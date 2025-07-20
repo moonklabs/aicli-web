@@ -1,0 +1,178 @@
+package middleware
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+// ErrorResponse는 표준 에러 응답 구조체입니다.
+type ErrorResponse struct {
+	Success bool  `json:"success"`
+	Error   Error `json:"error"`
+}
+
+// Error는 에러 정보 구조체입니다.
+type Error struct {
+	Code      string      `json:"code"`
+	Message   string      `json:"message"`
+	Details   interface{} `json:"details,omitempty"`
+	RequestID string      `json:"request_id,omitempty"`
+}
+
+// 에러 코드 상수
+const (
+	ErrValidation   = "ERR_VALIDATION"
+	ErrNotFound     = "ERR_NOT_FOUND"
+	ErrUnauthorized = "ERR_UNAUTHORIZED"
+	ErrForbidden    = "ERR_FORBIDDEN"
+	ErrConflict     = "ERR_CONFLICT"
+	ErrInternal     = "ERR_INTERNAL"
+	ErrBadRequest   = "ERR_BAD_REQUEST"
+	ErrTimeout      = "ERR_TIMEOUT"
+)
+
+// ErrorHandler는 표준화된 에러 처리 미들웨어입니다.
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+
+		// 에러가 있는 경우 처리
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last()
+			requestID := GetRequestID(c)
+
+			// 에러 타입에 따른 응답 생성
+			response := createErrorResponse(err, requestID)
+			
+			// 이미 응답이 작성된 경우 처리하지 않음
+			if c.Writer.Written() {
+				return
+			}
+
+			// HTTP 상태 코드 결정
+			statusCode := determineStatusCode(err)
+			
+			c.JSON(statusCode, response)
+			c.Abort()
+		}
+	}
+}
+
+// createErrorResponse는 에러로부터 표준 응답을 생성합니다.
+func createErrorResponse(err *gin.Error, requestID string) ErrorResponse {
+	// 에러 코드와 메시지 결정
+	code := ErrInternal
+	message := "서버 내부 오류가 발생했습니다"
+	var details interface{}
+
+	// Gin의 에러 타입에 따른 처리
+	switch err.Type {
+	case gin.ErrorTypeBind:
+		code = ErrValidation
+		message = "요청 데이터가 올바르지 않습니다"
+		details = err.Error()
+	case gin.ErrorTypePublic:
+		code = ErrBadRequest
+		message = err.Error()
+	case gin.ErrorTypePrivate:
+		code = ErrInternal
+		message = "서버 내부 오류가 발생했습니다"
+		// 개발 환경에서만 상세 정보 제공
+		if gin.Mode() == gin.DebugMode {
+			details = err.Error()
+		}
+	default:
+		// 기본 처리
+		if err.Error() != "" {
+			message = err.Error()
+		}
+	}
+
+	return ErrorResponse{
+		Success: false,
+		Error: Error{
+			Code:      code,
+			Message:   message,
+			Details:   details,
+			RequestID: requestID,
+		},
+	}
+}
+
+// determineStatusCode는 에러로부터 HTTP 상태 코드를 결정합니다.
+func determineStatusCode(err *gin.Error) int {
+	switch err.Type {
+	case gin.ErrorTypeBind:
+		return http.StatusBadRequest
+	case gin.ErrorTypePublic:
+		return http.StatusBadRequest
+	case gin.ErrorTypePrivate:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
+// NewAPIError는 새로운 API 에러를 생성합니다.
+func NewAPIError(code string, message string, details interface{}) *gin.Error {
+	return &gin.Error{
+		Err:  &APIError{Code: code, Message: message, Details: details},
+		Type: gin.ErrorTypePublic,
+	}
+}
+
+// APIError는 사용자 정의 API 에러 타입입니다.
+type APIError struct {
+	Code    string
+	Message string
+	Details interface{}
+}
+
+// Error는 error 인터페이스 구현입니다.
+func (e *APIError) Error() string {
+	return e.Message
+}
+
+// AbortWithError는 에러와 함께 요청을 중단합니다.
+func AbortWithError(c *gin.Context, statusCode int, code string, message string, details interface{}) {
+	requestID := GetRequestID(c)
+	
+	response := ErrorResponse{
+		Success: false,
+		Error: Error{
+			Code:      code,
+			Message:   message,
+			Details:   details,
+			RequestID: requestID,
+		},
+	}
+	
+	c.JSON(statusCode, response)
+	c.Abort()
+}
+
+// ValidationError는 유효성 검사 에러를 처리합니다.
+func ValidationError(c *gin.Context, message string, details interface{}) {
+	AbortWithError(c, http.StatusBadRequest, ErrValidation, message, details)
+}
+
+// NotFoundError는 리소스를 찾을 수 없는 에러를 처리합니다.
+func NotFoundError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusNotFound, ErrNotFound, message, nil)
+}
+
+// UnauthorizedError는 인증 실패 에러를 처리합니다.
+func UnauthorizedError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusUnauthorized, ErrUnauthorized, message, nil)
+}
+
+// ForbiddenError는 권한 부족 에러를 처리합니다.
+func ForbiddenError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusForbidden, ErrForbidden, message, nil)
+}
+
+// InternalError는 서버 내부 에러를 처리합니다.
+func InternalError(c *gin.Context, message string, details interface{}) {
+	AbortWithError(c, http.StatusInternalServerError, ErrInternal, message, details)
+}
