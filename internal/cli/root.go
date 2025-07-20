@@ -21,8 +21,34 @@ var (
 		Use:   "aicli",
 		Short: "AI-powered code management CLI",
 		Long: `AICode Manager(aicli)는 Claude CLI를 웹 플랫폼으로 관리하는 시스템입니다.
-각 프로젝트별 격리된 Docker 컨테이너에서 Claude CLI를 실행하고 관리합니다.`,
+각 프로젝트별 격리된 Docker 컨테이너에서 Claude CLI를 실행하고 관리합니다.
+
+주요 기능:
+  • 프로젝트별 격리된 워크스페이스 관리
+  • Claude CLI 태스크 실행 및 모니터링
+  • 실시간 로그 스트리밍
+  • Git 워크플로우 통합
+  • 멀티 프로젝트 병렬 작업 지원
+
+시작하기:
+  먼저 워크스페이스를 생성한 다음, 해당 워크스페이스에서 Claude 태스크를 실행합니다.
+
+  $ aicli workspace create --name myproject --path /path/to/project
+  $ aicli task create --workspace myproject --command "implement feature X"
+
+더 자세한 정보는 'aicli help [command]'를 사용하세요.`,
 		Version: version.Version,
+		Example: `  # 워크스페이스 생성
+  aicli workspace create --name myproject --path ~/projects/myapp
+
+  # 태스크 실행
+  aicli task create --workspace myproject --command "add login feature"
+
+  # 로그 확인
+  aicli logs --workspace myproject --follow
+
+  # 설정 변경
+  aicli config set claude.model claude-3-opus`,
 	}
 )
 
@@ -36,9 +62,9 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// 전역 플래그 정의
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.aicli.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "output format (table|json|yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "설정 파일 경로 (기본값: $HOME/.aicli.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "상세 출력 모드 활성화")
+	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "출력 형식 (table|json|yaml|csv)")
 
 	// 플래그를 viper와 바인딩
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
@@ -60,6 +86,7 @@ func init() {
 	rootCmd.AddCommand(commands.NewTaskCmd())
 	rootCmd.AddCommand(commands.NewLogsCmd())
 	rootCmd.AddCommand(commands.NewConfigCmd())
+	rootCmd.AddCommand(commands.NewVersionCmd())
 	
 	// 자동 완성 명령어 추가
 	addCompletionCmd()

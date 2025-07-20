@@ -12,7 +12,27 @@ func NewTaskCmd() *cobra.Command {
 		Use:     "task",
 		Aliases: []string{"t"},
 		Short:   "Claude 태스크 관리",
-		Long:    `워크스페이스에서 실행 중인 Claude 태스크를 관리합니다.`,
+		Long:    `워크스페이스에서 실행 중인 Claude 태스크를 관리합니다.
+
+태스크는 Claude CLI에 전달되는 작업 단위로, 코드 생성, 버그 수정,
+리팩토링 등의 작업을 수행합니다. 각 태스크는 고유한 ID를 가지며,
+실시간으로 진행 상황을 모니터링할 수 있습니다.
+
+태스크 유형:
+  • 명령형: 특정 명령을 실행하고 종료
+  • 대화형: Claude와 상호작용하며 작업 수행
+  • 백그라운드: 장기 실행 작업을 백그라운드에서 처리`,
+		Example: `  # 명령형 태스크 실행
+  aicli task create --workspace myproject --command "add user authentication"
+  
+  # 대화형 모드로 실행
+  aicli task create --workspace myproject --interactive
+  
+  # 백그라운드에서 실행
+  aicli task create --workspace myproject --command "refactor database layer" --detach
+  
+  # 태스크 목록 조회
+  aicli task list --workspace myproject`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -39,7 +59,25 @@ func newTaskCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "새 태스크 생성",
-		Long:  `지정된 워크스페이스에서 새로운 Claude 태스크를 생성하고 실행합니다.`,
+		Long:  `지정된 워크스페이스에서 새로운 Claude 태스크를 생성하고 실행합니다.
+
+태스크는 명령형 또는 대화형으로 실행할 수 있습니다:
+  • 명령형: --command 플래그로 실행할 명령어 지정
+  • 대화형: --interactive 플래그로 Claude와 직접 대화
+
+--detach 플래그를 사용하면 태스크를 백그라운드에서 실행하고 즉시
+태스크 ID를 반환합니다. 이후 'aicli logs' 명령으로 진행 상황을 확인할 수 있습니다.`,
+		Example: `  # 기본 명령형 태스크
+  aicli task create --workspace myproject --command "implement login feature"
+  
+  # 대화형 모드
+  aicli task create --workspace myproject --interactive
+  
+  # 백그라운드 실행
+  aicli task create -w myproject -c "analyze codebase" --detach
+  
+  # Git 커밋 메시지 생성 예시
+  aicli task create -w myproject -c "write commit message for recent changes"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// 필수 플래그 검증
 			if workspace == "" {
@@ -104,7 +142,32 @@ func newTaskListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "태스크 목록 조회",
-		Long:  `실행 중이거나 완료된 태스크 목록을 조회합니다.`,
+		Long:  `실행 중이거나 완료된 태스크 목록을 조회합니다.
+
+기본적으로 실행 중인 태스크만 표시합니다. --all 플래그를 사용하면
+완료된 태스크도 함께 표시합니다. --status 플래그로 특정 상태의
+태스크만 필터링할 수 있습니다.
+
+표시되는 정보:
+  • 태스크 ID
+  • 워크스페이스
+  • 상태 (running, completed, failed, cancelled)
+  • 시작 시간
+  • 실행 시간 또는 종료 시간`,
+		Example: `  # 실행 중인 태스크만 조회
+  aicli task list
+  
+  # 특정 워크스페이스의 태스크 조회
+  aicli task list --workspace myproject
+  
+  # 모든 태스크 조회
+  aicli task list --all
+  
+  # 완료된 태스크만 조회
+  aicli task list --status completed
+  
+  # JSON 형식으로 출력
+  aicli task list --output json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: API 클라이언트를 통해 실제 태스크 목록 조회
 			fmt.Println("Tasks:")
@@ -157,7 +220,24 @@ func newTaskStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status [task-id]",
 		Short: "태스크 상태 조회",
-		Long:  `지정된 태스크의 상세 상태를 조회합니다.`,
+		Long:  `지정된 태스크의 상세 상태를 조회합니다.
+
+표시되는 정보:
+  • 태스크 ID 및 이름
+  • 워크스페이스
+  • 현재 상태
+  • 시작 시간 및 실행 시간
+  • 사용 중인 리소스 (CPU, 메모리)
+  • 최근 로그 몇 줄
+  • 진행률 (가능한 경우)`,
+		Example: `  # 태스크 상태 확인
+  aicli task status task-001
+  
+  # 짧은 별칭 사용
+  aicli t status task-001
+  
+  # JSON 형식으로 출력
+  aicli task status task-001 --output json`,
 		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 태스크 ID 목록을 가져오는 로직 구현
@@ -188,7 +268,21 @@ func newTaskCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel [task-id]",
 		Short: "태스크 취소",
-		Long:  `실행 중인 태스크를 취소합니다.`,
+		Long:  `실행 중인 태스크를 취소합니다.
+
+태스크는 정상적으로 종료되며, 현재까지의 작업 결과는 보존됩니다.
+--force 플래그를 사용하면 강제로 종료하며, 진행 중인 작업이
+불완전할 수 있습니다.
+
+취소된 태스크의 로그는 보존되며 'aicli logs' 명령으로 확인할 수 있습니다.`,
+		Example: `  # 정상 취소
+  aicli task cancel task-001
+  
+  # 강제 종료
+  aicli task cancel task-001 --force
+  
+  # 짧은 별칭 사용
+  aicli t cancel task-001 -f`,
 		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실행 중인 태스크 ID만 반환하도록 개선

@@ -13,7 +13,31 @@ func NewConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "설정 관리",
-		Long:  `AICLI의 설정을 조회하고 변경합니다.`,
+		Long:  `AICLI의 설정을 조회하고 변경합니다.
+
+설정은 다음 순서로 우선순위를 가집니다:
+  1. 명령줄 플래그
+  2. 환경 변수 (AICLI_ 접두사)
+  3. 설정 파일 (~/.aicli.yaml)
+  4. 기본값
+
+주요 설정 그룹:
+  • api.*: API 서버 관련 설정
+  • claude.*: Claude API 설정
+  • docker.*: Docker 컨테이너 설정
+  • workspace.*: 워크스페이스 기본 설정
+  • logging.*: 로깅 설정`,
+		Example: `  # 특정 설정 조회
+  aicli config get claude.api_key
+  
+  # 설정 변경 (현재 세션만)
+  aicli config set logging.level debug
+  
+  # 전역 설정 파일에 저장
+  aicli config set claude.model claude-3-opus --global
+  
+  # 모든 설정 나열
+  aicli config list`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -32,7 +56,21 @@ func newConfigGetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get [key]",
 		Short: "설정 값 조회",
-		Long:  `지정된 설정 키의 값을 조회합니다.`,
+		Long:  `지정된 설정 키의 값을 조회합니다.
+
+키는 점(".")으로 구분된 계층 구조로 지정합니다.
+예: api.endpoint, claude.model, logging.level
+
+설정 값은 현재 적용된 최종 값을 표시합니다.
+(명령줄 > 환경 변수 > 설정 파일 > 기본값 순서)`,
+		Example: `  # API 엔드포인트 조회
+  aicli config get api.endpoint
+  
+  # Claude 모델 설정 조회
+  aicli config get claude.model
+  
+  # 로깅 레벨 조회
+  aicli config get logging.level`,
 		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// 설정 가능한 키 목록
@@ -73,7 +111,31 @@ func newConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set [key] [value]",
 		Short: "설정 값 변경",
-		Long:  `지정된 설정 키의 값을 변경합니다.`,
+		Long:  `지정된 설정 키의 값을 변경합니다.
+
+기본적으로 설정은 현재 세션에만 적용됩니다.
+--global 플래그를 사용하면 ~/.aicli.yaml 파일에 저장되어
+영구적으로 적용됩니다.
+
+값 타입:
+  • 문자열: 큰따옴표 없이 입력
+  • 숫자: 자동 타입 변환
+  • 불린: true 또는 false
+  • 배열: 쉼표로 구분 (예: "a,b,c")`,
+		Example: `  # 로깅 레벨 변경 (현재 세션만)
+  aicli config set logging.level debug
+  
+  # Claude 모델 전역 설정
+  aicli config set claude.model claude-3-opus --global
+  
+  # API 타임아웃 설정 (초 단위)
+  aicli config set api.timeout 30
+  
+  # Docker 레지스트리 설정
+  aicli config set docker.registry myregistry.com
+  
+  # 환경 변수로도 설정 가능
+  export AICLI_CLAUDE_MODEL=claude-3-opus`,
 		Args:  cobra.ExactArgs(2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
@@ -152,7 +214,20 @@ func newConfigListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "모든 설정 나열",
-		Long:  `현재 적용된 모든 설정을 나열합니다.`,
+		Long:  `현재 적용된 모든 설정을 나열합니다.
+
+설정은 계층 구조로 표시되며, 각 값의 출처
+(명령줄, 환경 변수, 설정 파일, 기본값)를 확인할 수 있습니다.
+
+설정 파일 경로도 함께 표시됩니다.`,
+		Example: `  # 모든 설정 표시
+  aicli config list
+  
+  # JSON 형식으로 출력
+  aicli config list --output json
+  
+  # 특정 그룹만 필터링 (grep 사용)
+  aicli config list | grep claude`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// 모든 설정 키 가져오기
 			settings := viper.AllSettings()

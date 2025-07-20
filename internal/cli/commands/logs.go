@@ -21,7 +21,37 @@ func NewLogsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "로그 조회",
-		Long:  `워크스페이스나 태스크의 로그를 조회합니다.`,
+		Long:  `워크스페이스나 태스크의 로그를 조회합니다.
+
+워크스페이스의 모든 로그나 특정 태스크의 로그를 조회할 수 있습니다.
+--follow 플래그를 사용하면 실시간으로 로그를 스트리밍합니다.
+
+로그 필터링 옵션:
+  • --since: 특정 시간 이후의 로그만 조회 (예: 10m, 1h, 2d)
+  • --tail: 마지막 N개 라인만 조회
+  • --timestamps: 각 로그 라인에 타임스탬프 표시
+
+로그는 표준 출력으로 스트리밍되므로 다른 도구와 파이프로 연결할 수 있습니다.`,
+		Example: `  # 워크스페이스의 모든 로그 조회
+  aicli logs --workspace myproject
+  
+  # 특정 태스크 로그 조회
+  aicli logs --task task-001
+  
+  # 실시간 로그 스트리밍
+  aicli logs -w myproject --follow
+  
+  # 최근 10분간의 로그만 조회
+  aicli logs -w myproject --since 10m
+  
+  # 마지막 100줄만 조회
+  aicli logs -t task-001 --tail 100
+  
+  # 타임스탬프와 함께 로그 출력
+  aicli logs -w myproject --timestamps
+  
+  # grep과 함께 사용
+  aicli logs -w myproject | grep ERROR`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// 워크스페이스나 태스크 ID 중 하나는 필수
 			if workspace == "" && taskID == "" {

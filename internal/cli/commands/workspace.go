@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/drumcap/aicli-web/internal/cli/errors"
 )
 
 // NewWorkspaceCmd는 workspace 관련 명령어를 생성합니다.
@@ -12,7 +13,28 @@ func NewWorkspaceCmd() *cobra.Command {
 		Use:     "workspace",
 		Aliases: []string{"ws"},
 		Short:   "워크스페이스 관리",
-		Long:    `Claude CLI 실행을 위한 격리된 워크스페이스를 관리합니다.`,
+		Long:    `Claude CLI 실행을 위한 격리된 워크스페이스를 관리합니다.
+
+워크스페이스는 각 프로젝트마다 독립적으로 생성되며, Docker 컨테이너 내에서
+안전하게 격리된 환경을 제공합니다. 각 워크스페이스는 자체 파일 시스템,
+환경 변수, Claude API 설정을 가집니다.
+
+워크스페이스를 통해:
+  • 여러 프로젝트를 동시에 관리
+  • 프로젝트별 독립적인 Claude 설정 사용
+  • 안전한 코드 실행 환경 보장
+  • 프로젝트 간 격리 및 보안 유지`,
+		Example: `  # 새 워크스페이스 생성
+  aicli workspace create --name myproject --path ~/projects/myapp
+  
+  # 워크스페이스 목록 조회
+  aicli workspace list
+  
+  # 워크스페이스 정보 확인
+  aicli workspace info myproject
+  
+  # 워크스페이스 삭제
+  aicli workspace delete myproject`,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -32,7 +54,18 @@ func newWorkspaceListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "워크스페이스 목록 조회",
-		Long:  `현재 생성된 모든 워크스페이스의 목록을 조회합니다.`,
+		Long:  `현재 생성된 모든 워크스페이스의 목록을 조회합니다.
+
+각 워크스페이스의 이름, 상태, 생성 시간, 프로젝트 경로 등의
+정보를 표시합니다. 출력 형식은 전역 --output 플래그로 변경할 수 있습니다.`,
+		Example: `  # 기본 테이블 형식으로 목록 조회
+  aicli workspace list
+  
+  # JSON 형식으로 출력
+  aicli workspace list --output json
+  
+  # 짧은 별칭 사용
+  aicli ws list`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: API 클라이언트를 통해 실제 워크스페이스 목록 조회
 			fmt.Println("Available workspaces:")
@@ -53,14 +86,27 @@ func newWorkspaceCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "새 워크스페이스 생성",
-		Long:  `새로운 Claude CLI 워크스페이스를 생성합니다.`,
+		Long:  `새로운 Claude CLI 워크스페이스를 생성합니다.
+
+워크스페이스는 지정된 프로젝트 디렉토리를 Docker 볼륨으로 마운트하여
+격리된 환경에서 Claude CLI를 실행할 수 있게 합니다. Claude API 키는
+환경 변수나 --claude-key 플래그로 지정할 수 있습니다.`,
+		Example: `  # 기본 워크스페이스 생성
+  aicli workspace create --name myproject --path ~/projects/myapp
+  
+  # Claude API 키와 함께 생성
+  aicli workspace create --name myproject --path ~/projects/myapp --claude-key sk-ant-...
+  
+  # 환경 변수에서 API 키 사용
+  export CLAUDE_API_KEY=sk-ant-...
+  aicli workspace create --name myproject --path ~/projects/myapp`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// 필수 플래그 검증
 			if name == "" {
-				return fmt.Errorf("워크스페이스 이름은 필수입니다 (--name)")
+				return errors.RequiredFlagError("name", "워크스페이스를 식별하는 고유한 이름")
 			}
 			if projectPath == "" {
-				return fmt.Errorf("프로젝트 경로는 필수입니다 (--path)")
+				return errors.RequiredFlagError("path", "Claude가 작업할 프로젝트 디렉토리 경로")
 			}
 
 			// TODO: API 클라이언트를 통해 실제 워크스페이스 생성
@@ -89,7 +135,21 @@ func newWorkspaceDeleteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete [workspace-name]",
 		Short: "워크스페이스 삭제",
-		Long:  `지정된 워크스페이스를 삭제합니다.`,
+		Long:  `지정된 워크스페이스를 삭제합니다.
+
+워크스페이스와 관련된 모든 리소스(컨테이너, 볼륨, 로그 등)가 삭제됩니다.
+실행 중인 태스크가 있는 경우 먼저 중지됩니다. --force 플래그를 사용하면
+확인 프롬프트 없이 즉시 삭제합니다.
+
+주의: 이 작업은 되돌릴 수 없습니다.`,
+		Example: `  # 확인 후 삭제
+  aicli workspace delete myproject
+  
+  # 강제 삭제 (확인 없음)
+  aicli workspace delete myproject --force
+  
+  # 짧은 별칭 사용
+  aicli ws delete myproject -f`,
 		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
@@ -134,7 +194,24 @@ func newWorkspaceInfoCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "info [workspace-name]",
 		Short: "워크스페이스 정보 조회",
-		Long:  `지정된 워크스페이스의 상세 정보를 조회합니다.`,
+		Long:  `지정된 워크스페이스의 상세 정보를 조회합니다.
+
+표시되는 정보:
+  • 워크스페이스 이름 및 ID
+  • 프로젝트 경로
+  • 생성 시간 및 최종 사용 시간
+  • 상태 (활성/비활성)
+  • 실행 중인 태스크 수
+  • 사용 중인 리소스 (CPU, 메모리)
+  • Claude API 설정 상태`,
+		Example: `  # 워크스페이스 정보 조회
+  aicli workspace info myproject
+  
+  # JSON 형식으로 출력
+  aicli workspace info myproject --output json
+  
+  # 짧은 별칭 사용
+  aicli ws info myproject`,
 		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
