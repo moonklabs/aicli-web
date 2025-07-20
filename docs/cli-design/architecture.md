@@ -7,7 +7,7 @@ Go 언어로 구현된 네이티브 CLI 도구를 중심으로 한 아키텍처�
 ```mermaid
 graph TB
     subgraph "Client Tools"
-        CLI[Terry CLI]
+        CLI[AICLI CLI]
         WEB[Web Dashboard]
         API_CLIENT[API Client Libraries]
     end
@@ -51,10 +51,10 @@ graph TB
 
 ## 🔧 핵심 컴포넌트
 
-### 1. Terry CLI (커맨드라인 도구)
+### 1. AICLI CLI (커맨드라인 도구)
 
 ```go
-// cmd/terry/main.go
+// cmd/aicli/main.go
 package main
 
 import (
@@ -64,7 +64,7 @@ import (
 
 func main() {
     rootCmd := &cobra.Command{
-        Use:   "terry",
+        Use:   "aicli",
         Short: "AI-powered code management CLI",
     }
     
@@ -478,20 +478,20 @@ func (p *ProcessPool) Get() *exec.Cmd {
 
 ```makefile
 # Makefile
-BINARY_NAME=terry
+BINARY_NAME=aicli
 VERSION=$(shell git describe --tags --always)
 
 build-all:
-	GOOS=darwin GOARCH=amd64 go build -o dist/$(BINARY_NAME)-darwin-amd64 ./cmd/terry
-	GOOS=darwin GOARCH=arm64 go build -o dist/$(BINARY_NAME)-darwin-arm64 ./cmd/terry
-	GOOS=linux GOARCH=amd64 go build -o dist/$(BINARY_NAME)-linux-amd64 ./cmd/terry
-	GOOS=windows GOARCH=amd64 go build -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/terry
+	GOOS=darwin GOARCH=amd64 go build -o dist/$(BINARY_NAME)-darwin-amd64 ./cmd/aicli
+	GOOS=darwin GOARCH=arm64 go build -o dist/$(BINARY_NAME)-darwin-arm64 ./cmd/aicli
+	GOOS=linux GOARCH=amd64 go build -o dist/$(BINARY_NAME)-linux-amd64 ./cmd/aicli
+	GOOS=windows GOARCH=amd64 go build -o dist/$(BINARY_NAME)-windows-amd64.exe ./cmd/aicli
 ```
 
 ### 2. 정적 링킹
 
 ```bash
-CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION}" -o terry ./cmd/terry
+CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION}" -o aicli ./cmd/aicli
 ```
 
 ## 🔍 Python 설계 대비 장점

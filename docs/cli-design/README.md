@@ -29,7 +29,7 @@
 
 ## 📋 주요 구성 요소
 
-### 1. CLI 도구 (Terry CLI)
+### 1. CLI 도구 (AICLI CLI)
 - 사용자 친화적인 커맨드라인 인터페이스
 - 로컬/원격 작업 관리
 - 실시간 로그 스트리밍
@@ -73,14 +73,14 @@
 
 ```bash
 # Go 버전
-go install github.com/yourusername/aicli-web/cmd/terry@latest
+go install github.com/yourusername/aicli-web/cmd/aicli@latest
 
 # 또는 바이너리 다운로드
-curl -L https://github.com/yourusername/aicli-web/releases/latest/download/terry-$(uname -s)-$(uname -m) -o /usr/local/bin/terry
-chmod +x /usr/local/bin/terry
+curl -L https://github.com/yourusername/aicli-web/releases/latest/download/aicli-$(uname -s)-$(uname -m) -o /usr/local/bin/aicli
+chmod +x /usr/local/bin/aicli
 
 # 사용
-terry workspace list
-terry task create --workspace my-project "Fix the bug in main.py"
-terry logs -f task-id
+aicli workspace list
+aicli task create --workspace my-project "Fix the bug in main.py"
+aicli logs -f task-id
 ```

@@ -13,8 +13,8 @@ Go로 작성된 네이티브 CLI 도구와 API 서버의 빌드, 패키징, 배�
 .PHONY: all build build-all clean test lint install docker help
 
 # 변수 정의
-BINARY_NAME := terry
-API_NAME := terry-api
+BINARY_NAME := aicli
+API_NAME := aicli-api
 VERSION := $(shell git describe --tags --always --dirty)
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 COMMIT := $(shell git rev-parse --short HEAD)
@@ -23,9 +23,9 @@ COMMIT := $(shell git rev-parse --short HEAD)
 GO := go
 GOFLAGS := -v
 LDFLAGS := -ldflags "-s -w \
-	-X github.com/yourusername/terry/pkg/version.Version=$(VERSION) \
-	-X github.com/yourusername/terry/pkg/version.BuildTime=$(BUILD_TIME) \
-	-X github.com/yourusername/terry/pkg/version.Commit=$(COMMIT)"
+	-X github.com/yourusername/aicli/pkg/version.Version=$(VERSION) \
+	-X github.com/yourusername/aicli/pkg/version.BuildTime=$(BUILD_TIME) \
+	-X github.com/yourusername/aicli/pkg/version.Commit=$(COMMIT)"
 
 # 플랫폼별 빌드 변수
 PLATFORMS := darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64
@@ -39,7 +39,7 @@ build: build-cli build-api
 
 build-cli:
 	@echo "Building CLI for local platform..."
-	$(GO) build $(GOFLAGS) $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/terry
+	$(GO) build $(GOFLAGS) $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/aicli
 
 build-api:
 	@echo "Building API server..."
@@ -55,7 +55,7 @@ $(PLATFORM_TARGETS): build-%:
 	@if [ "$(GOOS)" = "windows" ]; then OUTPUT="$(OUTPUT).exe"; fi; \
 	echo "Building for $(GOOS)/$(GOARCH)..."; \
 	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 \
-		$(GO) build $(GOFLAGS) $(LDFLAGS) -o dist/$(OUTPUT) ./cmd/terry
+		$(GO) build $(GOFLAGS) $(LDFLAGS) -o dist/$(OUTPUT) ./cmd/aicli
 
 # 정적 빌드 (Alpine Linux용)
 build-static:
@@ -63,8 +63,8 @@ build-static:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 		$(GO) build $(GOFLAGS) \
 		-ldflags "-s -w -extldflags '-static' \
-			-X github.com/yourusername/terry/pkg/version.Version=$(VERSION)" \
-		-o dist/$(BINARY_NAME)-linux-amd64-static ./cmd/terry
+			-X github.com/yourusername/aicli/pkg/version.Version=$(VERSION)" \
+		-o dist/$(BINARY_NAME)-linux-amd64-static ./cmd/aicli
 
 # 테스트
 test:
@@ -174,7 +174,7 @@ VERSION=$(git describe --tags --always --dirty)
 BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
 COMMIT=$(git rev-parse --short HEAD)
 
-log_info "Building Terry CLI v${VERSION}"
+log_info "Building AICLI CLI v${VERSION}"
 log_info "Commit: ${COMMIT}"
 log_info "Build time: ${BUILD_TIME}"
 
@@ -242,18 +242,18 @@ RUN apk add --no-cache \
     docker-cli
 
 # 사용자 생성
-RUN adduser -D -u 1000 terry
+RUN adduser -D -u 1000 aicli
 
 # 바이너리 복사
-COPY --from=builder /build/dist/terry-linux-amd64-static /usr/local/bin/terry
+COPY --from=builder /build/dist/aicli-linux-amd64-static /usr/local/bin/aicli
 
 # 설정 디렉토리
-RUN mkdir -p /home/terry/.terry && chown -R terry:terry /home/terry
+RUN mkdir -p /home/aicli/.aicli && chown -R aicli:aicli /home/aicli
 
-USER terry
-WORKDIR /home/terry
+USER aicli
+WORKDIR /home/aicli
 
-ENTRYPOINT ["terry"]
+ENTRYPOINT ["aicli"]
 CMD ["--help"]
 ```
 
@@ -275,7 +275,7 @@ RUN go mod download
 # 빌드
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-s -w" -o terry-api ./cmd/api
+    go build -ldflags="-s -w" -o aicli-api ./cmd/api
 
 # 실행 스테이지
 FROM alpine:3.19
@@ -283,24 +283,24 @@ FROM alpine:3.19
 RUN apk add --no-cache ca-certificates tzdata
 
 # 사용자 생성
-RUN addgroup -g 1000 -S terry && \
-    adduser -u 1000 -S terry -G terry
+RUN addgroup -g 1000 -S aicli && \
+    adduser -u 1000 -S aicli -G aicli
 
 # 바이너리 복사
-COPY --from=builder /build/terry-api /usr/local/bin/terry-api
+COPY --from=builder /build/aicli-api /usr/local/bin/aicli-api
 
 # 설정 파일
-COPY --chown=terry:terry configs/production.yaml /etc/terry/config.yaml
+COPY --chown=aicli:aicli configs/production.yaml /etc/aicli/config.yaml
 
-USER terry
+USER aicli
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["/usr/local/bin/terry-api", "health"]
+    CMD ["/usr/local/bin/aicli-api", "health"]
 
-ENTRYPOINT ["terry-api"]
-CMD ["server", "--config", "/etc/terry/config.yaml"]
+ENTRYPOINT ["aicli-api"]
+CMD ["server", "--config", "/etc/aicli/config.yaml"]
 ```
 
 ## 📦 패키징
@@ -308,42 +308,42 @@ CMD ["server", "--config", "/etc/terry/config.yaml"]
 ### 1. Homebrew Formula
 
 ```ruby
-# Formula/terry.rb
+# Formula/aicli.rb
 class Terry < Formula
   desc "AI-powered code management CLI"
-  homepage "https://github.com/yourusername/terry"
+  homepage "https://github.com/yourusername/aicli"
   version "1.0.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/yourusername/terry/releases/download/v#{version}/terry-darwin-arm64.tar.gz"
+      url "https://github.com/yourusername/aicli/releases/download/v#{version}/aicli-darwin-arm64.tar.gz"
       sha256 "YOUR_SHA256_HERE"
     else
-      url "https://github.com/yourusername/terry/releases/download/v#{version}/terry-darwin-amd64.tar.gz"
+      url "https://github.com/yourusername/aicli/releases/download/v#{version}/aicli-darwin-amd64.tar.gz"
       sha256 "YOUR_SHA256_HERE"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/yourusername/terry/releases/download/v#{version}/terry-linux-arm64.tar.gz"
+      url "https://github.com/yourusername/aicli/releases/download/v#{version}/aicli-linux-arm64.tar.gz"
       sha256 "YOUR_SHA256_HERE"
     else
-      url "https://github.com/yourusername/terry/releases/download/v#{version}/terry-linux-amd64.tar.gz"
+      url "https://github.com/yourusername/aicli/releases/download/v#{version}/aicli-linux-amd64.tar.gz"
       sha256 "YOUR_SHA256_HERE"
     end
   end
 
   def install
-    bin.install "terry"
+    bin.install "aicli"
     
     # 자동 완성 스크립트
-    generate_completions_from_executable(bin/"terry", "completion")
+    generate_completions_from_executable(bin/"aicli", "completion")
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/terry version")
+    assert_match version.to_s, shell_output("#{bin}/aicli version")
   end
 end
 ```
@@ -358,21 +358,21 @@ VERSION=$1
 ARCH=${2:-amd64}
 
 # 디렉토리 구조 생성
-mkdir -p terry-${VERSION}/DEBIAN
-mkdir -p terry-${VERSION}/usr/bin
-mkdir -p terry-${VERSION}/usr/share/doc/terry
-mkdir -p terry-${VERSION}/etc/terry
+mkdir -p aicli-${VERSION}/DEBIAN
+mkdir -p aicli-${VERSION}/usr/bin
+mkdir -p aicli-${VERSION}/usr/share/doc/aicli
+mkdir -p aicli-${VERSION}/etc/aicli
 
 # 바이너리 복사
-cp dist/terry-linux-${ARCH} terry-${VERSION}/usr/bin/terry
-chmod 755 terry-${VERSION}/usr/bin/terry
+cp dist/aicli-linux-${ARCH} aicli-${VERSION}/usr/bin/aicli
+chmod 755 aicli-${VERSION}/usr/bin/aicli
 
 # 문서 복사
-cp README.md LICENSE terry-${VERSION}/usr/share/doc/terry/
+cp README.md LICENSE aicli-${VERSION}/usr/share/doc/aicli/
 
 # Control 파일 생성
-cat > terry-${VERSION}/DEBIAN/control << EOF
-Package: terry
+cat > aicli-${VERSION}/DEBIAN/control << EOF
+Package: aicli
 Version: ${VERSION}
 Section: utils
 Priority: optional
@@ -381,41 +381,41 @@ Maintainer: Your Name <your.email@example.com>
 Description: AI-powered code management CLI
  Terry is a command-line interface for managing AI-powered coding tasks.
  It allows you to create workspaces, run Claude AI tasks, and monitor progress.
-Homepage: https://github.com/yourusername/terry
+Homepage: https://github.com/yourusername/aicli
 EOF
 
 # postinst 스크립트
-cat > terry-${VERSION}/DEBIAN/postinst << 'EOF'
+cat > aicli-${VERSION}/DEBIAN/postinst << 'EOF'
 #!/bin/bash
 set -e
 
 # 설정 디렉토리 생성
-mkdir -p /etc/terry
+mkdir -p /etc/aicli
 
 # 자동 완성 설정
 if [ -d /etc/bash_completion.d ]; then
-    terry completion bash > /etc/bash_completion.d/terry
+    aicli completion bash > /etc/bash_completion.d/aicli
 fi
 
 exit 0
 EOF
-chmod 755 terry-${VERSION}/DEBIAN/postinst
+chmod 755 aicli-${VERSION}/DEBIAN/postinst
 
 # 패키지 빌드
-dpkg-deb --build terry-${VERSION}
+dpkg-deb --build aicli-${VERSION}
 ```
 
 ### 3. RPM 패키지 (RHEL/CentOS/Fedora)
 
 ```spec
-# terry.spec
-Name:           terry
+# aicli.spec
+Name:           aicli
 Version:        1.0.0
 Release:        1%{?dist}
 Summary:        AI-powered code management CLI
 
 License:        MIT
-URL:            https://github.com/yourusername/terry
+URL:            https://github.com/yourusername/aicli
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  golang >= 1.21
@@ -432,12 +432,12 @@ make build
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{_bindir}
-install -m 755 bin/terry $RPM_BUILD_ROOT%{_bindir}/terry
+install -m 755 bin/aicli $RPM_BUILD_ROOT%{_bindir}/aicli
 
 %files
 %license LICENSE
 %doc README.md
-%{_bindir}/terry
+%{_bindir}/aicli
 
 %changelog
 * Mon Jan 20 2025 Your Name <your.email@example.com> - 1.0.0-1
@@ -534,8 +534,8 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/terry-api:latest
-          ${{ secrets.DOCKER_USERNAME }}/terry-api:${{ github.ref_name }}
+          ${{ secrets.DOCKER_USERNAME }}/aicli-api:latest
+          ${{ secrets.DOCKER_USERNAME }}/aicli-api:${{ github.ref_name }}
 ```
 
 ### 2. 설치 스크립트
@@ -547,8 +547,8 @@ jobs:
 set -euo pipefail
 
 # 변수
-REPO="yourusername/terry"
-BINARY="terry"
+REPO="yourusername/aicli"
+BINARY="aicli"
 
 # OS와 아키텍처 감지
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -575,7 +575,7 @@ if [ -z "${VERSION}" ]; then
     exit 1
 fi
 
-echo "Installing Terry ${VERSION} for ${OS}/${ARCH}..."
+echo "Installing AICLI ${VERSION} for ${OS}/${ARCH}..."
 
 # 다운로드 URL
 URL="https://github.com/${REPO}/releases/download/${VERSION}/${BINARY}-${OS}-${ARCH}"
@@ -607,7 +607,7 @@ if [ "${OS}" != "windows" ]; then
     fi
 fi
 
-echo "Terry ${VERSION} installed successfully!"
+echo "AICLI ${VERSION} installed successfully!"
 ${BINARY} version
 ```
 
@@ -616,17 +616,17 @@ ${BINARY} version
 ### 1. 시스템 서비스 (systemd)
 
 ```ini
-# /etc/systemd/system/terry-api.service
+# /etc/systemd/system/aicli-api.service
 [Unit]
 Description=Terry API Server
-Documentation=https://github.com/yourusername/terry
+Documentation=https://github.com/yourusername/aicli
 After=network.target
 
 [Service]
 Type=simple
-User=terry
-Group=terry
-ExecStart=/usr/local/bin/terry-api server --config /etc/terry/config.yaml
+User=aicli
+Group=aicli
+ExecStart=/usr/local/bin/aicli-api server --config /etc/aicli/config.yaml
 Restart=on-failure
 RestartSec=5
 
@@ -635,7 +635,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/terry /var/log/terry
+ReadWritePaths=/var/lib/aicli /var/log/aicli
 
 # 리소스 제한
 LimitNOFILE=65535
@@ -643,7 +643,7 @@ LimitNPROC=4096
 
 # 환경 변수
 Environment="TERRY_ENV=production"
-EnvironmentFile=-/etc/terry/env
+EnvironmentFile=-/etc/aicli/env
 
 [Install]
 WantedBy=multi-user.target
@@ -652,7 +652,7 @@ WantedBy=multi-user.target
 ### 2. 환경 설정
 
 ```yaml
-# /etc/terry/config.yaml
+# /etc/aicli/config.yaml
 server:
   host: 0.0.0.0
   port: 8080
@@ -661,22 +661,22 @@ server:
   
 database:
   type: sqlite
-  path: /var/lib/terry/terry.db
+  path: /var/lib/aicli/aicli.db
   
 logging:
   level: info
   format: json
-  output: /var/log/terry/api.log
+  output: /var/log/aicli/api.log
   
 security:
   jwt_secret: ${JWT_SECRET}
   allowed_origins:
     - http://localhost:3000
-    - https://terry.example.com
+    - https://aicli.example.com
     
 docker:
   host: unix:///var/run/docker.sock
-  network: terry_network
+  network: aicli_network
   
 claude:
   max_concurrent_sessions: 10
@@ -699,7 +699,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'terry-api'
+  - job_name: 'aicli-api'
     static_configs:
       - targets: ['localhost:9090']
     
@@ -756,22 +756,22 @@ gosec ./...
 go-licenses check ./...
 
 # Docker 이미지 스캔
-trivy image terry-api:latest
+trivy image aicli-api:latest
 ```
 
 ### 2. 강화 설정
 
 ```bash
 # 파일 권한
-chmod 600 /etc/terry/config.yaml
-chmod 700 /var/lib/terry
+chmod 600 /etc/aicli/config.yaml
+chmod 700 /var/lib/aicli
 
 # SELinux 컨텍스트 (RHEL/CentOS)
-semanage fcontext -a -t bin_t /usr/local/bin/terry
-restorecon -v /usr/local/bin/terry
+semanage fcontext -a -t bin_t /usr/local/bin/aicli
+restorecon -v /usr/local/bin/aicli
 
 # AppArmor 프로파일 (Ubuntu)
-aa-complain /usr/local/bin/terry-api
+aa-complain /usr/local/bin/aicli-api
 ```
 
 ## 🎯 배포 완료 확인
@@ -786,10 +786,10 @@ echo "Verifying deployment..."
 curl -f http://localhost:8080/health || exit 1
 
 # CLI 버전 확인
-terry version || exit 1
+aicli version || exit 1
 
 # 로그 확인
-tail -n 100 /var/log/terry/api.log
+tail -n 100 /var/log/aicli/api.log
 
 echo "Deployment verified successfully!"
 ```

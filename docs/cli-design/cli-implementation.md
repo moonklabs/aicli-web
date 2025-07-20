@@ -1,15 +1,15 @@
 # CLI 도구 구현 가이드
 
-## 🛠️ Terry CLI 구조
+## 🛠️ AICLI CLI 구조
 
 Go 언어로 구현된 사용자 친화적인 커맨드라인 인터페이스입니다.
 
 ## 📁 프로젝트 구조
 
 ```
-terry/
+aicli/
 ├── cmd/
-│   └── terry/
+│   └── aicli/
 │       └── main.go          # 진입점
 ├── internal/
 │   ├── cli/
@@ -37,7 +37,7 @@ terry/
 ### 1. 메인 엔트리포인트
 
 ```go
-// cmd/terry/main.go
+// cmd/aicli/main.go
 package main
 
 import (
@@ -45,8 +45,8 @@ import (
     "os"
     
     "github.com/spf13/cobra"
-    "github.com/yourusername/terry/internal/cli"
-    "github.com/yourusername/terry/pkg/version"
+    "github.com/yourusername/aicli/internal/cli"
+    "github.com/yourusername/aicli/pkg/version"
 )
 
 func main() {
@@ -75,7 +75,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-    Use:   "terry",
+    Use:   "aicli",
     Short: "AI-powered code management CLI",
     Long: `Terry is a command-line interface for managing AI-powered coding tasks.
 It allows you to create workspaces, run Claude AI tasks, and monitor progress.`,
@@ -90,7 +90,7 @@ func Execute() error {
 
 func init() {
     // 전역 플래그
-    rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.terry.yaml)")
+    rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.aicli.yaml)")
     rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
     rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "output format (table|json|yaml)")
     
@@ -110,7 +110,7 @@ func initConfig() {
     } else {
         home, _ := os.UserHomeDir()
         viper.AddConfigPath(home)
-        viper.SetConfigName(".terry")
+        viper.SetConfigName(".aicli")
     }
     
     viper.AutomaticEnv()
@@ -129,8 +129,8 @@ import (
     "os"
     
     "github.com/spf13/cobra"
-    "github.com/yourusername/terry/internal/client"
-    "github.com/yourusername/terry/internal/output"
+    "github.com/yourusername/aicli/internal/client"
+    "github.com/yourusername/aicli/internal/output"
 )
 
 func NewWorkspaceCmd() *cobra.Command {
@@ -248,7 +248,7 @@ import (
     "strings"
     
     "github.com/spf13/cobra"
-    "github.com/yourusername/terry/internal/client"
+    "github.com/yourusername/aicli/internal/client"
 )
 
 func NewTaskCmd() *cobra.Command {
@@ -353,8 +353,8 @@ func getInteractivePrompt() string {
 }
 
 func detectWorkspace() string {
-    // .terry 파일에서 워크스페이스 ID 읽기
-    if data, err := os.ReadFile(".terry"); err == nil {
+    // .aicli 파일에서 워크스페이스 ID 읽기
+    if data, err := os.ReadFile(".aicli"); err == nil {
         return strings.TrimSpace(string(data))
     }
     
@@ -378,7 +378,7 @@ import (
     
     "github.com/fatih/color"
     "github.com/spf13/cobra"
-    "github.com/yourusername/terry/internal/client"
+    "github.com/yourusername/aicli/internal/client"
 )
 
 func NewLogsCmd() *cobra.Command {
@@ -653,19 +653,19 @@ func showProgress() {
 
 ```bash
 # Bash completion
-terry completion bash > /etc/bash_completion.d/terry
+aicli completion bash > /etc/bash_completion.d/aicli
 
 # Zsh completion
-terry completion zsh > "${fpath[1]}/_terry"
+aicli completion zsh > "${fpath[1]}/_aicli"
 
 # Fish completion
-terry completion fish > ~/.config/fish/completions/terry.fish
+aicli completion fish > ~/.config/fish/completions/aicli.fish
 ```
 
 ### 3. 별칭 및 단축키
 
 ```yaml
-# ~/.terry.yaml
+# ~/.aicli.yaml
 aliases:
   ws: workspace
   t: task
@@ -692,14 +692,14 @@ if [ "$ARCH" = "x86_64" ]; then
     ARCH="amd64"
 fi
 
-URL="https://github.com/yourusername/terry/releases/download/${VERSION}/terry-${OS}-${ARCH}"
+URL="https://github.com/yourusername/aicli/releases/download/${VERSION}/aicli-${OS}-${ARCH}"
 
 echo "Downloading Terry CLI..."
-curl -L "$URL" -o /usr/local/bin/terry
-chmod +x /usr/local/bin/terry
+curl -L "$URL" -o /usr/local/bin/aicli
+chmod +x /usr/local/bin/aicli
 
 echo "Terry CLI installed successfully!"
-terry version
+aicli version
 ```
 
 ### 2. Homebrew Formula
@@ -707,26 +707,26 @@ terry version
 ```ruby
 class Terry < Formula
   desc "AI-powered code management CLI"
-  homepage "https://github.com/yourusername/terry"
+  homepage "https://github.com/yourusername/aicli"
   version "1.0.0"
   
   if OS.mac? && Hardware::CPU.arm?
-    url "https://github.com/yourusername/terry/releases/download/v1.0.0/terry-darwin-arm64"
+    url "https://github.com/yourusername/aicli/releases/download/v1.0.0/aicli-darwin-arm64"
     sha256 "..."
   elsif OS.mac?
-    url "https://github.com/yourusername/terry/releases/download/v1.0.0/terry-darwin-amd64"
+    url "https://github.com/yourusername/aicli/releases/download/v1.0.0/aicli-darwin-amd64"
     sha256 "..."
   elsif OS.linux?
-    url "https://github.com/yourusername/terry/releases/download/v1.0.0/terry-linux-amd64"
+    url "https://github.com/yourusername/aicli/releases/download/v1.0.0/aicli-linux-amd64"
     sha256 "..."
   end
   
   def install
-    bin.install "terry"
+    bin.install "aicli"
   end
   
   test do
-    system "#{bin}/terry", "version"
+    system "#{bin}/aicli", "version"
   end
 end
 ```
