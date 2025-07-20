@@ -1,0 +1,149 @@
+# AICode Manager Pre-commit Configuration
+# Go 프로젝트를 위한 Git hooks 자동화
+
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+# 일반적인 파일 검사
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+    name: Trim trailing whitespace
+    description: 파일 끝의 불필요한 공백 제거
+  - id: end-of-file-fixer
+    name: Fix end of files
+    description: 파일이 개행문자로 끝나도록 수정
+  - id: check-yaml
+    name: Check YAML syntax
+    description: YAML 파일 문법 검증
+  - id: check-added-large-files
+    name: Check for large files
+    description: 대용량 파일 커밋 방지 (기본값: 500KB)
+    args: ['--maxkb=500']
+  - id: check-merge-conflict
+    name: Check merge conflicts
+    description: 병합 충돌 마커 검사
+  - id: mixed-line-ending
+    name: Mixed line ending
+    description: 일관된 줄바꿈 문자 사용
+    args: ['--fix=lf']
+
+# Go 언어 특화 훅
+- repo: local
+  hooks:
+  # Go 포맷팅
+  - id: go-fmt
+    name: Go Format (gofmt)
+    description: Go 표준 포맷팅 적용
+    entry: bash -c 'gofmt -w -l $(find . -name "*.go" | grep -v vendor)'
+    language: system
+    types: [go]
+    pass_filenames: false
+
+  # Go imports 정리
+  - id: go-imports
+    name: Go Imports (goimports)
+    description: import 문 정리 및 포맷팅
+    entry: bash -c 'which goimports > /dev/null || go install golang.org/x/tools/cmd/goimports@latest && goimports -w -local github.com/drumcap/aicli-web $(find . -name "*.go" | grep -v vendor)'
+    language: system
+    types: [go]
+    pass_filenames: false
+
+  # Go vet 정적 분석
+  - id: go-vet
+    name: Go Vet
+    description: Go 공식 정적 분석 도구
+    entry: bash -c 'go vet ./...'
+    language: system
+    types: [go]
+    pass_filenames: false
+
+  # golangci-lint (빠른 린터만)
+  - id: golangci-lint
+    name: GolangCI-Lint (Fast)
+    description: 빠른 린팅 검사 (변경된 파일만)
+    entry: bash -c 'which golangci-lint > /dev/null && golangci-lint run --fast --timeout=30s || echo "golangci-lint not installed, skipping"'
+    language: system
+    types: [go]
+    pass_filenames: false
+
+  # Go 모듈 정리
+  - id: go-mod-tidy
+    name: Go Mod Tidy
+    description: go.mod 파일 정리
+    entry: bash -c 'go mod tidy'
+    language: system
+    types: [go]
+    pass_filenames: false
+
+  # 빠른 단위 테스트 (30초 제한)
+  - id: go-unit-tests
+    name: Go Unit Tests (Fast)
+    description: 빠른 단위 테스트 실행 (통합 테스트 제외)
+    entry: bash -c 'go test -short -timeout=30s ./internal/... ./pkg/...'
+    language: system
+    types: [go]
+    pass_filenames: false
+    stages: [push]  # push 할 때만 실행
+
+# 커밋 메시지 검증
+- repo: local
+  hooks:
+  - id: commit-msg-format
+    name: Commit Message Format
+    description: 커밋 메시지 형식 검증
+    entry: bash -c '
+      if ! head -1 "$1" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}$"; then
+        echo "❌ 커밋 메시지가 규칙을 따르지 않습니다!"
+        echo ""
+        echo "올바른 형식:"
+        echo "  <타입>(<범위>): <제목>"
+        echo ""
+        echo "타입:"
+        echo "  feat     : 새로운 기능"
+        echo "  fix      : 버그 수정"
+        echo "  docs     : 문서 변경"
+        echo "  style    : 코드 포맷팅, 세미콜론 누락 등"
+        echo "  refactor : 코드 리팩토링"
+        echo "  test     : 테스트 추가 또는 수정"
+        echo "  chore    : 빌드 프로세스 또는 보조 도구 변경"
+        echo "  perf     : 성능 개선"
+        echo "  ci       : CI 설정 변경"
+        echo "  build    : 빌드 시스템 또는 외부 의존성 변경"
+        echo "  revert   : 이전 커밋 되돌리기"
+        echo ""
+        echo "예시:"
+        echo "  feat(api): 워크스페이스 생성 API 추가"
+        echo "  fix(cli): 로그인 시 발생하는 null 포인터 오류 수정"
+        echo "  docs: README에 설치 가이드 추가"
+        echo ""
+        exit 1
+      fi
+    '
+    language: system
+    stages: [commit-msg]
+    always_run: true
+
+# 추가 선택적 훅 (주석 처리됨)
+# - repo: local
+#   hooks:
+#   # 보안 검사 (선택적)
+#   - id: go-security
+#     name: Go Security Check
+#     description: gosec을 사용한 보안 취약점 검사
+#     entry: bash -c 'which gosec > /dev/null && gosec -fmt json -out /dev/null ./... || echo "gosec not installed, skipping"'
+#     language: system
+#     types: [go]
+#     pass_filenames: false
+#
+#   # 전체 테스트 (수동 실행용)
+#   - id: go-test-all
+#     name: Go All Tests
+#     description: 모든 테스트 실행 (통합 테스트 포함)
+#     entry: bash -c 'go test -race ./...'
+#     language: system
+#     types: [go]
+#     pass_filenames: false
+#     stages: [manual]

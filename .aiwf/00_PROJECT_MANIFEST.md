@@ -59,11 +59,11 @@ aicli-web/
   - 완료된 태스크:
     - TX01_S02_Linting_Setup (COMPLETED - 2025-07-21 01:47 완료)
     - TX02_S02_Test_Framework_Setup (COMPLETED - 2025-07-21 03:19 완료)
+    - TX03_S02_PreCommit_Hooks (COMPLETED - 2025-07-21 03:05 완료)
   - 대기 중인 태스크:
-    - T03_S02_PreCommit_Hooks (OPEN)
     - T04_S02_Docker_Dev_Environment (OPEN)
     - T05_S02_VSCode_Settings (OPEN)
-  - 진행률: 2/5 태스크 완료 (40%)
+  - 진행률: 3/5 태스크 완료 (60%)
 - **S03_M01_CI_Setup** (planned) - CI/CD 파이프라인 및 문서화
   - GitHub Actions, 빌드 자동화, 프로젝트 문서 완성
 
@@ -132,6 +132,7 @@ aicli-web/
 - 2025-07-20 02:30: T07_S01_Project_Documentation 태스크 시작, 진행률 업데이트 (6/7, 86%)
 - 2025-07-20 03:00: T07_S01_Project_Documentation 태스크 완료 (README, API 문서, CONTRIBUTING 가이드 작성)
 - 2025-07-20 03:00: S01_M01_Project_Init 스프린트 완료 (100%), M01 마일스톤 1/3 스프린트 완료
+- 2025-07-21 03:05: TX03_S02_PreCommit_Hooks 태스크 완료 (pre-commit 설정, Makefile 통합, 문서화 완료)
 
 ---
 

@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -133,8 +134,5 @@ func AssertContains(t *testing.T, str, substr string) {
 }
 
 func contains(str, substr string) bool {
-	return len(str) >= len(substr) && 
-		(str == substr || len(substr) == 0 || 
-		(len(str) > 0 && len(substr) > 0 && 
-		bytes.Contains([]byte(str), []byte(substr))))
+	return strings.Contains(str, substr)
 }

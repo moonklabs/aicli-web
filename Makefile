@@ -33,7 +33,7 @@ BLUE=\033[0;34m
 NC=\033[0m # No Color
 
 .PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint lint-fix lint-all lint-report fmt dev help \
-	run-cli run-api install docker docker-push vet deps check security release
+	run-cli run-api install docker docker-push vet deps check security release pre-commit-install pre-commit-update pre-commit-run
 
 # 기본 타겟
 all: build
@@ -226,6 +226,26 @@ release: clean check build-all
 	@printf "${GREEN}✓ Release build completed${NC}\n"
 	@printf "${YELLOW}Release artifacts available in ${DIST_DIR}${NC}\n"
 
+# Pre-commit 관련 타겟
+pre-commit-install:
+	@printf "${BLUE}Installing pre-commit hooks...${NC}\n"
+	@which pre-commit > /dev/null || (printf "${YELLOW}Installing pre-commit...${NC}\n" && pip install pre-commit)
+	pre-commit install
+	pre-commit install --hook-type commit-msg
+	@printf "${GREEN}✓ Pre-commit hooks installed${NC}\n"
+
+pre-commit-update:
+	@printf "${BLUE}Updating pre-commit hooks...${NC}\n"
+	@which pre-commit > /dev/null || (printf "${RED}pre-commit not installed${NC}\n" && exit 1)
+	pre-commit autoupdate
+	@printf "${GREEN}✓ Pre-commit hooks updated${NC}\n"
+
+pre-commit-run:
+	@printf "${BLUE}Running pre-commit on all files...${NC}\n"
+	@which pre-commit > /dev/null || (printf "${RED}pre-commit not installed${NC}\n" && exit 1)
+	pre-commit run --all-files
+	@printf "${GREEN}✓ Pre-commit checks completed${NC}\n"
+
 # 도움말 타겟
 help:
 	@printf "${BLUE}AICode Manager Build System${NC}\n"
@@ -257,6 +277,11 @@ help:
 	@echo "  make run-cli        - Run CLI tool"
 	@echo "  make run-api        - Run API server"
 	@echo "  make deps           - Install and tidy dependencies"
+	@echo ""
+	@printf "${YELLOW}🔗 Pre-commit Commands:${NC}\n"
+	@echo "  make pre-commit-install - Install pre-commit hooks"
+	@echo "  make pre-commit-update  - Update pre-commit hooks"
+	@echo "  make pre-commit-run     - Run pre-commit on all files"
 	@echo ""
 	@printf "${YELLOW}🐳 Docker Commands:${NC}\n"
 	@echo "  make docker         - Build Docker image"
