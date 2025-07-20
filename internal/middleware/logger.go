@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -68,7 +69,7 @@ func RequestLogger() gin.HandlerFunc {
 				log.Printf(`{"level":"error","request_id":"%s","event":"request_error","error":"%s","type":"%s"}`,
 					requestID,
 					err.Error(),
-					err.Type.String(),
+					fmt.Sprint(err.Type),
 				)
 			}
 		}

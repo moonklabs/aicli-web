@@ -3,7 +3,7 @@ sprint_folder_name: S02_M01_Dev_Tools
 sprint_sequence_id: S02
 milestone_id: M01
 title: 개발 도구 설정 - 품질 및 생산성 환경 구축
-status: planned
+status: in_progress
 goal: 코드 품질 도구, 테스트 환경, Docker 개발 환경을 설정하여 팀 개발 생산성 향상
 last_updated: 2025-01-20T09:00:00Z
 ---

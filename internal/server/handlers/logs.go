@@ -26,7 +26,7 @@ type LogsResponse struct {
 // GetWorkspaceLogs는 특정 워크스페이스의 로그를 조회합니다.
 func GetWorkspaceLogs(c *gin.Context) {
 	idParam := c.Param("id")
-	id, err := strconv.Atoi(idParam)
+	_, err := strconv.Atoi(idParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid workspace ID",

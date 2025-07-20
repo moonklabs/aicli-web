@@ -54,8 +54,11 @@ aicli-web/
     - T06_S01_Build_System (COMPLETED - 2025-07-20 02:30 완료)
     - T07_S01_Project_Documentation (COMPLETED - 2025-07-20 03:00 완료)
   - 진행률: 7/7 태스크 완료 (100%)
-- **S02_M01_Dev_Tools** (NEXT) - 개발 도구 및 환경 설정
+- **S02_M01_Dev_Tools** (IN_PROGRESS - 2025-07-21 01:36 시작) - 개발 도구 및 환경 설정
   - 린터, 테스트, pre-commit, Docker 환경, IDE 설정
+  - 완료된 태스크:
+    - TX01_S02_Linting_Setup (COMPLETED - 2025-07-21 01:47 완료)
+  - 진행률: 1/5 태스크 완료 (20%)
 - **S03_M01_CI_Setup** (planned) - CI/CD 파이프라인 및 문서화
   - GitHub Actions, 빌드 자동화, 프로젝트 문서 완성
 

@@ -49,6 +49,9 @@ func init() {
 	rootCmd.AddCommand(commands.NewTaskCmd())
 	rootCmd.AddCommand(commands.NewLogsCmd())
 	rootCmd.AddCommand(commands.NewConfigCmd())
+	
+	// 자동 완성 명령어 추가
+	addCompletionCmd()
 }
 
 // initConfig는 설정 파일을 읽습니다.

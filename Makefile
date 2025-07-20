@@ -32,7 +32,7 @@ YELLOW=\033[0;33m
 BLUE=\033[0;34m
 NC=\033[0m # No Color
 
-.PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint fmt dev help \
+.PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint lint-fix lint-all lint-report fmt dev help \
 	run-cli run-api install docker docker-push vet deps check security release
 
 # 기본 타겟
@@ -132,6 +132,29 @@ lint:
 	@which golangci-lint > /dev/null || (printf "${RED}golangci-lint not installed${NC}\n" && exit 1)
 	golangci-lint run
 	@printf "${GREEN}✓ Linting completed${NC}\n"
+
+# 자동 수정 가능한 린팅 이슈 수정
+lint-fix:
+	@printf "${BLUE}Fixing linting issues...${NC}\n"
+	@which golangci-lint > /dev/null || (printf "${RED}golangci-lint not installed${NC}\n" && exit 1)
+	golangci-lint run --fix
+	@printf "${GREEN}✓ Linting issues fixed${NC}\n"
+
+# 전체 린팅 (캐시 무시)
+lint-all:
+	@printf "${BLUE}Running full lint check...${NC}\n"
+	@which golangci-lint > /dev/null || (printf "${RED}golangci-lint not installed${NC}\n" && exit 1)
+	golangci-lint run --no-config --enable-all
+	@printf "${GREEN}✓ Full lint check completed${NC}\n"
+
+# 린팅 리포트 생성
+lint-report:
+	@printf "${BLUE}Generating lint report...${NC}\n"
+	@mkdir -p reports
+	@which golangci-lint > /dev/null || (printf "${RED}golangci-lint not installed${NC}\n" && exit 1)
+	golangci-lint run --out-format html > reports/lint-report.html || true
+	golangci-lint run --out-format junit-xml > reports/lint-report.xml || true
+	@printf "${GREEN}✓ Lint report generated in reports/ directory${NC}\n"
 
 fmt:
 	@printf "${BLUE}Formatting code...${NC}\n"

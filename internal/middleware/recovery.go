@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -15,7 +16,7 @@ func Recovery() gin.HandlerFunc {
 }
 
 // RecoveryWithWriter는 지정된 Writer로 패닉 로그를 출력하는 복구 미들웨어입니다.
-func RecoveryWithWriter(writer gin.Writer) gin.HandlerFunc {
+func RecoveryWithWriter(writer io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {

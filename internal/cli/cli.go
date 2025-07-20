@@ -7,12 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Execute는 CLI를 실행합니다.
-func Execute() error {
+// addCompletionCmd는 자동 완성 명령어를 추가합니다.
+func addCompletionCmd() {
 	// 자동 완성 명령어 추가
 	rootCmd.AddCommand(newCompletionCmd())
-	
-	return rootCmd.Execute()
 }
 
 // newCompletionCmd는 셸 자동 완성 스크립트를 생성하는 명령어입니다.
