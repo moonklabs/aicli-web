@@ -178,3 +178,8 @@ func (fm *FileManager) RestoreBackup() error {
 	return os.Rename(backupPath, fm.configPath)
 }
 
+// GetConfigPath 는 설정 파일의 전체 경로를 반환합니다
+func (fm *FileManager) GetConfigPath() string {
+	return fm.configPath
+}
+

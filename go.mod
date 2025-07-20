@@ -1,4 +1,4 @@
-module github.com/drumcap/aicli-web
+module aicli-web
 
 go 1.21
 
