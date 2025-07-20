@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"aicli-web/internal/config"
+	"gopkg.in/yaml.v3"
 )
 
 // NewConfigCmd는 config 관련 명령어를 생성합니다.
@@ -47,6 +49,10 @@ func NewConfigCmd() *cobra.Command {
 	cmd.AddCommand(newConfigGetCmd())
 	cmd.AddCommand(newConfigSetCmd())
 	cmd.AddCommand(newConfigListCmd())
+	cmd.AddCommand(newConfigResetCmd())
+	cmd.AddCommand(newConfigBackupCmd())
+	cmd.AddCommand(newConfigRestoreCmd())
+	cmd.AddCommand(newConfigPathCmd())
 
 	return cmd
 }
@@ -92,8 +98,20 @@ func newConfigGetCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 
-			// Viper에서 설정 값 조회
-			value := viper.Get(key)
+			// 설정 관리자 생성
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			// 설정 로드
+			if err := mgr.Load(); err != nil {
+				return fmt.Errorf("설정 로드 실패: %v", err)
+			}
+
+			// 설정 값 조회
+			cfg := mgr.Get()
+			value := getNestedValue(cfg, key)
 			if value == nil {
 				return fmt.Errorf("설정 키 '%s'를 찾을 수 없습니다", key)
 			}
@@ -183,16 +201,32 @@ func newConfigSetCmd() *cobra.Command {
 				typedValue = value
 			}
 
-			// Viper에 설정 값 저장
-			viper.Set(key, typedValue)
+			// 설정 관리자 생성
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			// 현재 설정 로드
+			if err := mgr.Load(); err != nil {
+				return fmt.Errorf("설정 로드 실패: %v", err)
+			}
+
+			// 설정 값 업데이트
+			cfg := mgr.Get()
+			if err := setNestedValue(cfg, key, typedValue); err != nil {
+				return fmt.Errorf("설정 값 업데이트 실패: %v", err)
+			}
+
+			// 설정 적용
+			if err := mgr.Set(cfg); err != nil {
+				return fmt.Errorf("설정 검증 실패: %v", err)
+			}
 
 			// 설정 파일에 저장
 			if global {
-				if err := viper.WriteConfig(); err != nil {
-					// 설정 파일이 없으면 생성
-					if err := viper.SafeWriteConfig(); err != nil {
-						return fmt.Errorf("설정 파일 저장 실패: %v", err)
-					}
+				if err := mgr.Save(); err != nil {
+					return fmt.Errorf("설정 파일 저장 실패: %v", err)
 				}
 				fmt.Printf("전역 설정 '%s'가 '%v'로 저장되었습니다.\n", key, typedValue)
 			} else {
@@ -229,23 +263,30 @@ func newConfigListCmd() *cobra.Command {
   # 특정 그룹만 필터링 (grep 사용)
   aicli config list | grep claude`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// 모든 설정 키 가져오기
-			settings := viper.AllSettings()
-
-			if len(settings) == 0 {
-				fmt.Println("설정이 없습니다.")
-				return nil
+			// 설정 관리자 생성
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
 			}
 
-			// 설정 출력
-			fmt.Println("Current configuration:")
+			// 설정 로드
+			if err := mgr.Load(); err != nil {
+				return fmt.Errorf("설정 로드 실패: %v", err)
+			}
+
+			// 설정을 YAML로 출력
+			cfg := mgr.Get()
+			data, err := yaml.Marshal(cfg)
+			if err != nil {
+				return fmt.Errorf("설정 직렬화 실패: %v", err)
+			}
+
+			fmt.Println("현재 설정:")
 			fmt.Println("----------------------")
-			printSettings(settings, "")
+			fmt.Println(string(data))
 
 			// 설정 파일 경로 표시
-			if configFile := viper.ConfigFileUsed(); configFile != "" {
-				fmt.Printf("\nConfig file: %s\n", configFile)
-			}
+			fmt.Printf("\n설정 파일 경로: %s\n", mgr.GetConfigPath())
 
 			return nil
 		},
@@ -288,4 +329,295 @@ func parseNumber(s string) interface{} {
 	}
 
 	return nil
+}
+
+// getNestedValue는 중첩된 구조체에서 점 표기법으로 값을 가져옵니다
+func getNestedValue(cfg *config.Config, key string) interface{} {
+	parts := strings.Split(key, ".")
+	if len(parts) == 0 {
+		return nil
+	}
+
+	switch parts[0] {
+	case "claude":
+		if len(parts) < 2 {
+			return nil
+		}
+		switch parts[1] {
+		case "api_key":
+			return cfg.Claude.APIKey
+		case "model":
+			return cfg.Claude.Model
+		case "temperature":
+			return cfg.Claude.Temperature
+		case "timeout":
+			return cfg.Claude.Timeout
+		}
+	case "workspace":
+		if len(parts) < 2 {
+			return nil
+		}
+		switch parts[1] {
+		case "default_path":
+			return cfg.Workspace.DefaultPath
+		case "auto_sync":
+			return cfg.Workspace.AutoSync
+		case "max_projects":
+			return cfg.Workspace.MaxProjects
+		}
+	case "output":
+		if len(parts) < 2 {
+			return nil
+		}
+		switch parts[1] {
+		case "format":
+			return cfg.Output.Format
+		case "color_mode":
+			return cfg.Output.ColorMode
+		case "width":
+			return cfg.Output.Width
+		}
+	case "logging":
+		if len(parts) < 2 {
+			return nil
+		}
+		switch parts[1] {
+		case "level":
+			return cfg.Logging.Level
+		case "file_path":
+			return cfg.Logging.FilePath
+		}
+	}
+
+	return nil
+}
+
+// setNestedValue는 중첩된 구조체에 점 표기법으로 값을 설정합니다
+func setNestedValue(cfg *config.Config, key string, value interface{}) error {
+	parts := strings.Split(key, ".")
+	if len(parts) == 0 {
+		return fmt.Errorf("유효하지 않은 키")
+	}
+
+	switch parts[0] {
+	case "claude":
+		if len(parts) < 2 {
+			return fmt.Errorf("claude 하위 키가 필요합니다")
+		}
+		switch parts[1] {
+		case "api_key":
+			if s, ok := value.(string); ok {
+				cfg.Claude.APIKey = s
+			} else {
+				return fmt.Errorf("api_key는 문자열이어야 합니다")
+			}
+		case "model":
+			if s, ok := value.(string); ok {
+				cfg.Claude.Model = s
+			} else {
+				return fmt.Errorf("model은 문자열이어야 합니다")
+			}
+		case "temperature":
+			switch v := value.(type) {
+			case float64:
+				cfg.Claude.Temperature = v
+			case int:
+				cfg.Claude.Temperature = float64(v)
+			default:
+				return fmt.Errorf("temperature는 숫자여야 합니다")
+			}
+		case "timeout":
+			switch v := value.(type) {
+			case int:
+				cfg.Claude.Timeout = v
+			case float64:
+				cfg.Claude.Timeout = int(v)
+			default:
+				return fmt.Errorf("timeout은 정수여야 합니다")
+			}
+		default:
+			return fmt.Errorf("알 수 없는 claude 하위 키: %s", parts[1])
+		}
+	case "workspace":
+		if len(parts) < 2 {
+			return fmt.Errorf("workspace 하위 키가 필요합니다")
+		}
+		switch parts[1] {
+		case "default_path":
+			if s, ok := value.(string); ok {
+				cfg.Workspace.DefaultPath = s
+			} else {
+				return fmt.Errorf("default_path는 문자열이어야 합니다")
+			}
+		case "auto_sync":
+			if b, ok := value.(bool); ok {
+				cfg.Workspace.AutoSync = b
+			} else {
+				return fmt.Errorf("auto_sync는 불린이어야 합니다")
+			}
+		case "max_projects":
+			switch v := value.(type) {
+			case int:
+				cfg.Workspace.MaxProjects = v
+			case float64:
+				cfg.Workspace.MaxProjects = int(v)
+			default:
+				return fmt.Errorf("max_projects는 정수여야 합니다")
+			}
+		default:
+			return fmt.Errorf("알 수 없는 workspace 하위 키: %s", parts[1])
+		}
+	case "output":
+		if len(parts) < 2 {
+			return fmt.Errorf("output 하위 키가 필요합니다")
+		}
+		switch parts[1] {
+		case "format":
+			if s, ok := value.(string); ok {
+				cfg.Output.Format = s
+			} else {
+				return fmt.Errorf("format은 문자열이어야 합니다")
+			}
+		case "color_mode":
+			if s, ok := value.(string); ok {
+				cfg.Output.ColorMode = s
+			} else {
+				return fmt.Errorf("color_mode는 문자열이어야 합니다")
+			}
+		case "width":
+			switch v := value.(type) {
+			case int:
+				cfg.Output.Width = v
+			case float64:
+				cfg.Output.Width = int(v)
+			default:
+				return fmt.Errorf("width는 정수여야 합니다")
+			}
+		default:
+			return fmt.Errorf("알 수 없는 output 하위 키: %s", parts[1])
+		}
+	case "logging":
+		if len(parts) < 2 {
+			return fmt.Errorf("logging 하위 키가 필요합니다")
+		}
+		switch parts[1] {
+		case "level":
+			if s, ok := value.(string); ok {
+				cfg.Logging.Level = s
+			} else {
+				return fmt.Errorf("level은 문자열이어야 합니다")
+			}
+		case "file_path":
+			if s, ok := value.(string); ok {
+				cfg.Logging.FilePath = s
+			} else {
+				return fmt.Errorf("file_path는 문자열이어야 합니다")
+			}
+		default:
+			return fmt.Errorf("알 수 없는 logging 하위 키: %s", parts[1])
+		}
+	default:
+		return fmt.Errorf("알 수 없는 최상위 키: %s", parts[0])
+	}
+
+	return nil
+}
+
+// newConfigResetCmd는 설정을 기본값으로 초기화하는 명령어입니다
+func newConfigResetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "reset",
+		Short: "설정을 기본값으로 초기화",
+		Long:  `모든 설정을 기본값으로 초기화합니다.
+		
+기존 설정은 자동으로 백업되며, 필요시 restore 명령으로 복구할 수 있습니다.`,
+		Example: `  # 설정 초기화
+  aicli config reset`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			if err := mgr.Reset(); err != nil {
+				return fmt.Errorf("설정 초기화 실패: %v", err)
+			}
+
+			fmt.Println("설정이 기본값으로 초기화되었습니다.")
+			fmt.Println("이전 설정은 백업되었습니다. 'aicli config restore'로 복구할 수 있습니다.")
+			return nil
+		},
+	}
+}
+
+// newConfigBackupCmd는 현재 설정을 백업하는 명령어입니다
+func newConfigBackupCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "backup",
+		Short: "현재 설정 백업",
+		Long:  `현재 설정을 백업 파일로 저장합니다.
+		
+백업 파일은 설정 파일과 같은 디렉토리에 .backup 확장자로 저장됩니다.`,
+		Example: `  # 설정 백업
+  aicli config backup`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			if err := mgr.Backup(); err != nil {
+				return fmt.Errorf("백업 생성 실패: %v", err)
+			}
+
+			fmt.Println("설정이 백업되었습니다.")
+			return nil
+		},
+	}
+}
+
+// newConfigRestoreCmd는 백업에서 설정을 복구하는 명령어입니다
+func newConfigRestoreCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "restore",
+		Short: "백업에서 설정 복구",
+		Long:  `백업 파일에서 설정을 복구합니다.
+		
+가장 최근의 백업 파일에서 설정을 복구합니다.`,
+		Example: `  # 백업에서 설정 복구
+  aicli config restore`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			if err := mgr.Restore(); err != nil {
+				return fmt.Errorf("설정 복구 실패: %v", err)
+			}
+
+			fmt.Println("설정이 백업에서 복구되었습니다.")
+			return nil
+		},
+	}
+}
+
+// newConfigPathCmd는 설정 파일 경로를 표시하는 명령어입니다
+func newConfigPathCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "path",
+		Short: "설정 파일 경로 표시",
+		Long:  `설정 파일의 전체 경로를 표시합니다.`,
+		Example: `  # 설정 파일 경로 확인
+  aicli config path`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			mgr, err := config.NewManager()
+			if err != nil {
+				return fmt.Errorf("설정 관리자 초기화 실패: %v", err)
+			}
+
+			fmt.Println(mgr.GetConfigPath())
+			return nil
+		},
+	}
 }
