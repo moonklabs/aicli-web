@@ -27,7 +27,16 @@ last_updated: 2025-01-20T09:00:00Z
 - Docker 컨테이너에서 개발 환경 실행 가능
 - VS Code에서 Go 개발 환경 자동 설정
 
+## Sprint Tasks
+- **TX01_S02_Linting_Setup** (COMPLETED - 2025-07-21 01:47 완료) - Go 린팅 시스템 설정
+- **TX02_S02_Test_Framework_Setup** (COMPLETED - 2025-07-21 03:19 완료) - Go 테스트 프레임워크 및 테스트 스위트 구성
+- **T03_S02_PreCommit_Hooks** (OPEN) - Pre-commit Hooks 설정 및 자동화
+- **T04_S02_Docker_Dev_Environment** (OPEN) - Docker 기반 개발 환경 구성
+- **T05_S02_VSCode_Settings** (OPEN) - VS Code 개발 환경 설정 확장 및 최적화
+
 ## Notes / Retrospective Points
 - golangci-lint는 Go 커뮤니티 표준 린터 사용
 - 테스트 커버리지 목표: 70% 이상
 - Docker 개발 환경은 hot-reload 지원
+- 개발 도구 설정은 팀 생산성 향상에 직접적 영향
+- pre-commit hooks로 코드 품질 자동 검증

@@ -116,9 +116,14 @@ test-integration:
 
 test-coverage:
 	@printf "${BLUE}Generating test coverage report...${NC}\n"
+	@mkdir -p reports
 	${GO} test -v -race -coverprofile=coverage.out ./...
 	${GO} tool cover -html=coverage.out -o coverage.html
 	@printf "${GREEN}✓ Coverage report generated: coverage.html${NC}\n"
+	@printf "${BLUE}Generating XML test report...${NC}\n"
+	@which go-junit-report > /dev/null || (printf "${YELLOW}Installing go-junit-report...${NC}\n" && go install github.com/jstemmer/go-junit-report/v2@latest)
+	${GO} test -v ./... 2>&1 | go-junit-report -set-exit-code > reports/test-report.xml || true
+	@printf "${GREEN}✓ XML test report generated: reports/test-report.xml${NC}\n"
 
 # 벤치마크 테스트
 test-bench:
@@ -178,6 +183,7 @@ clean:
 	@printf "${BLUE}Cleaning build artifacts...${NC}\n"
 	@rm -rf ${BUILD_DIR}
 	@rm -rf ${DIST_DIR}
+	@rm -rf reports
 	@rm -f coverage.out coverage.html
 	@printf "${GREEN}✓ Cleanup completed${NC}\n"
 

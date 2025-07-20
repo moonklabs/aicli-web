@@ -58,7 +58,12 @@ aicli-web/
   - 린터, 테스트, pre-commit, Docker 환경, IDE 설정
   - 완료된 태스크:
     - TX01_S02_Linting_Setup (COMPLETED - 2025-07-21 01:47 완료)
-  - 진행률: 1/5 태스크 완료 (20%)
+    - TX02_S02_Test_Framework_Setup (COMPLETED - 2025-07-21 03:19 완료)
+  - 대기 중인 태스크:
+    - T03_S02_PreCommit_Hooks (OPEN)
+    - T04_S02_Docker_Dev_Environment (OPEN)
+    - T05_S02_VSCode_Settings (OPEN)
+  - 진행률: 2/5 태스크 완료 (40%)
 - **S03_M01_CI_Setup** (planned) - CI/CD 파이프라인 및 문서화
   - GitHub Actions, 빌드 자동화, 프로젝트 문서 완성
 
