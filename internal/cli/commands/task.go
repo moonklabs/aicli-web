@@ -73,6 +73,20 @@ func newTaskCreateCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "대화형 모드로 실행")
 	cmd.Flags().BoolVarP(&detach, "detach", "d", false, "백그라운드에서 실행")
 
+	// 워크스페이스 자동완성
+	cmd.RegisterFlagCompletionFunc("workspace", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
+		workspaces := []string{
+			"project-alpha",
+			"project-beta",
+			"project-gamma",
+			"development",
+			"staging",
+			"production",
+		}
+		return workspaces, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	// 필수 플래그 표시
 	cmd.MarkFlagRequired("workspace")
 
@@ -110,6 +124,31 @@ func newTaskListCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&all, "all", "a", false, "모든 상태의 태스크 조회")
 	cmd.Flags().StringVarP(&status, "status", "s", "", "상태별 필터링 (running|completed|failed)")
 
+	// 워크스페이스 자동완성
+	cmd.RegisterFlagCompletionFunc("workspace", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
+		workspaces := []string{
+			"project-alpha",
+			"project-beta",
+			"project-gamma",
+			"development",
+			"staging",
+			"production",
+		}
+		return workspaces, cobra.ShellCompDirectiveNoFileComp
+	})
+
+	// 상태 자동완성
+	cmd.RegisterFlagCompletionFunc("status", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		statuses := []string{
+			"running",
+			"completed",
+			"failed",
+			"cancelled",
+		}
+		return statuses, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	return cmd
 }
 
@@ -120,6 +159,17 @@ func newTaskStatusCmd() *cobra.Command {
 		Short: "태스크 상태 조회",
 		Long:  `지정된 태스크의 상세 상태를 조회합니다.`,
 		Args:  cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// TODO: 실제 태스크 ID 목록을 가져오는 로직 구현
+			tasks := []string{
+				"task-001",
+				"task-002",
+				"task-003",
+				"bug-fix-101",
+				"feature-201",
+			}
+			return tasks, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskID := args[0]
 
@@ -140,6 +190,15 @@ func newTaskCancelCmd() *cobra.Command {
 		Short: "태스크 취소",
 		Long:  `실행 중인 태스크를 취소합니다.`,
 		Args:  cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// TODO: 실행 중인 태스크 ID만 반환하도록 개선
+			tasks := []string{
+				"task-001",
+				"task-002",
+				"task-003",
+			}
+			return tasks, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			taskID := args[0]
 

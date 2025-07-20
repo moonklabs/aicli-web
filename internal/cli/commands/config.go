@@ -34,6 +34,23 @@ func newConfigGetCmd() *cobra.Command {
 		Short: "설정 값 조회",
 		Long:  `지정된 설정 키의 값을 조회합니다.`,
 		Args:  cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// 설정 가능한 키 목록
+			keys := []string{
+				"api.endpoint",
+				"api.timeout",
+				"api.retry_count",
+				"claude.api_key",
+				"claude.model",
+				"claude.max_tokens",
+				"docker.registry",
+				"docker.network",
+				"workspace.default_dir",
+				"logging.level",
+				"logging.format",
+			}
+			return keys, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 
@@ -58,6 +75,38 @@ func newConfigSetCmd() *cobra.Command {
 		Short: "설정 값 변경",
 		Long:  `지정된 설정 키의 값을 변경합니다.`,
 		Args:  cobra.ExactArgs(2),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) == 0 {
+				// 첫 번째 인자: 설정 키
+				keys := []string{
+					"api.endpoint",
+					"api.timeout",
+					"api.retry_count",
+					"claude.api_key",
+					"claude.model",
+					"claude.max_tokens",
+					"docker.registry",
+					"docker.network",
+					"workspace.default_dir",
+					"logging.level",
+					"logging.format",
+				}
+				return keys, cobra.ShellCompDirectiveNoFileComp
+			} else if len(args) == 1 {
+				// 두 번째 인자: 값 (키에 따라 다름)
+				switch args[0] {
+				case "logging.level":
+					return []string{"debug", "info", "warn", "error"}, cobra.ShellCompDirectiveNoFileComp
+				case "logging.format":
+					return []string{"text", "json"}, cobra.ShellCompDirectiveNoFileComp
+				case "claude.model":
+					return []string{"claude-3-opus", "claude-3-sonnet", "claude-3-haiku"}, cobra.ShellCompDirectiveNoFileComp
+				default:
+					return nil, cobra.ShellCompDirectiveNoFileComp
+				}
+			}
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]

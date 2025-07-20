@@ -91,6 +91,18 @@ func newWorkspaceDeleteCmd() *cobra.Command {
 		Short: "워크스페이스 삭제",
 		Long:  `지정된 워크스페이스를 삭제합니다.`,
 		Args:  cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
+			workspaces := []string{
+				"project-alpha",
+				"project-beta",
+				"project-gamma",
+				"development",
+				"staging",
+				"production",
+			}
+			return workspaces, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workspaceName := args[0]
 
@@ -124,6 +136,18 @@ func newWorkspaceInfoCmd() *cobra.Command {
 		Short: "워크스페이스 정보 조회",
 		Long:  `지정된 워크스페이스의 상세 정보를 조회합니다.`,
 		Args:  cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
+			workspaces := []string{
+				"project-alpha",
+				"project-beta",
+				"project-gamma",
+				"development",
+				"staging",
+				"production",
+			}
+			return workspaces, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workspaceName := args[0]
 

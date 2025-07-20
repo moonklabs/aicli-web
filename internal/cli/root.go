@@ -44,6 +44,17 @@ func init() {
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output"))
 
+	// 출력 형식 자동완성
+	rootCmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		formats := []string{
+			"table",
+			"json",
+			"yaml",
+			"csv",
+		}
+		return formats, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	// 하위 명령 추가
 	rootCmd.AddCommand(commands.NewWorkspaceCmd())
 	rootCmd.AddCommand(commands.NewTaskCmd())
