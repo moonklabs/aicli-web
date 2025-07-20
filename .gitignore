@@ -1,0 +1,88 @@
+# Go 바이너리 및 빌드 산출물
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/build/
+/dist/
+
+# 테스트 바이너리, -c 플래그로 빌드됨
+*.test
+
+# Go 테스트 결과
+*.out
+coverage.html
+coverage.out
+.coverage
+
+# 의존성 디렉토리 (vendor는 사용하지 않지만 혹시 모르니)
+vendor/
+
+# Go 모듈 캐시
+go.sum
+
+# 환경 변수 파일
+.env
+.env.local
+.env.*.local
+
+# IDE 설정 파일
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 로그 파일
+*.log
+logs/
+
+# 임시 파일
+tmp/
+temp/
+*.tmp
+
+# 바이너리 실행 파일
+aicli
+aicli-api
+aicli-web
+
+# Docker 관련
+.dockerignore
+docker-compose.override.yml
+
+# 로컬 설정
+configs/local/
+*.local.*
+
+# Air (hot reload) 임시 파일
+tmp/
+
+# 데이터베이스 파일
+*.db
+*.sqlite
+*.sqlite3
+
+# 프로파일링 데이터
+*.prof
+*.mem
+*.cpu
+
+# 운영체제 파일
+Thumbs.db
+.DS_Store
+
+# 백업 파일
+*.bak
+*.backup
+
+# 민감한 정보
+secrets/
+*.key
+*.pem
+*.crt
+
+# Claude 작업 디렉토리
+.claude/
