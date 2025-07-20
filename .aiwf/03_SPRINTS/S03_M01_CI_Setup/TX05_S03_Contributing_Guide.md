@@ -1,7 +1,7 @@
 ---
 task_id: T05_S03
 sprint_sequence_id: S03
-status: open
+status: completed
 complexity: Low
 last_updated: 2025-07-20T09:15:00Z
 ---
@@ -18,21 +18,21 @@ last_updated: 2025-07-20T09:15:00Z
 - 개발 환경 설정 가이드 제공
 
 ## Acceptance Criteria
-- [ ] CONTRIBUTING.md 파일이 프로젝트 루트에 생성됨
-- [ ] 기여 프로세스가 단계별로 명확히 설명됨
-- [ ] 코드 스타일, 커밋 메시지 규칙이 문서화됨
-- [ ] 개발 환경 설정 방법이 포함됨
-- [ ] 테스트 작성 가이드라인이 제공됨
+- [x] CONTRIBUTING.md 파일이 프로젝트 루트에 생성됨
+- [x] 기여 프로세스가 단계별로 명확히 설명됨
+- [x] 코드 스타일, 커밋 메시지 규칙이 문서화됨
+- [x] 개발 환경 설정 방법이 포함됨
+- [x] 테스트 작성 가이드라인이 제공됨
 
 ## Subtasks
-- [ ] CONTRIBUTING.md 파일 생성 및 구조 설계
-- [ ] 기여 시작하기 섹션 작성
-- [ ] 개발 환경 설정 가이드 작성
-- [ ] 코딩 스타일 가이드라인 정의
-- [ ] 커밋 메시지 컨벤션 문서화
-- [ ] PR 프로세스 및 체크리스트 작성
-- [ ] 이슈 보고 가이드라인 추가
-- [ ] 행동 강령(Code of Conduct) 참조 추가
+- [x] CONTRIBUTING.md 파일 생성 및 구조 설계
+- [x] 기여 시작하기 섹션 작성
+- [x] 개발 환경 설정 가이드 작성
+- [x] 코딩 스타일 가이드라인 정의
+- [x] 커밋 메시지 컨벤션 문서화
+- [x] PR 프로세스 및 체크리스트 작성
+- [x] 이슈 보고 가이드라인 추가
+- [x] 행동 강령(Code of Conduct) 참조 추가
 
 ## 기술 가이드 섹션
 
@@ -83,4 +83,20 @@ last_updated: 2025-07-20T09:15:00Z
 - 해당 없음 (문서 작업)
 
 ## Output Log
-*(This section is populated as work progresses on the task)*
+[2025-07-21 04:02]: 태스크 시작 - CONTRIBUTING.md 작성
+[2025-07-21 04:02]: Git 브랜치 task/T05_S03 생성
+[2025-07-21 04:02]: 태스크 상태를 in_progress로 변경
+[2025-07-21 04:03]: 기존 프로젝트 설정 파일들 분석 완료 (.golangci.yml, .pre-commit-config.yaml, Makefile, go.mod)
+[2025-07-21 04:04]: 프로젝트 README.md 검토하여 기능 및 구조 파악 완료
+[2025-07-21 04:05]: CONTRIBUTING.md 파일 전체 재작성 완료
+  - 상세한 목차 구조로 가독성 향상
+  - 개발 환경 설정부터 PR까지 단계별 가이드 제공
+  - Go 코딩 스타일 가이드 및 명명 규칙 상세 설명
+  - 커밋 메시지 컨벤션 (conventional commit) 문서화
+  - 테스트 작성 가이드라인 (Given-When-Then, 테이블 드리븐 테스트)
+  - PR 템플릿 및 리뷰 프로세스 설명
+  - 이슈 보고 템플릿 (버그 리포트, 기능 요청)
+  - 개발 워크플로우 및 Docker 환경 가이드
+  - 행동 강령 및 커뮤니티 가이드라인 포함
+  - 성능/보안 고려사항 및 릴리스 프로세스 설명
+[2025-07-21 04:05]: 모든 Acceptance Criteria 및 Subtasks 완료
