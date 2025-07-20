@@ -1,0 +1,377 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 시맨틱 버저닝 태그 (v1.0.0, v2.1.3 등)
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  # 릴리스 전 검증
+  pre-release-checks:
+    name: Pre-release Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 전체 테스트 실행
+        run: |
+          echo "🧪 릴리스 전 전체 테스트 실행..."
+          go test -v -race ./...
+
+      - name: 린트 검사
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.50.1
+          args: --timeout=5m
+
+      - name: 보안 스캔
+        uses: securecodewarrior/gosec-action@v1.0.0
+        with:
+          args: '-no-fail -fmt json -out gosec-results.json ./...'
+
+      - name: 버전 태그 검증
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "🏷️ 릴리스 태그: $TAG"
+          
+          # 시맨틱 버저닝 형식 검증
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "❌ 올바르지 않은 버전 태그 형식: $TAG"
+            echo "✅ 올바른 형식: v1.0.0, v2.1.3-beta.1, v3.0.0-rc.2+build.123"
+            exit 1
+          fi
+          
+          echo "✅ 버전 태그 검증 통과"
+
+  # 멀티 플랫폼 빌드
+  build-release:
+    name: Build Release Binaries
+    runs-on: ubuntu-latest
+    needs: pre-release-checks
+    strategy:
+      matrix:
+        include:
+          # Linux builds
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          # macOS builds
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          # Windows builds
+          - goos: windows
+            goarch: amd64
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 빌드 정보 설정
+        id: build-info
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}  # v 제거
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "build_time=$(date -u '+%Y-%m-%d_%H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: 릴리스 바이너리 빌드
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION=${{ steps.build-info.outputs.version }}
+          TAG=${{ steps.build-info.outputs.tag }}
+          
+          # 출력 디렉토리 생성
+          mkdir -p dist
+          
+          # 바이너리 이름 설정
+          CLI_NAME="aicli-${TAG}-${GOOS}-${GOARCH}"
+          API_NAME="aicli-api-${TAG}-${GOOS}-${GOARCH}"
+          
+          if [ "$GOOS" = "windows" ]; then
+            CLI_NAME="${CLI_NAME}.exe"
+            API_NAME="${API_NAME}.exe"
+          fi
+          
+          # CLI 빌드
+          echo "📦 Building $CLI_NAME..."
+          go build -v -trimpath \
+            -ldflags "-s -w -extldflags '-static' \
+              -X github.com/drumcap/aicli-web/pkg/version.Version=$VERSION \
+              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=main" \
+            -o "dist/$CLI_NAME" \
+            ./cmd/aicli
+          
+          # API 서버 빌드
+          echo "📦 Building $API_NAME..."
+          go build -v -trimpath \
+            -ldflags "-s -w -extldflags '-static' \
+              -X github.com/drumcap/aicli-web/pkg/version.Version=$VERSION \
+              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=main" \
+            -o "dist/$API_NAME" \
+            ./cmd/api
+          
+          # 바이너리 크기 확인
+          echo "📏 Binary sizes:"
+          ls -lh dist/
+
+      - name: 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          retention-days: 1
+
+  # 체크섬 생성 및 릴리스 생성
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    permissions:
+      contents: write
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 모든 아티팩트 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: release-binaries-*
+          merge-multiple: true
+
+      - name: 체크섬 생성
+        run: |
+          cd dist
+          
+          # SHA256 체크섬 생성
+          echo "🔐 Generating SHA256 checksums..."
+          sha256sum * > checksums.txt
+          
+          # 체크섬 파일 내용 확인
+          echo "📋 Checksums:"
+          cat checksums.txt
+          
+          # 각 파일별 개별 체크섬 파일도 생성
+          for file in $(ls | grep -v checksums.txt); do
+            sha256sum "$file" > "$file.sha256"
+          done
+
+      - name: 릴리스 노트 생성
+        id: release-notes
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          
+          # 이전 태그 찾기
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $TAG^ 2>/dev/null || echo "")
+          
+          # 릴리스 노트 헤더
+          cat > release-notes.md << EOF
+          # AICode Manager $TAG 릴리스
+          
+          📅 릴리스 날짜: $(date -u '+%Y년 %m월 %d일')
+          
+          ## 🚀 주요 변경사항
+          
+          EOF
+          
+          # 커밋 로그 기반 변경사항 추가
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "### 📝 변경 내역 ($PREVIOUS_TAG → $TAG)" >> release-notes.md
+            echo "" >> release-notes.md
+            
+            # 커밋 메시지 분류
+            git log $PREVIOUS_TAG..$TAG --pretty=format:"- %s" | while read -r line; do
+              if [[ "$line" =~ ^-\ feat:* ]]; then
+                echo "✨ $line" >> release-notes.md
+              elif [[ "$line" =~ ^-\ fix:* ]]; then
+                echo "🐛 $line" >> release-notes.md
+              elif [[ "$line" =~ ^-\ docs:* ]]; then
+                echo "📚 $line" >> release-notes.md
+              elif [[ "$line" =~ ^-\ chore:* ]]; then
+                echo "🔧 $line" >> release-notes.md
+              elif [[ "$line" =~ ^-\ refactor:* ]]; then
+                echo "♻️ $line" >> release-notes.md
+              else
+                echo "$line" >> release-notes.md
+              fi
+            done
+          else
+            echo "🎉 첫 번째 릴리스입니다!" >> release-notes.md
+          fi
+          
+          # 설치 가이드 추가
+          cat >> release-notes.md << EOF
+          
+          ## 📥 설치 방법
+          
+          ### macOS (Intel)
+          \`\`\`bash
+          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-amd64 -o aicli
+          chmod +x aicli
+          sudo mv aicli /usr/local/bin/
+          \`\`\`
+          
+          ### macOS (Apple Silicon)
+          \`\`\`bash
+          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-arm64 -o aicli
+          chmod +x aicli
+          sudo mv aicli /usr/local/bin/
+          \`\`\`
+          
+          ### Linux (x64)
+          \`\`\`bash
+          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-linux-amd64 -o aicli
+          chmod +x aicli
+          sudo mv aicli /usr/local/bin/
+          \`\`\`
+          
+          ### Windows
+          PowerShell에서 실행:
+          \`\`\`powershell
+          Invoke-WebRequest -Uri "https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-windows-amd64.exe" -OutFile "aicli.exe"
+          \`\`\`
+          
+          ## 🔍 체크섬 검증
+          
+          다운로드한 파일의 무결성을 확인하려면:
+          \`\`\`bash
+          # macOS/Linux
+          sha256sum -c checksums.txt
+          
+          # 또는 개별 파일 검증
+          sha256sum aicli-$TAG-darwin-amd64
+          \`\`\`
+          
+          ## 🔖 버전 확인
+          
+          설치 후 버전을 확인하려면:
+          \`\`\`bash
+          aicli version
+          \`\`\`
+          
+          ## 📋 지원 플랫폼
+          
+          | OS | Architecture | CLI Binary | API Binary |
+          |---|---|---|---|
+          | Linux | x64 | ✅ | ✅ |
+          | Linux | ARM64 | ✅ | ✅ |
+          | macOS | x64 (Intel) | ✅ | ✅ |
+          | macOS | ARM64 (Apple Silicon) | ✅ | ✅ |
+          | Windows | x64 | ✅ | ✅ |
+          | Windows | ARM64 | ✅ | ✅ |
+          
+          ---
+          
+          **Full Changelog**: https://github.com/drumcap/aicli-web/compare/$PREVIOUS_TAG...$TAG
+          EOF
+          
+          # 릴리스 노트를 출력으로 저장
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          cat release-notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: GitHub 릴리스 생성
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.release-notes.outputs.notes }}
+          files: |
+            dist/*
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}  # v1.0.0-beta 같은 경우 pre-release
+          generate_release_notes: false  # 자동 생성 비활성화 (수동으로 생성)
+          fail_on_unmatched_files: true
+
+      - name: 릴리스 생성 알림
+        if: success()
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "✅ 릴리스 $TAG가 성공적으로 생성되었습니다!"
+          echo "🔗 릴리스 페이지: https://github.com/drumcap/aicli-web/releases/tag/$TAG"
+
+      - name: 실패 시 정리
+        if: failure()
+        run: |
+          echo "❌ 릴리스 생성 중 오류가 발생했습니다."
+          echo "🔍 로그를 확인하고 문제를 해결한 후 다시 시도하세요."
+
+  # Docker 이미지 릴리스 (선택사항)
+  docker-release:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: success()
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Docker 메타데이터 설정
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            drumcap/aicli-web
+          tags: |
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker 이미지 빌드 및 푸시
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deployments/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
