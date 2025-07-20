@@ -1,0 +1,220 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+env:
+  GO_VERSION: '1.21'
+  GOLANGCI_LINT_VERSION: 'v1.50.1'
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: golangci-lint 실행
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 의존성 다운로드
+        run: |
+          go mod download
+          go mod verify
+
+      - name: 단위 테스트 실행
+        run: |
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./pkg/...
+
+      - name: 통합 테스트 실행
+        run: |
+          go test -v -race -tags=integration ./test/... || true
+
+      - name: 코드 커버리지 업로드
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  build:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+        exclude:
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 빌드 정보 설정
+        id: build-info
+        run: |
+          echo "version=$(git describe --tags --always --dirty)" >> $GITHUB_OUTPUT
+          echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "branch=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_OUTPUT
+          echo "build_time=$(date -u '+%Y-%m-%d_%H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: 바이너리 빌드
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          # CLI 도구 빌드
+          go build -v -trimpath \
+            -ldflags "-s -w \
+              -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
+              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
+            -o dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }} \
+            ./cmd/aicli
+
+          # API 서버 빌드
+          go build -v -trimpath \
+            -ldflags "-s -w \
+              -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
+              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
+            -o dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }} \
+            ./cmd/api
+
+      - name: 빌드 아티팩트 업로드
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          retention-days: 7
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: gosec 보안 스캔
+        uses: securecodewarrior/gosec-action@v1.0.0
+        with:
+          args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
+
+      - name: 보안 스캔 결과 업로드
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: gosec-results.sarif
+
+  check-pr:
+    name: PR Status Check
+    runs-on: ubuntu-latest
+    needs: [lint, test, build, security-scan]
+    if: always()
+    steps:
+      - name: PR 상태 체크
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.security-scan.result }}" != "success" ]; then
+            echo "❌ CI 파이프라인 실패"
+            echo "Lint: ${{ needs.lint.result }}"
+            echo "Test: ${{ needs.test.result }}"
+            echo "Build: ${{ needs.build.result }}"
+            echo "Security: ${{ needs.security-scan.result }}"
+            exit 1
+          else
+            echo "✅ CI 파이프라인 성공"
+          fi
+
+  performance-check:
+    name: Performance Check
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Go 환경 설정
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: 벤치마크 테스트 실행
+        run: |
+          go test -bench=. -benchmem -count=3 -run=^$ ./... | tee benchmark.txt
+
+      - name: 벤치마크 결과 저장
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark.txt
+          retention-days: 30

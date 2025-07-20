@@ -64,8 +64,16 @@ aicli-web/
   - 대기 중인 태스크:
     - T05_S02_VSCode_Settings (OPEN)
   - 진행률: 4/5 태스크 완료 (80%)
-- **S03_M01_CI_Setup** (planned) - CI/CD 파이프라인 및 문서화
+- **S03_M01_CI_Setup** (IN_PROGRESS - 2025-07-20T18:22:06Z 시작) - CI/CD 파이프라인 및 문서화
   - GitHub Actions, 빌드 자동화, 프로젝트 문서 완성
+  - 완료된 태스크:
+    - TX01_S03_GitHub_Actions_CI_Pipeline (COMPLETED - 2025-07-20T18:27:29Z 완료) - CI 파이프라인 구축
+    - T02_S03_Multi_Platform_Build (OPEN) - 멀티 플랫폼 빌드
+    - T03_S03_Release_Automation (OPEN) - 릴리스 자동화
+    - T04_S03_README_Documentation (OPEN) - README 문서화
+    - T05_S03_Contributing_Guide (OPEN) - 기여 가이드 작성
+    - T06_S03_Development_Guide (OPEN) - 개발 가이드 작성
+  - 진행률: 1/6 태스크 완료 (17%)
 
 ### 예정된 마일스톤
 1. **M02: 코어 구조 구현** (2주)
@@ -116,6 +124,8 @@ aicli-web/
 4. 개발 환경 설정
 
 ## 업데이트 로그
+- 2025-07-20 18:27: TX01_S03_GitHub_Actions_CI_Pipeline 태스크 완료 (GitHub Actions CI 파이프라인 구축, 보안 스캔 포함)
+- 2025-07-20 18:22: T01_S03_GitHub_Actions_CI_Pipeline 태스크 시작, S03 스프린트 진행 중
 - 2025-01-20 14:45: T01_S01_Go_Project_Init 태스크 시작, 마일스톤 상태 업데이트
 - 2025-01-20 15:30: T01_S01_Go_Project_Init 태스크 완료 (Go 프로젝트 초기화, 디렉토리 구조, Makefile 생성)
 - 2025-01-20 15:30: T02_S01_CLI_Tool_Base 태스크 시작, 진행률 업데이트 (1/7, 14%)
