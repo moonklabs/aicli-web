@@ -19,7 +19,7 @@ PLATFORMS=linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 window
 DIST_DIR=./dist
 
 # 빌드 플래그 (최적화 포함)
-LDFLAGS=-ldflags "-s -w \
+LDFLAGS=-ldflags "-s -w -extldflags '-static' \
 	-X github.com/drumcap/aicli-web/pkg/version.Version=${VERSION} \
 	-X github.com/drumcap/aicli-web/pkg/version.BuildTime=${BUILD_TIME} \
 	-X github.com/drumcap/aicli-web/pkg/version.GitCommit=${GIT_COMMIT} \
@@ -70,8 +70,8 @@ build-all:
 			API_OUTPUT=$$API_OUTPUT.exe; \
 		fi; \
 		\
-		GOOS=$$OS GOARCH=$$ARCH ${GO} build ${LDFLAGS} -trimpath -o $$CLI_OUTPUT ./cmd/aicli; \
-		GOOS=$$OS GOARCH=$$ARCH ${GO} build ${LDFLAGS} -trimpath -o $$API_OUTPUT ./cmd/api; \
+		CGO_ENABLED=0 GOOS=$$OS GOARCH=$$ARCH ${GO} build ${LDFLAGS} -trimpath -o $$CLI_OUTPUT ./cmd/aicli; \
+		CGO_ENABLED=0 GOOS=$$OS GOARCH=$$ARCH ${GO} build ${LDFLAGS} -trimpath -o $$API_OUTPUT ./cmd/api; \
 		\
 		if [ $$? -eq 0 ]; then \
 			printf "${GREEN}✓ Built $$OS/$$ARCH${NC}\n"; \

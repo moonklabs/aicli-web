@@ -84,16 +84,30 @@ jobs:
           fail_ci_if_error: false
 
   build:
-    name: Build Binary
-    runs-on: ubuntu-latest
+    name: Build Binary (${{ matrix.goos }}-${{ matrix.goarch }})
+    runs-on: ${{ matrix.os }}
     needs: test
     strategy:
       matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
+        include:
+          # Linux builds
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
             goarch: arm64
+          # macOS builds
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          # Windows builds
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -117,10 +131,15 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
         run: |
+          # 빌드 디렉토리 생성
+          mkdir -p dist
+          
           # CLI 도구 빌드
+          echo "Building aicli for ${{ matrix.goos }}-${{ matrix.goarch }}..."
           go build -v -trimpath \
-            -ldflags "-s -w \
+            -ldflags "-s -w -extldflags '-static' \
               -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
               -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
               -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
@@ -129,8 +148,9 @@ jobs:
             ./cmd/aicli
 
           # API 서버 빌드
+          echo "Building aicli-api for ${{ matrix.goos }}-${{ matrix.goarch }}..."
           go build -v -trimpath \
-            -ldflags "-s -w \
+            -ldflags "-s -w -extldflags '-static' \
               -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
               -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
               -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
@@ -138,12 +158,134 @@ jobs:
             -o dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }} \
             ./cmd/api
 
+      - name: 바이너리 최적화
+        if: matrix.goos != 'windows'
+        run: |
+          # Linux/macOS에서만 strip 실행
+          if [ "${{ matrix.goos }}" = "linux" ]; then
+            strip dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}
+            strip dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}
+          elif [ "${{ matrix.goos }}" = "darwin" ]; then
+            # macOS에서는 크로스 컴파일 시 strip이 어려울 수 있음
+            if [ "${{ matrix.goarch }}" = "$(uname -m | sed 's/x86_64/amd64/')" ]; then
+              strip dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }} || true
+              strip dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }} || true
+            fi
+          fi
+          
+          # 파일 크기 확인
+          echo "Optimized binary sizes:"
+          ls -lh dist/
+
+      - name: UPX 압축 (선택적)
+        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
+        run: |
+          # UPX 설치
+          wget -q https://github.com/upx/upx/releases/download/v4.2.2/upx-4.2.2-amd64_linux.tar.xz
+          tar -xf upx-4.2.2-amd64_linux.tar.xz
+          ./upx-4.2.2-amd64_linux/upx --version
+          
+          # 바이너리 압축 (백업 생성)
+          cp dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }} dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}.uncompressed
+          cp dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }} dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}.uncompressed
+          
+          # UPX 압축 적용
+          ./upx-4.2.2-amd64_linux/upx --best --lzma dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }} || true
+          ./upx-4.2.2-amd64_linux/upx --best --lzma dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }} || true
+          
+          # 압축 후 크기 비교
+          echo "Compression results:"
+          ls -lh dist/
+          
+          # 정리
+          rm -rf upx-* dist/*.uncompressed
+
+      - name: 빌드 검증
+        run: |
+          echo "Verifying built binaries..."
+          
+          # 현재 플랫폼에서 실행 가능한 바이너리만 테스트
+          current_os="${{ runner.os }}"
+          current_arch="$(uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')"
+          
+          if [[ "$current_os" == "Linux" && "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "$current_arch" ]] || \
+             [[ "$current_os" == "macOS" && "${{ matrix.goos }}" == "darwin" && "${{ matrix.goarch }}" == "$current_arch" ]] || \
+             [[ "$current_os" == "Windows" && "${{ matrix.goos }}" == "windows" && "${{ matrix.goarch }}" == "amd64" ]]; then
+            
+            echo "Testing on native platform..."
+            
+            # CLI 바이너리 테스트
+            if [[ "${{ matrix.goos }}" == "windows" ]]; then
+              ./dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}.exe version
+              ./dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}.exe --version
+            else
+              chmod +x ./dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}
+              chmod +x ./dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}
+              ./dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }} version
+              ./dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }} --version
+            fi
+          else
+            echo "Cross-compiled binary - skipping execution test"
+            # 최소한 파일이 존재하고 실행 가능한지 확인
+            if [[ "${{ matrix.goos }}" == "windows" ]]; then
+              test -f ./dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+              test -f ./dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+            else
+              test -f ./dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}
+              test -f ./dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}
+            fi
+          fi
+
       - name: 빌드 아티팩트 업로드
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
           retention-days: 7
+          if-no-files-found: error
+
+  collect-artifacts:
+    name: Collect All Artifacts
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 모든 아티팩트 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: binaries-*
+          merge-multiple: true
+
+      - name: 아티팩트 목록 생성
+        run: |
+          cd artifacts
+          echo "# Build Artifacts" > artifacts-list.md
+          echo "" >> artifacts-list.md
+          echo "| Platform | Architecture | CLI Binary | API Binary | Size |" >> artifacts-list.md
+          echo "|----------|--------------|------------|------------|------|" >> artifacts-list.md
+          
+          for file in aicli-*; do
+            if [[ ! $file =~ "api" ]]; then
+              platform=$(echo $file | cut -d'-' -f2)
+              arch=$(echo $file | cut -d'-' -f3 | sed 's/\.exe$//')
+              cli_size=$(ls -lh $file | awk '{print $5}')
+              api_file="aicli-api-${platform}-${arch}"
+              [[ $platform == "windows" ]] && api_file="${api_file}.exe"
+              api_size=$(ls -lh $api_file 2>/dev/null | awk '{print $5}' || echo "N/A")
+              echo "| $platform | $arch | $file | $api_file | CLI: $cli_size / API: $api_size |" >> artifacts-list.md
+            fi
+          done
+          
+          cat artifacts-list.md
+
+      - name: 통합 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-binaries
+          path: |
+            artifacts/*
+            artifacts/artifacts-list.md
+          retention-days: 30
 
   security-scan:
     name: Security Scan
@@ -173,24 +315,57 @@ jobs:
   check-pr:
     name: PR Status Check
     runs-on: ubuntu-latest
-    needs: [lint, test, build, security-scan]
+    needs: [lint, test, build, security-scan, collect-artifacts]
     if: always()
     steps:
       - name: PR 상태 체크
         run: |
+          echo "# 🔍 CI Pipeline Summary"
+          echo ""
+          echo "## 📊 Pipeline Status"
+          echo "| Stage | Status |"
+          echo "|-------|--------|"
+          echo "| Lint | ${{ needs.lint.result }} |"
+          echo "| Test | ${{ needs.test.result }} |"
+          echo "| Build | ${{ needs.build.result }} |"
+          echo "| Security | ${{ needs.security-scan.result }} |"
+          echo "| Artifacts | ${{ needs.collect-artifacts.result }} |"
+          echo ""
+          
           if [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.test.result }}" != "success" ] || \
              [ "${{ needs.build.result }}" != "success" ] || \
              [ "${{ needs.security-scan.result }}" != "success" ]; then
-            echo "❌ CI 파이프라인 실패"
-            echo "Lint: ${{ needs.lint.result }}"
-            echo "Test: ${{ needs.test.result }}"
-            echo "Build: ${{ needs.build.result }}"
-            echo "Security: ${{ needs.security-scan.result }}"
+            echo "## ❌ CI 파이프라인 실패"
+            echo ""
+            echo "다음 단계에서 문제가 발생했습니다:"
+            [ "${{ needs.lint.result }}" != "success" ] && echo "- Lint: ${{ needs.lint.result }}"
+            [ "${{ needs.test.result }}" != "success" ] && echo "- Test: ${{ needs.test.result }}"
+            [ "${{ needs.build.result }}" != "success" ] && echo "- Build: ${{ needs.build.result }}"
+            [ "${{ needs.security-scan.result }}" != "success" ] && echo "- Security: ${{ needs.security-scan.result }}"
             exit 1
           else
-            echo "✅ CI 파이프라인 성공"
+            echo "## ✅ CI 파이프라인 성공"
+            echo ""
+            echo "모든 검증을 통과했습니다!"
+            echo ""
+            echo "### 🎯 다음 단계"
+            echo "- 코드 리뷰 요청"
+            echo "- 머지 준비 완료"
           fi
+
+      - name: 빌드 시간 분석
+        if: success()
+        run: |
+          echo ""
+          echo "## ⏱️ Build Performance"
+          echo ""
+          echo "멀티 플랫폼 빌드가 병렬로 실행되어 전체 빌드 시간이 최적화되었습니다."
+          echo ""
+          echo "### 지원 플랫폼:"
+          echo "- Linux (amd64, arm64)"
+          echo "- macOS (amd64, arm64)"
+          echo "- Windows (amd64)"
 
   performance-check:
     name: Performance Check
