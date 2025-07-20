@@ -59,6 +59,7 @@ configs/local/
 
 # Air (hot reload) 임시 파일
 tmp/
+air_tmp/
 
 # 데이터베이스 파일
 *.db

@@ -212,6 +212,55 @@ docker-push:
 	docker push drumcap/aicli-web:${VERSION}
 	@printf "${GREEN}✓ Docker image pushed${NC}\n"
 
+# Docker 개발 환경 타겟
+.PHONY: docker-dev docker-dev-build docker-dev-cli docker-dev-api docker-dev-test docker-dev-lint docker-dev-down docker-dev-logs
+
+docker-dev-build:
+	@printf "${BLUE}Building Docker development images...${NC}\n"
+	docker-compose build
+	@printf "${GREEN}✓ Development images built${NC}\n"
+
+docker-dev: docker-dev-build
+	@printf "${BLUE}Starting Docker development environment...${NC}\n"
+	docker-compose up -d
+	@printf "${GREEN}✓ Development environment started${NC}\n"
+	@printf "${YELLOW}Tip: Use 'make docker-dev-logs' to view logs${NC}\n"
+
+docker-dev-cli:
+	@printf "${BLUE}Starting CLI development container...${NC}\n"
+	docker-compose run --rm aicli-dev
+	@printf "${GREEN}✓ CLI development session ended${NC}\n"
+
+docker-dev-api:
+	@printf "${BLUE}Starting API development server...${NC}\n"
+	docker-compose up api-dev
+	@printf "${GREEN}✓ API server stopped${NC}\n"
+
+docker-dev-test:
+	@printf "${BLUE}Running tests in Docker...${NC}\n"
+	docker-compose run --rm test
+	@printf "${GREEN}✓ Tests completed${NC}\n"
+
+docker-dev-lint:
+	@printf "${BLUE}Running linters in Docker...${NC}\n"
+	docker-compose run --rm lint
+	@printf "${GREEN}✓ Linting completed${NC}\n"
+
+docker-dev-down:
+	@printf "${BLUE}Stopping Docker development environment...${NC}\n"
+	docker-compose down
+	@printf "${GREEN}✓ Development environment stopped${NC}\n"
+
+docker-dev-logs:
+	@printf "${BLUE}Showing Docker development logs...${NC}\n"
+	docker-compose logs -f
+
+# Docker 디버그 환경
+docker-dev-debug:
+	@printf "${BLUE}Starting API server in debug mode...${NC}\n"
+	docker-compose run --rm -p 2345:2345 api-dev air -c .air.debug.toml
+	@printf "${GREEN}✓ Debug session ended${NC}\n"
+
 # 실행 타겟
 run-cli:
 	@printf "${BLUE}Running CLI tool...${NC}\n"
@@ -286,6 +335,14 @@ help:
 	@printf "${YELLOW}🐳 Docker Commands:${NC}\n"
 	@echo "  make docker         - Build Docker image"
 	@echo "  make docker-push    - Push Docker image to registry"
+	@echo "  make docker-dev     - Start development environment"
+	@echo "  make docker-dev-cli - Run CLI in development container"
+	@echo "  make docker-dev-api - Run API server with hot reload"
+	@echo "  make docker-dev-test - Run tests in Docker"
+	@echo "  make docker-dev-lint - Run linters in Docker"
+	@echo "  make docker-dev-debug - Start API in debug mode"
+	@echo "  make docker-dev-logs - View development logs"
+	@echo "  make docker-dev-down - Stop development environment"
 	@echo ""
 	@printf "${YELLOW}🗑️  Cleanup Commands:${NC}\n"
 	@echo "  make clean          - Clean build artifacts"

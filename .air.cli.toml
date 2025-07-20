@@ -1,0 +1,72 @@
+# Air 설정 파일 - CLI 도구용
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "tmp"
+
+[build]
+  # 빌드 명령어
+  cmd = "go build -o ./tmp/aicli ./cmd/aicli"
+  # 실행할 바이너리
+  bin = "./tmp/aicli"
+  # 실행 시 전달할 인자
+  args_bin = ["--help"]
+  # 파일 감시 설정
+  delay = 1000
+  # 제외할 디렉토리
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", ".git", "bin", "docs", ".aiwf"]
+  # 제외할 파일
+  exclude_file = []
+  # 정규식으로 제외
+  exclude_regex = ["_test.go", ".*\\.md"]
+  # 변경 시에만 제외
+  exclude_unchanged = false
+  # 심볼릭 링크 따라가기
+  follow_symlink = false
+  # 전체 경로 사용
+  full_bin = ""
+  # 감시할 디렉토리
+  include_dir = ["cmd/aicli", "internal", "pkg"]
+  # 감시할 확장자
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  # 포함할 파일
+  include_file = []
+  # 종료 시 자식 프로세스 종료
+  kill_delay = "0s"
+  # 로그 출력
+  log = "build-errors.log"
+  # 빌드 후 실행할 명령어
+  post_cmd = []
+  # 빌드 전 실행할 명령어
+  pre_cmd = []
+  # 재실행
+  rerun = false
+  # 재실행 지연
+  rerun_delay = 500
+  # 실행 시 디렉토리 변경
+  send_interrupt = false
+  # 중지 시그널
+  stop_on_error = false
+
+[color]
+  # 색상 출력 활성화
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  # 메인 로그만 표시
+  main_only = false
+  # 시간 표시
+  time = false
+
+[misc]
+  # 종료 시 tmp 디렉토리 정리
+  clean_on_exit = true
+
+[screen]
+  # 화면 지우기
+  clear_on_rebuild = true
+  # 시작 시 화면 유지
+  keep_scroll = true

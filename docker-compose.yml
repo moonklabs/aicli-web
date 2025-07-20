@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # CLI 개발 환경
+  aicli-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aicli-dev
+    volumes:
+      # 소스 코드 마운트
+      - .:/workspace:cached
+      # Go 모듈 캐시 (성능 최적화)
+      - go-mod-cache:/go/pkg/mod
+      # 빌드 캐시
+      - go-build-cache:/root/.cache/go-build
+    working_dir: /workspace
+    command: air -c .air.cli.toml
+    environment:
+      - GO_ENV=development
+      - CGO_ENABLED=1
+      - LOG_LEVEL=debug
+    networks:
+      - aicli-network
+    # CLI는 대화형 모드로 실행
+    stdin_open: true
+    tty: true
+
+  # API 서버 개발 환경
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: api-dev
+    volumes:
+      # 소스 코드 마운트
+      - .:/workspace:cached
+      # Go 모듈 캐시 (성능 최적화)
+      - go-mod-cache:/go/pkg/mod
+      # 빌드 캐시
+      - go-build-cache:/root/.cache/go-build
+    working_dir: /workspace
+    command: air -c .air.api.toml
+    ports:
+      # API 서버 포트
+      - "8080:8080"
+      # Delve 디버거 포트
+      - "2345:2345"
+      # pprof 프로파일러 포트
+      - "6060:6060"
+    environment:
+      - GO_ENV=development
+      - API_PORT=8080
+      - DEBUG_PORT=2345
+      - CGO_ENABLED=1
+      - LOG_LEVEL=debug
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+    env_file:
+      - .env
+    networks:
+      - aicli-network
+    depends_on:
+      - workspace-prep
+
+  # 워크스페이스 준비 서비스 (초기화용)
+  workspace-prep:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: workspace-prep
+    volumes:
+      - .:/workspace:cached
+      - go-mod-cache:/go/pkg/mod
+    working_dir: /workspace
+    command: |
+      bash -c "
+        echo '🚀 워크스페이스 초기화 중...'
+        if [ ! -f go.mod ]; then
+          echo 'go.mod 파일이 없습니다. 프로젝트를 먼저 초기화하세요.'
+          exit 1
+        fi
+        echo '📦 의존성 다운로드 중...'
+        go mod download
+        echo '✅ 워크스페이스 준비 완료!'
+      "
+    networks:
+      - aicli-network
+
+  # 테스트 실행 환경
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aicli-test
+    volumes:
+      - .:/workspace:cached
+      - go-mod-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    working_dir: /workspace
+    command: make test
+    environment:
+      - GO_ENV=test
+      - CGO_ENABLED=1
+    networks:
+      - aicli-network
+    profiles:
+      - test
+
+  # 린팅 환경
+  lint:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: aicli-lint
+    volumes:
+      - .:/workspace:cached
+      - go-mod-cache:/go/pkg/mod
+    working_dir: /workspace
+    command: make lint
+    networks:
+      - aicli-network
+    profiles:
+      - lint
+
+# 볼륨 정의
+volumes:
+  # Go 모듈 캐시 (재사용)
+  go-mod-cache:
+    driver: local
+  # 빌드 캐시 (성능 향상)
+  go-build-cache:
+    driver: local
+
+# 네트워크 정의
+networks:
+  aicli-network:
+    driver: bridge
+    name: aicli-network

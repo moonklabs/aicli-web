@@ -30,8 +30,8 @@ last_updated: 2025-01-20T09:00:00Z
 ## Sprint Tasks
 - **TX01_S02_Linting_Setup** (COMPLETED - 2025-07-21 01:47 완료) - Go 린팅 시스템 설정
 - **TX02_S02_Test_Framework_Setup** (COMPLETED - 2025-07-21 03:19 완료) - Go 테스트 프레임워크 및 테스트 스위트 구성
-- **T03_S02_PreCommit_Hooks** (OPEN) - Pre-commit Hooks 설정 및 자동화
-- **T04_S02_Docker_Dev_Environment** (OPEN) - Docker 기반 개발 환경 구성
+- **TX03_S02_PreCommit_Hooks** (COMPLETED - 2025-07-21 03:05 완료) - Pre-commit Hooks 설정 및 자동화
+- **TX04_S02_Docker_Dev_Environment** (COMPLETED - 2025-07-21 03:03 완료) - Docker 기반 개발 환경 구성
 - **T05_S02_VSCode_Settings** (OPEN) - VS Code 개발 환경 설정 확장 및 최적화
 
 ## Notes / Retrospective Points

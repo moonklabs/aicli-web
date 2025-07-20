@@ -1,0 +1,78 @@
+# Go 개발 환경용 Dockerfile
+# 멀티스테이지 빌드를 사용하여 개발 도구를 효율적으로 관리
+
+# 개발 도구 설치 스테이지
+FROM golang:1.21-alpine AS dev-tools
+
+# 필수 시스템 패키지 설치
+RUN apk add --no-cache \
+    git \
+    make \
+    gcc \
+    musl-dev \
+    bash \
+    curl
+
+# Go 개발 도구 설치
+RUN go install github.com/cosmtrek/air@latest && \
+    go install github.com/go-delve/delve/cmd/dlv@latest && \
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2 && \
+    go install golang.org/x/tools/gopls@latest && \
+    go install github.com/go-task/task/v3/cmd/task@latest
+
+# 최종 개발 환경 스테이지
+FROM golang:1.21-alpine
+
+# 메타데이터
+LABEL maintainer="AICode Manager Team"
+LABEL description="Go development environment for aicli-web"
+
+# 필수 시스템 패키지 설치
+RUN apk add --no-cache \
+    git \
+    make \
+    gcc \
+    musl-dev \
+    bash \
+    curl \
+    ca-certificates \
+    tzdata
+
+# 개발 도구 복사
+COPY --from=dev-tools /go/bin/* /go/bin/
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# Go 모듈 캐시 디렉토리 생성
+RUN mkdir -p /go/pkg/mod
+
+# 환경 변수 설정
+ENV GO111MODULE=on \
+    CGO_ENABLED=1 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    GOPRIVATE="" \
+    GOPROXY="https://proxy.golang.org,direct"
+
+# Git 설정 (개발 환경용)
+RUN git config --global user.email "dev@aicli.local" && \
+    git config --global user.name "AICode Developer" && \
+    git config --global init.defaultBranch main
+
+# 개발용 포트 노출
+# API 서버
+EXPOSE 8080
+# 디버거
+EXPOSE 2345
+# 프로파일러 (pprof)
+EXPOSE 6060
+
+# 기본 셸을 bash로 설정
+SHELL ["/bin/bash", "-c"]
+
+# 개발 환경 준비 완료 메시지
+RUN echo "Go development environment is ready!"
+
+# 기본 명령어 (air를 통한 hot reload)
+CMD ["air", "-c", ".air.toml"]
