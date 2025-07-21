@@ -33,7 +33,8 @@ BLUE=\033[0;34m
 NC=\033[0m # No Color
 
 .PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint lint-fix lint-all lint-report fmt dev help \
-	run-cli run-api install docker docker-push vet deps check security release pre-commit-install pre-commit-update pre-commit-run
+	run-cli run-api install docker docker-push vet deps check security release pre-commit-install pre-commit-update pre-commit-run \
+	swagger swagger-fmt
 
 # 기본 타겟
 all: build
@@ -177,6 +178,21 @@ security:
 	@which gosec > /dev/null || (printf "${YELLOW}Installing gosec...${NC}\n" && go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest)
 	gosec ./...
 	@printf "${GREEN}✓ Security check completed${NC}\n"
+
+# Swagger 문서 생성
+swagger:
+	@printf "${BLUE}Generating Swagger documentation...${NC}\n"
+	@if ! command -v swag >/dev/null 2>&1; then \
+		printf "${YELLOW}Installing swag...${NC}\n"; \
+		go install github.com/swaggo/swag/cmd/swag@latest; \
+	fi
+	@swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal --parseDepth 1
+	@printf "${GREEN}✓ Swagger documentation generated${NC}\n"
+
+swagger-fmt:
+	@printf "${BLUE}Formatting Swagger comments...${NC}\n"
+	@swag fmt -g cmd/api/main.go
+	@printf "${GREEN}✓ Swagger comments formatted${NC}\n"
 
 # 정리 타겟
 clean:

@@ -44,7 +44,17 @@ type UpdateWorkspaceRequest struct {
 }
 
 // ListWorkspaces는 워크스페이스 목록을 조회합니다.
-// GET /api/v1/workspaces
+// @Summary 워크스페이스 목록 조회
+// @Description 사용자의 모든 워크스페이스 목록을 페이지네이션과 함께 조회합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param page query int false "페이지 번호" default(1)
+// @Param limit query int false "페이지당 항목 수" default(10)
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "워크스페이스 목록"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /workspaces [get]
 func (wc *WorkspaceController) ListWorkspaces(c *gin.Context) {
 	// 쿼리 파라미터 처리
 	page := c.DefaultQuery("page", "1")
@@ -98,7 +108,17 @@ func (wc *WorkspaceController) ListWorkspaces(c *gin.Context) {
 }
 
 // CreateWorkspace는 새 워크스페이스를 생성합니다.
-// POST /api/v1/workspaces
+// @Summary 워크스페이스 생성
+// @Description 새로운 워크스페이스를 생성합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param body body CreateWorkspaceRequest true "워크스페이스 생성 요청"
+// @Security BearerAuth
+// @Success 201 {object} map[string]interface{} "생성된 워크스페이스"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /workspaces [post]
 func (wc *WorkspaceController) CreateWorkspace(c *gin.Context) {
 	var req CreateWorkspaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -130,7 +150,18 @@ func (wc *WorkspaceController) CreateWorkspace(c *gin.Context) {
 }
 
 // GetWorkspace는 특정 워크스페이스를 조회합니다.
-// GET /api/v1/workspaces/:id
+// @Summary 워크스페이스 상세 조회
+// @Description ID로 특정 워크스페이스의 상세 정보를 조회합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param id path int true "워크스페이스 ID"
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "워크스페이스 정보"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 404 {object} map[string]interface{} "워크스페이스를 찾을 수 없음"
+// @Router /workspaces/{id} [get]
 func (wc *WorkspaceController) GetWorkspace(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -161,7 +192,19 @@ func (wc *WorkspaceController) GetWorkspace(c *gin.Context) {
 }
 
 // UpdateWorkspace는 워크스페이스를 수정합니다.
-// PUT /api/v1/workspaces/:id
+// @Summary 워크스페이스 수정
+// @Description 워크스페이스 정보를 수정합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param id path int true "워크스페이스 ID"
+// @Param body body UpdateWorkspaceRequest true "워크스페이스 수정 요청"
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "수정된 워크스페이스"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 404 {object} map[string]interface{} "워크스페이스를 찾을 수 없음"
+// @Router /workspaces/{id} [put]
 func (wc *WorkspaceController) UpdateWorkspace(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -200,7 +243,18 @@ func (wc *WorkspaceController) UpdateWorkspace(c *gin.Context) {
 }
 
 // DeleteWorkspace는 워크스페이스를 삭제합니다.
-// DELETE /api/v1/workspaces/:id
+// @Summary 워크스페이스 삭제
+// @Description 워크스페이스와 관련된 모든 데이터를 삭제합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param id path int true "워크스페이스 ID"
+// @Security BearerAuth
+// @Success 204 "삭제 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Failure 404 {object} map[string]interface{} "워크스페이스를 찾을 수 없음"
+// @Router /workspaces/{id} [delete]
 func (wc *WorkspaceController) DeleteWorkspace(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)

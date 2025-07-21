@@ -12,7 +12,30 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/drumcap/aicli-web/internal/server"
+	
+	// Swagger docs 자동 생성을 위한 임포트
+	_ "aicli-web/docs"
 )
+
+// @title AICode Manager API
+// @version 1.0
+// @description Claude CLI를 웹 플랫폼으로 관리하는 로컬 우선 시스템의 API
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url https://github.com/drumcap/aicli-web
+// @contact.email support@aicli.dev
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT 인증 토큰. "Bearer {token}" 형식으로 입력하세요.
 
 func main() {
 	// 설정 초기화

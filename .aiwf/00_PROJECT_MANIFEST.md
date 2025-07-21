@@ -108,7 +108,8 @@ aicli-web/
   - 핵심 태스크: JWT 인증, OpenAPI/Swagger, 워크스페이스/프로젝트/세션 API, WebSocket 기초, Rate Limiting
   - 완료된 태스크:
     - TX01_S02_JWT_Auth_Implementation (COMPLETED - 2025-07-21 14:21 완료) - JWT 인증 시스템 전체 구현
-  - 진행률: 1/8 태스크 (12.5%)
+    - TX02_S02_OpenAPI_Documentation (COMPLETED - 2025-07-21 14:28 완료) - OpenAPI 문서화 및 Swagger UI 통합
+  - 진행률: 2/8 태스크 (25%)
 - **S03_M02_Data_Model** (PLANNED) - 데이터 모델 구현
   - 스키마 설계, 모델 구현, CRUD 작업, 마이그레이션
   - 진행률: 0/X 태스크 (태스크 상세화 필요)

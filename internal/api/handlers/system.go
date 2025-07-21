@@ -38,6 +38,13 @@ var (
 )
 
 // GetSystemInfo는 시스템 정보를 반환합니다.
+// @Summary 시스템 정보 조회
+// @Description API 서버의 상세 시스템 정보를 조회합니다
+// @Tags system
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "시스템 정보"
+// @Router /system/info [get]
 func GetSystemInfo(c *gin.Context) {
 	versionInfo := version.Get()
 	
@@ -97,6 +104,13 @@ func bToMb(b uint64) float64 {
 }
 
 // GetSystemStatus는 간단한 시스템 상태를 반환합니다.
+// @Summary 시스템 상태 확인
+// @Description API 서버의 간단한 상태 정보를 조회합니다
+// @Tags system
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "시스템 상태"
+// @Router /system/status [get]
 func GetSystemStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,

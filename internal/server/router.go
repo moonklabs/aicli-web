@@ -9,10 +9,14 @@ import (
 	"github.com/drumcap/aicli-web/internal/api/controllers"
 	"github.com/drumcap/aicli-web/internal/middleware"
 	"github.com/drumcap/aicli-web/pkg/version"
+	"aicli-web/internal/docs"
 )
 
 // setupRoutes는 모든 API 라우트를 설정합니다.
 func (s *Server) setupRoutes() {
+	// Swagger UI 설정
+	docs.SetupSwagger(s.router)
+	
 	// 루트 경로 - 기본 정보
 	s.router.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{

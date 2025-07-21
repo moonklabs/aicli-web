@@ -50,6 +50,16 @@ func NewAuthHandler(jwtManager *auth.JWTManager, blacklist *auth.Blacklist) *Aut
 }
 
 // Login 로그인 처리
+// @Summary 사용자 로그인
+// @Description 사용자 자격증명으로 로그인하여 JWT 토큰을 받습니다
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body LoginRequest true "로그인 요청"
+// @Success 200 {object} map[string]interface{} "로그인 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -123,6 +133,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Refresh 토큰 갱신
+// @Summary 액세스 토큰 갱신
+// @Description 리프레시 토큰을 사용하여 새 액세스 토큰을 받습니다
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param body body RefreshRequest true "토큰 갱신 요청"
+// @Success 200 {object} map[string]interface{} "토큰 갱신 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -175,6 +195,16 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 // Logout 로그아웃 처리
+// @Summary 사용자 로그아웃
+// @Description 현재 액세스 토큰을 무효화합니다
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "로그아웃 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Authorization 헤더에서 토큰 추출
 	authHeader := c.GetHeader("Authorization")

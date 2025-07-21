@@ -1,11 +1,11 @@
 ---
 task_id: T02_S02
 task_name: OpenAPI Documentation and Swagger UI
-status: pending
+status: completed
 complexity: medium
 priority: medium
 created_at: 2025-07-21
-updated_at: 2025-07-21
+updated_at: 2025-07-21 14:28
 sprint_id: S02_M02
 ---
 
@@ -24,13 +24,13 @@ OpenAPI 3.0 명세를 작성하고 Swagger UI를 통합하여 API 문서를 자�
 
 ## 수용 기준
 
-- [ ] OpenAPI 3.0 명세 파일이 모든 API 엔드포인트 정의
-- [ ] Swagger UI가 /docs 경로에서 접근 가능
-- [ ] API 버전 관리가 명세에 반영
-- [ ] 인증 스키마가 OpenAPI 명세에 포함
-- [ ] 요청/응답 예제가 문서에 포함
-- [ ] Go 구조체에서 자동 스키마 생성
-- [ ] API 변경 시 문서 자동 업데이트
+- [x] OpenAPI 3.0 명세 파일이 모든 API 엔드포인트 정의
+- [x] Swagger UI가 /docs 경로에서 접근 가능
+- [x] API 버전 관리가 명세에 반영
+- [x] 인증 스키마가 OpenAPI 명세에 포함
+- [x] 요청/응답 예제가 문서에 포함
+- [x] Go 구조체에서 자동 스키마 생성
+- [x] API 변경 시 문서 자동 업데이트
 
 ## 기술 가이드
 
@@ -103,13 +103,18 @@ internal/
 
 ## 서브태스크
 
-- [ ] Swaggo 라이브러리 설정
-- [ ] API 핸들러에 Swagger 주석 추가
-- [ ] OpenAPI 3.0 명세 작성
-- [ ] Swagger UI 라우트 통합
-- [ ] 모델 스키마 정의
-- [ ] 자동 문서 생성 설정
-- [ ] Makefile 타겟 추가
+- [x] Swaggo 라이브러리 설정
+- [x] API 핸들러에 Swagger 주석 추가
+- [x] OpenAPI 3.0 명세 작성
+- [x] Swagger UI 라우트 통합
+- [x] 모델 스키마 정의
+- [x] 자동 문서 생성 설정
+- [x] Makefile 타겟 추가
+
+## 출력 로그
+
+- [2025-07-21 14:23]: Swaggo 라이브러리 설정 완료 - go.mod에 의존성 추가
+- [2025-07-21 14:28]: 모든 서브태스크 완료 - Swagger 주석 추가, 라우트 통합, Makefile 타겟 추가
 
 ## 관련 링크
 
