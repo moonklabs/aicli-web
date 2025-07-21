@@ -145,6 +145,125 @@ func TestProcessManager_Start(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("with OAuth token", func(t *testing.T) {
+		pm := NewProcessManager(logger)
+		ctx := context.Background()
+
+		var cmd string
+		var args []string
+		if runtime.GOOS == "windows" {
+			cmd = "cmd"
+			args = []string{"/c", "echo", "%CLAUDE_CODE_OAUTH_TOKEN%"}
+		} else {
+			cmd = "sh"
+			args = []string{"-c", "echo $CLAUDE_CODE_OAUTH_TOKEN"}
+		}
+
+		config := &ProcessConfig{
+			Command:    cmd,
+			Args:       args,
+			OAuthToken: "test-oauth-token",
+		}
+
+		err := pm.Start(ctx, config)
+		require.NoError(t, err)
+
+		err = pm.Wait()
+		assert.NoError(t, err)
+	})
+
+	t.Run("with API key", func(t *testing.T) {
+		pm := NewProcessManager(logger)
+		ctx := context.Background()
+
+		var cmd string
+		var args []string
+		if runtime.GOOS == "windows" {
+			cmd = "cmd"
+			args = []string{"/c", "echo", "%CLAUDE_API_KEY%"}
+		} else {
+			cmd = "sh"
+			args = []string{"-c", "echo $CLAUDE_API_KEY"}
+		}
+
+		config := &ProcessConfig{
+			Command: cmd,
+			Args:    args,
+			APIKey:  "test-api-key",
+		}
+
+		err := pm.Start(ctx, config)
+		require.NoError(t, err)
+
+		err = pm.Wait()
+		assert.NoError(t, err)
+	})
+
+	t.Run("with resource limits", func(t *testing.T) {
+		pm := NewProcessManager(logger)
+		ctx := context.Background()
+
+		var cmd string
+		var args []string
+		if runtime.GOOS == "windows" {
+			cmd = "cmd"
+			args = []string{"/c", "echo", "hello"}
+		} else {
+			cmd = "echo"
+			args = []string{"hello"}
+		}
+
+		config := &ProcessConfig{
+			Command: cmd,
+			Args:    args,
+			ResourceLimits: &ResourceLimits{
+				MaxCPU:    1.0,
+				MaxMemory: 1024 * 1024 * 512, // 512MB
+				MaxDiskIO: 1024 * 1024,        // 1MB/s
+				Timeout:   5 * time.Second,
+			},
+		}
+
+		err := pm.Start(ctx, config)
+		require.NoError(t, err)
+
+		err = pm.Wait()
+		assert.NoError(t, err)
+	})
+
+	t.Run("with health check", func(t *testing.T) {
+		pm := NewProcessManager(logger)
+		ctx := context.Background()
+
+		var cmd string
+		var args []string
+		if runtime.GOOS == "windows" {
+			cmd = "cmd"
+			args = []string{"/c", "timeout", "/t", "2"}
+		} else {
+			cmd = "sleep"
+			args = []string{"2"}
+		}
+
+		config := &ProcessConfig{
+			Command:             cmd,
+			Args:                args,
+			HealthCheckInterval: 500 * time.Millisecond,
+		}
+
+		err := pm.Start(ctx, config)
+		require.NoError(t, err)
+
+		// 헬스체크가 실행될 시간을 줌
+		time.Sleep(1 * time.Second)
+
+		// 프로세스가 여전히 실행 중인지 확인
+		assert.True(t, pm.IsRunning())
+
+		// 정리
+		_ = pm.Kill()
+	})
+
 	t.Run("invalid config", func(t *testing.T) {
 		pm := NewProcessManager(logger)
 		ctx := context.Background()

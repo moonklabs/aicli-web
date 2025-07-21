@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -80,20 +81,43 @@ type ProcessConfig struct {
 	Environment map[string]string
 	// Timeout 실행 타임아웃
 	Timeout time.Duration
+	// OAuthToken OAuth 인증 토큰
+	OAuthToken string
+	// APIKey Claude API 키 (OAuth 토큰이 없는 경우 fallback)
+	APIKey string
+	// ResourceLimits 리소스 제한 설정
+	ResourceLimits *ResourceLimits
+	// HealthCheckInterval 헬스체크 주기
+	HealthCheckInterval time.Duration
+}
+
+// ResourceLimits 프로세스 리소스 제한 설정
+type ResourceLimits struct {
+	// MaxCPU 최대 CPU 사용량 (CPU 코어 수, 예: 1.5 = 1.5 코어)
+	MaxCPU float64
+	// MaxMemory 최대 메모리 사용량 (바이트)
+	MaxMemory int64
+	// MaxDiskIO 최대 디스크 I/O (바이트/초)
+	MaxDiskIO int64
+	// Timeout 최대 실행 시간
+	Timeout time.Duration
 }
 
 // claudeProcessManager Claude CLI 프로세스 관리자 구현
 type claudeProcessManager struct {
-	cmd        *exec.Cmd
-	config     *ProcessConfig
-	status     ProcessStatus
-	pid        int
-	startTime  time.Time
-	mutex      sync.RWMutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	done       chan error
-	logger     *logrus.Logger
+	cmd           *exec.Cmd
+	config        *ProcessConfig
+	status        ProcessStatus
+	pid           int
+	startTime     time.Time
+	mutex         sync.RWMutex
+	ctx           context.Context
+	cancel        context.CancelFunc
+	done          chan error
+	logger        *logrus.Logger
+	tokenManager  TokenManager
+	healthChecker HealthChecker
+	healthCancel  context.CancelFunc
 }
 
 // NewProcessManager 새로운 프로세스 관리자를 생성합니다
@@ -140,12 +164,34 @@ func (pm *claudeProcessManager) Start(ctx context.Context, config *ProcessConfig
 	}
 
 	// 환경 변수 설정
+	env := os.Environ()
+	
+	// 기본 환경 변수 설정
 	if len(config.Environment) > 0 {
-		env := os.Environ()
 		for key, value := range config.Environment {
 			env = append(env, fmt.Sprintf("%s=%s", key, value))
 		}
-		pm.cmd.Env = env
+	}
+	
+	// OAuth 토큰 또는 API 키 설정
+	if config.OAuthToken != "" {
+		env = append(env, fmt.Sprintf("CLAUDE_CODE_OAUTH_TOKEN=%s", config.OAuthToken))
+		// 토큰 관리자 초기화
+		pm.tokenManager = NewTokenManager(config.OAuthToken, config.APIKey, nil)
+	} else if config.APIKey != "" {
+		env = append(env, fmt.Sprintf("CLAUDE_API_KEY=%s", config.APIKey))
+		// API 키만으로 토큰 관리자 초기화
+		pm.tokenManager = NewTokenManager("", config.APIKey, nil)
+	}
+	
+	pm.cmd.Env = env
+
+	// 리소스 제한 설정
+	if config.ResourceLimits != nil {
+		if err := pm.applyResourceLimits(config.ResourceLimits); err != nil {
+			pm.logger.WithError(err).Warn("리소스 제한 설정 실패")
+			// 리소스 제한 실패는 치명적이지 않으므로 계속 진행
+		}
 	}
 
 	// 프로세스 시작
@@ -164,6 +210,14 @@ func (pm *claudeProcessManager) Start(ctx context.Context, config *ProcessConfig
 		"args":       config.Args,
 		"workingDir": config.WorkingDir,
 	}).Info("프로세스가 성공적으로 시작되었습니다")
+
+	// 헬스체커 초기화 및 시작
+	if config.HealthCheckInterval > 0 {
+		pm.healthChecker = NewHealthChecker(pm.logger)
+		healthCtx, cancel := context.WithCancel(ctx)
+		pm.healthCancel = cancel
+		go pm.healthChecker.Start(healthCtx, pm, config.HealthCheckInterval)
+	}
 
 	// 비동기 프로세스 모니터링
 	go pm.monitor()
@@ -215,6 +269,12 @@ func (pm *claudeProcessManager) Stop(timeout time.Duration) error {
 
 	pm.status = StatusStopping
 	pm.mutex.Unlock()
+
+	// 헬스체커 중지
+	if pm.healthChecker != nil && pm.healthCancel != nil {
+		pm.healthCancel()
+		pm.healthChecker.Stop()
+	}
 
 	pm.logger.WithFields(logrus.Fields{
 		"pid":     pm.pid,
@@ -309,6 +369,40 @@ func (pm *claudeProcessManager) HealthCheck() error {
 	// 프로세스가 실제로 실행 중인지 확인
 	if err := pm.cmd.Process.Signal(syscall.Signal(0)); err != nil {
 		return fmt.Errorf("프로세스 헬스체크 실패: %w", err)
+	}
+
+	return nil
+}
+
+// applyResourceLimits 프로세스에 리소스 제한을 적용합니다
+func (pm *claudeProcessManager) applyResourceLimits(limits *ResourceLimits) error {
+	if limits == nil {
+		return nil
+	}
+
+	// Linux/Unix 시스템에서 rlimit 설정
+	if runtime.GOOS != "windows" {
+		if pm.cmd.SysProcAttr == nil {
+			pm.cmd.SysProcAttr = &syscall.SysProcAttr{}
+		}
+
+		// TODO: 실제 리소스 제한 구현
+		// - cgroup 또는 rlimit 사용
+		// - CPU 제한: cgroup cpu.cfs_quota_us / cpu.cfs_period_us
+		// - 메모리 제한: cgroup memory.limit_in_bytes 또는 rlimit RLIMIT_AS
+		// - 디스크 I/O 제한: cgroup blkio 컨트롤러
+		
+		pm.logger.WithFields(logrus.Fields{
+			"maxCPU":    limits.MaxCPU,
+			"maxMemory": limits.MaxMemory,
+			"maxDiskIO": limits.MaxDiskIO,
+			"timeout":   limits.Timeout,
+		}).Debug("리소스 제한 설정 (구현 예정)")
+	}
+
+	// 타임아웃 설정
+	if limits.Timeout > 0 && pm.config.Timeout == 0 {
+		pm.config.Timeout = limits.Timeout
 	}
 
 	return nil

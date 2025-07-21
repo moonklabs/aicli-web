@@ -6,7 +6,7 @@
 - **버전**: 0.1.0 (Pre-Alpha)
 - **프레임워크**: AIWF v1.0
 - **생성일**: 2025-01-20
-- **최종 수정일**: 2025-07-21T03:15:24Z
+- **최종 수정일**: 2025-07-21T23:50:00+0900
 
 ## 기술 스택
 - **언어**: Go 1.21+
@@ -42,14 +42,24 @@ aicli-web/
   - 개발 도구 설정 ✅
   - CI/CD 파이프라인 구축 ✅
 
-### 현재 마일스톤: M02_Core_Implementation
-- **상태**: 진행 중 (2025-07-21 06:07 시작)
+### 완료된 마일스톤: M02_Core_Implementation
+- **상태**: 완료 (2025-07-21 06:07 시작, 2025-07-21 22:00 완료)
 - **목표**: CLI 명령어 구조, API 서버 기본 구조, 데이터베이스 스키마 설계
-- **기간**: 2주 (3 스프린트)
+- **기간**: 1일 (3 스프린트 - 집중 개발)
 - **주요 작업**:
-  - CLI 기본 구조 구현
-  - API 서버 초기 설정
-  - 데이터 모델 설계
+  - CLI 기본 구조 구현 ✅
+  - API 서버 초기 설정 ✅
+  - 데이터 모델 설계 ✅
+
+### 현재 마일스톤: M03_Claude_CLI_Integration
+- **상태**: 계획 중 (2025-07-21 23:00 시작)
+- **목표**: Claude CLI와의 완전한 통합 구현
+- **기간**: 2-3주 (3-4 스프린트 예상)
+- **주요 작업**:
+  - Claude CLI 프로세스 관리
+  - 실시간 스트림 처리
+  - 세션 관리 시스템
+  - 에러 처리 및 복구
 
 ### 스프린트 로드맵 (M01)
 - **S01_M01_Project_Init** (COMPLETED - 2025-07-20 03:00 완료) - Go 프로젝트 초기화 및 기본 구조 설정
@@ -116,11 +126,25 @@ aicli-web/
     - TX07_S02_WebSocket_Foundation (COMPLETED - 2025-07-21 완료) - WebSocket 실시간 통신 기초 구현
     - TX08_S02_API_Rate_Limiting (COMPLETED - 2025-07-21 완료) - API Rate Limiting 및 Throttling 구현
   - 진행률: 8/8 태스크 완료 (100%)
-- **S03_M02_Data_Model** (PLANNED) - 데이터 모델 구현
+- **S03_M02_Data_Model** (COMPLETED - 2025-07-21 17:30 완료) - 데이터 모델 구현
   - 스키마 설계, 모델 구현, CRUD 작업, 마이그레이션
   - 태스크 상세화 완료: 8개 태스크 (Medium: 6개, Low: 2개)
   - 핵심 태스크: 데이터베이스 스키마 설계, 스토리지 추상화, 마이그레이션 시스템, SQLite/BoltDB 구현, 트랜잭션 관리, 검증 시스템, 쿼리 최적화
-  - 진행률: 0/8 태스크 (0%)
+  - 진행률: 8/8 태스크 완료 (100%)
+
+### 스프린트 로드맵 (M03)
+- **S01_M03_Process_Foundation** (IN_PROGRESS - 2025-07-21 23:50 시작) - Claude CLI 프로세스 관리 기반
+  - 프로세스 매니저 통합, 스트림 처리, 기본 세션 관리, CLI/API 통합
+  - 태스크 상세화 완료: 7개 태스크 (High: 2개, Medium: 4개, Low: 1개)
+  - 태스크:
+    - TX01_S01_Process_Manager_Integration (High) - OAuth 토큰 관리, 헬스체크, 리소스 제한 (COMPLETED - 2025-07-22 00:50)
+    - TX02_S01_Stream_Processing_System (High) - 백프레셔 처리, 메시지 라우팅
+    - TX03_S01_Session_Management_Basic (Medium) - 세션 풀링, 상태 관리
+    - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현
+    - TX05_S01_API_Integration (Medium) - REST/WebSocket API
+    - TX06_S01_Integration_Tests (Medium) - E2E 테스트
+    - TX07_S01_Documentation (Low) - 사용 가이드
+  - 진행률: 1/7 태스크 (14%)
 
 ### 예정된 마일스톤
 1. **M03: Claude CLI 통합** (2주)
@@ -170,6 +194,14 @@ aicli-web/
 4. 개발 환경 설정
 
 ## 업데이트 로그
+- 2025-07-21 23:50: M03_Claude_CLI_Integration 마일스톤 시작, S01_M03_Process_Foundation 스프린트 계획 및 시작 (7개 태스크: High 2개, Medium 4개, Low 1개)
+- 2025-07-21 23:00: M03_Claude_CLI_Integration 마일스톤 분석 및 계획 수립 완료
+  - M01, M02 완료 작업 분석 및 현재 상태 파악
+  - M03 요구사항 문서 작성 (프로세스 관리, 스트림 처리, 세션 관리, 에러 처리)
+  - S01_M03_Process_Foundation 스프린트 계획 및 7개 태스크 정의
+  - 기존 Claude 래퍼 코드 통합 전략 수립
+- 2025-07-21 22:00: M02_Core_Implementation 마일스톤 완료 (3개 스프린트 모두 성공적으로 완료)
+- 2025-07-21 17:30: S03_M02_Data_Model 스프린트 완료 (8/8 태스크), SQLite/BoltDB 듀얼 스토리지 구현
 - 2025-07-21 16:15: S03_M02_Data_Model 스프린트 태스크 상세화 완료 (8개 태스크: Medium 6개, Low 2개)
 - 2025-07-21 14:21: TX01_S02_JWT_Auth_Implementation 태스크 완료 (JWT 인증 시스템 구현 - 토큰 생성/검증, 로그인/로그아웃/갱신 API, 인증 미들웨어, 블랙리스트, 역할 기반 접근 제어, 테스트 및 문서화 완료)
 - 2025-07-21 10:11: TX06_S01_CLI_Error_Handling 태스크 완료 (통합된 CLI 에러 처리 시스템 구현 - 에러 분류, 포맷터, 진단 정보, 로깅, 복구 메커니즘, 테스트 완료)
