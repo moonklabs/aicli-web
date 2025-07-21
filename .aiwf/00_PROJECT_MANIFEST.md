@@ -97,6 +97,8 @@ aicli-web/
     - TX03C_S01_Config_Integration (COMPLETED - 2025-07-21 08:52)
     - TX05B_S01_Stream_Handler (COMPLETED - 2025-07-21 09:44)
     - TX06_S01_CLI_Error_Handling (COMPLETED - 2025-07-21 10:11)
+  - 진행 중인 태스크:
+    - T07_S01_CLI_Testing_Framework (IN_PROGRESS - 2025-07-21 10:16)
   - 진행률: 7/11 태스크 완료 (64%)
 - **S02_M02_API_Foundation** (PLANNED) - API 서버 기초 구축
   - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화
