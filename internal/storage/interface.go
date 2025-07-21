@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	
-	"aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // 에러 정의
@@ -67,6 +67,27 @@ type ProjectStorage interface {
 	GetByPath(ctx context.Context, path string) (*models.Project, error)
 }
 
+// SessionStorage 세션 스토리지 인터페이스
+type SessionStorage interface {
+	// Create 새 세션 생성
+	Create(ctx context.Context, session *models.Session) error
+	
+	// GetByID ID로 세션 조회
+	GetByID(ctx context.Context, id string) (*models.Session, error)
+	
+	// List 세션 목록 조회
+	List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.Session], error)
+	
+	// Update 세션 업데이트
+	Update(ctx context.Context, session *models.Session) error
+	
+	// Delete 세션 삭제
+	Delete(ctx context.Context, id string) error
+	
+	// GetActiveCount 활성 세션 수 조회
+	GetActiveCount(ctx context.Context, projectID string) (int64, error)
+}
+
 // Storage 전체 스토리지 인터페이스
 type Storage interface {
 	// Workspace 워크스페이스 스토리지 반환
@@ -74,6 +95,9 @@ type Storage interface {
 	
 	// Project 프로젝트 스토리지 반환
 	Project() ProjectStorage
+	
+	// Session 세션 스토리지 반환
+	Session() SessionStorage
 	
 	// Close 스토리지 연결 종료
 	Close() error

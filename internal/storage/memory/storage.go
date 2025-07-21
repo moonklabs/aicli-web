@@ -8,6 +8,7 @@ import (
 type Storage struct {
 	workspace *WorkspaceStorage
 	project   *ProjectStorage
+	session   *SessionStorage
 }
 
 // New 새 메모리 스토리지 생성
@@ -15,6 +16,7 @@ func New() *Storage {
 	return &Storage{
 		workspace: NewWorkspaceStorage(),
 		project:   NewProjectStorage(),
+		session:   NewSessionStorage(),
 	}
 }
 
@@ -26,6 +28,11 @@ func (s *Storage) Workspace() storage.WorkspaceStorage {
 // Project 프로젝트 스토리지 반환
 func (s *Storage) Project() storage.ProjectStorage {
 	return s.project
+}
+
+// Session 세션 스토리지 반환
+func (s *Storage) Session() storage.SessionStorage {
+	return s.session
 }
 
 // Close 스토리지 연결 종료 (메모리 스토리지는 아무 작업 없음)

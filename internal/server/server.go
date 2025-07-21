@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"aicli-web/internal/auth"
 	"aicli-web/internal/config"
+	"aicli-web/internal/services"
 	"aicli-web/internal/storage"
 	"aicli-web/internal/storage/memory"
 	"aicli-web/internal/utils"
@@ -13,10 +14,11 @@ import (
 
 // Server는 API 서버의 핵심 구조체입니다.
 type Server struct {
-	router      *gin.Engine
-	jwtManager  *auth.JWTManager
-	blacklist   *auth.Blacklist
-	storage     storage.Storage
+	router         *gin.Engine
+	jwtManager     *auth.JWTManager
+	blacklist      *auth.Blacklist
+	storage        storage.Storage
+	sessionService *services.SessionService
 }
 
 // New는 새로운 서버 인스턴스를 생성합니다.
@@ -40,10 +42,17 @@ func New() *Server {
 	// 스토리지 초기화 (개발 환경에서는 메모리 스토리지 사용)
 	storage := memory.New()
 	
+	// 프로젝트 서비스 초기화
+	projectService := services.NewProjectService(storage)
+	
+	// 세션 서비스 초기화
+	sessionService := services.NewSessionService(storage, projectService, nil)
+	
 	s := &Server{
-		jwtManager: jwtManager,
-		blacklist:  blacklist,
-		storage:    storage,
+		jwtManager:     jwtManager,
+		blacklist:      blacklist,
+		storage:        storage,
+		sessionService: sessionService,
 	}
 	s.setupRouter()
 	return s

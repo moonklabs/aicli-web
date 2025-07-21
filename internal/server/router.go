@@ -60,6 +60,9 @@ func (s *Server) setupRoutes() {
 		
 		// 프로젝트 컨트롤러 인스턴스 생성
 		projectController := controllers.NewProjectController(s.storage)
+		
+		// 세션 컨트롤러 인스턴스 생성
+		sessionController := controllers.NewSessionController(s.sessionService)
 
 		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
@@ -83,6 +86,20 @@ func (s *Server) setupRoutes() {
 			projects.GET("/:id", projectController.GetProject)
 			projects.PUT("/:id", projectController.UpdateProject)
 			projects.DELETE("/:id", projectController.DeleteProject)
+			
+			// 프로젝트별 세션 생성
+			projects.POST("/:id/sessions", sessionController.Create)
+		}
+		
+		// 세션 관련 엔드포인트 (인증 필요)
+		sessions := v1.Group("/sessions")
+		sessions.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		{
+			sessions.GET("", sessionController.List)
+			sessions.GET("/active", sessionController.GetActiveSessions)
+			sessions.GET("/:id", sessionController.GetByID)
+			sessions.DELETE("/:id", sessionController.Terminate)
+			sessions.PUT("/:id/activity", sessionController.UpdateActivity)
 		}
 
 		// 태스크 관련 엔드포인트 (인증 필요)
