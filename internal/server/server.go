@@ -1,15 +1,18 @@
 package server
 
 import (
+	"context"
+	
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/config"
-	"aicli-web/internal/services"
-	"aicli-web/internal/storage"
-	"aicli-web/internal/storage/memory"
-	"aicli-web/internal/utils"
-	"github.com/drumcap/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
+	"github.com/aicli/aicli-web/internal/utils"
+	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/websocket"
 )
 
 // Server는 API 서버의 핵심 구조체입니다.
@@ -19,6 +22,11 @@ type Server struct {
 	blacklist      *auth.Blacklist
 	storage        storage.Storage
 	sessionService *services.SessionService
+	taskService    *services.TaskService
+	
+	// WebSocket 관련
+	wsHub     *websocket.Hub
+	wsHandler *websocket.WebSocketHandler
 }
 
 // New는 새로운 서버 인스턴스를 생성합니다.
@@ -48,12 +56,37 @@ func New() *Server {
 	// 세션 서비스 초기화
 	sessionService := services.NewSessionService(storage, projectService, nil)
 	
+	// 태스크 서비스 초기화
+	taskService := services.NewTaskService(storage, sessionService, nil)
+	
+	// WebSocket 허브 초기화
+	wsHub := websocket.NewHub(nil)
+	
+	// WebSocket 핸들러 초기화
+	wsHandler := websocket.NewWebSocketHandler(wsHub, jwtManager, blacklist, nil)
+	
 	s := &Server{
 		jwtManager:     jwtManager,
 		blacklist:      blacklist,
 		storage:        storage,
 		sessionService: sessionService,
+		taskService:    taskService,
+		wsHub:          wsHub,
+		wsHandler:      wsHandler,
 	}
+	
+	// 태스크 서비스 시작
+	if err := taskService.Start(context.Background()); err != nil {
+		// 에러 로깅하지만 서버는 계속 시작
+		// TODO: 로거 추가 시 로깅
+	}
+	
+	// WebSocket 허브 시작
+	if err := wsHub.Start(); err != nil {
+		// 에러 로깅하지만 서버는 계속 시작
+		// TODO: 로거 추가 시 로깅
+	}
+	
 	s.setupRouter()
 	return s
 }
@@ -80,6 +113,7 @@ func (s *Server) setupRouter() {
 	s.router.Use(middleware.RequestID())    // 요청 ID 생성 (가장 먼저)
 	s.router.Use(middleware.Security())     // 보안 헤더
 	s.router.Use(middleware.CORS())         // CORS 설정
+	s.router.Use(middleware.RateLimit(middleware.DefaultRateLimitConfig())) // Rate Limiting
 	s.router.Use(middleware.Logger())       // 기본 로깅
 	s.router.Use(middleware.RequestLogger()) // 상세 요청 로깅
 	s.router.Use(middleware.GracefulRecovery()) // 패닉 복구

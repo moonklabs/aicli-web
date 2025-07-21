@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/drumcap/aicli-web/internal/server/handlers"
-	apiHandlers "github.com/drumcap/aicli-web/internal/api/handlers"
-	"github.com/drumcap/aicli-web/internal/api/controllers"
-	"github.com/drumcap/aicli-web/internal/middleware"
-	"github.com/drumcap/aicli-web/pkg/version"
-	"aicli-web/internal/docs"
+	"github.com/aicli/aicli-web/internal/server/handlers"
+	apiHandlers "github.com/aicli/aicli-web/internal/api/handlers"
+	"github.com/aicli/aicli-web/internal/api/controllers"
+	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/pkg/version"
+	"github.com/aicli/aicli-web/internal/docs"
 )
 
 // setupRoutes는 모든 API 라우트를 설정합니다.
@@ -63,6 +63,9 @@ func (s *Server) setupRoutes() {
 		
 		// 세션 컨트롤러 인스턴스 생성
 		sessionController := controllers.NewSessionController(s.sessionService)
+		
+		// 태스크 컨트롤러 인스턴스 생성
+		taskController := controllers.NewTaskController(s.taskService)
 
 		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
@@ -100,16 +103,20 @@ func (s *Server) setupRoutes() {
 			sessions.GET("/:id", sessionController.GetByID)
 			sessions.DELETE("/:id", sessionController.Terminate)
 			sessions.PUT("/:id/activity", sessionController.UpdateActivity)
+			
+			// 세션별 태스크 생성
+			sessions.POST("/:sessionId/tasks", taskController.Create)
 		}
 
 		// 태스크 관련 엔드포인트 (인증 필요)
 		tasks := v1.Group("/tasks")
 		tasks.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
 		{
-			tasks.GET("", handlers.ListTasks)
-			tasks.POST("", handlers.CreateTask)
-			tasks.GET("/:id", handlers.GetTask)
-			tasks.DELETE("/:id", handlers.CancelTask)
+			tasks.GET("", taskController.List)
+			tasks.GET("/active", taskController.GetActiveTasks)
+			tasks.GET("/stats", taskController.GetStats)
+			tasks.GET("/:id", taskController.GetByID)
+			tasks.DELETE("/:id", taskController.Cancel)
 		}
 
 		// 로그 관련 엔드포인트 (인증 필요)
@@ -130,6 +137,9 @@ func (s *Server) setupRoutes() {
 			config.PUT("", handlers.UpdateConfig)
 		}
 	}
+	
+	// WebSocket 엔드포인트
+	s.router.GET("/ws", s.wsHandler.HandleConnection)
 
 	// 개발 환경용 디버그 라우트
 	if gin.Mode() == gin.DebugMode {

@@ -1,7 +1,7 @@
 ---
 task_id: T05A_S01
 sprint_sequence_id: S01_M02
-status: in_progress
+status: completed
 complexity: High
 last_updated: 2025-07-21 09:13
 github_issue: # Optional: GitHub issue number
@@ -19,12 +19,12 @@ Claude CLI 프로세스의 생명주기를 관리하는 핵심 모듈을 구현�
 - 프로세스 모니터링 및 헬스체크
 
 ## Acceptance Criteria
-- [ ] 프로세스 시작/중지 기능 구현
-- [ ] 프로세스 상태 추적 및 상태 머신 구현
-- [ ] 시그널 처리 (SIGTERM, SIGKILL) 구현
-- [ ] 프로세스 헬스체크 및 모니터링
-- [ ] 컨텍스트 기반 취소 처리
-- [ ] 프로세스 메타데이터 관리
+- [x] 프로세스 시작/중지 기능 구현
+- [x] 프로세스 상태 추적 및 상태 머신 구현
+- [x] 시그널 처리 (SIGTERM, SIGKILL) 구현
+- [x] 프로세스 헬스체크 및 모니터링
+- [x] 컨텍스트 기반 취소 처리
+- [x] 프로세스 메타데이터 관리
 
 ## Subtasks
 - [x] 프로세스 관리자 인터페이스 설계

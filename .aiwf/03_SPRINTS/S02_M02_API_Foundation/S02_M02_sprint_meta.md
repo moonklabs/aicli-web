@@ -2,12 +2,12 @@
 sprint_id: S02_M02
 sprint_name: API Foundation Setup
 milestone_id: M02
-status: planned
-start_date: 
-end_date: 
-duration: 1 week
+status: complete
+start_date: 2025-07-21
+end_date: 2025-07-21
+duration: 1 day
 created_at: 2025-07-21 06:06
-updated_at: 2025-07-21 06:06
+updated_at: 2025-07-21
 ---
 
 # S02_M02: API Foundation Setup
@@ -52,11 +52,11 @@ AICode Manager의 RESTful API 서버 기초를 구축하는 스프린트입니�
 
 ## 성공 기준
 
-- [ ] API 서버 시작 및 헬스체크 엔드포인트 작동
-- [ ] JWT 토큰 발급 및 검증 가능
-- [ ] Swagger UI에서 API 문서 확인 가능
-- [ ] 미들웨어 체인 정상 작동
-- [ ] 기본 CRUD 엔드포인트 구현
+- [x] API 서버 시작 및 헬스체크 엔드포인트 작동
+- [x] JWT 토큰 발급 및 검증 가능
+- [x] Swagger UI에서 API 문서 확인 가능
+- [x] 미들웨어 체인 정상 작동
+- [x] 기본 CRUD 엔드포인트 구현
 
 ## 태스크 목록
 

@@ -70,9 +70,9 @@ aicli-web/
     - TX02_S02_Test_Framework_Setup (COMPLETED - 2025-07-21 03:19 완료)
     - TX03_S02_PreCommit_Hooks (COMPLETED - 2025-07-21 03:05 완료)
     - TX04_S02_Docker_Dev_Environment (COMPLETED - 2025-07-21 03:03 완료)
-  - 대기 중인 태스크:
-    - T05_S02_VSCode_Settings (OPEN)
-  - 진행률: 4/5 태스크 완료 (80%)
+  - 완료된 태스크:
+    - TX05_S02_VSCode_Settings (COMPLETED - 2025-07-21 03:30 완료)
+  - 진행률: 5/5 태스크 완료 (100%)
 - **S03_M01_CI_Setup** (COMPLETED - 2025-07-21 04:10 완료) - CI/CD 파이프라인 및 문서화
   - GitHub Actions, 빌드 자동화, 프로젝트 문서 완성
   - 완료된 태스크:
@@ -102,16 +102,20 @@ aicli-web/
     - TX06_S01_CLI_Error_Handling (COMPLETED - 2025-07-21 10:11)
     - TX07_S01_CLI_Testing_Framework (COMPLETED - 2025-07-21 10:34)
   - 진행률: 11/11 태스크 완료 (100%)
-- **S02_M02_API_Foundation** (IN_PROGRESS - 2025-07-21 14:08 시작) - API 서버 기초 구축
-  - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화
+- **S02_M02_API_Foundation** (COMPLETED - 2025-07-21 14:08 시작, 2025-07-21 완료) - API 서버 기초 구축
+  - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화, WebSocket 기초, Rate Limiting
   - 태스크 상세화 완료: 8개 태스크 (Medium: 6개, Low: 2개)
-  - 핵심 태스크: JWT 인증, OpenAPI/Swagger, 워크스페이스/프로젝트/세션 API, WebSocket 기초, Rate Limiting
+  - 핵심 태스크: JWT 인증, OpenAPI/Swagger, 워크스페이스/프로젝트/세션/태스크 API, WebSocket 기초, Rate Limiting
   - 완료된 태스크:
     - TX01_S02_JWT_Auth_Implementation (COMPLETED - 2025-07-21 14:21 완료) - JWT 인증 시스템 전체 구현
     - TX02_S02_OpenAPI_Documentation (COMPLETED - 2025-07-21 14:28 완료) - OpenAPI 문서화 및 Swagger UI 통합
     - TX03_S02_Workspace_API_Endpoints (COMPLETED - 2025-07-21 16:11 완료) - 워크스페이스 관리 API 구현
     - TX04_S02_Project_API_Endpoints (COMPLETED - 2025-07-21 16:39 완료) - 프로젝트 관리 API 구현
-  - 진행률: 4/8 태스크 (50%)
+    - TX05_S02_Claude_Session_API (COMPLETED - 2025-07-21 16:50 완료) - Claude 세션 관리 API 구현
+    - TX06_S02_Task_Execution_API (COMPLETED - 2025-07-21 완료) - 태스크 실행 및 관리 API 구현
+    - TX07_S02_WebSocket_Foundation (COMPLETED - 2025-07-21 완료) - WebSocket 실시간 통신 기초 구현
+    - TX08_S02_API_Rate_Limiting (COMPLETED - 2025-07-21 완료) - API Rate Limiting 및 Throttling 구현
+  - 진행률: 8/8 태스크 완료 (100%)
 - **S03_M02_Data_Model** (PLANNED) - 데이터 모델 구현
   - 스키마 설계, 모델 구현, CRUD 작업, 마이그레이션
   - 진행률: 0/X 태스크 (태스크 상세화 필요)

@@ -1,14 +1,15 @@
 package memory
 
 import (
-	"aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // Storage 메모리 기반 스토리지 구현
 type Storage struct {
 	workspace *WorkspaceStorage
 	project   *ProjectStorage
-	session   *SessionStorage
+	session   *sessionStorage
+	task      *taskStorage
 }
 
 // New 새 메모리 스토리지 생성
@@ -16,7 +17,8 @@ func New() *Storage {
 	return &Storage{
 		workspace: NewWorkspaceStorage(),
 		project:   NewProjectStorage(),
-		session:   NewSessionStorage(),
+		session:   newSessionStorage(),
+		task:      newTaskStorage(),
 	}
 }
 
@@ -33,6 +35,11 @@ func (s *Storage) Project() storage.ProjectStorage {
 // Session 세션 스토리지 반환
 func (s *Storage) Session() storage.SessionStorage {
 	return s.session
+}
+
+// Task 태스크 스토리지 반환
+func (s *Storage) Task() storage.TaskStorage {
+	return s.task
 }
 
 // Close 스토리지 연결 종료 (메모리 스토리지는 아무 작업 없음)

@@ -88,6 +88,30 @@ type SessionStorage interface {
 	GetActiveCount(ctx context.Context, projectID string) (int64, error)
 }
 
+// TaskStorage 태스크 스토리지 인터페이스
+type TaskStorage interface {
+	// Create 새 태스크 생성
+	Create(ctx context.Context, task *models.Task) error
+	
+	// GetByID ID로 태스크 조회
+	GetByID(ctx context.Context, id string) (*models.Task, error)
+	
+	// List 태스크 목록 조회
+	List(ctx context.Context, filter *models.TaskFilter, paging *models.PagingRequest) ([]*models.Task, int, error)
+	
+	// Update 태스크 업데이트
+	Update(ctx context.Context, task *models.Task) error
+	
+	// Delete 태스크 삭제
+	Delete(ctx context.Context, id string) error
+	
+	// GetBySessionID 세션 ID로 태스크 목록 조회
+	GetBySessionID(ctx context.Context, sessionID string, paging *models.PagingRequest) ([]*models.Task, int, error)
+	
+	// GetActiveCount 활성 태스크 수 조회
+	GetActiveCount(ctx context.Context, sessionID string) (int64, error)
+}
+
 // Storage 전체 스토리지 인터페이스
 type Storage interface {
 	// Workspace 워크스페이스 스토리지 반환
@@ -98,6 +122,9 @@ type Storage interface {
 	
 	// Session 세션 스토리지 반환
 	Session() SessionStorage
+	
+	// Task 태스크 스토리지 반환
+	Task() TaskStorage
 	
 	// Close 스토리지 연결 종료
 	Close() error
