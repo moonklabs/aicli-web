@@ -13,6 +13,7 @@ import (
 	"github.com/aicli/aicli-web/internal/utils"
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/websocket"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // Server는 API 서버의 핵심 구조체입니다.
@@ -23,6 +24,11 @@ type Server struct {
 	storage        storage.Storage
 	sessionService *services.SessionService
 	taskService    *services.TaskService
+	
+	// Claude 관련
+	claudeWrapper        claude.Wrapper
+	claudeStreamHandler  *websocket.ClaudeStreamHandler
+	executionTracker     *claude.ExecutionTracker
 	
 	// WebSocket 관련
 	wsHub     *websocket.Hub
@@ -65,14 +71,32 @@ func New() *Server {
 	// WebSocket 핸들러 초기화
 	wsHandler := websocket.NewWebSocketHandler(wsHub, jwtManager, blacklist, nil)
 	
+	// Claude 세션 매니저 초기화
+	sessionManager := claude.NewSessionManager(storage.Session())
+	
+	// Claude 프로세스 매니저 초기화 (기존 구현체 사용)
+	processManager := claude.NewProcessManager()
+	
+	// Claude 래퍼 초기화
+	claudeWrapper := claude.NewWrapper(sessionManager, processManager)
+	
+	// Claude 스트림 핸들러 초기화
+	claudeStreamHandler := websocket.NewClaudeStreamHandler(wsHub, claudeWrapper)
+	
+	// 실행 추적기 초기화
+	executionTracker := claude.NewExecutionTracker(wsHub)
+	
 	s := &Server{
-		jwtManager:     jwtManager,
-		blacklist:      blacklist,
-		storage:        storage,
-		sessionService: sessionService,
-		taskService:    taskService,
-		wsHub:          wsHub,
-		wsHandler:      wsHandler,
+		jwtManager:           jwtManager,
+		blacklist:            blacklist,
+		storage:              storage,
+		sessionService:       sessionService,
+		taskService:          taskService,
+		claudeWrapper:        claudeWrapper,
+		claudeStreamHandler:  claudeStreamHandler,
+		executionTracker:     executionTracker,
+		wsHub:                wsHub,
+		wsHandler:            wsHandler,
 	}
 	
 	// 태스크 서비스 시작

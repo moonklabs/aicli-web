@@ -141,10 +141,10 @@ aicli-web/
     - TX02_S01_Stream_Processing_System (High) - 백프레셔 처리, 메시지 라우팅 (COMPLETED - 2025-07-22 02:35)
     - TX03_S01_Session_Management_Basic (Medium) - 세션 풀링, 상태 관리 (COMPLETED - 2025-07-22 01:07)
     - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현 (IN_PROGRESS - 2025-07-22 00:43)
-    - TX05_S01_API_Integration (Medium) - REST/WebSocket API
+    - TX05_S01_API_Integration (Medium) - REST/WebSocket API (COMPLETED - 2025-07-22 01:03)
     - TX06_S01_Integration_Tests (Medium) - E2E 테스트
     - TX07_S01_Documentation (Low) - 사용 가이드
-  - 진행률: 3/7 태스크 완료 (43%)
+  - 진행률: 4/7 태스크 완료 (57%)
 
 ### 예정된 마일스톤
 1. **M03: Claude CLI 통합** (2주)

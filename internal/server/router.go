@@ -67,6 +67,23 @@ func (s *Server) setupRoutes() {
 		// 태스크 컨트롤러 인스턴스 생성
 		taskController := controllers.NewTaskController(s.taskService)
 
+		// Claude 핸들러 인스턴스 생성 (Claude wrapper가 있다고 가정)
+		// TODO: s.claudeWrapper가 Server 구조체에 추가되어야 함
+		claudeHandler := handlers.NewClaudeHandler(s.claudeWrapper, s.storage.Session(), s.wsHub)
+
+		// Claude 관련 엔드포인트 (인증 필요)
+		claude := v1.Group("/claude")
+		claude.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		claude.Use(middleware.ClaudeErrorHandler())
+		{
+			// Claude 실행 및 세션 관리
+			claude.POST("/execute", claudeHandler.Execute)
+			claude.GET("/sessions", claudeHandler.ListSessions)
+			claude.GET("/sessions/:id", claudeHandler.GetSession)
+			claude.DELETE("/sessions/:id", claudeHandler.CloseSession)
+			claude.GET("/sessions/:id/logs", claudeHandler.GetSessionLogs)
+		}
+
 		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
 		workspaces.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
@@ -140,6 +157,9 @@ func (s *Server) setupRoutes() {
 	
 	// WebSocket 엔드포인트
 	s.router.GET("/ws", s.wsHandler.HandleConnection)
+	
+	// Claude WebSocket 스트림 엔드포인트
+	s.router.GET("/ws/executions/:executionID", s.claudeStreamHandler.HandleConnection)
 
 	// 개발 환경용 디버그 라우트
 	if gin.Mode() == gin.DebugMode {
