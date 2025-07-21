@@ -2,12 +2,12 @@
 sprint_id: S01_M02
 sprint_name: CLI Structure Implementation
 milestone_id: M02
-status: planned
+status: completed
 start_date: 2025-07-21
-end_date: 
-duration: 1 week
+end_date: 2025-07-21
+duration: 1 day
 created_at: 2025-07-21 06:05
-updated_at: 2025-07-21 06:05
+updated_at: 2025-07-21 11:00
 ---
 
 # S01_M02: CLI Structure Implementation
@@ -51,11 +51,11 @@ AICode Manager의 CLI 기본 구조를 구현하는 스프린트입니다. Cobra
 
 ## 성공 기준
 
-- [ ] `aicli version` 명령 작동
-- [ ] `aicli config` 명령으로 설정 관리 가능
-- [ ] 도움말 시스템 완성
-- [ ] 자동완성 설치 가능
-- [ ] Claude CLI 래퍼 인터페이스 정의 완료
+- [x] `aicli version` 명령 작동
+- [x] `aicli config` 명령으로 설정 관리 가능
+- [x] 도움말 시스템 완성
+- [x] 자동완성 설치 가능
+- [x] Claude CLI 래퍼 인터페이스 정의 완료
 
 ## 태스크 목록
 
