@@ -133,18 +133,21 @@ aicli-web/
   - 진행률: 8/8 태스크 완료 (100%)
 
 ### 스프린트 로드맵 (M03)
-- **S01_M03_Process_Foundation** (IN_PROGRESS - 2025-07-21 23:50 시작) - Claude CLI 프로세스 관리 기반
+- **S01_M03_Process_Foundation** (COMPLETED - 2025-07-21 23:50 시작, 2025-07-22 08:30 완료) - Claude CLI 프로세스 관리 기반
   - 프로세스 매니저 통합, 스트림 처리, 기본 세션 관리, CLI/API 통합
   - 태스크 상세화 완료: 7개 태스크 (High: 2개, Medium: 4개, Low: 1개)
   - 태스크:
     - TX01_S01_Process_Manager_Integration (High) - OAuth 토큰 관리, 헬스체크, 리소스 제한 (COMPLETED - 2025-07-22 00:50)
     - TX02_S01_Stream_Processing_System (High) - 백프레셔 처리, 메시지 라우팅 (COMPLETED - 2025-07-22 02:35)
     - TX03_S01_Session_Management_Basic (Medium) - 세션 풀링, 상태 관리 (COMPLETED - 2025-07-22 01:07)
-    - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현 (IN_PROGRESS - 2025-07-22 00:43)
+    - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현 (COMPLETED - 2025-07-22 08:15)
     - TX05_S01_API_Integration (Medium) - REST/WebSocket API (COMPLETED - 2025-07-22 01:03)
-    - TX06_S01_Integration_Tests (Medium) - E2E 테스트
+    - TX06_S01_Integration_Tests (Medium) - E2E 테스트 (COMPLETED - 2025-07-22 08:25)
     - TX07_S01_Documentation (Low) - 사용 가이드 (COMPLETED - 2025-07-22 01:28)
-  - 진행률: 5/7 태스크 완료 (71%)
+  - 진행률: 7/7 태스크 완료 (100%)
+- **S02_M03_Advanced_Integration** (PLANNING - 2025-07-22 08:30 계획 시작) - Claude CLI 고급 통합 및 최적화
+  - 고급 세션 관리, 웹 인터페이스 통합, 에러 복구, 성능 최적화
+  - 예상 기간: 1주 (5-7개 태스크 예상)
 
 ### 예정된 마일스톤
 1. **M03: Claude CLI 통합** (2주)
