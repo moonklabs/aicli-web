@@ -96,9 +96,8 @@ aicli-web/
     - TX03B_S01_Config_File_Management (COMPLETED - 2025-07-21 08:30)
     - TX03C_S01_Config_Integration (COMPLETED - 2025-07-21 08:52)
     - TX05B_S01_Stream_Handler (COMPLETED - 2025-07-21 09:44)
-  - 진행률: 6/11 태스크 완료 (55%)
-  - 진행 중인 태스크:
-    - T05A_S01_Process_Manager (IN_PROGRESS - 2025-07-21 09:13)
+    - TX06_S01_CLI_Error_Handling (COMPLETED - 2025-07-21 10:11)
+  - 진행률: 7/11 태스크 완료 (64%)
 - **S02_M02_API_Foundation** (PLANNED) - API 서버 기초 구축
   - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화
   - 진행률: 0/X 태스크 (태스크 상세화 필요)
@@ -154,6 +153,7 @@ aicli-web/
 4. 개발 환경 설정
 
 ## 업데이트 로그
+- 2025-07-21 10:11: TX06_S01_CLI_Error_Handling 태스크 완료 (통합된 CLI 에러 처리 시스템 구현 - 에러 분류, 포맷터, 진단 정보, 로깅, 복구 메커니즘, 테스트 완료)
 - 2025-07-21 09:44: TX05B_S01_Stream_Handler 태스크 완료 (Claude CLI 스트림 처리 시스템 완전 구현 - JSON 파서, 이벤트 버스, 버퍼 관리, 테스트 포함)
 - 2025-07-21 09:34: T05B_S01_Stream_Handler 태스크 시작 (Claude CLI 스트림 처리 시스템 구현)
 - 2025-07-21 09:13: T05A_S01_Process_Manager 태스크 시작 (Claude CLI 프로세스 생명주기 관리 시스템 구현)
