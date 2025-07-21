@@ -96,6 +96,8 @@ aicli-web/
     - TX03B_S01_Config_File_Management (COMPLETED - 2025-07-21 08:30)
     - TX03C_S01_Config_Integration (COMPLETED - 2025-07-21 08:52)
   - 진행률: 5/11 태스크 완료 (45%)
+  - 진행 중인 태스크:
+    - T05A_S01_Process_Manager (IN_PROGRESS - 2025-07-21 09:13)
 - **S02_M02_API_Foundation** (PLANNED) - API 서버 기초 구축
   - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화
   - 진행률: 0/X 태스크 (태스크 상세화 필요)
@@ -151,6 +153,7 @@ aicli-web/
 4. 개발 환경 설정
 
 ## 업데이트 로그
+- 2025-07-21 09:13: T05A_S01_Process_Manager 태스크 시작 (Claude CLI 프로세스 생명주기 관리 시스템 구현)
 - 2025-07-21 08:52: TX03C_S01_Config_Integration 태스크 완료 (Viper 통합 설정 관리, 우선순위 체계, CLI 명령어, 동적 설정 감지 구현)
 - 2025-07-21 08:37: T03C_S01_Config_Integration 태스크 시작 (설정 통합 및 우선순위 시스템 구현 - Viper 통합)
 - 2025-07-21 08:30: TX03B_S01_Config_File_Management 태스크 완료 (설정 파일 관리 시스템 구현, YAML 읽기/쓰기, 권한 관리, 백업/복구, 동시성 처리)
