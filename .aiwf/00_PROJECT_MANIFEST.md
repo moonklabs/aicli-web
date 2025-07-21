@@ -140,7 +140,7 @@ aicli-web/
     - TX01_S01_Process_Manager_Integration (High) - OAuth 토큰 관리, 헬스체크, 리소스 제한 (COMPLETED - 2025-07-22 00:50)
     - TX02_S01_Stream_Processing_System (High) - 백프레셔 처리, 메시지 라우팅 (COMPLETED - 2025-07-22 02:35)
     - TX03_S01_Session_Management_Basic (Medium) - 세션 풀링, 상태 관리 (COMPLETED - 2025-07-22 01:07)
-    - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현
+    - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현 (IN_PROGRESS - 2025-07-22 00:43)
     - TX05_S01_API_Integration (Medium) - REST/WebSocket API
     - TX06_S01_Integration_Tests (Medium) - E2E 테스트
     - TX07_S01_Documentation (Low) - 사용 가이드
