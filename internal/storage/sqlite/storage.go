@@ -8,6 +8,7 @@ import (
 	"time"
 	
 	_ "github.com/mattn/go-sqlite3" // SQLite 드라이버
+	"go.uber.org/zap"
 	
 	"github.com/aicli/aicli-web/internal/storage"
 )
@@ -17,12 +18,16 @@ type Storage struct {
 	db        *sql.DB
 	stmtCache map[string]*sql.Stmt
 	mu        sync.RWMutex
+	logger    *zap.Logger
 	
 	// 스토리지 구현체들
 	workspace *workspaceStorage
 	project   *projectStorage
 	session   *sessionStorage
 	task      *taskStorage
+	
+	// 최적화 도구들
+	indexManager *IndexManager
 }
 
 // Config SQLite 설정
@@ -33,6 +38,7 @@ type Config struct {
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
 	PragmaOptions   map[string]string
+	Logger          *zap.Logger
 }
 
 // DefaultConfig 기본 설정 반환
@@ -81,6 +87,11 @@ func New(config Config) (*Storage, error) {
 	storage := &Storage{
 		db:        db,
 		stmtCache: make(map[string]*sql.Stmt),
+		logger:    config.Logger,
+	}
+	
+	if storage.logger == nil {
+		storage.logger = zap.NewNop()
 	}
 	
 	// PRAGMA 설정 적용
@@ -93,6 +104,9 @@ func New(config Config) (*Storage, error) {
 	storage.project = newProjectStorage(storage)
 	storage.session = newSessionStorage(storage)
 	storage.task = newTaskStorage(storage)
+	
+	// 최적화 도구들 초기화
+	storage.indexManager = newIndexManager(storage)
 	
 	return storage, nil
 }
@@ -283,4 +297,60 @@ func (s *Storage) clearStmtCache() {
 		stmt.Close()
 	}
 	s.stmtCache = make(map[string]*sql.Stmt)
+}
+
+// IndexManager 인덱스 관리자 반환
+func (s *Storage) IndexManager() *IndexManager {
+	return s.indexManager
+}
+
+// OptimizeIndexes 모든 테이블의 인덱스 최적화
+func (s *Storage) OptimizeIndexes(ctx context.Context) error {
+	tables := []string{"workspaces", "projects", "sessions", "tasks"}
+	
+	for _, table := range tables {
+		s.logger.Info("테이블 인덱스 분석 시작", zap.String("table", table))
+		
+		analysis, err := s.indexManager.AnalyzeTable(ctx, table)
+		if err != nil {
+			s.logger.Error("테이블 인덱스 분석 실패", 
+				zap.String("table", table),
+				zap.Error(err),
+			)
+			continue
+		}
+		
+		// 높은 우선순위 제안만 적용
+		if len(analysis.SuggestedIndexes) > 0 {
+			err = s.indexManager.ApplyIndexSuggestions(ctx, analysis.SuggestedIndexes, []string{"high"})
+			if err != nil {
+				s.logger.Error("인덱스 제안 적용 실패",
+					zap.String("table", table),
+					zap.Error(err),
+				)
+			}
+		}
+	}
+	
+	return nil
+}
+
+// GetIndexAnalysis 인덱스 분석 결과 반환
+func (s *Storage) GetIndexAnalysis(ctx context.Context) (map[string]*IndexAnalysis, error) {
+	tables := []string{"workspaces", "projects", "sessions", "tasks"}
+	results := make(map[string]*IndexAnalysis)
+	
+	for _, table := range tables {
+		analysis, err := s.indexManager.AnalyzeTable(ctx, table)
+		if err != nil {
+			s.logger.Error("테이블 인덱스 분석 실패", 
+				zap.String("table", table),
+				zap.Error(err),
+			)
+			continue
+		}
+		results[table] = analysis
+	}
+	
+	return results, nil
 }
