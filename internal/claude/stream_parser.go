@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -43,23 +44,35 @@ func (e *StreamError) Error() string {
 
 // JSONStreamParser는 JSON 스트림을 파싱하는 구조체입니다.
 type JSONStreamParser struct {
-	scanner   *bufio.Scanner
-	decoder   *json.Decoder
-	buffer    *bytes.Buffer
-	mutex     sync.RWMutex
-	logger    *logrus.Logger
-	reader    io.Reader
+	scanner     *bufio.Scanner
+	decoder     *json.Decoder
+	buffer      *bytes.Buffer
+	mutex       sync.RWMutex
+	logger      *logrus.Logger
+	reader      io.Reader
+	maxLineSize int
+	
+	// 부분 JSON 처리를 위한 필드
+	partialBuffer   *bytes.Buffer
+	inMultilineJSON bool
+	braceCount      int
+	bracketCount    int
 }
 
 // NewJSONStreamParser는 새로운 JSON 스트림 파서를 생성합니다.
 func NewJSONStreamParser(reader io.Reader, logger *logrus.Logger) *JSONStreamParser {
 	buffer := &bytes.Buffer{}
+	scanner := bufio.NewScanner(reader)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // 최대 1MB 라인
+	
 	return &JSONStreamParser{
-		scanner: bufio.NewScanner(reader),
-		decoder: json.NewDecoder(reader),
-		buffer:  buffer,
-		logger:  logger,
-		reader:  reader,
+		scanner:       scanner,
+		decoder:       json.NewDecoder(reader),
+		buffer:        buffer,
+		logger:        logger,
+		reader:        reader,
+		maxLineSize:   1024 * 1024, // 1MB
+		partialBuffer: &bytes.Buffer{},
 	}
 }
 
@@ -205,6 +218,123 @@ func (p *JSONStreamParser) GetStats() map[string]interface{} {
 	defer p.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"buffer_size": p.buffer.Len(),
+		"buffer_size":        p.buffer.Len(),
+		"partial_buffer_size": p.partialBuffer.Len(),
+		"in_multiline_json":  p.inMultilineJSON,
+		"brace_count":        p.braceCount,
+		"bracket_count":      p.bracketCount,
 	}
+}
+
+// ParseMultilineJSON은 멀티라인 JSON을 파싱합니다.
+func (p *JSONStreamParser) ParseMultilineJSON(line string) (*Response, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	// 라인을 부분 버퍼에 추가
+	p.partialBuffer.WriteString(line)
+	p.partialBuffer.WriteString("\n")
+
+	// 중괄호와 대괄호 카운트
+	for _, ch := range line {
+		switch ch {
+		case '{':
+			p.braceCount++
+		case '}':
+			p.braceCount--
+		case '[':
+			p.bracketCount++
+		case ']':
+			p.bracketCount--
+		}
+	}
+
+	// JSON이 완성되었는지 확인
+	if p.braceCount == 0 && p.bracketCount == 0 && p.partialBuffer.Len() > 0 {
+		// 완성된 JSON 파싱
+		var response Response
+		if err := json.Unmarshal(p.partialBuffer.Bytes(), &response); err != nil {
+			// 파싱 실패 시 버퍼 리셋
+			p.partialBuffer.Reset()
+			p.inMultilineJSON = false
+			return nil, fmt.Errorf("failed to unmarshal multiline JSON: %w", err)
+		}
+
+		// 성공적으로 파싱됨
+		p.partialBuffer.Reset()
+		p.inMultilineJSON = false
+		
+		p.logger.WithFields(logrus.Fields{
+			"type":       response.Type,
+			"message_id": response.MessageID,
+		}).Debug("Parsed multiline JSON response")
+
+		return &response, nil
+	}
+
+	// 아직 JSON이 완성되지 않음
+	p.inMultilineJSON = true
+	return nil, nil
+}
+
+// IsValidJSONStart는 라인이 JSON 객체의 시작인지 확인합니다.
+func (p *JSONStreamParser) IsValidJSONStart(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	return strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[")
+}
+
+// ParseLineAdvanced는 향상된 라인 파싱을 수행합니다.
+func (p *JSONStreamParser) ParseLineAdvanced() (*Response, error) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if !p.scanner.Scan() {
+		if err := p.scanner.Err(); err != nil {
+			return nil, fmt.Errorf("scanner error: %w", err)
+		}
+		return nil, io.EOF
+	}
+
+	line := p.scanner.Text()
+	if line == "" {
+		return nil, nil // 빈 라인 무시
+	}
+
+	// 멀티라인 JSON 처리 중인 경우
+	if p.inMultilineJSON {
+		return p.ParseMultilineJSON(line)
+	}
+
+	// 단일 라인 JSON 시도
+	var response Response
+	if err := json.Unmarshal([]byte(line), &response); err == nil {
+		// 성공적으로 파싱됨
+		p.logger.WithFields(logrus.Fields{
+			"type":       response.Type,
+			"message_id": response.MessageID,
+		}).Debug("Parsed single line JSON")
+		return &response, nil
+	}
+
+	// JSON 시작인 경우 멀티라인 처리 시작
+	if p.IsValidJSONStart(line) {
+		return p.ParseMultilineJSON(line)
+	}
+
+	// JSON이 아닌 라인은 무시
+	p.logger.WithField("line", line).Debug("Ignoring non-JSON line")
+	return nil, nil
+}
+
+// RecoverFromError는 파싱 에러로부터 복구를 시도합니다.
+func (p *JSONStreamParser) RecoverFromError() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	p.partialBuffer.Reset()
+	p.inMultilineJSON = false
+	p.braceCount = 0
+	p.bracketCount = 0
+	
+	p.logger.Info("Parser recovered from error state")
 }
