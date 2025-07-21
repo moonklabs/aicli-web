@@ -12,35 +12,50 @@ import (
 
 // 버킷 이름 정의
 const (
-	// 메인 데이터 버킷
-	BucketWorkspaces = "workspaces"
-	BucketProjects   = "projects" 
-	BucketSessions   = "sessions"
-	BucketTasks      = "tasks"
+	// 메인 데이터 버킷 (lowercase for internal use)
+	bucketWorkspaces = "workspaces"
+	bucketProjects   = "projects" 
+	bucketSessions   = "sessions"
+	bucketTasks      = "tasks"
 	
-	// 인덱스 버킷
-	BucketIndexOwner     = "idx_owner"      // owner_id -> workspace_ids
-	BucketIndexWorkspace = "idx_workspace"  // workspace_id -> project_ids
-	BucketIndexProject   = "idx_project"    // project_id -> session_ids
-	BucketIndexSession   = "idx_session"    // session_id -> task_ids
-	BucketIndexStatus    = "idx_status"     // status -> entity_ids
-	BucketIndexPath      = "idx_path"       // path -> project_id
-	BucketIndexName      = "idx_name"       // owner_id:name -> workspace_id
+	// 인덱스 버킷 (lowercase for internal use)
+	bucketIndexOwner     = "idx_owner"      // owner_id -> workspace_ids
+	bucketIndexWorkspace = "idx_workspace"  // workspace_id -> project_ids
+	bucketIndexProject   = "idx_project"    // project_id -> session_ids
+	bucketIndexSession   = "idx_session"    // session_id -> task_ids
+	bucketIndexStatus    = "idx_status"     // status -> entity_ids
+	bucketIndexPath      = "idx_path"       // path -> project_id
+	bucketIndexName      = "idx_name"       // owner_id:name -> workspace_id
+	
+	// 메인 데이터 버킷 (uppercase for external access - backward compatibility)
+	BucketWorkspaces = bucketWorkspaces
+	BucketProjects   = bucketProjects
+	BucketSessions   = bucketSessions
+	BucketTasks      = bucketTasks
+	
+	// 인덱스 버킷 (uppercase for external access - backward compatibility) 
+	BucketIndexOwner     = bucketIndexOwner
+	BucketIndexWorkspace = bucketIndexWorkspace
+	BucketIndexProject   = bucketIndexProject
+	BucketIndexSession   = bucketIndexSession
+	BucketIndexStatus    = bucketIndexStatus
+	BucketIndexPath      = bucketIndexPath
+	BucketIndexName      = bucketIndexName
 )
 
 // 모든 필요한 버킷 리스트
 var requiredBuckets = []string{
-	BucketWorkspaces,
-	BucketProjects,
-	BucketSessions,
-	BucketTasks,
-	BucketIndexOwner,
-	BucketIndexWorkspace,
-	BucketIndexProject,
-	BucketIndexSession,
-	BucketIndexStatus,
-	BucketIndexPath,
-	BucketIndexName,
+	bucketWorkspaces,
+	bucketProjects,
+	bucketSessions,
+	bucketTasks,
+	bucketIndexOwner,
+	bucketIndexWorkspace,
+	bucketIndexProject,
+	bucketIndexSession,
+	bucketIndexStatus,
+	bucketIndexPath,
+	bucketIndexName,
 }
 
 // Storage BoltDB 기반 스토리지 구현
@@ -48,18 +63,28 @@ type Storage struct {
 	db   *bbolt.DB
 	path string
 	
+	// 유틸리티 도구들
+	serializer *Serializer
+	indexer    *IndexManager
+	querier    *QueryHelper
+	
 	// 스토리지 구현체들
 	workspace *workspaceStorage
 	project   *projectStorage
 	session   *sessionStorage
 	task      *taskStorage
+	
+	// 최적화 도구들
+	batchProcessor *BatchProcessor
+	bulkImporter   *BulkImporter
 }
 
 // Config BoltDB 설정
 type Config struct {
-	Path    string
-	Mode    uint32
-	Options *bbolt.Options
+	Path        string
+	Mode        uint32
+	Options     *bbolt.Options
+	BatchConfig BatchConfig
 }
 
 // DefaultConfig 기본 설정 반환
@@ -70,6 +95,7 @@ func DefaultConfig(path string) Config {
 		Options: &bbolt.Options{
 			Timeout: 1 * time.Second,
 		},
+		BatchConfig: DefaultBatchConfig(),
 	}
 }
 
@@ -97,11 +123,20 @@ func New(config Config) (*Storage, error) {
 		return nil, fmt.Errorf("버킷 초기화 실패: %w", err)
 	}
 	
+	// 유틸리티 도구들 초기화
+	storage.serializer = NewSerializer()
+	storage.indexer = NewIndexManager()
+	storage.querier = NewQueryHelper()
+	
 	// 스토리지 구현체들 초기화
 	storage.workspace = newWorkspaceStorage(storage)
 	storage.project = newProjectStorage(storage)
 	storage.session = newSessionStorage(storage)
 	storage.task = newTaskStorage(storage)
+	
+	// 최적화 도구들 초기화
+	storage.batchProcessor = NewBatchProcessor(storage, config.BatchConfig)
+	storage.bulkImporter = NewBulkImporter(storage, DefaultBulkImportConfig())
 	
 	return storage, nil
 }
@@ -179,6 +214,11 @@ func (s *Storage) Update(fn func(*bbolt.Tx) error) error {
 
 // Close 스토리지 연결 종료
 func (s *Storage) Close() error {
+	// 배치 처리기 종료
+	if s.batchProcessor != nil {
+		s.batchProcessor.Close()
+	}
+	
 	if s.db != nil {
 		return s.db.Close()
 	}
@@ -228,4 +268,45 @@ func (s *Storage) Backup(path string) error {
 	return s.db.View(func(tx *bbolt.Tx) error {
 		return tx.CopyFile(path, 0600)
 	})
+}
+
+// BatchProcessor 배치 처리기 반환
+func (s *Storage) BatchProcessor() *BatchProcessor {
+	return s.batchProcessor
+}
+
+// BulkImporter 대량 가져오기 반환
+func (s *Storage) BulkImporter() *BulkImporter {
+	return s.bulkImporter
+}
+
+// GetBatchWriters 배치 라이터들 반환
+func (s *Storage) GetBatchWriters() *BatchWriters {
+	return &BatchWriters{
+		Workspace: s.batchProcessor.NewBatchWriter(BucketWorkspaces, &WorkspaceSerializer{}),
+		Project:   s.batchProcessor.NewBatchWriter(BucketProjects, &ProjectSerializer{}),
+		Session:   s.batchProcessor.NewBatchWriter(BucketSessions, &SessionSerializer{}),
+		Task:      s.batchProcessor.NewBatchWriter(BucketTasks, &TaskSerializer{}),
+	}
+}
+
+// BatchWriters 배치 라이터 모음
+type BatchWriters struct {
+	Workspace *BatchWriter
+	Project   *BatchWriter
+	Session   *BatchWriter
+	Task      *BatchWriter
+}
+
+// FlushAndSync 모든 배치 처리 및 동기화
+func (s *Storage) FlushAndSync(timeout time.Duration) error {
+	// 배치 처리 완료 대기
+	if s.batchProcessor != nil {
+		if err := s.batchProcessor.FlushAll(timeout); err != nil {
+			return fmt.Errorf("배치 플러시 실패: %w", err)
+		}
+	}
+	
+	// 디스크 동기화
+	return s.Sync()
 }
