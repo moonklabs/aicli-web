@@ -1,11 +1,11 @@
 ---
 task_id: T04_S02
 task_name: Project Management API Endpoints
-status: pending
+status: done
 complexity: medium
 priority: medium
 created_at: 2025-07-21
-updated_at: 2025-07-21
+updated_at: 2025-07-21 16:39
 sprint_id: S02_M02
 ---
 
@@ -24,14 +24,14 @@ sprint_id: S02_M02
 
 ## 수용 기준
 
-- [ ] POST /workspaces/:id/projects가 새 프로젝트 생성
-- [ ] GET /workspaces/:id/projects가 워크스페이스의 프로젝트 목록 반환
-- [ ] GET /projects/:id가 프로젝트 상세 정보 반환
-- [ ] PUT /projects/:id가 프로젝트 정보 업데이트
-- [ ] DELETE /projects/:id가 프로젝트 삭제
-- [ ] Git 상태 정보가 프로젝트 응답에 포함
-- [ ] 프로젝트 설정 저장/조회 가능
-- [ ] 단위 및 통합 테스트 작성
+- [x] POST /workspaces/:id/projects가 새 프로젝트 생성
+- [x] GET /workspaces/:id/projects가 워크스페이스의 프로젝트 목록 반환
+- [x] GET /projects/:id가 프로젝트 상세 정보 반환
+- [x] PUT /projects/:id가 프로젝트 정보 업데이트
+- [x] DELETE /projects/:id가 프로젝트 삭제
+- [x] Git 상태 정보가 프로젝트 응답에 포함
+- [x] 프로젝트 설정 저장/조회 가능
+- [x] 단위 및 통합 테스트 작성
 
 ## 기술 가이드
 
@@ -112,15 +112,63 @@ type Project struct {
 
 ## 서브태스크
 
-- [ ] 프로젝트 모델 정의
-- [ ] 프로젝트 서비스 구현
-- [ ] Git 통합 서비스 구현
-- [ ] 프로젝트 컨트롤러 구현
-- [ ] API 라우트 설정
-- [ ] 프로젝트 설정 관리
-- [ ] 테스트 작성
+- [x] 프로젝트 모델 정의
+- [x] 프로젝트 서비스 구현
+- [x] Git 통합 서비스 구현
+- [x] 프로젝트 컨트롤러 구현
+- [x] API 라우트 설정
+- [x] 프로젝트 설정 관리
+- [x] 테스트 작성
 
 ## 관련 링크
 
 - go-git: https://github.com/go-git/go-git
 - Git 상태 API 설계: https://docs.github.com/en/rest/repos
+
+## 출력 로그
+
+### 2025-07-21 16:39
+- 프로젝트 모델 정의 완료 (`internal/models/project.go`)
+  - ID, 이름, 경로, 설명, Git 정보 포함
+  - ProjectStatus enum으로 상태 관리
+  - ProjectConfig로 Claude 설정 관리
+  - GitInfo 구조체로 Git 상태 추적
+  
+- 프로젝트 스토리지 인터페이스 추가 (`internal/storage/interface.go`)
+  - ProjectStorage 인터페이스 정의
+  - 워크스페이스별 프로젝트 조회 지원
+  - 경로 기반 프로젝트 조회 메서드
+  
+- 메모리 기반 프로젝트 스토리지 구현 (`internal/storage/memory/project.go`)
+  - 이름 및 경로 기반 인덱싱
+  - 워크스페이스별 프로젝트 격리
+  - Soft delete 패턴 적용
+  
+- Git 통합 서비스 구현 (`internal/services/git.go`)
+  - Git 리포지토리 상태 확인
+  - 현재 브랜치 및 원격 URL 조회
+  - 파일 변경사항 추적
+  - 마지막 커밋 정보 조회
+  
+- 프로젝트 서비스 레이어 구현 (`internal/services/project.go`)
+  - 워크스페이스 존재 및 권한 검증
+  - 프로젝트 이름/경로 중복 확인
+  - Git 정보 자동 수집
+  - 프로젝트 설정 관리 (API 키 마스킹)
+  
+- 프로젝트 컨트롤러 구현 (`internal/api/controllers/project.go`)
+  - 모든 CRUD 엔드포인트 구현
+  - JWT 인증 통합
+  - 워크스페이스 기반 권한 검증
+  - 페이지네이션 지원
+  
+- 라우터 업데이트 (`internal/server/router.go`)
+  - 워크스페이스 하위 프로젝트 라우트 추가
+  - 독립 프로젝트 라우트 추가
+  
+- 통합 테스트 작성 (`internal/api/controllers/project_test.go`)
+  - 모든 CRUD 작업 테스트
+  - 워크스페이스-프로젝트 관계 테스트
+  - 권한 검증 테스트
+
+모든 서브태스크가 성공적으로 완료되었으며, 프로젝트 관리 API가 완전히 구현되었습니다.

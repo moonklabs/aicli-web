@@ -57,6 +57,9 @@ func (s *Server) setupRoutes() {
 
 		// 워크스페이스 컨트롤러 인스턴스 생성
 		workspaceController := controllers.NewWorkspaceController(s.storage)
+		
+		// 프로젝트 컨트롤러 인스턴스 생성
+		projectController := controllers.NewProjectController(s.storage)
 
 		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
@@ -67,6 +70,19 @@ func (s *Server) setupRoutes() {
 			workspaces.GET("/:id", workspaceController.GetWorkspace)
 			workspaces.PUT("/:id", workspaceController.UpdateWorkspace)
 			workspaces.DELETE("/:id", workspaceController.DeleteWorkspace)
+			
+			// 워크스페이스 내 프로젝트 엔드포인트
+			workspaces.POST("/:workspace_id/projects", projectController.CreateProject)
+			workspaces.GET("/:workspace_id/projects", projectController.ListProjects)
+		}
+		
+		// 프로젝트 관련 엔드포인트 (인증 필요)
+		projects := v1.Group("/projects")
+		projects.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		{
+			projects.GET("/:id", projectController.GetProject)
+			projects.PUT("/:id", projectController.UpdateProject)
+			projects.DELETE("/:id", projectController.DeleteProject)
 		}
 
 		// 태스크 관련 엔드포인트 (인증 필요)
