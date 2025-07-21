@@ -17,6 +17,7 @@ AICode Manager는 Claude CLI를 웹 플랫폼으로 관리하는 로컬 우선 �
   - [빠른 시작](#빠른-시작)
 - [사용법](#사용법)
   - [CLI 명령어](#cli-명령어)
+  - [Claude CLI 통합](#claude-cli-통합)
   - [API 엔드포인트](#api-엔드포인트)
 - [프로젝트 구조](#프로젝트-구조)
 - [개발하기](#개발하기)
@@ -203,6 +204,42 @@ aicli config set <key> <value>
 aicli config path
 ```
 
+### Claude CLI 통합
+
+AICode Manager의 핵심 기능인 Claude CLI 통합을 통해 강력한 AI 개발 도구를 활용할 수 있습니다.
+
+#### Claude 명령어
+
+```bash
+# 단일 프롬프트 실행
+aicli claude run "Write a Go function to reverse a string"
+
+# 인터랙티브 세션
+aicli claude chat --system "You are a helpful coding assistant"
+
+# 세션 관리
+aicli claude session list
+aicli claude session show <session-id>
+aicli claude session clean
+```
+
+#### 주요 특징
+
+- 🔄 **세션 관리**: 재사용 가능한 세션으로 성능 최적화
+- 📡 **실시간 스트리밍**: WebSocket을 통한 실시간 응답 스트리밍  
+- 🛡️ **에러 복구**: 자동 재시도 및 회로 차단기 패턴
+- 🎯 **백프레셔 처리**: 효율적인 스트림 버퍼 관리
+- 📊 **모니터링**: 성능 메트릭 및 상세 로깅
+
+#### 문서
+
+- [사용 가이드](./docs/claude/usage-guide.md) - 기본 사용법과 설정
+- [API 레퍼런스](./docs/claude/api-reference.md) - REST API 및 WebSocket API
+- [설정 가이드](./docs/claude/configuration.md) - 환경 변수 및 설정 파일
+- [아키텍처](./docs/claude/architecture.md) - 시스템 설계 및 구조
+- [트러블슈팅](./docs/claude/troubleshooting.md) - 일반적인 문제 해결
+- [예제 및 레시피](./docs/claude/examples.md) - 실용적인 사용 예제
+
 ### API 엔드포인트
 
 RESTful API를 통해 프로그래밍 방식으로 AICode Manager를 제어할 수 있습니다:
@@ -306,6 +343,13 @@ aicli-web/
 ├── test/                  # 통합 테스트, E2E 테스트
 ├── examples/              # 사용 예제
 ├── docs/                  # 프로젝트 문서
+│   ├── claude/            # Claude CLI 통합 문서
+│   │   ├── usage-guide.md
+│   │   ├── api-reference.md
+│   │   ├── configuration.md
+│   │   ├── architecture.md
+│   │   ├── troubleshooting.md
+│   │   └── examples.md
 │   ├── cli-design/        # CLI 설계 문서
 │   └── development-guide.md # 개발 가이드
 ├── .aiwf/                 # AIWF 프레임워크 구조

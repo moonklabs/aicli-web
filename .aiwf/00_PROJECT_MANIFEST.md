@@ -143,8 +143,8 @@ aicli-web/
     - TX04_S01_CLI_Integration (Medium) - Claude 명령어 구현 (IN_PROGRESS - 2025-07-22 00:43)
     - TX05_S01_API_Integration (Medium) - REST/WebSocket API (COMPLETED - 2025-07-22 01:03)
     - TX06_S01_Integration_Tests (Medium) - E2E 테스트
-    - TX07_S01_Documentation (Low) - 사용 가이드
-  - 진행률: 4/7 태스크 완료 (57%)
+    - TX07_S01_Documentation (Low) - 사용 가이드 (COMPLETED - 2025-07-22 01:28)
+  - 진행률: 5/7 태스크 완료 (71%)
 
 ### 예정된 마일스톤
 1. **M03: Claude CLI 통합** (2주)
@@ -194,6 +194,15 @@ aicli-web/
 4. 개발 환경 설정
 
 ## 업데이트 로그
+- 2025-07-22 01:28: TX07_S01_Documentation 태스크 완료 - Claude CLI 통합 포괄적 문서화
+  - docs/claude/ 디렉토리에 6개 문서 파일 생성 (총 3,526 라인)
+  - usage-guide.md: 전체 사용법 가이드 (기본 사용법, 고급 기능, 성능 최적화)
+  - api-reference.md: REST API 및 WebSocket API 상세 레퍼런스
+  - configuration.md: 환경 변수, 설정 파일, 런타임 설정 가이드
+  - architecture.md: 시스템 아키텍처, 컴포넌트 설계, 데이터 흐름
+  - troubleshooting.md: 문제 해결, 진단 도구, 모니터링 가이드
+  - examples.md: 실용적인 사용 예제, 레시피, 워크플로우 통합
+  - README.md 업데이트: Claude 섹션 추가 및 문서 링크 정리
 - 2025-07-22 01:07: TX03_S01_Session_Management_Basic 태스크 완료 - 세션 관리 시스템 전체 구현
   - session_manager.go: SessionManager 인터페이스 및 구현체 (CRUD, 상태 관리, 스토리지 통합)
   - session_state_machine.go: 세션 상태 머신 (9개 상태, 전이 규칙, 경로 탐색)
