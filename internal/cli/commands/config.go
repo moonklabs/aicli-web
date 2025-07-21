@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"aicli-web/internal/config"
+	"aicli-web/internal/cli/output"
 	"gopkg.in/yaml.v3"
 )
 
@@ -217,16 +218,17 @@ Use --source to see where each value comes from.`,
 			// 전체 설정 가져오기
 			allSettings := cm.AllSettings()
 
+			// 출력 포맷터 생성
+			formatter := output.DefaultFormatterManager()
+			
 			if showSource {
-				// 소스 정보와 함께 출력
-				printSettingsWithSource(cm, allSettings, "")
+				// 소스 정보와 함께 테이블 형식으로 출력
+				configs := flattenSettingsWithSource(cm, allSettings, "")
+				formatter.SetHeaders([]string{"key", "value", "source"})
+				return formatter.Print(configs)
 			} else {
-				// YAML 형식으로 출력
-				data, err := yaml.Marshal(allSettings)
-				if err != nil {
-					return fmt.Errorf("failed to marshal settings: %w", err)
-				}
-				fmt.Println(string(data))
+				// 일반 출력 (테이블/JSON/YAML)
+				return formatter.Print(allSettings)
 			}
 
 			return nil
@@ -427,4 +429,49 @@ Use --force to skip confirmation.`,
 	cmd.Flags().BoolVarP(&force, "force", "f", false, "Skip confirmation")
 
 	return cmd
+}
+
+// flattenSettingsWithSource는 중첩된 설정을 평면화하고 소스 정보를 추가합니다
+func flattenSettingsWithSource(cm *config.Manager, settings map[string]interface{}, prefix string) []map[string]interface{} {
+	var result []map[string]interface{}
+	
+	// 키를 정렬하여 일관된 출력 순서 보장
+	keys := make([]string, 0, len(settings))
+	for k := range settings {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	for _, key := range keys {
+		value := settings[key]
+		fullKey := key
+		if prefix != "" {
+			fullKey = prefix + "." + key
+		}
+		
+		switch v := value.(type) {
+		case map[string]interface{}:
+			// 중첩된 맵인 경우 재귀적으로 처리
+			result = append(result, flattenSettingsWithSource(cm, v, fullKey)...)
+		default:
+			// 값과 소스 정보 추가
+			source := "default"
+			if cm.IsSet(fullKey) {
+				// 실제 소스 확인 (환경변수, 설정파일 등)
+				if cm.GetEnv(fullKey) != "" {
+					source = "env"
+				} else if cm.IsFromConfigFile(fullKey) {
+					source = "config"
+				}
+			}
+			
+			result = append(result, map[string]interface{}{
+				"key":    fullKey,
+				"value":  fmt.Sprintf("%v", value),
+				"source": source,
+			})
+		}
+	}
+	
+	return result
 }

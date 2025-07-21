@@ -280,3 +280,115 @@ func validateDirectory(fl validator.FieldLevel) bool {
 	
 	return info.IsDir()
 }
+
+// AllSettings는 모든 설정을 맵 형태로 반환합니다
+func (m *Manager) AllSettings() map[string]interface{} {
+	if m.config == nil {
+		m.config = GetDefaultConfig()
+	}
+	
+	// 구조체를 맵으로 변환
+	return map[string]interface{}{
+		"claude": map[string]interface{}{
+			"api_key":     m.config.Claude.APIKey,
+			"model":       m.config.Claude.Model,
+			"temperature": m.config.Claude.Temperature,
+			"timeout":     m.config.Claude.Timeout,
+		},
+		"workspace": map[string]interface{}{
+			"default_path": m.config.Workspace.DefaultPath,
+			"max_projects": m.config.Workspace.MaxProjects,
+			"auto_sync":    m.config.Workspace.AutoSync,
+		},
+		"output": map[string]interface{}{
+			"format":     m.config.Output.Format,
+			"color_mode": m.config.Output.ColorMode,
+			"width":      m.config.Output.Width,
+		},
+		"logging": map[string]interface{}{
+			"level":     m.config.Logging.Level,
+			"file_path": m.config.Logging.FilePath,
+		},
+	}
+}
+
+// IsSet은 특정 키가 설정되어 있는지 확인합니다
+func (m *Manager) IsSet(key string) bool {
+	// 환경 변수 확인
+	envKey := "AICLI_" + strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
+	if os.Getenv(envKey) != "" {
+		return true
+	}
+	
+	// 설정 파일에서 확인
+	return m.IsFromConfigFile(key)
+}
+
+// GetEnv는 해당 키의 환경 변수 값을 반환합니다
+func (m *Manager) GetEnv(key string) string {
+	envKey := "AICLI_" + strings.ToUpper(strings.ReplaceAll(key, ".", "_"))
+	return os.Getenv(envKey)
+}
+
+// IsFromConfigFile은 해당 키가 설정 파일에서 왔는지 확인합니다
+func (m *Manager) IsFromConfigFile(key string) bool {
+	// 설정이 로드되지 않은 경우
+	if m.config == nil {
+		return false
+	}
+	
+	// 기본값과 비교하여 변경되었는지 확인
+	defaultConfig := GetDefaultConfig()
+	
+	switch key {
+	case "claude.api_key":
+		return m.config.Claude.APIKey != defaultConfig.Claude.APIKey
+	case "claude.model":
+		return m.config.Claude.Model != defaultConfig.Claude.Model
+	case "claude.temperature":
+		return m.config.Claude.Temperature != defaultConfig.Claude.Temperature
+	case "claude.timeout":
+		return m.config.Claude.Timeout != defaultConfig.Claude.Timeout
+	case "workspace.default_path":
+		return m.config.Workspace.DefaultPath != defaultConfig.Workspace.DefaultPath
+	case "workspace.max_projects":
+		return m.config.Workspace.MaxProjects != defaultConfig.Workspace.MaxProjects
+	case "workspace.auto_sync":
+		return m.config.Workspace.AutoSync != defaultConfig.Workspace.AutoSync
+	case "output.format":
+		return m.config.Output.Format != defaultConfig.Output.Format
+	case "output.color_mode":
+		return m.config.Output.ColorMode != defaultConfig.Output.ColorMode
+	case "output.width":
+		return m.config.Output.Width != defaultConfig.Output.Width
+	case "logging.level":
+		return m.config.Logging.Level != defaultConfig.Logging.Level
+	case "logging.file_path":
+		return m.config.Logging.FilePath != defaultConfig.Logging.FilePath
+	default:
+		return false
+	}
+}
+
+// ConvertValue는 문자열 값을 적절한 타입으로 변환합니다
+func (m *Manager) ConvertValue(key string, value string) (interface{}, error) {
+	switch key {
+	case "claude.api_key", "claude.model", "workspace.default_path", 
+	     "output.format", "output.color_mode", "logging.level", "logging.file_path":
+		return value, nil
+	case "claude.temperature":
+		return parseFloat(value)
+	case "claude.timeout", "workspace.max_projects", "output.width":
+		return parseInt(value)
+	case "workspace.auto_sync":
+		return strings.ToLower(value) == "true", nil
+	default:
+		return value, nil
+	}
+}
+
+// Reset은 설정을 기본값으로 초기화합니다
+func (m *Manager) Reset() error {
+	m.config = GetDefaultConfig()
+	return m.Save()
+}

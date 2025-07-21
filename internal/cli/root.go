@@ -64,7 +64,7 @@ func init() {
 	// 전역 플래그 정의
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "설정 파일 경로 (기본값: $HOME/.aicli.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "상세 출력 모드 활성화")
-	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "출력 형식 (table|json|yaml|csv)")
+	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "table", "출력 형식 (table|json|yaml)")
 
 	// 플래그를 viper와 바인딩
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
@@ -76,7 +76,6 @@ func init() {
 			"table",
 			"json",
 			"yaml",
-			"csv",
 		}
 		return formats, cobra.ShellCompDirectiveNoFileComp
 	})

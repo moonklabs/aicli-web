@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
+	"aicli-web/internal/cli/output"
 )
 
 // NewTaskCmd는 task 관련 명령어를 생성합니다.
@@ -170,15 +172,55 @@ func newTaskListCmd() *cobra.Command {
   aicli task list --output json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: API 클라이언트를 통해 실제 태스크 목록 조회
-			fmt.Println("Tasks:")
-			if workspace != "" {
-				fmt.Printf("Filtering by workspace: %s\n", workspace)
+			// 임시 데이터 (실제로는 API에서 가져옴)
+			tasks := []map[string]interface{}{
+				{
+					"id":        "task-12345",
+					"workspace": "project-alpha",
+					"status":    "running",
+					"command":   "implement login feature",
+					"started_at": time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
+					"duration":   "10m",
+				},
+				{
+					"id":         "task-12346",
+					"workspace":  "project-beta",
+					"status":     "completed",
+					"command":    "fix database migration",
+					"started_at":  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+					"duration":    "45m",
+				},
 			}
-			if status != "" {
-				fmt.Printf("Filtering by status: %s\n", status)
+			
+			// 필터링 적용
+			filteredTasks := []map[string]interface{}{}
+			for _, task := range tasks {
+				// 워크스페이스 필터
+				if workspace != "" && task["workspace"] != workspace {
+					continue
+				}
+				// 상태 필터
+				if status != "" && task["status"] != status {
+					continue
+				}
+				// all 플래그가 없으면 실행 중인 것만
+				if !all && task["status"] != "running" {
+					continue
+				}
+				filteredTasks = append(filteredTasks, task)
 			}
-			fmt.Println("- No tasks found")
-			return nil
+			
+			// 빈 목록 처리
+			if len(filteredTasks) == 0 {
+				fmt.Println("No tasks found")
+				return nil
+			}
+			
+			// 출력 포맷터 생성
+			formatter := output.DefaultFormatterManager()
+			formatter.SetHeaders([]string{"id", "workspace", "status", "command", "started_at", "duration"})
+			
+			return formatter.Print(filteredTasks)
 		},
 	}
 

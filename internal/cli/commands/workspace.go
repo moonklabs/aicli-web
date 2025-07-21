@@ -2,9 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/drumcap/aicli-web/internal/cli/errors"
+	"aicli-web/internal/cli/errors"
+	"aicli-web/internal/cli/output"
 )
 
 // NewWorkspaceCmd는 workspace 관련 명령어를 생성합니다.
@@ -68,9 +70,33 @@ func newWorkspaceListCmd() *cobra.Command {
   aicli ws list`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: API 클라이언트를 통해 실제 워크스페이스 목록 조회
-			fmt.Println("Available workspaces:")
-			fmt.Println("- No workspaces found")
-			return nil
+			// 임시 데이터 (실제로는 API에서 가져옴)
+			workspaces := []map[string]interface{}{
+				{
+					"name":       "project-alpha",
+					"status":     "active",
+					"created_at": time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+					"path":       "/home/user/projects/alpha",
+				},
+				{
+					"name":       "project-beta", 
+					"status":     "inactive",
+					"created_at": time.Now().Add(-48 * time.Hour).Format(time.RFC3339),
+					"path":       "/home/user/projects/beta",
+				},
+			}
+			
+			// 빈 목록 처리
+			if len(workspaces) == 0 {
+				fmt.Println("No workspaces found")
+				return nil
+			}
+			
+			// 출력 포맷터 생성
+			formatter := output.DefaultFormatterManager()
+			formatter.SetHeaders([]string{"name", "status", "created_at", "path"})
+			
+			return formatter.Print(workspaces)
 		},
 	}
 }
@@ -229,9 +255,24 @@ func newWorkspaceInfoCmd() *cobra.Command {
 			workspaceName := args[0]
 
 			// TODO: API 클라이언트를 통해 실제 워크스페이스 정보 조회
-			fmt.Printf("Workspace: %s\n", workspaceName)
-			fmt.Println("Status: Not Found")
-			return nil
+			// 임시 데이터 (실제로는 API에서 가져옴)
+			info := map[string]interface{}{
+				"name":          workspaceName,
+				"id":            "ws-12345",
+				"status":        "active",
+				"created_at":    time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+				"last_used":     time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+				"project_path":  "/home/user/projects/" + workspaceName,
+				"running_tasks": 2,
+				"cpu_usage":     "15%",
+				"memory_usage":  "512MB / 2GB",
+				"claude_api":    "configured",
+			}
+			
+			// 출력 포맷터 생성
+			formatter := output.DefaultFormatterManager()
+			
+			return formatter.Print(info)
 		},
 	}
 }

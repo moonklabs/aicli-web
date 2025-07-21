@@ -19,21 +19,21 @@ AICode Manager CLI의 다양한 출력 형식을 지원하는 포맷팅 시스�
 - 파이프라인 및 스크립팅 지원
 
 ## Acceptance Criteria
-- [ ] Table 형식 출력 (기본값) 구현
-- [ ] JSON 형식 출력 구현
-- [ ] YAML 형식 출력 구현
-- [ ] 색상 지원 및 터미널 감지 구현
-- [ ] `--output` 또는 `-o` 플래그로 형식 선택 가능
-- [ ] 파이프 환경에서 색상 자동 비활성화
+- [x] Table 형식 출력 (기본값) 구현
+- [x] JSON 형식 출력 구현
+- [x] YAML 형식 출력 구현
+- [x] 색상 지원 및 터미널 감지 구현
+- [x] `--output` 또는 `-o` 플래그로 형식 선택 가능
+- [x] 파이프 환경에서 색상 자동 비활성화
 
 ## Subtasks
-- [ ] 출력 포맷터 인터페이스 설계
-- [ ] Table 포맷터 구현
-- [ ] JSON 포맷터 구현
-- [ ] YAML 포맷터 구현
-- [ ] 색상 지원 시스템 구현
-- [ ] CLI 플래그 통합
-- [ ] 출력 형식 테스트 작성
+- [x] 출력 포맷터 인터페이스 설계
+- [x] Table 포맷터 구현
+- [x] JSON 포맷터 구현
+- [x] YAML 포맷터 구현
+- [x] 색상 지원 시스템 구현
+- [x] CLI 플래그 통합
+- [x] 출력 형식 테스트 작성
 
 ## 기술 가이드
 
@@ -140,4 +140,67 @@ NO_COLOR=1 aicli workspace list --output yaml
 ```
 
 ## Output Log
-*(This section is populated as work progresses on the task)*
+
+### 2025-07-21 - CLI 출력 포맷팅 시스템 구현 완료
+
+#### 구현된 기능
+
+1. **출력 포맷터 인터페이스 및 구현체**
+   - `/internal/cli/output/formatter.go` - 메인 포맷터 구현
+   - `Formatter` 인터페이스와 `FormatterManager` 구조체
+   - `TableFormatter`, `JSONFormatter`, `YAMLFormatter` 구현체
+
+2. **주요 기능**
+   - 테이블 형식 출력 (tablewriter 라이브러리 사용)
+   - JSON 형식 출력 (들여쓰기 지원)
+   - YAML 형식 출력
+   - 색상 지원 (fatih/color 라이브러리)
+   - 터미널 감지 (mattn/go-isatty)
+   - NO_COLOR 환경 변수 지원
+
+3. **CLI 통합**
+   - 전역 `--output` 플래그 추가 (root.go)
+   - workspace 명령어 통합 (list, info)
+   - task 명령어 통합 (list)
+   - config 명령어 통합 (list)
+
+4. **테스트 및 예제**
+   - `/internal/cli/output/formatter_test.go` - 단위 테스트
+   - `/examples/output_formatter_example.go` - 사용 예제
+
+5. **추가된 의존성**
+   - `github.com/olekukonko/tablewriter` - 테이블 렌더링
+   - `github.com/fatih/color` - 터미널 색상 지원
+   - `github.com/mattn/go-isatty` - 터미널 감지
+
+#### 구현 특징
+
+- 리플렉션을 사용한 구조체 자동 테이블 변환
+- 맵, 구조체, 슬라이스 등 다양한 데이터 타입 지원
+- JSON 태그를 활용한 필드명 매핑
+- 색상 문법 하이라이팅 (JSON, YAML)
+- 파이프라인 환경 자동 감지
+
+#### 사용 방법
+
+```bash
+# 기본 테이블 형식
+aicli workspace list
+
+# JSON 형식
+aicli workspace list --output json
+aicli workspace list -o json
+
+# YAML 형식
+aicli workspace list --output yaml
+
+# 색상 비활성화
+NO_COLOR=1 aicli workspace list
+```
+
+#### 향후 개선 사항
+
+1. CSV 형식 추가 (필요시)
+2. 커스텀 템플릿 지원
+3. 페이지네이션 지원
+4. 더 정교한 문법 하이라이팅
