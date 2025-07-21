@@ -145,9 +145,17 @@ aicli-web/
     - TX06_S01_Integration_Tests (Medium) - E2E 테스트 (COMPLETED - 2025-07-22 08:25)
     - TX07_S01_Documentation (Low) - 사용 가이드 (COMPLETED - 2025-07-22 01:28)
   - 진행률: 7/7 태스크 완료 (100%)
-- **S02_M03_Advanced_Integration** (PLANNING - 2025-07-22 08:30 계획 시작) - Claude CLI 고급 통합 및 최적화
+- **S02_M03_Advanced_Integration** (IN_PROGRESS - 2025-07-22 08:45 시작) - Claude CLI 고급 통합 및 최적화
   - 고급 세션 관리, 웹 인터페이스 통합, 에러 복구, 성능 최적화
-  - 예상 기간: 1주 (5-7개 태스크 예상)
+  - 태스크 상세화 완료: 6개 태스크 (High: 2개, Medium: 3개, Low: 1개)
+  - 태스크:
+    - TX01_S02_Advanced_Session_Pool (High) - 동적 세션 풀 스케일링, 재사용 최적화 (PENDING)
+    - TX02_S02_Web_Interface_Integration (High) - 실시간 WebSocket 통합, 멀티유저 협업 (PENDING)
+    - TX03_S02_Advanced_Error_Recovery (Medium) - 고급 에러 분류, 자동 재시도, Circuit Breaker (PENDING)
+    - TX04_S02_Performance_Optimization (Medium) - 메모리 풀링, 고루틴 관리, 캐싱 시스템 (PENDING)
+    - TX05_S02_Comprehensive_Integration_Tests (Medium) - 포괄적 통합 테스트, E2E 시나리오 (PENDING)
+    - TX06_S02_Advanced_Documentation (Low) - 고급 기능 문서화, 운영 가이드 (PENDING)
+  - 진행률: 0/6 태스크 완료 (0%)
 
 ### 예정된 마일스톤
 1. **M03: Claude CLI 통합** (2주)
