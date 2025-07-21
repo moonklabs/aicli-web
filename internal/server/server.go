@@ -3,18 +3,38 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"aicli-web/internal/auth"
+	"aicli-web/internal/config"
 	"github.com/drumcap/aicli-web/internal/middleware"
 )
 
 // Server는 API 서버의 핵심 구조체입니다.
 type Server struct {
-	router *gin.Engine
+	router      *gin.Engine
+	jwtManager  *auth.JWTManager
+	blacklist   *auth.Blacklist
 	// TODO: 데이터베이스, 클라이언트 등 의존성은 나중에 추가
 }
 
 // New는 새로운 서버 인스턴스를 생성합니다.
 func New() *Server {
-	s := &Server{}
+	// 설정 로드
+	cfg := config.DefaultConfig()
+	
+	// JWT 매니저 초기화
+	jwtManager := auth.NewJWTManager(
+		cfg.API.JWTSecret,
+		cfg.API.AccessTokenExpiry,
+		cfg.API.RefreshTokenExpiry,
+	)
+	
+	// 블랙리스트 초기화
+	blacklist := auth.NewBlacklist()
+	
+	s := &Server{
+		jwtManager: jwtManager,
+		blacklist:  blacklist,
+	}
 	s.setupRouter()
 	return s
 }

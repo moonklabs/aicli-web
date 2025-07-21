@@ -7,6 +7,7 @@ import (
 	"github.com/drumcap/aicli-web/internal/server/handlers"
 	apiHandlers "github.com/drumcap/aicli-web/internal/api/handlers"
 	"github.com/drumcap/aicli-web/internal/api/controllers"
+	"github.com/drumcap/aicli-web/internal/middleware"
 	"github.com/drumcap/aicli-web/pkg/version"
 )
 
@@ -32,6 +33,17 @@ func (s *Server) setupRoutes() {
 	// API v1 그룹
 	v1 := s.router.Group("/api/v1")
 	{
+		// 인증 핸들러 생성
+		authHandler := apiHandlers.NewAuthHandler(s.jwtManager, s.blacklist)
+		
+		// 인증 엔드포인트 (인증 불필요)
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.Refresh)
+			auth.POST("/logout", authHandler.Logout)
+		}
+		
 		// 시스템 정보 엔드포인트
 		system := v1.Group("/system")
 		{
@@ -42,8 +54,9 @@ func (s *Server) setupRoutes() {
 		// 워크스페이스 컨트롤러 인스턴스 생성
 		workspaceController := controllers.NewWorkspaceController()
 
-		// 워크스페이스 관련 엔드포인트
+		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
+		workspaces.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
 		{
 			workspaces.GET("", workspaceController.ListWorkspaces)
 			workspaces.POST("", workspaceController.CreateWorkspace)
@@ -52,8 +65,9 @@ func (s *Server) setupRoutes() {
 			workspaces.DELETE("/:id", workspaceController.DeleteWorkspace)
 		}
 
-		// 태스크 관련 엔드포인트 (기존 스텁 유지)
+		// 태스크 관련 엔드포인트 (인증 필요)
 		tasks := v1.Group("/tasks")
+		tasks.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
 		{
 			tasks.GET("", handlers.ListTasks)
 			tasks.POST("", handlers.CreateTask)
@@ -61,16 +75,19 @@ func (s *Server) setupRoutes() {
 			tasks.DELETE("/:id", handlers.CancelTask)
 		}
 
-		// 로그 관련 엔드포인트 (기존 스텁 유지)
+		// 로그 관련 엔드포인트 (인증 필요)
 		logs := v1.Group("/logs")
+		logs.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
 		{
 			logs.GET("/workspaces/:id", handlers.GetWorkspaceLogs)
 			logs.GET("/tasks/:id", handlers.GetTaskLogs)
 			// TODO: WebSocket 엔드포인트는 나중에 추가
 		}
 
-		// 설정 관련 엔드포인트 (기존 스텁 유지)
+		// 설정 관련 엔드포인트 (인증 필요 + 관리자 권한)
 		config := v1.Group("/config")
+		config.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		config.Use(middleware.RequireRole("admin"))
 		{
 			config.GET("", handlers.GetConfig)
 			config.PUT("", handlers.UpdateConfig)

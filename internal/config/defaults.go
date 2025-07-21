@@ -44,6 +44,11 @@ const (
 	DefaultAPIAddress     = "localhost:8080"
 	DefaultRateLimit      = 100 // requests per minute
 	DefaultJWTExpiration  = 24 * time.Hour
+	
+	// JWT 기본값
+	DefaultAccessTokenExpiry  = 15 * time.Minute
+	DefaultRefreshTokenExpiry = 7 * 24 * time.Hour
+	DefaultJWTSecretKey      = "default-secret-key-change-in-production"
 )
 
 // DefaultConfig는 기본 설정을 반환합니다
@@ -105,11 +110,14 @@ func DefaultConfig() *Config {
 			ContainerPrefix: DefaultContainerPrefix,
 		},
 		API: APIConfig{
-			Address:       DefaultAPIAddress,
-			TLSEnabled:    false,
-			CORSOrigins:   []string{"http://localhost:3000"},
-			RateLimit:     DefaultRateLimit,
-			JWTExpiration: DefaultJWTExpiration,
+			Address:            DefaultAPIAddress,
+			TLSEnabled:         false,
+			CORSOrigins:        []string{"http://localhost:3000"},
+			RateLimit:          DefaultRateLimit,
+			JWTExpiration:      DefaultJWTExpiration,
+			JWTSecret:          DefaultJWTSecretKey,
+			AccessTokenExpiry:  DefaultAccessTokenExpiry,
+			RefreshTokenExpiry: DefaultRefreshTokenExpiry,
 		},
 	}
 }

@@ -162,4 +162,10 @@ type APIConfig struct {
 	
 	// JWT 만료 시간 (시간)
 	JWTExpiration time.Duration `yaml:"jwt_expiration" mapstructure:"jwt_expiration" json:"jwt_expiration"`
+	
+	// 액세스 토큰 만료 시간
+	AccessTokenExpiry time.Duration `yaml:"access_token_expiry" mapstructure:"access_token_expiry" json:"access_token_expiry"`
+	
+	// 리프레시 토큰 만료 시간
+	RefreshTokenExpiry time.Duration `yaml:"refresh_token_expiry" mapstructure:"refresh_token_expiry" json:"refresh_token_expiry"`
 }
