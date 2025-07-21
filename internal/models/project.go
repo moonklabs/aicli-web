@@ -15,40 +15,40 @@ const (
 
 // Project 프로젝트 모델
 type Project struct {
-	ID           string         `json:"id"`
-	WorkspaceID  string         `json:"workspace_id" binding:"required"`
-	Name         string         `json:"name" binding:"required,min=1,max=100"`
-	Path         string         `json:"path" binding:"required,dir"` // 커스텀 validator 사용
-	Description  string         `json:"description" binding:"max=500"`
-	GitURL       string         `json:"git_url,omitempty"`
-	GitBranch    string         `json:"git_branch,omitempty"`
-	Language     string         `json:"language,omitempty"`
-	Status       ProjectStatus  `json:"status"`
-	Config       ProjectConfig  `json:"config"`
-	GitInfo      *GitInfo       `json:"git_info,omitempty"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
-	DeletedAt    *time.Time     `json:"deleted_at,omitempty"`
+	ID           string         `json:"id" validate:"omitempty,uuid"`
+	WorkspaceID  string         `json:"workspace_id" binding:"required" validate:"required,uuid"`
+	Name         string         `json:"name" binding:"required,min=1,max=100" validate:"required,min=1,max=100,no_special_chars"`
+	Path         string         `json:"path" binding:"required,dir" validate:"required,dir,safepath"` // 커스텀 validator 사용
+	Description  string         `json:"description" binding:"max=500" validate:"max=500"`
+	GitURL       string         `json:"git_url,omitempty" validate:"omitempty,url"`
+	GitBranch    string         `json:"git_branch,omitempty" validate:"omitempty,min=1,max=100"`
+	Language     string         `json:"language,omitempty" validate:"omitempty,min=1,max=50"`
+	Status       ProjectStatus  `json:"status" validate:"omitempty,project_status"`
+	Config       ProjectConfig  `json:"config" validate:"-"`
+	GitInfo      *GitInfo       `json:"git_info,omitempty" validate:"-"`
+	CreatedAt    time.Time      `json:"created_at" validate:"-"`
+	UpdatedAt    time.Time      `json:"updated_at" validate:"-"`
+	DeletedAt    *time.Time     `json:"deleted_at,omitempty" validate:"-"`
 }
 
 // ProjectConfig 프로젝트 설정
 type ProjectConfig struct {
-	ClaudeAPIKey    string            `json:"-"` // 보안상 JSON 직렬화에서 제외
-	EncryptedAPIKey string            `json:"encrypted_api_key,omitempty"`
-	Environment     map[string]string `json:"environment,omitempty"`
-	ClaudeOptions   ClaudeOptions     `json:"claude_options"`
-	BuildCommands   []string          `json:"build_commands,omitempty"`
-	TestCommands    []string          `json:"test_commands,omitempty"`
+	ClaudeAPIKey    string            `json:"-" validate:"omitempty,claude_api_key"` // 보안상 JSON 직렬화에서 제외
+	EncryptedAPIKey string            `json:"encrypted_api_key,omitempty" validate:"omitempty"`
+	Environment     map[string]string `json:"environment,omitempty" validate:"-"`
+	ClaudeOptions   ClaudeOptions     `json:"claude_options" validate:"-"`
+	BuildCommands   []string          `json:"build_commands,omitempty" validate:"dive,min=1"`
+	TestCommands    []string          `json:"test_commands,omitempty" validate:"dive,min=1"`
 }
 
 // ClaudeOptions Claude CLI 옵션
 type ClaudeOptions struct {
-	Model           string   `json:"model,omitempty"`
-	MaxTokens       int      `json:"max_tokens,omitempty"`
-	Temperature     float32  `json:"temperature,omitempty"`
-	SystemPrompt    string   `json:"system_prompt,omitempty"`
-	ExcludePaths    []string `json:"exclude_paths,omitempty"`
-	IncludePaths    []string `json:"include_paths,omitempty"`
+	Model           string   `json:"model,omitempty" validate:"omitempty,min=1,max=100"`
+	MaxTokens       int      `json:"max_tokens,omitempty" validate:"omitempty,min=1,max=200000"`
+	Temperature     float32  `json:"temperature,omitempty" validate:"omitempty,min=0,max=1"`
+	SystemPrompt    string   `json:"system_prompt,omitempty" validate:"omitempty,max=10000"`
+	ExcludePaths    []string `json:"exclude_paths,omitempty" validate:"dive,min=1"`
+	IncludePaths    []string `json:"include_paths,omitempty" validate:"dive,min=1"`
 }
 
 // GitInfo Git 리포지토리 정보

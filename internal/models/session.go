@@ -25,26 +25,26 @@ const (
 // Session Claude CLI 세션을 나타내는 모델
 type Session struct {
 	BaseModel
-	ProjectID  string            `json:"project_id" gorm:"index;not null"`
-	ProcessID  int               `json:"process_id"`
-	Status     SessionStatus     `json:"status" gorm:"default:'pending'"`
-	StartedAt  *time.Time        `json:"started_at"`
-	EndedAt    *time.Time        `json:"ended_at"`
-	LastActive time.Time         `json:"last_active" gorm:"not null"`
-	Metadata   map[string]string `json:"metadata" gorm:"serializer:json"`
+	ProjectID  string            `json:"project_id" gorm:"index;not null" validate:"required,uuid"`
+	ProcessID  int               `json:"process_id" validate:"omitempty,min=0"`
+	Status     SessionStatus     `json:"status" gorm:"default:'pending'" validate:"omitempty,session_status"`
+	StartedAt  *time.Time        `json:"started_at" validate:"-"`
+	EndedAt    *time.Time        `json:"ended_at" validate:"-"`
+	LastActive time.Time         `json:"last_active" gorm:"not null" validate:"-"`
+	Metadata   map[string]string `json:"metadata" gorm:"serializer:json" validate:"-"`
 	
 	// 연관 관계
-	Project    *Project          `json:"project,omitempty" gorm:"foreignKey:ProjectID"`
+	Project    *Project          `json:"project,omitempty" gorm:"foreignKey:ProjectID" validate:"-"`
 	
 	// 세션 통계
-	CommandCount int64           `json:"command_count" gorm:"default:0"`
-	BytesIn      int64           `json:"bytes_in" gorm:"default:0"`
-	BytesOut     int64           `json:"bytes_out" gorm:"default:0"`
-	ErrorCount   int64           `json:"error_count" gorm:"default:0"`
+	CommandCount int64           `json:"command_count" gorm:"default:0" validate:"min=0"`
+	BytesIn      int64           `json:"bytes_in" gorm:"default:0" validate:"min=0"`
+	BytesOut     int64           `json:"bytes_out" gorm:"default:0" validate:"min=0"`
+	ErrorCount   int64           `json:"error_count" gorm:"default:0" validate:"min=0"`
 	
 	// 리소스 제한
-	MaxIdleTime  time.Duration   `json:"max_idle_time" gorm:"default:1800000000000"` // 30분
-	MaxLifetime  time.Duration   `json:"max_lifetime" gorm:"default:14400000000000"` // 4시간
+	MaxIdleTime  time.Duration   `json:"max_idle_time" gorm:"default:1800000000000" validate:"min=0"` // 30분
+	MaxLifetime  time.Duration   `json:"max_lifetime" gorm:"default:14400000000000" validate:"min=0"` // 4시간
 }
 
 // IsActive 세션이 활성 상태인지 확인
@@ -87,10 +87,10 @@ type SessionFilter struct {
 
 // SessionCreateRequest 세션 생성 요청
 type SessionCreateRequest struct {
-	ProjectID   string            `json:"project_id" binding:"required"`
-	Metadata    map[string]string `json:"metadata"`
-	MaxIdleTime *time.Duration    `json:"max_idle_time"`
-	MaxLifetime *time.Duration    `json:"max_lifetime"`
+	ProjectID   string            `json:"project_id" binding:"required" validate:"required,uuid"`
+	Metadata    map[string]string `json:"metadata" validate:"-"`
+	MaxIdleTime *time.Duration    `json:"max_idle_time" validate:"omitempty,min=0"`
+	MaxLifetime *time.Duration    `json:"max_lifetime" validate:"omitempty,min=0"`
 }
 
 // SessionResponse 세션 응답

@@ -18,25 +18,25 @@ const (
 // Task 태스크 모델
 type Task struct {
 	BaseModel
-	SessionID   string     `json:"session_id" gorm:"not null;index"`
-	Command     string     `json:"command" binding:"required" gorm:"not null"`
-	Status      TaskStatus `json:"status" gorm:"default:'pending';index"`
-	Output      string     `json:"output,omitempty" gorm:"type:text"`
-	Error       string     `json:"error,omitempty" gorm:"type:text"`
-	StartedAt   *time.Time `json:"started_at,omitempty"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	SessionID   string     `json:"session_id" gorm:"not null;index" validate:"required,uuid"`
+	Command     string     `json:"command" binding:"required" gorm:"not null" validate:"required,min=1,max=10000"`
+	Status      TaskStatus `json:"status" gorm:"default:'pending';index" validate:"omitempty,task_status"`
+	Output      string     `json:"output,omitempty" gorm:"type:text" validate:"omitempty"`
+	Error       string     `json:"error,omitempty" gorm:"type:text" validate:"omitempty"`
+	StartedAt   *time.Time `json:"started_at,omitempty" validate:"-"`
+	CompletedAt *time.Time `json:"completed_at,omitempty" validate:"-"`
 	
 	// 통계 정보
-	BytesIn  int64 `json:"bytes_in" gorm:"default:0"`
-	BytesOut int64 `json:"bytes_out" gorm:"default:0"`
-	Duration int64 `json:"duration" gorm:"default:0"` // 실행 시간 (밀리초)
+	BytesIn  int64 `json:"bytes_in" gorm:"default:0" validate:"min=0"`
+	BytesOut int64 `json:"bytes_out" gorm:"default:0" validate:"min=0"`
+	Duration int64 `json:"duration" gorm:"default:0" validate:"min=0"` // 실행 시간 (밀리초)
 }
 
 // TaskCreateRequest 태스크 생성 요청
 type TaskCreateRequest struct {
-	SessionID string            `json:"session_id" binding:"required"`
-	Command   string            `json:"command" binding:"required,min=1,max=10000"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
+	SessionID string            `json:"session_id" binding:"required" validate:"required,uuid"`
+	Command   string            `json:"command" binding:"required,min=1,max=10000" validate:"required,min=1,max=10000"`
+	Metadata  map[string]string `json:"metadata,omitempty" validate:"-"`
 }
 
 // TaskResponse 태스크 응답
@@ -65,9 +65,9 @@ type TaskFilter struct {
 
 // TaskUpdateRequest 태스크 업데이트 요청
 type TaskUpdateRequest struct {
-	Status TaskStatus `json:"status" binding:"required"`
-	Output string     `json:"output,omitempty"`
-	Error  string     `json:"error,omitempty"`
+	Status TaskStatus `json:"status" binding:"required" validate:"required,task_status"`
+	Output string     `json:"output,omitempty" validate:"omitempty"`
+	Error  string     `json:"error,omitempty" validate:"omitempty"`
 }
 
 // IsActive 태스크가 활성 상태인지 확인
