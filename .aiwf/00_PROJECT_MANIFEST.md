@@ -109,6 +109,8 @@ aicli-web/
   - 완료된 태스크:
     - TX01_S02_JWT_Auth_Implementation (COMPLETED - 2025-07-21 14:21 완료) - JWT 인증 시스템 전체 구현
     - TX02_S02_OpenAPI_Documentation (COMPLETED - 2025-07-21 14:28 완료) - OpenAPI 문서화 및 Swagger UI 통합
+  - 진행 중인 태스크:
+    - T03_S02_Workspace_API_Endpoints (IN_PROGRESS - 2025-07-21 14:31 시작)
   - 진행률: 2/8 태스크 (25%)
 - **S03_M02_Data_Model** (PLANNED) - 데이터 모델 구현
   - 스키마 설계, 모델 구현, CRUD 작업, 마이그레이션

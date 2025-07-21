@@ -172,6 +172,11 @@ func ForbiddenError(c *gin.Context, message string) {
 	AbortWithError(c, http.StatusForbidden, ErrForbidden, message, nil)
 }
 
+// ConflictError는 리소스 충돌 에러를 처리합니다.
+func ConflictError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusConflict, "CONFLICT", message, nil)
+}
+
 // InternalError는 서버 내부 에러를 처리합니다.
 func InternalError(c *gin.Context, message string, details interface{}) {
 	AbortWithError(c, http.StatusInternalServerError, ErrInternal, message, details)

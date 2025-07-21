@@ -5,6 +5,9 @@ import (
 	"github.com/spf13/viper"
 	"aicli-web/internal/auth"
 	"aicli-web/internal/config"
+	"aicli-web/internal/storage"
+	"aicli-web/internal/storage/memory"
+	"aicli-web/internal/utils"
 	"github.com/drumcap/aicli-web/internal/middleware"
 )
 
@@ -13,11 +16,14 @@ type Server struct {
 	router      *gin.Engine
 	jwtManager  *auth.JWTManager
 	blacklist   *auth.Blacklist
-	// TODO: 데이터베이스, 클라이언트 등 의존성은 나중에 추가
+	storage     storage.Storage
 }
 
 // New는 새로운 서버 인스턴스를 생성합니다.
 func New() *Server {
+	// 커스텀 validator 등록
+	utils.RegisterCustomValidators()
+	
 	// 설정 로드
 	cfg := config.DefaultConfig()
 	
@@ -31,9 +37,13 @@ func New() *Server {
 	// 블랙리스트 초기화
 	blacklist := auth.NewBlacklist()
 	
+	// 스토리지 초기화 (개발 환경에서는 메모리 스토리지 사용)
+	storage := memory.New()
+	
 	s := &Server{
 		jwtManager: jwtManager,
 		blacklist:  blacklist,
+		storage:    storage,
 	}
 	s.setupRouter()
 	return s

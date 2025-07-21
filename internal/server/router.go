@@ -56,7 +56,7 @@ func (s *Server) setupRoutes() {
 		}
 
 		// 워크스페이스 컨트롤러 인스턴스 생성
-		workspaceController := controllers.NewWorkspaceController()
+		workspaceController := controllers.NewWorkspaceController(s.storage)
 
 		// 워크스페이스 관련 엔드포인트 (인증 필요)
 		workspaces := v1.Group("/workspaces")
