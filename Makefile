@@ -105,6 +105,8 @@ vet:
 # 테스트 타겟
 test: test-unit test-integration
 
+test-all: test-unit test-integration test-e2e test-benchmark
+
 test-unit:
 	@printf "${BLUE}Running unit tests...${NC}\n"
 	${GO} test -v -race -cover ./internal/... ./pkg/...
@@ -112,8 +114,23 @@ test-unit:
 
 test-integration:
 	@printf "${BLUE}Running integration tests...${NC}\n"
-	${GO} test -v -race -tags=integration ./test/...
+	${GO} test -v -race -tags=integration ./test/integration/...
 	@printf "${GREEN}✓ Integration tests completed${NC}\n"
+
+test-e2e:
+	@printf "${BLUE}Running E2E tests...${NC}\n"
+	${GO} test -v -race -tags=e2e ./test/e2e/...
+	@printf "${GREEN}✓ E2E tests completed${NC}\n"
+
+test-benchmark:
+	@printf "${BLUE}Running performance benchmarks...${NC}\n"
+	${GO} test -v -race -tags=benchmark -run=^$$ -bench=. -benchmem ./test/benchmark/...
+	@printf "${GREEN}✓ Benchmarks completed${NC}\n"
+
+test-stress:
+	@printf "${BLUE}Running stress tests...${NC}\n"
+	${GO} test -v -race -tags=benchmark -run=TestStressTest ./test/benchmark/...
+	@printf "${GREEN}✓ Stress tests completed${NC}\n"
 
 test-coverage:
 	@printf "${BLUE}Generating test coverage report...${NC}\n"
@@ -324,9 +341,13 @@ help:
 	@echo "  make install        - Install binaries to GOPATH/bin"
 	@echo ""
 	@printf "${YELLOW}🧪 Test Commands:${NC}\n"
-	@echo "  make test           - Run all tests (unit + integration)"
+	@echo "  make test           - Run basic tests (unit + integration)"
+	@echo "  make test-all       - Run all tests (unit + integration + e2e + benchmarks)"
 	@echo "  make test-unit      - Run unit tests only"
 	@echo "  make test-integration - Run integration tests only"
+	@echo "  make test-e2e       - Run end-to-end tests only"
+	@echo "  make test-benchmark - Run performance benchmarks"
+	@echo "  make test-stress    - Run stress tests"
 	@echo "  make test-coverage  - Generate test coverage report"
 	@echo "  make test-bench     - Run benchmark tests"
 	@echo ""

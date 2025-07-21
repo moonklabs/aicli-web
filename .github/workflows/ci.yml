@@ -73,7 +73,11 @@ jobs:
 
       - name: 통합 테스트 실행
         run: |
-          go test -v -race -tags=integration ./test/... || true
+          go test -v -race -tags=integration ./test/integration/...
+
+      - name: 성능 벤치마크 실행
+        run: |
+          go test -v -race -tags=benchmark -run=^$$ -bench=. -benchmem ./test/benchmark/... || true
 
       - name: 코드 커버리지 업로드
         uses: codecov/codecov-action@v3
