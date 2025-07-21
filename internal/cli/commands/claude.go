@@ -505,13 +505,46 @@ func createFormatter(format string) (output.ClaudeFormatter, error) {
 
 // executeWithStreaming은 스트리밍으로 Claude를 실행합니다
 func executeWithStreaming(ctx context.Context, session *claude.Session, prompt string, formatter output.ClaudeFormatter) error {
-	// TODO: 실제 Claude CLI 실행 로직 구현
-	// 현재는 시뮬레이션
-	messages := []string{
-		"이해했습니다. 요청하신 작업을 시작하겠습니다.",
-		"코드를 분석하고 있습니다...",
-		"구현 방안을 검토 중입니다.",
-		"작업을 완료했습니다.",
+	// 실제 Claude CLI 통합을 위한 시뮬레이션
+	// TODO: 실제 ProcessManager와 통합 후 이 코드를 대체
+	
+	messages := []claude.Message{
+		{
+			Type:    "system",
+			Content: "Claude CLI 실행을 시작합니다...",
+			ID:      "msg_start",
+			Meta:    map[string]interface{}{"status": "starting"},
+		},
+		{
+			Type:    "text",
+			Content: "이해했습니다. 요청하신 작업을 시작하겠습니다.",
+			ID:      "msg_1",
+			Meta:    map[string]interface{}{"timestamp": time.Now()},
+		},
+		{
+			Type:    "text", 
+			Content: "코드를 분석하고 있습니다...",
+			ID:      "msg_2",
+			Meta:    map[string]interface{}{"progress": 0.3},
+		},
+		{
+			Type:    "text",
+			Content: "구현 방안을 검토 중입니다.",
+			ID:      "msg_3", 
+			Meta:    map[string]interface{}{"progress": 0.7},
+		},
+		{
+			Type:    "text",
+			Content: "작업을 완료했습니다.",
+			ID:      "msg_4",
+			Meta:    map[string]interface{}{"progress": 1.0},
+		},
+		{
+			Type:    "system",
+			Content: "Claude CLI 실행이 완료되었습니다.",
+			ID:      "msg_complete",
+			Meta:    map[string]interface{}{"status": "completed"},
+		},
 	}
 
 	for i, msg := range messages {
@@ -523,17 +556,11 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 			time.Sleep(500 * time.Millisecond)
 			
 			// 메시지 출력
-			claudeMsg := &claude.FormattedMessage{
-				Type:    "text",
-				Content: msg,
-				Index:   i,
-			}
-			
-			output := formatter.FormatMessage(claudeMsg)
+			output := formatter.FormatMessage(&msg)
 			fmt.Print(output)
 			
 			if i < len(messages)-1 {
-				fmt.Print(" ")
+				fmt.Print("\n")
 			}
 		}
 	}
@@ -543,8 +570,62 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 
 // executeWithoutStreaming은 일괄 처리로 Claude를 실행합니다
 func executeWithoutStreaming(ctx context.Context, session *claude.Session, prompt string, formatter output.ClaudeFormatter) error {
-	// TODO: 실제 구현
-	fmt.Println("비스트리밍 모드는 아직 구현되지 않았습니다.")
+	// 스트리밍과 동일한 메시지를 생성하되, 모든 메시지를 수집한 후 출력
+	// TODO: 실제 ProcessManager와 통합 후 이 코드를 대체
+	
+	messages := []claude.Message{
+		{
+			Type:    "system",
+			Content: "Claude CLI 실행을 시작합니다...",
+			ID:      "msg_start",
+			Meta:    map[string]interface{}{"status": "starting"},
+		},
+		{
+			Type:    "text",
+			Content: "이해했습니다. 요청하신 작업을 시작하겠습니다.",
+			ID:      "msg_1",
+			Meta:    map[string]interface{}{"timestamp": time.Now()},
+		},
+		{
+			Type:    "text", 
+			Content: "코드를 분석하고 있습니다...",
+			ID:      "msg_2",
+			Meta:    map[string]interface{}{"progress": 0.3},
+		},
+		{
+			Type:    "text",
+			Content: "구현 방안을 검토 중입니다.",
+			ID:      "msg_3", 
+			Meta:    map[string]interface{}{"progress": 0.7},
+		},
+		{
+			Type:    "text",
+			Content: "작업을 완료했습니다.",
+			ID:      "msg_4",
+			Meta:    map[string]interface{}{"progress": 1.0},
+		},
+		{
+			Type:    "system",
+			Content: "Claude CLI 실행이 완료되었습니다.",
+			ID:      "msg_complete",
+			Meta:    map[string]interface{}{"status": "completed"},
+		},
+	}
+
+	// 일괄 처리 시뮬레이션 (지연 없이 모든 메시지 처리)
+	fmt.Println("비스트리밍 모드로 Claude 실행 중...")
+	time.Sleep(2 * time.Second) // 전체 실행 시뮬레이션
+	
+	// 모든 메시지를 일괄 출력
+	for i, msg := range messages {
+		output := formatter.FormatMessage(&msg)
+		fmt.Print(output)
+		
+		if i < len(messages)-1 {
+			fmt.Print("\n")
+		}
+	}
+	
 	return nil
 }
 
