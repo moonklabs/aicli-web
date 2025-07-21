@@ -86,6 +86,7 @@ func init() {
 	rootCmd.AddCommand(commands.NewLogsCmd())
 	rootCmd.AddCommand(commands.NewConfigCmd())
 	rootCmd.AddCommand(commands.NewVersionCmd())
+	rootCmd.AddCommand(commands.NewDBCmd())
 	
 	// 자동 완성 명령어 추가
 	addCompletionCmd()

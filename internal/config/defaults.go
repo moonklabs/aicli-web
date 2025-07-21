@@ -119,6 +119,17 @@ func DefaultConfig() *Config {
 			AccessTokenExpiry:  DefaultAccessTokenExpiry,
 			RefreshTokenExpiry: DefaultRefreshTokenExpiry,
 		},
+		
+		Storage: StorageConfig{
+			Type:            "memory",
+			DataSource:      "",
+			MaxConns:        10,
+			MaxIdleConns:    5,
+			ConnMaxLifetime: time.Hour,
+			Timeout:         time.Second * 30,
+			RetryCount:      3,
+			RetryInterval:   time.Second,
+		},
 	}
 }
 

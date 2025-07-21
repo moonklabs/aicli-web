@@ -21,6 +21,9 @@ type Config struct {
 	
 	// API 서버 관련 설정
 	API APIConfig `yaml:"api" mapstructure:"api" json:"api"`
+	
+	// 스토리지 관련 설정
+	Storage StorageConfig `yaml:"storage" mapstructure:"storage" json:"storage"`
 }
 
 // ClaudeConfig는 Claude CLI 관련 설정을 정의합니다
@@ -168,4 +171,31 @@ type APIConfig struct {
 	
 	// 리프레시 토큰 만료 시간
 	RefreshTokenExpiry time.Duration `yaml:"refresh_token_expiry" mapstructure:"refresh_token_expiry" json:"refresh_token_expiry"`
+}
+
+// StorageConfig는 스토리지 관련 설정을 정의합니다
+type StorageConfig struct {
+	// Type 스토리지 타입 (memory, sqlite, boltdb)
+	Type string `yaml:"type" mapstructure:"type" json:"type" validate:"oneof=memory sqlite boltdb"`
+	
+	// DataSource 데이터 소스 (파일 경로 또는 연결 문자열)
+	DataSource string `yaml:"data_source" mapstructure:"data_source" json:"data_source"`
+	
+	// MaxConns 최대 연결 수
+	MaxConns int `yaml:"max_conns" mapstructure:"max_conns" json:"max_conns" validate:"min=1,max=100"`
+	
+	// MaxIdleConns 최대 유휴 연결 수
+	MaxIdleConns int `yaml:"max_idle_conns" mapstructure:"max_idle_conns" json:"max_idle_conns" validate:"min=0"`
+	
+	// ConnMaxLifetime 연결 최대 생명 시간
+	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" mapstructure:"conn_max_lifetime" json:"conn_max_lifetime"`
+	
+	// Timeout 연결 타임아웃
+	Timeout time.Duration `yaml:"timeout" mapstructure:"timeout" json:"timeout"`
+	
+	// RetryCount 재시도 횟수
+	RetryCount int `yaml:"retry_count" mapstructure:"retry_count" json:"retry_count" validate:"min=0,max=10"`
+	
+	// RetryInterval 재시도 간격
+	RetryInterval time.Duration `yaml:"retry_interval" mapstructure:"retry_interval" json:"retry_interval"`
 }

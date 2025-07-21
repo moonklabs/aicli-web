@@ -220,6 +220,21 @@ func (m *Manager) applyEnvironmentVariables(config *Config) {
 	if filePath := os.Getenv("AICLI_LOG_FILE_PATH"); filePath != "" {
 		config.Logging.FilePath = filePath
 	}
+
+	// Storage 설정
+	if storageType := os.Getenv("AICLI_STORAGE_TYPE"); storageType != "" {
+		if isValidStorageType(storageType) {
+			config.Storage.Type = storageType
+		}
+	}
+	if dataSource := os.Getenv("AICLI_STORAGE_DATA_SOURCE"); dataSource != "" {
+		config.Storage.DataSource = dataSource
+	}
+	if maxConns := os.Getenv("AICLI_STORAGE_MAX_CONNS"); maxConns != "" {
+		if m, err := parseInt(maxConns); err == nil && m > 0 && m <= 100 {
+			config.Storage.MaxConns = m
+		}
+	}
 }
 
 // Helper 함수들
@@ -279,6 +294,17 @@ func validateDirectory(fl validator.FieldLevel) bool {
 	}
 	
 	return info.IsDir()
+}
+
+// isValidStorageType 는 스토리지 타입이 유효한지 검증합니다
+func isValidStorageType(storageType string) bool {
+	validTypes := []string{"memory", "sqlite", "boltdb"}
+	for _, valid := range validTypes {
+		if storageType == valid {
+			return true
+		}
+	}
+	return false
 }
 
 // AllSettings는 모든 설정을 맵 형태로 반환합니다
