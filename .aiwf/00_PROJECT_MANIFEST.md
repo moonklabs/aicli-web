@@ -6,7 +6,7 @@
 - **버전**: 0.1.0 (Pre-Alpha)
 - **프레임워크**: AIWF v1.0
 - **생성일**: 2025-01-20
-- **최종 수정일**: 2025-07-21T06:07:00Z
+- **최종 수정일**: 2025-07-21T03:15:24Z
 
 ## 기술 스택
 - **언어**: Go 1.21+
@@ -85,7 +85,7 @@ aicli-web/
   - 진행률: 6/6 태스크 완료 (100%)
 
 ### 스프린트 로드맵 (M02)
-- **S01_M02_CLI_Structure** (IN_PROGRESS - 2025-07-21 07:30 시작) - CLI 기본 구조 구현
+- **S01_M02_CLI_Structure** (COMPLETED - 2025-07-21 07:30 시작, 2025-07-21 11:00 완료) - CLI 기본 구조 구현
   - Cobra 기반 명령어 체계, 설정 관리, Claude CLI 래퍼 설계
   - 태스크 상세화 완료: 11개 태스크 (High: 2개, Medium: 7개, Low: 2개)
   - 핵심 태스크: CLI 자동완성, 설정 관리 (3개), 출력 포맷팅, Claude 래퍼 (3개), 에러 처리, 테스트 프레임워크
@@ -95,14 +95,18 @@ aicli-web/
     - TX03A_S01_Config_Structure_Design (COMPLETED - 2025-07-21 08:16)
     - TX03B_S01_Config_File_Management (COMPLETED - 2025-07-21 08:30)
     - TX03C_S01_Config_Integration (COMPLETED - 2025-07-21 08:52)
+    - TX04_S01_CLI_Output_Formatting (COMPLETED - 2025-07-21 09:07)
+    - TX05A_S01_Process_Manager (COMPLETED - 2025-07-21 09:23)
     - TX05B_S01_Stream_Handler (COMPLETED - 2025-07-21 09:44)
+    - TX05C_S01_Error_Recovery (COMPLETED - 2025-07-21 09:59)
     - TX06_S01_CLI_Error_Handling (COMPLETED - 2025-07-21 10:11)
-  - 진행 중인 태스크:
-    - T07_S01_CLI_Testing_Framework (IN_PROGRESS - 2025-07-21 10:16)
-  - 진행률: 7/11 태스크 완료 (64%)
+    - TX07_S01_CLI_Testing_Framework (COMPLETED - 2025-07-21 10:34)
+  - 진행률: 11/11 태스크 완료 (100%)
 - **S02_M02_API_Foundation** (PLANNED) - API 서버 기초 구축
   - Gin 서버 설정, 라우팅, JWT 인증, OpenAPI 문서화
-  - 진행률: 0/X 태스크 (태스크 상세화 필요)
+  - 태스크 상세화 완료: 8개 태스크 (Medium: 6개, Low: 2개)
+  - 핵심 태스크: JWT 인증, OpenAPI/Swagger, 워크스페이스/프로젝트/세션 API, WebSocket 기초, Rate Limiting
+  - 진행률: 0/8 태스크 (0%)
 - **S03_M02_Data_Model** (PLANNED) - 데이터 모델 구현
   - 스키마 설계, 모델 구현, CRUD 작업, 마이그레이션
   - 진행률: 0/X 태스크 (태스크 상세화 필요)
