@@ -23,6 +23,7 @@ type Server struct {
 	router         *gin.Engine
 	jwtManager     *auth.JWTManager
 	blacklist      *auth.Blacklist
+	oauthManager   auth.OAuthManager
 	storage          storage.Storage
 	workspaceService services.WorkspaceService
 	dockerWorkspaceService *services.DockerWorkspaceService // Docker 통합 워크스페이스 서비스 추가
@@ -56,6 +57,35 @@ func New() *Server {
 	
 	// 블랙리스트 초기화
 	blacklist := auth.NewBlacklist()
+	
+	// OAuth 매니저 초기화
+	oauthConfigs := make(map[auth.OAuthProvider]*auth.OAuthConfig)
+	
+	// Google OAuth 설정
+	if cfg.API.OAuth.Google.Enabled {
+		oauthConfigs[auth.ProviderGoogle] = &auth.OAuthConfig{
+			Provider:     auth.ProviderGoogle,
+			ClientID:     cfg.API.OAuth.Google.ClientID,
+			ClientSecret: cfg.API.OAuth.Google.ClientSecret,
+			RedirectURL:  cfg.API.OAuth.BaseRedirectURL + "/google/callback",
+			Scopes:       cfg.API.OAuth.Google.Scopes,
+			Enabled:      true,
+		}
+	}
+	
+	// GitHub OAuth 설정
+	if cfg.API.OAuth.GitHub.Enabled {
+		oauthConfigs[auth.ProviderGitHub] = &auth.OAuthConfig{
+			Provider:     auth.ProviderGitHub,
+			ClientID:     cfg.API.OAuth.GitHub.ClientID,
+			ClientSecret: cfg.API.OAuth.GitHub.ClientSecret,
+			RedirectURL:  cfg.API.OAuth.BaseRedirectURL + "/github/callback",
+			Scopes:       cfg.API.OAuth.GitHub.Scopes,
+			Enabled:      true,
+		}
+	}
+	
+	oauthManager := auth.NewOAuthManager(oauthConfigs, jwtManager)
 	
 	// 스토리지 초기화 (개발 환경에서는 메모리 스토리지 사용)
 	storage := memory.New()
@@ -108,6 +138,7 @@ func New() *Server {
 	s := &Server{
 		jwtManager:           jwtManager,
 		blacklist:            blacklist,
+		oauthManager:         oauthManager,
 		storage:              storage,
 		workspaceService:     workspaceService,
 		dockerWorkspaceService: dockerWorkspaceService,

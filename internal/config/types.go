@@ -171,6 +171,9 @@ type APIConfig struct {
 	
 	// 리프레시 토큰 만료 시간
 	RefreshTokenExpiry time.Duration `yaml:"refresh_token_expiry" mapstructure:"refresh_token_expiry" json:"refresh_token_expiry"`
+	
+	// OAuth 설정
+	OAuth OAuthConfig `yaml:"oauth" mapstructure:"oauth" json:"oauth"`
 }
 
 // StorageConfig는 스토리지 관련 설정을 정의합니다
@@ -198,4 +201,50 @@ type StorageConfig struct {
 	
 	// RetryInterval 재시도 간격
 	RetryInterval time.Duration `yaml:"retry_interval" mapstructure:"retry_interval" json:"retry_interval"`
+}
+
+// OAuthConfig는 OAuth 인증 관련 설정을 정의합니다
+type OAuthConfig struct {
+	// 전체 OAuth 활성화 여부
+	Enabled bool `yaml:"enabled" mapstructure:"enabled" json:"enabled"`
+	
+	// 기본 리다이렉트 URL
+	BaseRedirectURL string `yaml:"base_redirect_url" mapstructure:"base_redirect_url" json:"base_redirect_url"`
+	
+	// Google OAuth 설정
+	Google GoogleOAuthConfig `yaml:"google" mapstructure:"google" json:"google"`
+	
+	// GitHub OAuth 설정
+	GitHub GitHubOAuthConfig `yaml:"github" mapstructure:"github" json:"github"`
+	
+	// Microsoft OAuth 설정 (선택적)
+	Microsoft MicrosoftOAuthConfig `yaml:"microsoft" mapstructure:"microsoft" json:"microsoft"`
+	
+	// state 파라미터 유효 시간 (분)
+	StateExpiry int `yaml:"state_expiry" mapstructure:"state_expiry" json:"state_expiry" validate:"min=1,max=60"`
+}
+
+// GoogleOAuthConfig Google OAuth 설정
+type GoogleOAuthConfig struct {
+	Enabled      bool     `yaml:"enabled" mapstructure:"enabled" json:"enabled"`
+	ClientID     string   `yaml:"client_id" mapstructure:"client_id" json:"client_id"`
+	ClientSecret string   `yaml:"client_secret" mapstructure:"client_secret" json:"client_secret"`
+	Scopes       []string `yaml:"scopes" mapstructure:"scopes" json:"scopes"`
+}
+
+// GitHubOAuthConfig GitHub OAuth 설정
+type GitHubOAuthConfig struct {
+	Enabled      bool     `yaml:"enabled" mapstructure:"enabled" json:"enabled"`
+	ClientID     string   `yaml:"client_id" mapstructure:"client_id" json:"client_id"`
+	ClientSecret string   `yaml:"client_secret" mapstructure:"client_secret" json:"client_secret"`
+	Scopes       []string `yaml:"scopes" mapstructure:"scopes" json:"scopes"`
+}
+
+// MicrosoftOAuthConfig Microsoft OAuth 설정
+type MicrosoftOAuthConfig struct {
+	Enabled      bool     `yaml:"enabled" mapstructure:"enabled" json:"enabled"`
+	ClientID     string   `yaml:"client_id" mapstructure:"client_id" json:"client_id"`
+	ClientSecret string   `yaml:"client_secret" mapstructure:"client_secret" json:"client_secret"`
+	TenantID     string   `yaml:"tenant_id" mapstructure:"tenant_id" json:"tenant_id"`
+	Scopes       []string `yaml:"scopes" mapstructure:"scopes" json:"scopes"`
 }

@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -37,15 +40,17 @@ type RefreshResponse struct {
 
 // AuthHandler 인증 핸들러
 type AuthHandler struct {
-	jwtManager *auth.JWTManager
-	blacklist  *auth.Blacklist
+	jwtManager   *auth.JWTManager
+	blacklist    *auth.Blacklist
+	oauthManager auth.OAuthManager
 }
 
 // NewAuthHandler 새로운 인증 핸들러 생성
-func NewAuthHandler(jwtManager *auth.JWTManager, blacklist *auth.Blacklist) *AuthHandler {
+func NewAuthHandler(jwtManager *auth.JWTManager, blacklist *auth.Blacklist, oauthManager auth.OAuthManager) *AuthHandler {
 	return &AuthHandler{
-		jwtManager: jwtManager,
-		blacklist:  blacklist,
+		jwtManager:   jwtManager,
+		blacklist:    blacklist,
+		oauthManager: oauthManager,
 	}
 }
 
@@ -255,4 +260,214 @@ func (h *AuthHandler) validateUser(username, password string) bool {
 
 	validPassword, exists := validUsers[username]
 	return exists && validPassword == password
+}
+
+// OAuth 관련 구조체들
+
+// OAuthLoginRequest OAuth 로그인 시작 요청
+type OAuthLoginRequest struct {
+	Provider auth.OAuthProvider `uri:"provider" binding:"required"`
+}
+
+// OAuthCallbackRequest OAuth 콜백 요청
+type OAuthCallbackRequest struct {
+	Provider auth.OAuthProvider `uri:"provider" binding:"required"`
+	Code     string             `form:"code" binding:"required"`
+	State    string             `form:"state" binding:"required"`
+}
+
+// OAuthLoginResponse OAuth 로그인 응답
+type OAuthLoginResponse struct {
+	AuthURL string `json:"auth_url"`
+	State   string `json:"state"`
+}
+
+// OAuth 핸들러들
+
+// OAuthLogin OAuth 로그인 시작
+// @Summary OAuth 로그인 시작
+// @Description OAuth 제공자를 통한 로그인을 시작합니다
+// @Tags oauth
+// @Produce json
+// @Param provider path string true "OAuth 제공자" Enums(google,github)
+// @Success 200 {object} map[string]interface{} "로그인 URL 생성 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Router /auth/oauth/{provider} [get]
+func (h *AuthHandler) OAuthLogin(c *gin.Context) {
+	var req OAuthLoginRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "INVALID_PROVIDER",
+				"message": "Invalid OAuth provider",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// state 생성 (CSRF 보호)
+	state, err := h.generateSecureState()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "STATE_GENERATION_ERROR",
+				"message": "Failed to generate security state",
+			},
+		})
+		return
+	}
+
+	// OAuth 인증 URL 생성
+	authURL, err := h.oauthManager.GetAuthURL(req.Provider, state)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "AUTH_URL_ERROR",
+				"message": "Failed to generate OAuth URL",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": OAuthLoginResponse{
+			AuthURL: authURL,
+			State:   state,
+		},
+	})
+}
+
+// OAuthCallback OAuth 콜백 처리
+// @Summary OAuth 콜백 처리
+// @Description OAuth 제공자로부터의 콜백을 처리하여 JWT 토큰을 발급합니다
+// @Tags oauth
+// @Produce json
+// @Param provider path string true "OAuth 제공자" Enums(google,github)
+// @Param code query string true "인증 코드"
+// @Param state query string true "상태 파라미터"
+// @Success 200 {object} map[string]interface{} "로그인 성공"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 401 {object} map[string]interface{} "인증 실패"
+// @Router /auth/oauth/{provider}/callback [get]
+func (h *AuthHandler) OAuthCallback(c *gin.Context) {
+	var req OAuthCallbackRequest
+	if err := c.ShouldBindUri(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "INVALID_PROVIDER",
+				"message": "Invalid OAuth provider",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "INVALID_CALLBACK",
+				"message": "Invalid OAuth callback parameters",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// 인증 코드를 액세스 토큰으로 교환
+	oauthToken, err := h.oauthManager.ExchangeCode(req.Provider, req.Code, req.State)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "TOKEN_EXCHANGE_ERROR",
+				"message": "Failed to exchange OAuth code",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// 사용자 정보 조회
+	userInfo, err := h.oauthManager.GetUserInfo(req.Provider, oauthToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "USER_INFO_ERROR",
+				"message": "Failed to get user information",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// TODO: 실제 환경에서는 DB에서 사용자 매핑 또는 생성 필요
+	// 현재는 OAuth 정보로 내부 사용자 생성
+	userID := fmt.Sprintf("oauth_%s_%s", userInfo.Provider, userInfo.ID)
+	userName := userInfo.Name
+	if userName == "" {
+		userName = userInfo.Email
+	}
+	role := "user" // OAuth 사용자는 기본적으로 user 역할
+
+	// JWT 토큰 생성 (기존 시스템과 동일)
+	accessToken, err := h.jwtManager.GenerateToken(userID, userName, role, auth.AccessToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "TOKEN_GENERATION_ERROR",
+				"message": "Failed to generate access token",
+			},
+		})
+		return
+	}
+
+	refreshToken, err := h.jwtManager.GenerateToken(userID, userName, role, auth.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error": gin.H{
+				"code":    "TOKEN_GENERATION_ERROR",
+				"message": "Failed to generate refresh token",
+			},
+		})
+		return
+	}
+
+	// 응답
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": LoginResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+			TokenType:    "Bearer",
+			ExpiresIn:    int(config.DefaultAccessTokenExpiry.Seconds()),
+		},
+		"user": gin.H{
+			"id":       userID,
+			"name":     userName,
+			"email":    userInfo.Email,
+			"picture":  userInfo.Picture,
+			"provider": userInfo.Provider,
+		},
+	})
+}
+
+// generateSecureState 보안 state 파라미터 생성
+func (h *AuthHandler) generateSecureState() (string, error) {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }

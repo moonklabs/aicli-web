@@ -43,6 +43,9 @@ const (
 	
 	// ErrorTypeInternal은 내부 시스템 오류를 나타냅니다.
 	ErrorTypeInternal
+	
+	// ErrorTypeOAuth은 OAuth 인증 관련 오류를 나타냅니다.
+	ErrorTypeOAuth
 )
 
 // String은 ErrorType의 문자열 표현을 반환합니다.
@@ -68,6 +71,8 @@ func (e ErrorType) String() string {
 		return "ConflictError"
 	case ErrorTypeInternal:
 		return "InternalError"
+	case ErrorTypeOAuth:
+		return "OAuthError"
 	default:
 		return "UnknownError"
 	}
@@ -96,6 +101,8 @@ func (e ErrorType) ExitCode() int {
 		return 9 // 충돌 상황
 	case ErrorTypeInternal:
 		return 127 // 내부 시스템 에러
+	case ErrorTypeOAuth:
+		return 10 // OAuth 인증 에러
 	default:
 		return 1 // 기본값
 	}
@@ -360,4 +367,52 @@ func GetExitCode(err error) int {
 		return cliErr.ExitCode
 	}
 	return 1 // 기본 에러 코드
+}
+
+// OAuth 에러 생성 헬퍼 함수들
+
+// NewOAuthError는 OAuth 인증 관련 오류를 생성합니다.
+func NewOAuthError(provider string, operation string, cause error) *CLIError {
+	message := fmt.Sprintf("OAuth %s 인증 오류: %s", provider, operation)
+	err := NewCLIError(ErrorTypeOAuth, message).WithCause(cause)
+	err.AddContext("oauth_provider", provider)
+	err.AddContext("oauth_operation", operation)
+	err.AddSuggestion(fmt.Sprintf("%s OAuth 설정이 올바른지 확인하세요", provider))
+	err.AddSuggestion("클라이언트 ID와 시크릿이 유효한지 확인하세요")
+	err.AddSuggestion("리다이렉트 URL이 올바르게 설정되어 있는지 확인하세요")
+	return err
+}
+
+// NewOAuthProviderError는 OAuth 제공자 설정 오류를 생성합니다.
+func NewOAuthProviderError(provider string, reason string) *CLIError {
+	message := fmt.Sprintf("OAuth 제공자 설정 오류: %s - %s", provider, reason)
+	err := NewCLIError(ErrorTypeOAuth, message)
+	err.AddContext("oauth_provider", provider)
+	err.AddContext("error_reason", reason)
+	err.AddSuggestion("설정 파일에서 OAuth 제공자 설정을 확인하세요")
+	err.AddSuggestion(fmt.Sprintf("'%s' 제공자가 활성화되어 있는지 확인하세요", provider))
+	err.AddSuggestion("환경 변수가 올바르게 설정되어 있는지 확인하세요")
+	return err
+}
+
+// NewOAuthTokenError는 OAuth 토큰 관련 오류를 생성합니다.
+func NewOAuthTokenError(operation string, cause error) *CLIError {
+	message := fmt.Sprintf("OAuth 토큰 오류: %s", operation)
+	err := NewCLIError(ErrorTypeOAuth, message).WithCause(cause)
+	err.AddContext("token_operation", operation)
+	err.AddSuggestion("토큰이 만료되었을 수 있습니다. 다시 로그인해보세요")
+	err.AddSuggestion("토큰 권한(scope)이 충분한지 확인하세요")
+	err.AddSuggestion("네트워크 연결 상태를 확인하세요")
+	return err
+}
+
+// NewOAuthStateError는 OAuth state 파라미터 관련 오류를 생성합니다.
+func NewOAuthStateError(reason string) *CLIError {
+	message := fmt.Sprintf("OAuth state 검증 실패: %s", reason)
+	err := NewCLIError(ErrorTypeOAuth, message)
+	err.AddContext("state_error_reason", reason)
+	err.AddSuggestion("OAuth 인증 플로우를 다시 시작하세요")
+	err.AddSuggestion("브라우저 쿠키와 캐시를 확인하세요")
+	err.AddSuggestion("CSRF 공격 방지를 위해 새로운 요청을 시작하세요")
+	return err
 }

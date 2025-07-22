@@ -38,7 +38,7 @@ func (s *Server) setupRoutes() {
 	v1 := s.router.Group("/api/v1")
 	{
 		// 인증 핸들러 생성
-		authHandler := apiHandlers.NewAuthHandler(s.jwtManager, s.blacklist)
+		authHandler := apiHandlers.NewAuthHandler(s.jwtManager, s.blacklist, s.oauthManager)
 		
 		// 인증 엔드포인트 (인증 불필요)
 		auth := v1.Group("/auth")
@@ -46,6 +46,13 @@ func (s *Server) setupRoutes() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.POST("/logout", authHandler.Logout)
+			
+			// OAuth 엔드포인트
+			oauth := auth.Group("/oauth")
+			{
+				oauth.GET("/:provider", authHandler.OAuthLogin)
+				oauth.GET("/:provider/callback", authHandler.OAuthCallback)
+			}
 		}
 		
 		// 시스템 정보 엔드포인트

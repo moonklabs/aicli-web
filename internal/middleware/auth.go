@@ -222,3 +222,27 @@ func IsAuthenticated(c *gin.Context) bool {
 	isAuth, ok := authenticated.(bool)
 	return ok && isAuth
 }
+
+// IsOAuthUser OAuth를 통해 로그인한 사용자인지 확인 헬퍼 함수
+func IsOAuthUser(c *gin.Context) bool {
+	userID, exists := GetUserID(c)
+	if !exists {
+		return false
+	}
+	// OAuth 사용자 ID는 "oauth_" 접두사로 시작
+	return strings.HasPrefix(userID, "oauth_")
+}
+
+// GetOAuthProvider OAuth 사용자의 제공자 정보 추출
+func GetOAuthProvider(c *gin.Context) (string, bool) {
+	userID, exists := GetUserID(c)
+	if !exists || !IsOAuthUser(c) {
+		return "", false
+	}
+	// oauth_google_123456 → google
+	parts := strings.Split(userID, "_")
+	if len(parts) >= 2 {
+		return parts[1], true
+	}
+	return "", false
+}
