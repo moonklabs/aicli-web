@@ -1,0 +1,24 @@
+{
+  "name": "aicli-web",
+  "version": "1.0.0",
+  "description": "AI Code Manager - Web platform for managing Claude CLI",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "preview": "pnpm --filter web preview",
+    "test": "pnpm --filter web test:unit",
+    "lint": "pnpm --filter web lint",
+    "format": "pnpm --filter web format",
+    "install:web": "pnpm --filter web install",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "keywords": ["vue", "typescript", "claude", "ai", "cli", "workspace"],
+  "author": "AICLI Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}
