@@ -4,7 +4,6 @@ package errors
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 

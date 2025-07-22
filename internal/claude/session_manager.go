@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/sijinhui/aicli-web/internal/models"
-	"github.com/sijinhui/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // SessionManager 인터페이스는 Claude CLI 세션을 관리합니다
@@ -28,7 +28,7 @@ type Session struct {
 	UserID      string                 `json:"user_id"`
 	Config      SessionConfig          `json:"config"`
 	State       SessionState           `json:"state"`
-	Process     *Process               `json:"-"` // 프로세스는 직렬화하지 않음
+	Process     ProcessManager         `json:"-"` // 프로세스는 직렬화하지 않음
 	Created     time.Time              `json:"created"`
 	LastActive  time.Time              `json:"last_active"`
 	Metadata    map[string]interface{} `json:"metadata"`

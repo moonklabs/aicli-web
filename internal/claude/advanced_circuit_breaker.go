@@ -54,7 +54,7 @@ const (
 type CircuitOperation func(ctx context.Context) error
 
 // StateChangeListener는 상태 변화 리스너입니다
-type StateChangeListener func(oldState, newState CircuitState, metrics CircuitMetrics)
+type CircuitStateChangeListener func(oldState, newState CircuitState, metrics CircuitMetrics)
 
 // CircuitThresholds는 Circuit Breaker 임계값입니다
 type CircuitThresholds struct {
@@ -98,8 +98,8 @@ type CircuitMetrics struct {
 	P99ResponseTime  time.Duration `json:"p99_response_time"`
 }
 
-// StateTransition은 상태 전환 정보입니다
-type StateTransition struct {
+// CircuitStateTransition은 서킷브레이커 상태 전환 정보입니다
+type CircuitStateTransition struct {
 	FromState   CircuitState  `json:"from_state"`
 	ToState     CircuitState  `json:"to_state"`
 	Timestamp   time.Time     `json:"timestamp"`
@@ -698,7 +698,7 @@ func (cb *SmartCircuitBreaker) transitionToClosed(reason string) {
 }
 
 func (cb *SmartCircuitBreaker) recordStateTransition(from, to CircuitState, reason string) {
-	transition := StateTransition{
+	transition := CircuitStateTransition{
 		FromState: from,
 		ToState:   to,
 		Timestamp: time.Now(),

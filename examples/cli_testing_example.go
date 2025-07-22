@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
-	"aicli-web/internal/testutil"
+	"github.com/aicli/aicli-web/internal/testutil"
 )
 
 // CLI 테스트 프레임워크 사용 예제

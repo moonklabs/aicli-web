@@ -10,10 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage/memory"
-	"aicli-web/internal/utils"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage/memory"
+	"github.com/aicli/aicli-web/internal/utils"
 )
 
 // setupProjectTest는 프로젝트 테스트를 위한 설정을 수행합니다

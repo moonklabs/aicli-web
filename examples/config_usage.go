@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/config"
 )
 
 func main() {

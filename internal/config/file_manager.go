@@ -60,7 +60,7 @@ func (fm *FileManager) ReadConfig() (*Config, error) {
 
 	if !fm.configExists() {
 		// 설정 파일이 없으면 기본 설정 반환
-		return DefaultConfig(), nil
+		return GetDefaultConfig(), nil
 	}
 
 	data, err := os.ReadFile(fm.configPath)

@@ -2,6 +2,7 @@ package claude
 
 import (
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -96,7 +97,7 @@ type PoolMetrics struct {
 }
 
 // PoolStats는 전체 풀 통계입니다
-type PoolStats struct {
+type MemoryPoolStats struct {
 	MessagePool  PoolMetrics            `json:"message_pool"`
 	BufferPools  map[int]PoolMetrics    `json:"buffer_pools"`
 	SessionPool  PoolMetrics            `json:"session_pool"`
@@ -116,8 +117,8 @@ type PoolStats struct {
 
 // MemoryMetrics는 메모리 관련 메트릭입니다
 type MemoryMetrics struct {
-	// GC 통계
-	GCStats      runtime.GCStats
+	// GC 통계  
+	GCStats      debug.GCStats
 	MemStats     runtime.MemStats
 	
 	// 풀 효율성

@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/drumcap/aicli-web/internal/cli/commands"
-	"github.com/drumcap/aicli-web/pkg/version"
+	"github.com/aicli/aicli-web/internal/cli/commands"
+	"github.com/aicli/aicli-web/pkg/version"
 )
 
 var (
@@ -82,12 +82,12 @@ func init() {
 
 	// 하위 명령 추가
 	rootCmd.AddCommand(commands.NewWorkspaceCmd())
-	rootCmd.AddCommand(commands.NewTaskCmd())
-	rootCmd.AddCommand(commands.NewLogsCmd())
+	// rootCmd.AddCommand(commands.NewTaskCmd())     // claude 패키지 의존성으로 임시 비활성화
+	// rootCmd.AddCommand(commands.NewLogsCmd())     // claude 패키지 의존성으로 임시 비활성화
 	rootCmd.AddCommand(commands.NewConfigCmd())
 	rootCmd.AddCommand(commands.NewVersionCmd())
 	rootCmd.AddCommand(commands.NewDBCmd())
-	rootCmd.AddCommand(commands.NewClaudeCommand())
+	// rootCmd.AddCommand(commands.NewClaudeCommand()) // claude 패키지 중복 오류로 임시 비활성화
 	
 	// 자동 완성 명령어 추가
 	addCompletionCmd()

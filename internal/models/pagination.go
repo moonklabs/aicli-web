@@ -73,3 +73,7 @@ func (m *PaginationMeta) HasMore() bool {
 func (m *PaginationMeta) HasPrev() bool {
 	return m.CurrentPage > 1
 }
+
+// 별칭 타입 정의 (호환성을 위한)
+type PagingRequest = PaginationRequest
+type PagingResponse = PaginationResponse

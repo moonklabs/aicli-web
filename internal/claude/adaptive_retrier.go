@@ -54,11 +54,11 @@ type RetryPolicy struct {
 type BackoffType int
 
 const (
-	LinearBackoff BackoffType = iota
-	ExponentialBackoff
-	FixedDelayBackoff
-	AdaptiveBackoff
-	DecorrelatedJitterBackoff
+	LinearBackoffType BackoffType = iota
+	ExponentialBackoffType
+	FixedDelayBackoffType
+	AdaptiveBackoffType
+	DecorrelatedJitterBackoffType
 )
 
 // RetryStatistics는 재시도 통계입니다
@@ -396,7 +396,7 @@ func (r *AdaptiveRetrier) initializeDefaultPolicies() {
 			MaxAttempts:     5,
 			BaseDelay:       1 * time.Second,
 			MaxDelay:        30 * time.Second,
-			BackoffStrategy: ExponentialBackoff,
+			BackoffStrategy: ExponentialBackoffType,
 			Jitter:          true,
 			JitterFactor:    0.1,
 			RetryableErrors: []ErrorType{NetworkError},
@@ -426,7 +426,7 @@ func (r *AdaptiveRetrier) initializeDefaultPolicies() {
 			MaxAttempts:     3,
 			BaseDelay:       5 * time.Second,
 			MaxDelay:        120 * time.Second,
-			BackoffStrategy: ExponentialBackoff,
+			BackoffStrategy: ExponentialBackoffType,
 			Jitter:          false,
 			RetryableErrors: []ErrorType{ProcessError},
 			CircuitBreaker:  true,
@@ -437,7 +437,7 @@ func (r *AdaptiveRetrier) initializeDefaultPolicies() {
 			MaxAttempts:     4,
 			BaseDelay:       10 * time.Second,
 			MaxDelay:        300 * time.Second,
-			BackoffStrategy: ExponentialBackoff,
+			BackoffStrategy: ExponentialBackoffType,
 			Jitter:          true,
 			JitterFactor:    0.3,
 			RetryableErrors: []ErrorType{ResourceError},
@@ -479,7 +479,7 @@ func (r *AdaptiveRetrier) getRetryPolicy(errorType ErrorType) RetryPolicy {
 		MaxAttempts:     r.config.DefaultMaxAttempts,
 		BaseDelay:       r.config.DefaultBaseDelay,
 		MaxDelay:        r.config.DefaultMaxDelay,
-		BackoffStrategy: ExponentialBackoff,
+		BackoffStrategy: ExponentialBackoffType,
 		Jitter:          true,
 		JitterFactor:    r.config.DefaultJitterFactor,
 		Timeout:         5 * time.Minute,

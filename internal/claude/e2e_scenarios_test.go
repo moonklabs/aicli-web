@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/drumcap/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // TestE2EScenarios는 전체 시스템의 E2E 시나리오를 테스트합니다.

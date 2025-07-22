@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drumcap/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // FileManager는 세션 파일 관리를 담당합니다

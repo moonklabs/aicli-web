@@ -29,7 +29,7 @@ func NewTextMessageHandler(outputHandler func(string) error, logger *logrus.Logg
 }
 
 // Handle은 텍스트 메시지를 처리합니다.
-func (h *TextMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *TextMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -67,7 +67,7 @@ func NewToolUseHandler(toolExecutor func(string, map[string]interface{}) (interf
 }
 
 // Handle은 도구 사용 메시지를 처리합니다.
-func (h *ToolUseHandler) Handle(ctx context.Context, msg Message) error {
+func (h *ToolUseHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -122,7 +122,7 @@ func NewErrorMessageHandler(errorReporter func(error, map[string]interface{}), l
 }
 
 // Handle은 에러 메시지를 처리합니다.
-func (h *ErrorMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *ErrorMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -168,7 +168,7 @@ func NewSystemMessageHandler(systemEventHandler func(string, map[string]interfac
 }
 
 // Handle은 시스템 메시지를 처리합니다.
-func (h *SystemMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *SystemMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -210,7 +210,7 @@ func NewMetadataHandler(logger *logrus.Logger) *MetadataHandler {
 }
 
 // Handle은 메타데이터 메시지를 처리합니다.
-func (h *MetadataHandler) Handle(ctx context.Context, msg Message) error {
+func (h *MetadataHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -272,7 +272,7 @@ func NewStatusMessageHandler(statusCallback func(string, float64), logger *logru
 }
 
 // Handle은 상태 메시지를 처리합니다.
-func (h *StatusMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *StatusMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -338,7 +338,7 @@ func NewProgressMessageHandler(onUpdate func(string, *TaskProgress), logger *log
 }
 
 // Handle은 진행률 메시지를 처리합니다.
-func (h *ProgressMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *ProgressMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -424,7 +424,7 @@ func NewCompleteMessageHandler(onComplete func(map[string]interface{}), logger *
 }
 
 // Handle은 완료 메시지를 처리합니다.
-func (h *CompleteMessageHandler) Handle(ctx context.Context, msg Message) error {
+func (h *CompleteMessageHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -472,7 +472,7 @@ func NewChainHandler(name string, priority int, handlers []MessageHandler, logge
 }
 
 // Handle은 체인의 모든 핸들러를 순차적으로 실행합니다.
-func (h *ChainHandler) Handle(ctx context.Context, msg Message) error {
+func (h *ChainHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	for _, handler := range h.handlers {
 		select {
 		case <-ctx.Done():

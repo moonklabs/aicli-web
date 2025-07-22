@@ -84,21 +84,7 @@ const (
 	PriorityCritical
 )
 
-// RecoveryStrategy는 복구 전략 인터페이스입니다
-type RecoveryStrategy interface {
-	CanRecover(ctx context.Context, err error) bool
-	Execute(ctx context.Context, target RecoveryTarget) error
-	GetEstimatedTime() time.Duration
-	GetSuccessRate() float64
-	GetName() string
-}
-
-// RecoveryTarget은 복구 대상입니다
-type RecoveryTarget struct {
-	Type       string                 `json:"type"`
-	Identifier string                 `json:"identifier"`
-	Context    map[string]interface{} `json:"context"`
-}
+// RecoveryStrategy와 RecoveryTarget는 types.go에서 공통 정의됨
 
 // ClassificationRule은 분류 규칙입니다
 type ClassificationRule struct {

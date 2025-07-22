@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/config"
 )
 
 func setupTestRouter() (*gin.Engine, *AuthHandler) {

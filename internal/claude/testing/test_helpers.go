@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drumcap/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // TestEnvironment는 통합 테스트를 위한 환경을 제공합니다.

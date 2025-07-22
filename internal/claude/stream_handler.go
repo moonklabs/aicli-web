@@ -17,7 +17,7 @@ import (
 type StreamHandler interface {
 	// 기본 스트림 처리
 	Start(stdin io.WriteCloser, stdout, stderr io.ReadCloser) error
-	SendMessage(msg *Message) error
+	SendMessage(msg *StreamMessage) error
 	ReceiveMessage(timeout time.Duration) (*Response, error)
 	Subscribe(eventType string, handler EventHandler) (*EventSubscription, error)
 	Close() error
@@ -25,14 +25,14 @@ type StreamHandler interface {
 	GetStats() map[string]interface{}
 	
 	// 새로운 스트림 처리 메서드
-	Stream(ctx context.Context, reader io.Reader) (<-chan Message, error)
+	Stream(ctx context.Context, reader io.Reader) (<-chan StreamMessage, error)
 	StreamWithCallback(ctx context.Context, reader io.Reader, callback MessageCallback) error
 	SetBufferSize(size int)
 	GetMetrics() StreamMetrics
 }
 
 // MessageCallback은 메시지 처리 콜백 함수 타입입니다.
-type MessageCallback func(msg Message) error
+type MessageCallback func(msg StreamMessage) error
 
 // StreamMetrics는 스트림 처리 메트릭을 정의합니다.
 type StreamMetrics struct {
@@ -254,7 +254,7 @@ func (sh *claudeStreamHandler) handleStreamError(err error) {
 }
 
 // SendMessage는 메시지를 전송합니다.
-func (sh *claudeStreamHandler) SendMessage(msg *Message) error {
+func (sh *claudeStreamHandler) SendMessage(msg *StreamMessage) error {
 	sh.mutex.RLock()
 	defer sh.mutex.RUnlock()
 
@@ -440,8 +440,8 @@ func (sh *claudeStreamHandler) GetBuffer() *StreamBuffer {
 }
 
 // Stream은 리더에서 메시지를 스트리밍합니다.
-func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-chan Message, error) {
-	messageChan := make(chan Message, sh.bufferSize)
+func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-chan StreamMessage, error) {
+	messageChan := make(chan StreamMessage, sh.bufferSize)
 	
 	go func() {
 		defer close(messageChan)

@@ -11,15 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage"
-	"aicli-web/internal/storage/memory"
-	"aicli-web/internal/utils"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/storage/memory"
+	"github.com/aicli/aicli-web/internal/utils"
 )
 
 // setupTest는 테스트를 위한 설정을 수행합니다
-func setupTest() (*gin.Engine, *WorkspaceController, *auth.JWTManager) {
+func setupTest() (*gin.Engine, *WorkspaceController, *auth.JWTManager, services.WorkspaceService) {
 	gin.SetMode(gin.TestMode)
 	utils.RegisterCustomValidators()
 	
@@ -29,13 +29,16 @@ func setupTest() (*gin.Engine, *WorkspaceController, *auth.JWTManager) {
 	// 메모리 스토리지 생성
 	storage := memory.New()
 	
+	// 워크스페이스 서비스 생성
+	workspaceService := services.NewWorkspaceService(storage)
+	
 	// 컨트롤러 생성
-	controller := NewWorkspaceController(storage)
+	controller := NewWorkspaceController(workspaceService)
 	
 	// 라우터 설정
 	router := gin.New()
 	
-	return router, controller, jwtManager
+	return router, controller, jwtManager, workspaceService
 }
 
 // getAuthToken는 테스트용 JWT 토큰을 생성합니다
@@ -45,7 +48,7 @@ func getAuthToken(jwtManager *auth.JWTManager, userID, userName, role string) st
 }
 
 func TestListWorkspaces(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, _ := setupTest()
 	
 	// 테스트 사용자
 	userID := "test-user-id"
@@ -82,7 +85,7 @@ func TestListWorkspaces(t *testing.T) {
 }
 
 func TestCreateWorkspace(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, _ := setupTest()
 	
 	// 테스트 사용자
 	userID := "test-user-id"
@@ -99,12 +102,12 @@ func TestCreateWorkspace(t *testing.T) {
 	})
 	
 	// 요청 데이터
-	workspace := models.Workspace{
+	createReq := models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
 		ClaudeKey:   "test-key",
 	}
-	body, _ := json.Marshal(workspace)
+	body, _ := json.Marshal(createReq)
 	
 	// 요청 생성
 	req, _ := http.NewRequest("POST", "/workspaces", bytes.NewBuffer(body))
@@ -126,20 +129,19 @@ func TestCreateWorkspace(t *testing.T) {
 }
 
 func TestGetWorkspace(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, workspaceService := setupTest()
 	
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
 	
 	// 테스트 워크스페이스 생성
-	workspace := &models.Workspace{
+	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		OwnerID:     userID,
 		ClaudeKey:   "test-key",
 	}
-	err := controller.storage.Workspace().Create(context.Background(), workspace)
+	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
 	
 	// 라우트 설정
@@ -170,20 +172,19 @@ func TestGetWorkspace(t *testing.T) {
 }
 
 func TestUpdateWorkspace(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, workspaceService := setupTest()
 	
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
 	
 	// 테스트 워크스페이스 생성
-	workspace := &models.Workspace{
+	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		OwnerID:     userID,
 		ClaudeKey:   "test-key",
 	}
-	err := controller.storage.Workspace().Create(context.Background(), workspace)
+	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
 	
 	// 라우트 설정
@@ -197,10 +198,10 @@ func TestUpdateWorkspace(t *testing.T) {
 	})
 	
 	// 업데이트 데이터
-	updates := map[string]interface{}{
-		"name": "updated-workspace",
+	updateReq := models.UpdateWorkspaceRequest{
+		Name: "updated-workspace",
 	}
-	body, _ := json.Marshal(updates)
+	body, _ := json.Marshal(updateReq)
 	
 	// 요청 생성
 	req, _ := http.NewRequest("PUT", "/workspaces/"+workspace.ID, bytes.NewBuffer(body))
@@ -222,20 +223,19 @@ func TestUpdateWorkspace(t *testing.T) {
 }
 
 func TestDeleteWorkspace(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, workspaceService := setupTest()
 	
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
 	
 	// 테스트 워크스페이스 생성
-	workspace := &models.Workspace{
+	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		OwnerID:     userID,
 		ClaudeKey:   "test-key",
 	}
-	err := controller.storage.Workspace().Create(context.Background(), workspace)
+	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
 	
 	// 라우트 설정
@@ -267,20 +267,19 @@ func TestDeleteWorkspace(t *testing.T) {
 }
 
 func TestWorkspacePermissions(t *testing.T) {
-	router, controller, jwtManager := setupTest()
+	router, controller, jwtManager, workspaceService := setupTest()
 	
 	// 두 명의 사용자
 	ownerID := "owner-id"
 	otherUserID := "other-user-id"
 	
 	// 소유자가 워크스페이스 생성
-	workspace := &models.Workspace{
+	req := &models.CreateWorkspaceRequest{
 		Name:        "owner-workspace",
 		ProjectPath: "/tmp/owner-project",
-		OwnerID:     ownerID,
 		ClaudeKey:   "test-key",
 	}
-	err := controller.storage.Workspace().Create(context.Background(), workspace)
+	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, ownerID)
 	assert.NoError(t, err)
 	
 	// 다른 사용자의 토큰

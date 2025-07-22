@@ -144,10 +144,10 @@ jobs:
           echo "Building aicli for ${{ matrix.goos }}-${{ matrix.goarch }}..."
           go build -v -trimpath \
             -ldflags "-s -w -extldflags '-static' \
-              -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
-              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
+              -X github.com/aicli/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
+              -X github.com/aicli/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
             -o dist/aicli-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }} \
             ./cmd/aicli
 
@@ -155,10 +155,10 @@ jobs:
           echo "Building aicli-api for ${{ matrix.goos }}-${{ matrix.goarch }}..."
           go build -v -trimpath \
             -ldflags "-s -w -extldflags '-static' \
-              -X github.com/drumcap/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
-              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
+              -X github.com/aicli/aicli-web/pkg/version.Version=${{ steps.build-info.outputs.version }} \
+              -X github.com/aicli/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitBranch=${{ steps.build-info.outputs.branch }}" \
             -o dist/aicli-api-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goos == 'windows' && '.exe' || '' }} \
             ./cmd/api
 

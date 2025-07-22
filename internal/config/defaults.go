@@ -51,8 +51,8 @@ const (
 	DefaultJWTSecretKey      = "default-secret-key-change-in-production"
 )
 
-// DefaultConfig는 기본 설정을 반환합니다
-func DefaultConfig() *Config {
+// GetDefaultConfig는 기본 설정을 반환합니다
+func GetDefaultConfig() *Config {
 	homeDir, _ := os.UserHomeDir()
 	defaultWorkspacePath := filepath.Join(homeDir, ".aicli", "workspaces")
 	defaultLogPath := filepath.Join(homeDir, ".aicli", "logs", "aicli.log")

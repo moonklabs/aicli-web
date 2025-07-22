@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"github.com/drumcap/aicli-web/internal/server"
+	"github.com/aicli/aicli-web/internal/server"
 	
-	// Swagger docs 자동 생성을 위한 임포트
-	_ "aicli-web/docs"
+	// Swagger docs 자동 생성을 위한 임포트 (docs 패키지 생성 필요)
+	// _ "github.com/aicli/aicli-web/docs"
 )
 
 // @title AICode Manager API
@@ -23,7 +23,7 @@ import (
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
-// @contact.url https://github.com/drumcap/aicli-web
+// @contact.url https://github.com/aicli/aicli-web
 // @contact.email support@aicli.dev
 
 // @license.name Apache 2.0

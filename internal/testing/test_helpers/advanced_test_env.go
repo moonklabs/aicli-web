@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/claude-ai/aicli-web/internal/claude"
-	"github.com/claude-ai/aicli-web/internal/api/websocket"
-	"github.com/claude-ai/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/api/websocket"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // AdvancedTestEnvironment 고급 테스트 환경

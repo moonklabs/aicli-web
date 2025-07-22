@@ -56,36 +56,36 @@ func (a RecoveryAction) String() string {
 	}
 }
 
-// ErrorType 에러 타입 분류
-type ErrorType int
+// RecoveryErrorType 에러 타입 분류 (복구 전략용)
+type RecoveryErrorType int
 
 const (
-	// ErrorTypeUnknown 알 수 없는 에러
-	ErrorTypeUnknown ErrorType = iota
-	// ErrorTypeTransient 일시적 오류 (네트워크, 타임아웃)
-	ErrorTypeTransient
-	// ErrorTypePermanent 영구적 오류 (설정, 권한)
-	ErrorTypePermanent
-	// ErrorTypeProcess 프로세스 관련 오류
-	ErrorTypeProcess
-	// ErrorTypeResource 리소스 부족
-	ErrorTypeResource
-	// ErrorTypeAPI API 오류
-	ErrorTypeAPI
+	// RecoveryErrorTypeUnknown 알 수 없는 에러
+	RecoveryErrorTypeUnknown RecoveryErrorType = iota
+	// RecoveryErrorTypeTransient 일시적 오류 (네트워크, 타임아웃)
+	RecoveryErrorTypeTransient
+	// RecoveryErrorTypePermanent 영구적 오류 (설정, 권한)
+	RecoveryErrorTypePermanent
+	// RecoveryErrorTypeProcess 프로세스 관련 오류
+	RecoveryErrorTypeProcess
+	// RecoveryErrorTypeResource 리소스 부족
+	RecoveryErrorTypeResource
+	// RecoveryErrorTypeAPI API 오류
+	RecoveryErrorTypeAPI
 )
 
-// String ErrorType을 문자열로 변환
-func (e ErrorType) String() string {
+// String RecoveryErrorType을 문자열로 변환
+func (e RecoveryErrorType) String() string {
 	switch e {
-	case ErrorTypeTransient:
+	case RecoveryErrorTypeTransient:
 		return "transient"
-	case ErrorTypePermanent:
+	case RecoveryErrorTypePermanent:
 		return "permanent"
-	case ErrorTypeProcess:
+	case RecoveryErrorTypeProcess:
 		return "process"
-	case ErrorTypeResource:
+	case RecoveryErrorTypeResource:
 		return "resource"
-	case ErrorTypeAPI:
+	case RecoveryErrorTypeAPI:
 		return "api"
 	default:
 		return "unknown"
@@ -123,7 +123,7 @@ type RecoveryStats struct {
 	// AverageUptime 평균 가동 시간
 	AverageUptime time.Duration `json:"average_uptime"`
 	// ErrorsByType 에러 타입별 통계
-	ErrorsByType map[ErrorType]int64 `json:"errors_by_type"`
+	ErrorsByType map[RecoveryErrorType]int64 `json:"errors_by_type"`
 	// ActionsByType 액션별 통계
 	ActionsByType map[RecoveryAction]int64 `json:"actions_by_type"`
 }
@@ -147,13 +147,13 @@ func DefaultRecoveryPolicy() *RecoveryPolicy {
 // NewRecoveryStats 새로운 복구 통계를 생성합니다
 func NewRecoveryStats() *RecoveryStats {
 	return &RecoveryStats{
-		ErrorsByType:  make(map[ErrorType]int64),
+		ErrorsByType:  make(map[RecoveryErrorType]int64),
 		ActionsByType: make(map[RecoveryAction]int64),
 	}
 }
 
 // IncrementError 에러 수를 증가시킵니다
-func (rs *RecoveryStats) IncrementError(errorType ErrorType) {
+func (rs *RecoveryStats) IncrementError(errorType RecoveryErrorType) {
 	rs.TotalErrors++
 	rs.ErrorsByType[errorType]++
 }
@@ -174,32 +174,32 @@ func (rs *RecoveryStats) IncrementSuccessfulRun() {
 	rs.SuccessfulRuns++
 }
 
-// ClassificationRule 에러 분류 규칙
-type ClassificationRule struct {
+// RecoveryRecoveryClassificationRule 에러 분류 규칙 (복구용)
+type RecoveryClassificationRule struct {
 	// ErrorPattern 에러 패턴
 	ErrorPattern string `yaml:"error_pattern" json:"error_pattern"`
 	// Action 수행할 액션
 	Action RecoveryAction `yaml:"action" json:"action"`
 	// Retryable 재시도 가능 여부
 	Retryable bool `yaml:"retryable" json:"retryable"`
-	// BackoffType 백오프 타입
-	BackoffType BackoffType `yaml:"backoff_type" json:"backoff_type"`
+	// RecoveryBackoffType 백오프 타입
+	RecoveryBackoffType RecoveryBackoffType `yaml:"backoff_type" json:"backoff_type"`
 }
 
-// BackoffType 백오프 타입
-type BackoffType int
+// RecoveryBackoffType 백오프 타입 (복구용)
+type RecoveryBackoffType int
 
 const (
 	// BackoffFixed 고정 백오프
-	BackoffFixed BackoffType = iota
+	BackoffFixed RecoveryBackoffType = iota
 	// BackoffExponential 지수 백오프
 	BackoffExponential
 	// BackoffLinear 선형 백오프
 	BackoffLinear
 )
 
-// String BackoffType을 문자열로 변환
-func (b BackoffType) String() string {
+// String RecoveryBackoffType을 문자열로 변환
+func (b RecoveryBackoffType) String() string {
 	switch b {
 	case BackoffFixed:
 		return "fixed"
@@ -212,16 +212,16 @@ func (b BackoffType) String() string {
 	}
 }
 
-// ErrorClassifier 에러 분류기
-type ErrorClassifier struct {
-	rules map[ErrorType][]ClassificationRule
+// RecoveryRecoveryErrorClassifier 에러 분류기 (복구용)
+type RecoveryRecoveryErrorClassifier struct {
+	rules map[RecoveryErrorType][]RecoveryClassificationRule
 	mutex sync.RWMutex
 }
 
-// NewErrorClassifier 새로운 에러 분류기를 생성합니다
-func NewErrorClassifier() *ErrorClassifier {
-	classifier := &ErrorClassifier{
-		rules: make(map[ErrorType][]ClassificationRule),
+// NewRecoveryErrorClassifier 새로운 에러 분류기를 생성합니다
+func NewRecoveryErrorClassifier() *RecoveryRecoveryErrorClassifier {
+	classifier := &RecoveryErrorClassifier{
+		rules: make(map[RecoveryErrorType][]RecoveryClassificationRule),
 	}
 	
 	// 기본 분류 규칙 추가
@@ -231,122 +231,122 @@ func NewErrorClassifier() *ErrorClassifier {
 }
 
 // addDefaultRules 기본 분류 규칙을 추가합니다
-func (ec *ErrorClassifier) addDefaultRules() {
+func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
 	// 일시적 에러 규칙
-	ec.rules[ErrorTypeTransient] = []ClassificationRule{
+	ec.rules[RecoveryErrorTypeTransient] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "connection refused",
 			Action:       ActionRetry,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "timeout",
 			Action:       ActionRetry,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "temporary failure",
 			Action:       ActionRetry,
 			Retryable:    true,
-			BackoffType:  BackoffLinear,
+			RecoveryBackoffType:  BackoffLinear,
 		},
 	}
 
 	// 영구적 에러 규칙
-	ec.rules[ErrorTypePermanent] = []ClassificationRule{
+	ec.rules[RecoveryErrorTypePermanent] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "permission denied",
 			Action:       ActionFail,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 		{
 			ErrorPattern: "invalid api key",
 			Action:       ActionFail,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 		{
 			ErrorPattern: "authentication failed",
 			Action:       ActionFail,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 	}
 
 	// 프로세스 에러 규칙
-	ec.rules[ErrorTypeProcess] = []ClassificationRule{
+	ec.rules[RecoveryErrorTypeProcess] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "process exited",
 			Action:       ActionRestart,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "signal",
 			Action:       ActionRestart,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "unexpected exit",
 			Action:       ActionRestart,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 	}
 
 	// 리소스 에러 규칙
-	ec.rules[ErrorTypeResource] = []ClassificationRule{
+	ec.rules[RecoveryErrorTypeResource] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "out of memory",
 			Action:       ActionCircuitBreak,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 		{
 			ErrorPattern: "resource limit",
 			Action:       ActionCircuitBreak,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 		{
 			ErrorPattern: "disk full",
 			Action:       ActionFail,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 	}
 
 	// API 에러 규칙
-	ec.rules[ErrorTypeAPI] = []ClassificationRule{
+	ec.rules[RecoveryErrorTypeAPI] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "rate limit",
 			Action:       ActionRetry,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "service unavailable",
 			Action:       ActionRetry,
 			Retryable:    true,
-			BackoffType:  BackoffExponential,
+			RecoveryBackoffType:  BackoffExponential,
 		},
 		{
 			ErrorPattern: "bad request",
 			Action:       ActionFail,
 			Retryable:    false,
-			BackoffType:  BackoffFixed,
+			RecoveryBackoffType:  BackoffFixed,
 		},
 	}
 }
 
 // ClassifyError 에러를 분류하고 적절한 액션을 반환합니다
-func (ec *ErrorClassifier) ClassifyError(err error) (ErrorType, RecoveryAction) {
+func (ec *RecoveryRecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, RecoveryAction) {
 	if err == nil {
-		return ErrorTypeUnknown, ActionIgnore
+		return RecoveryErrorTypeUnknown, ActionIgnore
 	}
 
 	ec.mutex.RLock()
@@ -364,23 +364,23 @@ func (ec *ErrorClassifier) ClassifyError(err error) (ErrorType, RecoveryAction) 
 	}
 	
 	// 기본 처리
-	return ErrorTypeUnknown, ActionIgnore
+	return RecoveryErrorTypeUnknown, ActionIgnore
 }
 
 // AddRule 새로운 분류 규칙을 추가합니다
-func (ec *ErrorClassifier) AddRule(errorType ErrorType, rule ClassificationRule) {
+func (ec *RecoveryRecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, rule RecoveryClassificationRule) {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
 	
 	if ec.rules[errorType] == nil {
-		ec.rules[errorType] = []ClassificationRule{}
+		ec.rules[errorType] = []RecoveryClassificationRule{}
 	}
 	
 	ec.rules[errorType] = append(ec.rules[errorType], rule)
 }
 
 // GetRules 특정 에러 타입의 규칙들을 반환합니다
-func (ec *ErrorClassifier) GetRules(errorType ErrorType) []ClassificationRule {
+func (ec *RecoveryRecoveryErrorClassifier) GetRules(errorType RecoveryErrorType) []RecoveryClassificationRule {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	

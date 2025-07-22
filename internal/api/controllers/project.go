@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/middleware"
-	"aicli-web/internal/models"
-	"aicli-web/internal/services"
-	"aicli-web/internal/storage"
-	"aicli-web/internal/utils"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/utils"
 )
 
 // ProjectController는 프로젝트 관련 API를 처리합니다.

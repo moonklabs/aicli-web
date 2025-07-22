@@ -2,25 +2,26 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/middleware"
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage"
-	"aicli-web/internal/utils"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/services"
 )
 
 // WorkspaceController는 워크스페이스 관련 API를 처리합니다.
 type WorkspaceController struct {
-	storage storage.Storage
+	service       services.WorkspaceService
+	dockerService *services.DockerWorkspaceService // Docker 통합 서비스 추가
 }
 
 // NewWorkspaceController는 새로운 워크스페이스 컨트롤러를 생성합니다.
-func NewWorkspaceController(storage storage.Storage) *WorkspaceController {
+func NewWorkspaceController(service services.WorkspaceService, dockerService *services.DockerWorkspaceService) *WorkspaceController {
 	return &WorkspaceController{
-		storage: storage,
+		service:       service,
+		dockerService: dockerService,
 	}
 }
 
@@ -36,7 +37,7 @@ func NewWorkspaceController(storage storage.Storage) *WorkspaceController {
 // @Param sort query string false "정렬 기준 (name, created_at, updated_at)" default("created_at")
 // @Param order query string false "정렬 순서 (asc, desc)" default("desc")
 // @Security BearerAuth
-// @Success 200 {object} models.PaginationResponse "워크스페이스 목록"
+// @Success 200 {object} models.WorkspaceListResponse "워크스페이스 목록"
 // @Failure 401 {object} models.ErrorResponse "인증 실패"
 // @Router /workspaces [get]
 func (wc *WorkspaceController) ListWorkspaces(c *gin.Context) {
@@ -55,52 +56,44 @@ func (wc *WorkspaceController) ListWorkspaces(c *gin.Context) {
 		return
 	}
 	
-	// 기본값 설정
-	if req.Page < 1 {
-		req.Page = 1
-	}
-	if req.Limit < 1 {
-		req.Limit = 10
-	}
-	if req.Sort == "" {
-		req.Sort = "created_at"
-	}
-	if req.Order == "" {
-		req.Order = "desc"
-	}
-	
-	// 워크스페이스 목록 조회
-	workspaces, total, err := wc.storage.Workspace().GetByOwnerID(c, userClaims.UserID, &req)
+	// 워크스페이스 목록 조회 (서비스 계층 사용)
+	response, err := wc.service.ListWorkspaces(c, userClaims.UserID, &req)
 	if err != nil {
-		middleware.InternalError(c, "워크스페이스 목록 조회 실패", err)
+		middleware.HandleServiceError(c, err)
 		return
 	}
 	
-	// 응답 생성
-	response := models.PaginationResponse{
-		SuccessResponse: models.SuccessResponse{
+	// 성공 응답에 메시지 추가
+	response.Success = true
+	if len(response.Data) == 0 {
+		c.JSON(http.StatusOK, models.SuccessResponse{
 			Success: true,
-			Message: "워크스페이스 목록을 조회했습니다",
-		},
-		Data: workspaces,
-		Meta: models.PaginationMeta{
-			Page:       req.Page,
-			Limit:      req.Limit,
-			Total:      total,
-			TotalPages: (total + req.Limit - 1) / req.Limit,
-		},
+			Message: "워크스페이스가 없습니다",
+			Data: gin.H{
+				"workspaces": []models.Workspace{},
+				"meta": response.Meta,
+			},
+		})
+		return
 	}
 	
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+		Message: "워크스페이스 목록을 조회했습니다",
+		Data: gin.H{
+			"workspaces": response.Data,
+			"meta": response.Meta,
+		},
+	})
 }
 
 // CreateWorkspace는 새 워크스페이스를 생성합니다.
 // @Summary 워크스페이스 생성
-// @Description 새로운 워크스페이스를 생성합니다
+// @Description 새로운 워크스페이스를 생성합니다 (Docker 컨테이너 포함)
 // @Tags workspaces
 // @Accept json
 // @Produce json
-// @Param body body models.Workspace true "워크스페이스 생성 요청"
+// @Param body body models.CreateWorkspaceRequest true "워크스페이스 생성 요청"
 // @Security BearerAuth
 // @Success 201 {object} models.SuccessResponse "생성된 워크스페이스"
 // @Failure 400 {object} models.ErrorResponse "잘못된 요청"
@@ -117,50 +110,40 @@ func (wc *WorkspaceController) CreateWorkspace(c *gin.Context) {
 	userClaims := claims.(*auth.Claims)
 	
 	// 요청 데이터 파싱
-	var workspace models.Workspace
-	if err := c.ShouldBindJSON(&workspace); err != nil {
+	var req models.CreateWorkspaceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
 	
-	// 프로젝트 경로 유효성 검사
-	if err := utils.IsValidProjectPath(workspace.ProjectPath); err != nil {
-		middleware.ValidationError(c, "프로젝트 경로가 유효하지 않습니다", err.Error())
-		return
+	// Docker 통합 서비스를 사용하여 워크스페이스 생성
+	var workspace *models.Workspace
+	var err error
+	
+	if wc.dockerService != nil {
+		// Docker 통합 워크스페이스 생성
+		workspace, err = wc.dockerService.CreateWorkspace(c, &req, userClaims.UserID)
+	} else {
+		// 기본 서비스 사용 (Docker 비활성화된 경우)
+		workspace, err = wc.service.CreateWorkspace(c, &req, userClaims.UserID)
 	}
 	
-	// 소유자 정보 설정
-	workspace.OwnerID = userClaims.UserID
-	
-	// 중복 확인
-	exists, err := wc.storage.Workspace().ExistsByName(c, workspace.OwnerID, workspace.Name)
 	if err != nil {
-		middleware.InternalError(c, "워크스페이스 중복 확인 실패", err)
-		return
-	}
-	if exists {
-		middleware.ConflictError(c, "이미 존재하는 워크스페이스 이름입니다")
-		return
-	}
-	
-	// 워크스페이스 생성
-	if err := wc.storage.Workspace().Create(c, &workspace); err != nil {
-		if err == storage.ErrAlreadyExists {
-			middleware.ConflictError(c, "이미 존재하는 워크스페이스입니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 생성 실패", err)
+		middleware.HandleServiceError(c, err)
 		return
 	}
 	
 	// 성공 응답
-	response := models.SuccessResponse{
-		Success: true,
-		Message: "워크스페이스가 생성되었습니다",
-		Data:    workspace,
+	message := "워크스페이스가 생성되었습니다"
+	if wc.dockerService != nil {
+		message = "워크스페이스가 생성되었습니다 (컨테이너 설정 중)"
 	}
 	
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, models.SuccessResponse{
+		Success: true,
+		Message: message,
+		Data:    workspace,
+	})
 }
 
 // GetWorkspace는 특정 워크스페이스를 조회합니다.
@@ -191,30 +174,19 @@ func (wc *WorkspaceController) GetWorkspace(c *gin.Context) {
 		return
 	}
 	
-	// 워크스페이스 조회
-	workspace, err := wc.storage.Workspace().GetByID(c, id)
+	// 워크스페이스 조회 (서비스 계층 사용)
+	workspace, err := wc.service.GetWorkspace(c, id, userClaims.UserID)
 	if err != nil {
-		if err == storage.ErrNotFound {
-			middleware.NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 조회 실패", err)
-		return
-	}
-	
-	// 권한 확인
-	if workspace.OwnerID != userClaims.UserID {
-		middleware.ForbiddenError(c, "워크스페이스에 접근할 권한이 없습니다")
+		middleware.HandleServiceError(c, err)
 		return
 	}
 	
 	// 성공 응답
-	response := models.SuccessResponse{
+	c.JSON(http.StatusOK, models.SuccessResponse{
 		Success: true,
+		Message: "워크스페이스 정보를 조회했습니다",
 		Data:    workspace,
-	}
-	
-	c.JSON(http.StatusOK, response)
+	})
 }
 
 // UpdateWorkspace는 워크스페이스를 수정합니다.
@@ -224,7 +196,7 @@ func (wc *WorkspaceController) GetWorkspace(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "워크스페이스 ID"
-// @Param body body map[string]interface{} true "워크스페이스 수정 요청"
+// @Param body body models.UpdateWorkspaceRequest true "워크스페이스 수정 요청"
 // @Security BearerAuth
 // @Success 200 {object} models.SuccessResponse "수정된 워크스페이스"
 // @Failure 400 {object} models.ErrorResponse "잘못된 요청"
@@ -248,65 +220,25 @@ func (wc *WorkspaceController) UpdateWorkspace(c *gin.Context) {
 	}
 	
 	// 요청 데이터 파싱
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var req models.UpdateWorkspaceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
 	
-	// 워크스페이스 존재 및 권한 확인
-	workspace, err := wc.storage.Workspace().GetByID(c, id)
+	// 워크스페이스 업데이트 (서비스 계층 사용)
+	updatedWorkspace, err := wc.service.UpdateWorkspace(c, id, &req, userClaims.UserID)
 	if err != nil {
-		if err == storage.ErrNotFound {
-			middleware.NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 조회 실패", err)
-		return
-	}
-	
-	if workspace.OwnerID != userClaims.UserID {
-		middleware.ForbiddenError(c, "워크스페이스를 수정할 권한이 없습니다")
-		return
-	}
-	
-	// 프로젝트 경로 유효성 검사 (변경되는 경우)
-	if projectPath, ok := updates["project_path"].(string); ok {
-		if err := utils.IsValidProjectPath(projectPath); err != nil {
-			middleware.ValidationError(c, "프로젝트 경로가 유효하지 않습니다", err.Error())
-			return
-		}
-	}
-	
-	// 워크스페이스 업데이트
-	if err := wc.storage.Workspace().Update(c, id, updates); err != nil {
-		if err == storage.ErrAlreadyExists {
-			middleware.ConflictError(c, "이미 존재하는 워크스페이스 이름입니다")
-			return
-		}
-		if err == storage.ErrNotFound {
-			middleware.NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 수정 실패", err)
-		return
-	}
-	
-	// 수정된 워크스페이스 조회
-	updatedWorkspace, err := wc.storage.Workspace().GetByID(c, id)
-	if err != nil {
-		middleware.InternalError(c, "수정된 워크스페이스 조회 실패", err)
+		middleware.HandleServiceError(c, err)
 		return
 	}
 	
 	// 성공 응답
-	response := models.SuccessResponse{
+	c.JSON(http.StatusOK, models.SuccessResponse{
 		Success: true,
 		Message: "워크스페이스가 수정되었습니다",
 		Data:    updatedWorkspace,
-	}
-	
-	c.JSON(http.StatusOK, response)
+	})
 }
 
 // DeleteWorkspace는 워크스페이스를 삭제합니다.
@@ -337,43 +269,203 @@ func (wc *WorkspaceController) DeleteWorkspace(c *gin.Context) {
 		return
 	}
 	
-	// 워크스페이스 존재 및 권한 확인
-	workspace, err := wc.storage.Workspace().GetByID(c, id)
+	// 워크스페이스 삭제 (서비스 계층 사용)
+	err := wc.service.DeleteWorkspace(c, id, userClaims.UserID)
 	if err != nil {
-		if err == storage.ErrNotFound {
-			middleware.NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 조회 실패", err)
-		return
-	}
-	
-	if workspace.OwnerID != userClaims.UserID {
-		middleware.ForbiddenError(c, "워크스페이스를 삭제할 권한이 없습니다")
-		return
-	}
-	
-	// TODO: 실행 중인 태스크 확인 및 정리
-	// TODO: Docker 컨테이너 제거
-	
-	// 워크스페이스 삭제 (Soft Delete)
-	if err := wc.storage.Workspace().Delete(c, id); err != nil {
-		if err == storage.ErrNotFound {
-			middleware.NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-			return
-		}
-		middleware.InternalError(c, "워크스페이스 삭제 실패", err)
+		middleware.HandleServiceError(c, err)
 		return
 	}
 	
 	// 성공 응답
-	response := models.SuccessResponse{
+	c.JSON(http.StatusOK, models.SuccessResponse{
 		Success: true,
 		Message: "워크스페이스가 삭제되었습니다",
 		Data: gin.H{
 			"id": id,
 		},
+	})
+}
+
+// GetWorkspaceStatus는 워크스페이스의 상세 상태를 조회합니다.
+// @Summary 워크스페이스 상태 조회
+// @Description 워크스페이스와 연관된 Docker 컨테이너 상태를 포함한 상세 정보를 조회합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param id path string true "워크스페이스 ID"
+// @Security BearerAuth
+// @Success 200 {object} models.SuccessResponse "워크스페이스 상태 정보"
+// @Failure 400 {object} models.ErrorResponse "잘못된 요청"
+// @Failure 401 {object} models.ErrorResponse "인증 실패"
+// @Failure 404 {object} models.ErrorResponse "워크스페이스를 찾을 수 없음"
+// @Router /workspaces/{id}/status [get]
+func (wc *WorkspaceController) GetWorkspaceStatus(c *gin.Context) {
+	claims := c.MustGet("claims").(*auth.Claims)
+	workspaceID := c.Param("id")
+	
+	if workspaceID == "" {
+		middleware.ValidationError(c, "워크스페이스 ID가 필요합니다", nil)
+		return
 	}
 	
-	c.JSON(http.StatusOK, response)
+	// 기본 워크스페이스 정보 조회
+	workspace, err := wc.service.GetWorkspace(c, workspaceID, claims.UserID)
+	if err != nil {
+		middleware.HandleServiceError(c, err)
+		return
+	}
+	
+	// Docker 컨테이너 상태 조회 (선택적)
+	var containerStatus *services.WorkspaceStatus
+	if wc.dockerService != nil {
+		status, err := wc.dockerService.GetWorkspaceStatus(c, workspaceID)
+		if err != nil {
+			// Docker 상태 조회 실패는 경고만 출력
+			containerStatus = &services.WorkspaceStatus{
+				ContainerState: "unknown",
+				LastError:      err.Error(),
+			}
+		} else {
+			containerStatus = status
+		}
+	}
+	
+	response := gin.H{
+		"workspace":        workspace,
+		"container_status": containerStatus,
+		"last_updated":     time.Now(),
+	}
+	
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+		Message: "워크스페이스 상태를 조회했습니다",
+		Data:    response,
+	})
+}
+
+// BatchWorkspaceOperation은 대량 워크스페이스 작업을 처리합니다.
+// @Summary 배치 워크스페이스 작업
+// @Description 여러 워크스페이스에 대해 일괄 작업을 수행합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param body body services.BatchOperationRequest true "배치 작업 요청"
+// @Security BearerAuth
+// @Success 202 {object} models.SuccessResponse "배치 작업 시작됨"
+// @Failure 400 {object} models.ErrorResponse "잘못된 요청"
+// @Failure 401 {object} models.ErrorResponse "인증 실패"
+// @Router /workspaces/batch [post]
+func (wc *WorkspaceController) BatchWorkspaceOperation(c *gin.Context) {
+	claims := c.MustGet("claims").(*auth.Claims)
+	
+	var req services.BatchOperationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
+		return
+	}
+	
+	// Docker 서비스가 없으면 에러 반환
+	if wc.dockerService == nil {
+		middleware.ValidationError(c, "배치 작업은 Docker 서비스가 활성화된 경우에만 사용할 수 있습니다", nil)
+		return
+	}
+	
+	// 비동기 배치 작업 시작
+	batchID, err := wc.dockerService.StartBatchOperation(c, &req, claims.UserID)
+	if err != nil {
+		middleware.HandleServiceError(c, err)
+		return
+	}
+	
+	c.JSON(http.StatusAccepted, models.SuccessResponse{
+		Success: true,
+		Message: "배치 작업이 시작되었습니다",
+		Data: gin.H{
+			"batch_id":        batchID,
+			"operation_type":  req.Operation,
+			"workspace_count": len(req.WorkspaceIDs),
+			"status_url":      "/api/workspaces/batch/" + batchID + "/status",
+		},
+	})
+}
+
+// GetBatchOperationStatus는 배치 작업 상태를 조회합니다.
+// @Summary 배치 작업 상태 조회
+// @Description 배치 작업의 진행 상황과 결과를 조회합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param batch_id path string true "배치 작업 ID"
+// @Security BearerAuth
+// @Success 200 {object} models.SuccessResponse "배치 작업 상태"
+// @Failure 400 {object} models.ErrorResponse "잘못된 요청"
+// @Failure 401 {object} models.ErrorResponse "인증 실패"
+// @Failure 404 {object} models.ErrorResponse "배치 작업을 찾을 수 없음"
+// @Router /workspaces/batch/{batch_id}/status [get]
+func (wc *WorkspaceController) GetBatchOperationStatus(c *gin.Context) {
+	batchID := c.Param("batch_id")
+	
+	if batchID == "" {
+		middleware.ValidationError(c, "배치 작업 ID가 필요합니다", nil)
+		return
+	}
+	
+	if wc.dockerService == nil {
+		middleware.ValidationError(c, "배치 작업은 Docker 서비스가 활성화된 경우에만 사용할 수 있습니다", nil)
+		return
+	}
+	
+	status, err := wc.dockerService.GetBatchOperationStatus(c, batchID)
+	if err != nil {
+		middleware.HandleServiceError(c, err)
+		return
+	}
+	
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+		Message: "배치 작업 상태를 조회했습니다",
+		Data:    status,
+	})
+}
+
+// CancelBatchOperation은 배치 작업을 취소합니다.
+// @Summary 배치 작업 취소
+// @Description 진행 중인 배치 작업을 취소합니다
+// @Tags workspaces
+// @Accept json
+// @Produce json
+// @Param batch_id path string true "배치 작업 ID"
+// @Security BearerAuth
+// @Success 200 {object} models.SuccessResponse "배치 작업 취소됨"
+// @Failure 400 {object} models.ErrorResponse "잘못된 요청"
+// @Failure 401 {object} models.ErrorResponse "인증 실패"
+// @Failure 404 {object} models.ErrorResponse "배치 작업을 찾을 수 없음"
+// @Router /workspaces/batch/{batch_id}/cancel [post]
+func (wc *WorkspaceController) CancelBatchOperation(c *gin.Context) {
+	batchID := c.Param("batch_id")
+	
+	if batchID == "" {
+		middleware.ValidationError(c, "배치 작업 ID가 필요합니다", nil)
+		return
+	}
+	
+	if wc.dockerService == nil {
+		middleware.ValidationError(c, "배치 작업은 Docker 서비스가 활성화된 경우에만 사용할 수 있습니다", nil)
+		return
+	}
+	
+	err := wc.dockerService.CancelBatchOperation(c, batchID)
+	if err != nil {
+		middleware.HandleServiceError(c, err)
+		return
+	}
+	
+	c.JSON(http.StatusOK, models.SuccessResponse{
+		Success: true,
+		Message: "배치 작업이 취소되었습니다",
+		Data: gin.H{
+			"batch_id": batchID,
+			"status":   "cancelled",
+		},
+	})
 }

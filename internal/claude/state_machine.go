@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// StateTransition 상태 전환 정의
-type StateTransition struct {
+// ProcessStateTransition 프로세스 상태 전환 정의
+type ProcessStateTransition struct {
 	From ProcessStatus
 	To   ProcessStatus
 }
@@ -14,7 +14,7 @@ type StateTransition struct {
 // StateMachine 프로세스 상태 머신
 type StateMachine struct {
 	current     ProcessStatus
-	transitions map[StateTransition]bool
+	transitions map[ProcessStateTransition]bool
 	listeners   []StateChangeListener
 	mutex       sync.RWMutex
 }

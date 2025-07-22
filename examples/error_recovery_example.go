@@ -8,7 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 func main() {

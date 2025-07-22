@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/drumcap/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/auth"
 )
 
 // ConnectionManager는 WebSocket 연결 생명주기를 관리합니다

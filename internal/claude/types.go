@@ -1,6 +1,9 @@
 package claude
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // FormattedMessage는 포맷터에서 사용하는 확장된 메시지 구조체입니다.
 type FormattedMessage struct {
@@ -46,8 +49,8 @@ func (e *ClaudeError) Error() string {
 	return e.Message
 }
 
-// NewFormattedMessage는 기본 Message를 FormattedMessage로 변환합니다.
-func NewFormattedMessage(msg *Message) *FormattedMessage {
+// NewFormattedMessage는 StreamMessage를 FormattedMessage로 변환합니다.
+func NewFormattedMessage(msg *StreamMessage) *FormattedMessage {
 	if msg == nil {
 		return nil
 	}
@@ -101,4 +104,63 @@ func NewExecutionSummary(success bool, startTime time.Time) *ExecutionSummary {
 		StartedAt:   startTime,
 		CompletedAt: now,
 	}
+}
+
+// === 공통 타입 정의 (중복 제거) ===
+
+// RecoveryStrategy는 복구 전략 인터페이스입니다
+type RecoveryStrategy interface {
+	// 복구 가능 여부 확인
+	CanRecover(ctx context.Context, err error) bool
+	
+	// 복구 실행
+	Execute(ctx context.Context, target RecoveryTarget) error
+	
+	// 예상 소요 시간
+	GetEstimatedTime() time.Duration
+	
+	// 성공률
+	GetSuccessRate() float64
+	
+	// 전략명
+	GetName() string
+}
+
+// RecoveryTarget은 복구 대상입니다
+type RecoveryTarget interface {
+	GetType() string
+	GetIdentifier() string
+	GetContext() map[string]interface{}
+}
+
+// AlertManager는 알림 관리 인터페이스입니다
+type AlertManager interface {
+	SendAlert(level AlertLevel, message string, context map[string]interface{}) error
+}
+
+// AlertLevel은 알림 레벨입니다
+type AlertLevel int
+
+const (
+	AlertLevelInfo AlertLevel = iota
+	AlertLevelWarning
+	AlertLevelError
+	AlertLevelCritical
+)
+
+// PoolStats는 풀 통계 정보입니다
+type PoolStats struct {
+	Active      int     `json:"active"`
+	Idle        int     `json:"idle"`
+	Total       int     `json:"total"`
+	MaxCapacity int     `json:"max_capacity"`
+	Utilization float64 `json:"utilization"`
+}
+
+// StateTransition은 상태 전환을 나타냅니다
+type StateTransition struct {
+	FromState string    `json:"from_state"`
+	ToState   string    `json:"to_state"`
+	Trigger   string    `json:"trigger"`
+	Timestamp time.Time `json:"timestamp"`
 }

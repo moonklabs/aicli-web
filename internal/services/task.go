@@ -141,7 +141,7 @@ func (ts *TaskService) GetByID(ctx context.Context, id string) (*models.Task, er
 }
 
 // List 태스크 목록 조회
-func (ts *TaskService) List(ctx context.Context, filter *models.TaskFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.TaskResponse], error) {
+func (ts *TaskService) List(ctx context.Context, filter *models.TaskFilter, paging *models.PagingRequest) (*models.PagingResponse, error) {
 	tasks, total, err := ts.storage.Task().List(ctx, filter, paging)
 	if err != nil {
 		return nil, fmt.Errorf("태스크 목록 조회 실패: %w", err)
@@ -153,11 +153,9 @@ func (ts *TaskService) List(ctx context.Context, filter *models.TaskFilter, pagi
 		responses[i] = task.ToResponse()
 	}
 	
-	return &models.PagingResponse[*models.TaskResponse]{
-		Items: responses,
-		Total: total,
-		Page:  paging.Page,
-		Limit: paging.Limit,
+	return &models.PagingResponse{
+		Data: responses,
+		Meta: models.NewPaginationMeta(paging.Page, paging.Limit, total),
 	}, nil
 }
 

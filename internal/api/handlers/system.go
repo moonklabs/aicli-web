@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/drumcap/aicli-web/pkg/version"
+	"github.com/aicli/aicli-web/pkg/version"
 )
 
 // SystemInfo는 시스템 정보 응답 구조체입니다.

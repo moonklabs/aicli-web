@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// PoolMetrics는 풀 메트릭을 수집하고 관리합니다
-type PoolMetrics struct {
+// SessionSessionPoolMetrics는 풀 메트릭을 수집하고 관리합니다
+type SessionPoolMetrics struct {
 	// 카운터들
 	totalRequests    atomic.Int64
 	successRequests  atomic.Int64
@@ -137,9 +137,9 @@ type MetricsSummary struct {
 	ActionCounts    map[string]int64 `json:"action_counts"`
 }
 
-// NewPoolMetrics는 새로운 풀 메트릭을 생성합니다
-func NewPoolMetrics() *PoolMetrics {
-	pm := &PoolMetrics{
+// NewSessionPoolMetrics는 새로운 풀 메트릭을 생성합니다
+func NewSessionPoolMetrics() *SessionPoolMetrics {
+	pm := &SessionPoolMetrics{
 		latencyTracker:     NewLatencyTracker(1000),
 		throughputTracker:  NewThroughputTracker(time.Minute, 60),
 		errorRateTracker:   NewErrorRateTracker(time.Minute, 60),
@@ -188,7 +188,7 @@ func NewTimeSeriesMetrics(maxPoints int) *TimeSeriesMetrics {
 }
 
 // Start는 메트릭 수집을 시작합니다
-func (pm *PoolMetrics) Start() {
+func (pm *SessionPoolMetrics) Start() {
 	if !pm.running.CompareAndSwap(false, true) {
 		return // 이미 실행 중
 	}
@@ -197,7 +197,7 @@ func (pm *PoolMetrics) Start() {
 }
 
 // Stop은 메트릭 수집을 중지합니다
-func (pm *PoolMetrics) Stop() {
+func (pm *SessionPoolMetrics) Stop() {
 	if !pm.running.CompareAndSwap(true, false) {
 		return // 이미 중지됨
 	}
@@ -207,7 +207,7 @@ func (pm *PoolMetrics) Stop() {
 }
 
 // RecordAction은 액션을 기록합니다
-func (pm *PoolMetrics) RecordAction(action string, session *PooledSession) {
+func (pm *SessionPoolMetrics) RecordAction(action string, session *PooledSession) {
 	// 액션 카운터 증가
 	pm.incrementActionCounter(action)
 	
@@ -228,39 +228,39 @@ func (pm *PoolMetrics) RecordAction(action string, session *PooledSession) {
 }
 
 // RecordLatency는 지연시간을 기록합니다
-func (pm *PoolMetrics) RecordLatency(latency time.Duration) {
+func (pm *SessionPoolMetrics) RecordLatency(latency time.Duration) {
 	pm.latencyTracker.AddSample(latency)
 }
 
 // RecordError는 에러를 기록합니다
-func (pm *PoolMetrics) RecordError() {
+func (pm *SessionPoolMetrics) RecordError() {
 	pm.failedRequests.Add(1)
 	pm.errorRateTracker.RecordError()
 }
 
 // UpdateSessionCount는 세션 수를 업데이트합니다
-func (pm *PoolMetrics) UpdateSessionCount(total, active int64) {
+func (pm *SessionPoolMetrics) UpdateSessionCount(total, active int64) {
 	pm.totalSessions.Store(total)
 	pm.activeSessions.Store(active)
 }
 
 // GetThroughputRPS는 현재 처리량(RPS)을 반환합니다
-func (pm *PoolMetrics) GetThroughputRPS() float64 {
+func (pm *SessionPoolMetrics) GetThroughputRPS() float64 {
 	return pm.throughputTracker.GetCurrentRPS()
 }
 
 // GetAverageLatency는 평균 지연시간을 반환합니다
-func (pm *PoolMetrics) GetAverageLatency() time.Duration {
+func (pm *SessionPoolMetrics) GetAverageLatency() time.Duration {
 	return pm.latencyTracker.GetAverage()
 }
 
 // GetErrorRate는 현재 에러율을 반환합니다
-func (pm *PoolMetrics) GetErrorRate() float64 {
+func (pm *SessionPoolMetrics) GetErrorRate() float64 {
 	return pm.errorRateTracker.GetCurrentErrorRate()
 }
 
 // GetMetricsSummary는 메트릭 요약을 반환합니다
-func (pm *PoolMetrics) GetMetricsSummary() MetricsSummary {
+func (pm *SessionPoolMetrics) GetMetricsSummary() MetricsSummary {
 	totalReq := pm.totalRequests.Load()
 	successReq := pm.successRequests.Load()
 	failedReq := pm.failedRequests.Load()
@@ -305,13 +305,13 @@ func (pm *PoolMetrics) GetMetricsSummary() MetricsSummary {
 }
 
 // GetTimeSeriesData는 시계열 데이터를 반환합니다
-func (pm *PoolMetrics) GetTimeSeriesData() []MetricDataPoint {
+func (pm *SessionPoolMetrics) GetTimeSeriesData() []MetricDataPoint {
 	return pm.timeSeriesMetrics.GetDataPoints()
 }
 
 // 내부 메서드들
 
-func (pm *PoolMetrics) metricsLoop() {
+func (pm *SessionPoolMetrics) metricsLoop() {
 	for {
 		select {
 		case <-pm.done:
@@ -322,7 +322,7 @@ func (pm *PoolMetrics) metricsLoop() {
 	}
 }
 
-func (pm *PoolMetrics) collectTimeSeriesData() {
+func (pm *SessionPoolMetrics) collectTimeSeriesData() {
 	dataPoint := MetricDataPoint{
 		Timestamp:      time.Now(),
 		ActiveSessions: pm.activeSessions.Load(),
@@ -336,7 +336,7 @@ func (pm *PoolMetrics) collectTimeSeriesData() {
 	pm.timeSeriesMetrics.AddDataPoint(dataPoint)
 }
 
-func (pm *PoolMetrics) incrementActionCounter(action string) {
+func (pm *SessionPoolMetrics) incrementActionCounter(action string) {
 	pm.actionMutex.RLock()
 	counter, exists := pm.actionCounter[action]
 	pm.actionMutex.RUnlock()
@@ -354,7 +354,7 @@ func (pm *PoolMetrics) incrementActionCounter(action string) {
 	counter.Add(1)
 }
 
-func (pm *PoolMetrics) calculateSessionUtilization() float64 {
+func (pm *SessionPoolMetrics) calculateSessionUtilization() float64 {
 	total := pm.totalSessions.Load()
 	active := pm.activeSessions.Load()
 	

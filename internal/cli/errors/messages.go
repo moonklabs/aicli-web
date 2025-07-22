@@ -5,7 +5,7 @@ package errors
 import (
 	"fmt"
 
-	cliErrors "github.com/aicli-web/internal/errors"
+	cliErrors "github.com/aicli/aicli-web/internal/errors"
 )
 
 // RequiredFlagError는 필수 플래그가 누락되었을 때 사용합니다.

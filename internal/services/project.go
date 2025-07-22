@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // ProjectService 프로젝트 비즈니스 로직 처리
@@ -208,4 +208,9 @@ func (s *ProjectService) UpdateProjectConfig(ctx context.Context, projectID stri
 	}
 
 	return s.storage.Project().Update(ctx, projectID, updates)
+}
+
+// GetByID 프로젝트 ID로 조회 (별칭)
+func (s *ProjectService) GetByID(ctx context.Context, id string) (*models.Project, error) {
+	return s.GetProject(ctx, id)
 }

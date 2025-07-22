@@ -15,7 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // 통합 테스트는 실제 프로세스를 실행하므로 더 긴 시간이 걸릴 수 있습니다.

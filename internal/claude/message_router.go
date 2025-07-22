@@ -28,7 +28,7 @@ const (
 
 // MessageHandler는 메시지를 처리하는 핸들러 인터페이스입니다.
 type MessageHandler interface {
-	Handle(ctx context.Context, msg Message) error
+	Handle(ctx context.Context, msg StreamMessage) error
 	Priority() int
 	Name() string
 }
@@ -57,7 +57,7 @@ type MessageRouter struct {
 	mu             sync.RWMutex
 	logger         *logrus.Logger
 	metrics        *RouterMetrics
-	errorHandler   func(error, Message)
+	errorHandler   func(error, StreamMessage)
 	
 	// 비동기 처리를 위한 워커 풀
 	workerPool     *WorkerPool
@@ -79,7 +79,7 @@ type RouterMetrics struct {
 type RouterConfig struct {
 	AsyncMode      bool
 	MaxConcurrency int
-	ErrorHandler   func(error, Message)
+	ErrorHandler   func(error, StreamMessage)
 }
 
 // NewMessageRouter는 새로운 메시지 라우터를 생성합니다.
@@ -142,7 +142,7 @@ func (r *MessageRouter) SetDefaultHandler(handler MessageHandler) {
 }
 
 // Route는 메시지를 적절한 핸들러로 라우팅합니다.
-func (r *MessageRouter) Route(ctx context.Context, msg Message) error {
+func (r *MessageRouter) Route(ctx context.Context, msg StreamMessage) error {
 	msgType := MessageType(msg.Type)
 	
 	// 메트릭 업데이트
@@ -174,7 +174,7 @@ func (r *MessageRouter) Route(ctx context.Context, msg Message) error {
 }
 
 // routeSync는 메시지를 동기적으로 처리합니다.
-func (r *MessageRouter) routeSync(ctx context.Context, msg Message, handlers []MessageHandler, msgType MessageType) error {
+func (r *MessageRouter) routeSync(ctx context.Context, msg StreamMessage, handlers []MessageHandler, msgType MessageType) error {
 	start := time.Now()
 	var lastErr error
 
@@ -198,7 +198,7 @@ func (r *MessageRouter) routeSync(ctx context.Context, msg Message, handlers []M
 }
 
 // routeAsync는 메시지를 비동기적으로 처리합니다.
-func (r *MessageRouter) routeAsync(ctx context.Context, msg Message, handlers []MessageHandler, msgType MessageType) error {
+func (r *MessageRouter) routeAsync(ctx context.Context, msg StreamMessage, handlers []MessageHandler, msgType MessageType) error {
 	if r.workerPool == nil {
 		return fmt.Errorf("worker pool not initialized")
 	}
@@ -215,7 +215,7 @@ func (r *MessageRouter) routeAsync(ctx context.Context, msg Message, handlers []
 }
 
 // executeHandler는 단일 핸들러를 실행합니다.
-func (r *MessageRouter) executeHandler(ctx context.Context, handler MessageHandler, msg Message, msgType MessageType) error {
+func (r *MessageRouter) executeHandler(ctx context.Context, handler MessageHandler, msg StreamMessage, msgType MessageType) error {
 	// 타임아웃 설정
 	handlerCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -355,7 +355,7 @@ func (r *MessageRouter) Stop() {
 // RouterTask는 비동기 처리를 위한 태스크입니다.
 type RouterTask struct {
 	ctx      context.Context
-	msg      Message
+	msg      StreamMessage
 	handlers []MessageHandler
 	msgType  MessageType
 	router   *MessageRouter
@@ -388,15 +388,15 @@ func (t *RouterTask) Execute() error {
 // WorkerPool은 비동기 태스크 처리를 위한 워커 풀입니다.
 type WorkerPool struct {
 	workers    int
-	taskQueue  chan Task
+	taskQueue  chan MessageRouterTask
 	wg         sync.WaitGroup
 	stopCh     chan struct{}
 	logger     *logrus.Logger
 	stats      *WorkerPoolStats
 }
 
-// Task는 워커 풀에서 실행할 태스크 인터페이스입니다.
-type Task interface {
+// MessageRouterTask는 워커 풀에서 실행할 태스크 인터페이스입니다.
+type MessageRouterTask interface {
 	Execute() error
 }
 
@@ -412,7 +412,7 @@ type WorkerPoolStats struct {
 func NewWorkerPool(workers int, logger *logrus.Logger) *WorkerPool {
 	return &WorkerPool{
 		workers:   workers,
-		taskQueue: make(chan Task, workers*10),
+		taskQueue: make(chan MessageRouterTask, workers*10),
 		stopCh:    make(chan struct{}),
 		logger:    logger,
 		stats:     &WorkerPoolStats{},
@@ -450,7 +450,7 @@ func (wp *WorkerPool) worker(id int) {
 }
 
 // Submit은 태스크를 워커 풀에 제출합니다.
-func (wp *WorkerPool) Submit(task Task) error {
+func (wp *WorkerPool) Submit(task MessageRouterTask) error {
 	select {
 	case wp.taskQueue <- task:
 		atomic.AddInt64(&wp.stats.TasksSubmitted, 1)

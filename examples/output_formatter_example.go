@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 	
-	"aicli-web/internal/cli/output"
+	"github.com/aicli/aicli-web/internal/cli/output"
 )
 
 // 예시 구조체 정의

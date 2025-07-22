@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"aicli-web/internal/cli/errors"
-	"aicli-web/internal/cli/output"
+	"github.com/aicli/aicli-web/internal/cli/errors"
+	"github.com/aicli/aicli-web/internal/cli/output"
 )
 
 // NewWorkspaceCmd는 workspace 관련 명령어를 생성합니다.

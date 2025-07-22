@@ -56,7 +56,7 @@ func (s *Server) setupRoutes() {
 		}
 
 		// 워크스페이스 컨트롤러 인스턴스 생성
-		workspaceController := controllers.NewWorkspaceController(s.storage)
+		workspaceController := controllers.NewWorkspaceController(s.workspaceService)
 		
 		// 프로젝트 컨트롤러 인스턴스 생성
 		projectController := controllers.NewProjectController(s.storage)

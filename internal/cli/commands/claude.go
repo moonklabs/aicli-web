@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/drumcap/aicli-web/internal/claude"
-	"github.com/drumcap/aicli-web/internal/cli/output"
-	"github.com/drumcap/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/cli/output"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // Claude 명령어 옵션

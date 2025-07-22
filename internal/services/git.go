@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // GitService Git 관련 작업을 처리하는 서비스

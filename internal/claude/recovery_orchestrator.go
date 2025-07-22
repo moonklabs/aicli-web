@@ -40,36 +40,25 @@ type RecoveryOrchestrator struct {
 	wg     sync.WaitGroup
 }
 
-// RecoveryStrategy는 복구 전략 인터페이스입니다
-type RecoveryStrategy interface {
-	// 복구 가능 여부 확인
-	CanRecover(ctx context.Context, err error) bool
-	
-	// 복구 실행
-	Execute(ctx context.Context, target RecoveryTarget) error
-	
-	// 예상 시간
-	GetEstimatedTime() time.Duration
-	
-	// 성공률
-	GetSuccessRate() float64
-	
-	// 전략 이름
-	GetName() string
-	
-	// 우선순위
-	GetPriority() int
-	
-	// 전제 조건
-	GetPrerequisites() []string
-}
-
-// RecoveryTarget는 복구 대상입니다
-type RecoveryTarget struct {
+// RecoveryTargetImpl는 복구 대상의 구체적 구현입니다
+type RecoveryTargetImpl struct {
 	Type       string                 `json:"type"`        // "process", "session", "resource"
 	Identifier string                 `json:"identifier"`  // ID 또는 이름
 	Context    map[string]interface{} `json:"context"`     // 추가 컨텍스트
 	Priority   RecoveryPriority       `json:"priority"`    // 복구 우선순위
+}
+
+// RecoveryTarget 인터페이스 구현
+func (r *RecoveryTargetImpl) GetType() string {
+	return r.Type
+}
+
+func (r *RecoveryTargetImpl) GetIdentifier() string {
+	return r.Identifier
+}
+
+func (r *RecoveryTargetImpl) GetContext() map[string]interface{} {
+	return r.Context
 }
 
 // RecoveryPriority는 복구 우선순위입니다
@@ -158,19 +147,7 @@ type RecoveryConfig struct {
 }
 
 // AlertManager는 알림 관리 인터페이스입니다
-type AlertManager interface {
-	SendAlert(level AlertLevel, message string, context map[string]interface{}) error
-}
-
-// AlertLevel은 알림 레벨입니다
-type AlertLevel int
-
-const (
-	AlertLevelInfo AlertLevel = iota
-	AlertLevelWarning
-	AlertLevelError
-	AlertLevelCritical
-)
+// AlertManager 인터페이스는 types.go에서 공통 정의됨
 
 // NewRecoveryOrchestrator는 새로운 복구 오케스트레이터를 생성합니다
 func NewRecoveryOrchestrator(

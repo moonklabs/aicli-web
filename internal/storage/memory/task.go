@@ -2,14 +2,12 @@ package memory
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/google/uuid"
 )
 
@@ -50,7 +48,7 @@ func (ts *taskStorage) Create(ctx context.Context, task *models.Task) error {
 	
 	// 중복 확인
 	if _, exists := ts.tasks[task.ID]; exists {
-		return storage.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 	
 	// 복사본 저장
@@ -67,7 +65,7 @@ func (ts *taskStorage) GetByID(ctx context.Context, id string) (*models.Task, er
 	
 	task, exists := ts.tasks[id]
 	if !exists {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 	
 	// 복사본 반환
@@ -76,17 +74,14 @@ func (ts *taskStorage) GetByID(ctx context.Context, id string) (*models.Task, er
 }
 
 // List 태스크 목록 조회
-func (ts *taskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PagingRequest) ([]*models.Task, int, error) {
+func (ts *taskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
 	
 	// 모든 태스크 수집
 	var allTasks []*models.Task
 	for _, task := range ts.tasks {
-		// 삭제되지 않은 태스크만
-		if !task.DeletedAt.Valid {
-			allTasks = append(allTasks, task)
-		}
+		allTasks = append(allTasks, task)
 	}
 	
 	// 필터링 적용
@@ -132,14 +127,9 @@ func (ts *taskStorage) Update(ctx context.Context, task *models.Task) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
 	
-	existing, exists := ts.tasks[task.ID]
+	_, exists := ts.tasks[task.ID]
 	if !exists {
-		return storage.ErrNotFound
-	}
-	
-	// 삭제된 리소스 확인
-	if existing.DeletedAt.Valid {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 	
 	// 업데이트 시간 설정
@@ -157,27 +147,19 @@ func (ts *taskStorage) Delete(ctx context.Context, id string) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
 	
-	task, exists := ts.tasks[id]
+	_, exists := ts.tasks[id]
 	if !exists {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 	
-	// 이미 삭제된 경우
-	if task.DeletedAt.Valid {
-		return storage.ErrNotFound
-	}
-	
-	// Soft delete
-	now := time.Now()
-	task.DeletedAt.Time = now
-	task.DeletedAt.Valid = true
-	task.UpdatedAt = now
+	// Hard delete (메모리 스토리지는 단순 삭제)
+	delete(ts.tasks, id)
 	
 	return nil
 }
 
 // GetBySessionID 세션 ID로 태스크 목록 조회
-func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *models.PagingRequest) ([]*models.Task, int, error) {
+func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	filter := &models.TaskFilter{
 		SessionID: &sessionID,
 	}
@@ -192,7 +174,7 @@ func (ts *taskStorage) GetActiveCount(ctx context.Context, sessionID string) (in
 	
 	count := int64(0)
 	for _, task := range ts.tasks {
-		if !task.DeletedAt.Valid && (sessionID == "" || task.SessionID == sessionID) && task.IsActive() {
+		if (sessionID == "" || task.SessionID == sessionID) && task.IsActive() {
 			count++
 		}
 	}
@@ -240,7 +222,7 @@ func (ts *taskStorage) searchTasks(keyword string) []*models.Task {
 	keyword = strings.ToLower(keyword)
 	
 	for _, task := range ts.tasks {
-		if !task.DeletedAt.Valid {
+		{
 			// 명령어에서 검색
 			if strings.Contains(strings.ToLower(task.Command), keyword) {
 				results = append(results, task)
@@ -272,7 +254,7 @@ func (ts *taskStorage) getTasksByTimeRange(start, end time.Time) []*models.Task 
 	var results []*models.Task
 	
 	for _, task := range ts.tasks {
-		if !task.DeletedAt.Valid && 
+		if 
 		   task.CreatedAt.After(start) && 
 		   task.CreatedAt.Before(end) {
 			results = append(results, task)
@@ -294,7 +276,7 @@ func (ts *taskStorage) getStats() map[string]interface{} {
 	}
 	
 	for _, task := range ts.tasks {
-		if !task.DeletedAt.Valid {
+		{
 			stats["total"] = stats["total"].(int) + 1
 			
 			// 상태별 카운트

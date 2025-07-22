@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drumcap/aicli-web/internal/testutil"
+	"github.com/aicli/aicli-web/internal/testutil"
 	"github.com/spf13/viper"
 )
 

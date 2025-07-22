@@ -364,7 +364,7 @@ type WorkerScaler struct {
 	metricsMutex sync.RWMutex
 	
 	// 결정 이력
-	decisions  []ScalingDecision
+	decisions  []GoroutineScalingDecision
 	decisionMutex sync.RWMutex
 	maxDecisions int
 }
@@ -391,8 +391,8 @@ type ScalerMetrics struct {
 	EfficiencyScore    float64       `json:"efficiency_score"`
 }
 
-// ScalingDecision는 스케일링 결정입니다
-type ScalingDecision struct {
+// GoroutineScalingDecision는 스케일링 결정입니다 (고루틴 매니저용)
+type GoroutineScalingDecision struct {
 	Timestamp   time.Time `json:"timestamp"`
 	Action      string    `json:"action"`
 	FromWorkers int       `json:"from_workers"`
@@ -1405,7 +1405,7 @@ func NewWorkerScaler(pool *WorkerPoolManager, config ScalerConfig) *WorkerScaler
 	return &WorkerScaler{
 		pool:         pool,
 		config:       config,
-		decisions:    make([]ScalingDecision, 0),
+		decisions:    make([]GoroutineScalingDecision, 0),
 		maxDecisions: 100,
 	}
 }
@@ -1786,13 +1786,13 @@ func (ld *LeakDetector) DetectLeaks() []GoroutineLeak {
 }
 
 // AlertManager 알림 관리자 (인터페이스)
-type AlertManager interface {
+type GoroutineAlertManager interface {
 	SendAlert(alert Alert) error
 }
 
 // Alert 알림
 type Alert struct {
-	Level       AlertLevel    `json:"level"`
+	Level       GoroutineAlertLevel    `json:"level"`
 	Message     string        `json:"message"`
 	Source      string        `json:"source"`
 	Timestamp   time.Time     `json:"timestamp"`
@@ -1800,11 +1800,11 @@ type Alert struct {
 }
 
 // AlertLevel 알림 레벨
-type AlertLevel string
+type GoroutineAlertLevel string
 
 const (
-	AlertLevelInfo     AlertLevel = "info"
-	AlertLevelWarning  AlertLevel = "warning"
-	AlertLevelError    AlertLevel = "error"
-	AlertLevelCritical AlertLevel = "critical"
+	GoroutineAlertLevelInfo     GoroutineAlertLevel = "info"
+	GoroutineAlertLevelWarning  GoroutineAlertLevel = "warning"
+	GoroutineAlertLevelError    GoroutineAlertLevel = "error"
+	GoroutineAlertLevelCritical GoroutineAlertLevel = "critical"
 )

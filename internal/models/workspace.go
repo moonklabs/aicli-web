@@ -130,6 +130,21 @@ func (s WorkspaceStatus) IsValid() bool {
 	}
 }
 
+// IsValid 워크스페이스 전체 유효성 검사
+func (w *Workspace) IsValid() bool {
+	// 기본 필드 검증
+	if w.ID == "" || w.Name == "" || w.ProjectPath == "" {
+		return false
+	}
+	
+	// 상태 검증
+	if !w.Status.IsValid() {
+		return false
+	}
+	
+	return true
+}
+
 // MaskClaudeKey Claude API 키 마스킹
 func (w *Workspace) MaskClaudeKey() {
 	if w.ClaudeKey != "" {

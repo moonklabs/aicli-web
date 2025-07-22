@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/auth"
 )
 
 func setupTestMiddleware() (*gin.Engine, *auth.JWTManager, *auth.Blacklist) {

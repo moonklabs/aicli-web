@@ -1,14 +1,14 @@
 package memory
 
 import (
-	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/interfaces"
 )
 
 // Storage 메모리 기반 스토리지 구현
 type Storage struct {
 	workspace *WorkspaceStorage
 	project   *ProjectStorage
-	session   *sessionStorage
+	session   *SessionStorage
 	task      *taskStorage
 }
 
@@ -17,28 +17,28 @@ func New() *Storage {
 	return &Storage{
 		workspace: NewWorkspaceStorage(),
 		project:   NewProjectStorage(),
-		session:   newSessionStorage(),
+		session:   NewSessionStorage(),
 		task:      newTaskStorage(),
 	}
 }
 
 // Workspace 워크스페이스 스토리지 반환
-func (s *Storage) Workspace() storage.WorkspaceStorage {
+func (s *Storage) Workspace() interfaces.WorkspaceStorage {
 	return s.workspace
 }
 
 // Project 프로젝트 스토리지 반환
-func (s *Storage) Project() storage.ProjectStorage {
+func (s *Storage) Project() interfaces.ProjectStorage {
 	return s.project
 }
 
 // Session 세션 스토리지 반환
-func (s *Storage) Session() storage.SessionStorage {
+func (s *Storage) Session() interfaces.SessionStorage {
 	return s.session
 }
 
 // Task 태스크 스토리지 반환
-func (s *Storage) Task() storage.TaskStorage {
+func (s *Storage) Task() interfaces.TaskStorage {
 	return s.task
 }
 

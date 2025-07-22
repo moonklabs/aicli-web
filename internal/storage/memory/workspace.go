@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // WorkspaceStorage 메모리 기반 워크스페이스 스토리지
@@ -41,7 +39,7 @@ func (s *WorkspaceStorage) Create(ctx context.Context, workspace *models.Workspa
 	// 이름 중복 확인
 	nameKey := fmt.Sprintf("%s:%s", workspace.OwnerID, workspace.Name)
 	if _, exists := s.nameIndex[nameKey]; exists {
-		return storage.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 
 	// 기본값 설정
@@ -66,7 +64,7 @@ func (s *WorkspaceStorage) GetByID(ctx context.Context, id string) (*models.Work
 
 	workspace, exists := s.workspaces[id]
 	if !exists || workspace.DeletedAt != nil {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	// 복사본 반환
@@ -139,14 +137,14 @@ func (s *WorkspaceStorage) Update(ctx context.Context, id string, updates map[st
 
 	workspace, exists := s.workspaces[id]
 	if !exists || workspace.DeletedAt != nil {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	// 이름 변경 시 중복 확인
 	if name, ok := updates["name"].(string); ok && name != workspace.Name {
 		nameKey := fmt.Sprintf("%s:%s", workspace.OwnerID, name)
 		if existingID, exists := s.nameIndex[nameKey]; exists && existingID != id {
-			return storage.ErrAlreadyExists
+			return ErrAlreadyExists
 		}
 		
 		// 기존 인덱스 삭제
@@ -181,7 +179,7 @@ func (s *WorkspaceStorage) Delete(ctx context.Context, id string) error {
 
 	workspace, exists := s.workspaces[id]
 	if !exists || workspace.DeletedAt != nil {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	// Soft delete

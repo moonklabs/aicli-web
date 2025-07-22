@@ -5,8 +5,17 @@ import (
 	"strings"
 )
 
-// 추가 에러 정의
+// 기본 에러 정의
 var (
+	// ErrNotFound 항목을 찾을 수 없음
+	ErrNotFound = fmt.Errorf("not found")
+	
+	// ErrAlreadyExists 이미 존재함
+	ErrAlreadyExists = fmt.Errorf("already exists")
+	
+	// ErrInvalidInput 잘못된 입력값
+	ErrInvalidInput = fmt.Errorf("invalid input")
+	
 	// ErrDuplicateKey 중복 키 에러
 	ErrDuplicateKey = fmt.Errorf("중복된 키")
 	

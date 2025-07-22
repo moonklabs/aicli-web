@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-	"aicli-web/internal/models"
-	"aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // ProjectStorage 메모리 기반 프로젝트 스토리지
@@ -43,12 +41,12 @@ func (s *ProjectStorage) Create(ctx context.Context, project *models.Project) er
 	// 이름 중복 확인
 	nameKey := fmt.Sprintf("%s:%s", project.WorkspaceID, project.Name)
 	if _, exists := s.nameIndex[nameKey]; exists {
-		return storage.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 
 	// 경로 중복 확인
 	if _, exists := s.pathIndex[project.Path]; exists {
-		return storage.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 
 	// 기본값 설정
@@ -74,7 +72,7 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id string) (*models.Projec
 
 	project, exists := s.projects[id]
 	if !exists || project.DeletedAt != nil {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	// 복사본 반환
@@ -147,14 +145,14 @@ func (s *ProjectStorage) Update(ctx context.Context, id string, updates map[stri
 
 	project, exists := s.projects[id]
 	if !exists || project.DeletedAt != nil {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	// 이름 변경 시 중복 확인
 	if name, ok := updates["name"].(string); ok && name != project.Name {
 		nameKey := fmt.Sprintf("%s:%s", project.WorkspaceID, name)
 		if existingID, exists := s.nameIndex[nameKey]; exists && existingID != id {
-			return storage.ErrAlreadyExists
+			return ErrAlreadyExists
 		}
 		
 		// 기존 인덱스 삭제
@@ -169,7 +167,7 @@ func (s *ProjectStorage) Update(ctx context.Context, id string, updates map[stri
 	// 경로 변경 시 중복 확인
 	if path, ok := updates["path"].(string); ok && path != project.Path {
 		if existingID, exists := s.pathIndex[path]; exists && existingID != id {
-			return storage.ErrAlreadyExists
+			return ErrAlreadyExists
 		}
 		
 		// 기존 인덱스 삭제
@@ -212,7 +210,7 @@ func (s *ProjectStorage) Delete(ctx context.Context, id string) error {
 
 	project, exists := s.projects[id]
 	if !exists || project.DeletedAt != nil {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	// Soft delete
@@ -251,12 +249,12 @@ func (s *ProjectStorage) GetByPath(ctx context.Context, path string) (*models.Pr
 
 	projectID, exists := s.pathIndex[path]
 	if !exists {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	project, exists := s.projects[projectID]
 	if !exists || project.DeletedAt != nil {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	// 복사본 반환

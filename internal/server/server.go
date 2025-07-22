@@ -14,6 +14,8 @@ import (
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/websocket"
 	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/docker"
+	"github.com/aicli/aicli-web/internal/api/controllers"
 )
 
 // Server는 API 서버의 핵심 구조체입니다.
@@ -21,9 +23,11 @@ type Server struct {
 	router         *gin.Engine
 	jwtManager     *auth.JWTManager
 	blacklist      *auth.Blacklist
-	storage        storage.Storage
-	sessionService *services.SessionService
-	taskService    *services.TaskService
+	storage          storage.Storage
+	workspaceService services.WorkspaceService
+	dockerWorkspaceService *services.DockerWorkspaceService // Docker 통합 워크스페이스 서비스 추가
+	sessionService   *services.SessionService
+	taskService      *services.TaskService
 	
 	// Claude 관련
 	claudeWrapper        claude.Wrapper
@@ -55,6 +59,21 @@ func New() *Server {
 	
 	// 스토리지 초기화 (개발 환경에서는 메모리 스토리지 사용)
 	storage := memory.New()
+	
+	// 워크스페이스 서비스 초기화
+	workspaceService := services.NewWorkspaceService(storage)
+	
+	// Docker 매니저 초기화 (선택적)
+	var dockerWorkspaceService *services.DockerWorkspaceService
+	dockerManager, err := docker.NewManagerWithDefaults()
+	if err != nil {
+		// Docker를 사용할 수 없는 경우 로깅만 하고 계속 진행
+		// TODO: 로거 추가 시 로깅
+		dockerWorkspaceService = nil
+	} else {
+		// Docker 통합 워크스페이스 서비스 초기화
+		dockerWorkspaceService = services.NewDockerWorkspaceService(workspaceService, storage, dockerManager)
+	}
 	
 	// 프로젝트 서비스 초기화
 	projectService := services.NewProjectService(storage)
@@ -90,6 +109,8 @@ func New() *Server {
 		jwtManager:           jwtManager,
 		blacklist:            blacklist,
 		storage:              storage,
+		workspaceService:     workspaceService,
+		dockerWorkspaceService: dockerWorkspaceService,
 		sessionService:       sessionService,
 		taskService:          taskService,
 		claudeWrapper:        claudeWrapper,
@@ -145,4 +166,59 @@ func (s *Server) setupRouter() {
 
 	// 라우터 설정
 	s.setupRoutes()
+}
+
+// setupRoutes는 API 엔드포인트를 설정합니다.
+func (s *Server) setupRoutes() {
+	// API 컨트롤러들 초기화
+	s.setupControllers()
+}
+
+// setupControllers는 컨트롤러들을 초기화하고 라우트를 설정합니다.
+func (s *Server) setupControllers() {
+	// 컨트롤러들 초기화
+	workspaceController := controllers.NewWorkspaceController(s.workspaceService, s.dockerWorkspaceService)
+	
+	// 헬스체크 엔드포인트
+	s.router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "aicli-web"})
+	})
+	
+	// API v1 그룹
+	v1 := s.router.Group("/api/v1")
+	{
+		// 인증 없이 접근 가능한 엔드포인트
+		public := v1.Group("/")
+		{
+			public.GET("/health", func(c *gin.Context) {
+				c.JSON(200, gin.H{"status": "ok", "version": "v1"})
+			})
+		}
+		
+		// 인증이 필요한 엔드포인트
+		protected := v1.Group("/")
+		protected.Use(middleware.AuthMiddleware(s.jwtManager, s.blacklist))
+		{
+			// 워크스페이스 라우트
+			workspaces := protected.Group("/workspaces")
+			{
+				workspaces.GET("/", workspaceController.ListWorkspaces)
+				workspaces.POST("/", workspaceController.CreateWorkspace)
+				workspaces.GET("/:id", workspaceController.GetWorkspace)
+				workspaces.PUT("/:id", workspaceController.UpdateWorkspace)
+				workspaces.DELETE("/:id", workspaceController.DeleteWorkspace)
+				
+				// Docker 통합 엔드포인트 (Docker 서비스가 활성화된 경우에만)
+				if s.dockerWorkspaceService != nil {
+					workspaces.GET("/:id/status", workspaceController.GetWorkspaceStatus)
+					workspaces.POST("/batch", workspaceController.BatchWorkspaceOperation)
+					workspaces.GET("/batch/:batch_id/status", workspaceController.GetBatchOperationStatus)
+					workspaces.POST("/batch/:batch_id/cancel", workspaceController.CancelBatchOperation)
+				}
+			}
+		}
+	}
+	
+	// WebSocket 엔드포인트
+	s.router.GET("/ws", middleware.AuthMiddleware(s.jwtManager, s.blacklist), s.wsHandler.HandleWebSocket)
 }

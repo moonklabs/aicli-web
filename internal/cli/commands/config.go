@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"aicli-web/internal/config"
-	"aicli-web/internal/cli/output"
+	"github.com/aicli/aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/cli/output"
 	"gopkg.in/yaml.v3"
 )
 

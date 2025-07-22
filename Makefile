@@ -3,7 +3,7 @@
 
 BINARY_NAME_CLI=aicli
 BINARY_NAME_API=aicli-api
-GO=go
+GO=/home/node/go-local/go/bin/go
 GOFLAGS=-v
 BUILD_DIR=./build
 SCRIPTS_DIR=./scripts
@@ -20,10 +20,10 @@ DIST_DIR=./dist
 
 # 빌드 플래그 (최적화 포함)
 LDFLAGS=-ldflags "-s -w -extldflags '-static' \
-	-X github.com/drumcap/aicli-web/pkg/version.Version=${VERSION} \
-	-X github.com/drumcap/aicli-web/pkg/version.BuildTime=${BUILD_TIME} \
-	-X github.com/drumcap/aicli-web/pkg/version.GitCommit=${GIT_COMMIT} \
-	-X github.com/drumcap/aicli-web/pkg/version.GitBranch=${GIT_BRANCH}"
+	-X github.com/aicli/aicli-web/pkg/version.Version=${VERSION} \
+	-X github.com/aicli/aicli-web/pkg/version.BuildTime=${BUILD_TIME} \
+	-X github.com/aicli/aicli-web/pkg/version.GitCommit=${GIT_COMMIT} \
+	-X github.com/aicli/aicli-web/pkg/version.GitBranch=${GIT_BRANCH}"
 
 # 컬러 출력
 RED=\033[0;31m
@@ -34,7 +34,9 @@ NC=\033[0m # No Color
 
 .PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint lint-fix lint-all lint-report fmt dev help \
 	run-cli run-api install docker docker-push vet deps check security release pre-commit-install pre-commit-update pre-commit-run \
-	swagger swagger-fmt
+	swagger swagger-fmt test-docker test-docker-skip test-container test-docker-bench test-mount test-mount-integration test-status test-status-integration \
+	test-security test-security-integration test-security-bench test-workspace-integration test-workspace-performance test-workspace-complete \
+	test-e2e-workspace test-workspace-isolation test-workspace-chaos
 
 # 기본 타겟
 all: build
@@ -147,6 +149,29 @@ test-coverage:
 test-bench:
 	@printf "${BLUE}Running benchmark tests...${NC}\n"
 	${GO} test -bench=. -benchmem ./...
+
+# Docker 관련 테스트
+test-docker:
+	@printf "${BLUE}Running Docker integration tests...${NC}\n"
+	${GO} test -v -race -timeout=5m ./internal/docker/...
+	@printf "${GREEN}✓ Docker tests completed${NC}\n"
+
+test-docker-skip:
+	@printf "${BLUE}Running tests without Docker...${NC}\n"
+	SKIP_DOCKER_TESTS=true ${GO} test -v -race ./internal/docker/...
+	@printf "${GREEN}✓ Tests completed (Docker skipped)${NC}\n"
+
+# 컨테이너 생명주기 테스트
+test-container:
+	@printf "${BLUE}Running container lifecycle tests...${NC}\n"
+	${GO} test -v -race -run="TestContainerManager" ./internal/docker/...
+	@printf "${GREEN}✓ Container tests completed${NC}\n"
+
+# Docker 벤치마크 테스트
+test-docker-bench:
+	@printf "${BLUE}Running Docker benchmark tests...${NC}\n"
+	${GO} test -v -race -bench="BenchmarkContainerManager" ./internal/docker/... -benchmem
+	@printf "${GREEN}✓ Docker benchmarks completed${NC}\n"
 	@printf "${GREEN}✓ Benchmark tests completed${NC}\n"
 
 # 고급 통합 테스트 명령어들
@@ -184,6 +209,17 @@ test-production:
 	@printf "${BLUE}Running production stability tests...${NC}\n"
 	${GO} test -v -race -timeout=60m -run="TestHighLoadScenario|TestChaosEngineering" ./internal/testing/
 	@printf "${GREEN}✓ Production tests completed${NC}\n"
+
+# 마운트 시스템 테스트
+test-mount:
+	@printf "${BLUE}Running mount system tests...${NC}\n"
+	${GO} test -v -short ./internal/docker/mount/...
+	@printf "${GREEN}✓ Mount system tests completed${NC}\n"
+
+test-mount-integration:
+	@printf "${BLUE}Running mount integration tests...${NC}\n"
+	DOCKER_INTEGRATION_TEST=1 ${GO} test -v -timeout=10m ./internal/docker/mount_manager_integration_test.go
+	@printf "${GREEN}✓ Mount integration tests completed${NC}\n"
 
 # 코드 품질 타겟
 lint:
@@ -277,8 +313,8 @@ docker:
 
 docker-push:
 	@printf "${BLUE}Pushing Docker images...${NC}\n"
-	docker tag aicli-web:${VERSION} drumcap/aicli-web:${VERSION}
-	docker push drumcap/aicli-web:${VERSION}
+	docker tag aicli-web:${VERSION} aicli/aicli-web:${VERSION}
+	docker push aicli/aicli-web:${VERSION}
 	@printf "${GREEN}✓ Docker image pushed${NC}\n"
 
 # Docker 개발 환경 타겟
@@ -430,3 +466,77 @@ help:
 	@printf "${GREEN}Version: ${VERSION}${NC}\n"
 	@printf "${GREEN}Git Commit: ${GIT_COMMIT}${NC}\n"
 	@printf "${GREEN}Git Branch: ${GIT_BRANCH}${NC}\n"
+
+# 상태 추적 시스템 테스트
+test-status:
+	@printf "${BLUE}Running status tracking system tests...${NC}\n"
+	${GO} test -v -race ./internal/docker/status/...
+	@printf "${GREEN}✓ Status tracking tests completed${NC}\n"
+
+# 상태 추적 시스템 통합 테스트
+test-status-integration:
+	@printf "${BLUE}Running status tracking integration tests...${NC}\n"
+	${GO} test -v -race -run="TestIntegration_.*" ./internal/docker/status/...
+	@printf "${GREEN}✓ Status tracking integration tests completed${NC}\n"
+
+# 보안 격리 시스템 테스트
+test-security:
+	@printf "${BLUE}Running security module tests...${NC}\n"
+	${GO} test -v -race ./internal/docker/security/...
+	@printf "${GREEN}✓ Security module tests completed${NC}\n"
+
+test-security-integration:
+	@printf "${BLUE}Running security integration tests...${NC}\n"
+	DOCKER_INTEGRATION_TEST=1 ${GO} test -v -timeout=10m ./internal/docker/security/...
+	@printf "${GREEN}✓ Security integration tests completed${NC}\n"
+
+test-security-bench:
+	@printf "${BLUE}Running security benchmark tests...${NC}\n"
+	${GO} test -v -race -bench="Benchmark.*" ./internal/docker/security/... -benchmem
+	@printf "${GREEN}✓ Security benchmark tests completed${NC}\n"
+
+# 워크스페이스 통합 테스트 타겟
+test-workspace-integration:
+	@printf "${BLUE}Running workspace integration tests...${NC}\n"
+	${GO} test -v -race -timeout 10m ./test/integration/workspace_basic_test.go
+	@printf "${GREEN}✓ Workspace integration tests completed${NC}\n"
+
+test-workspace-performance:
+	@printf "${BLUE}Running workspace performance tests...${NC}\n"
+	${GO} test -v -race -timeout 15m ./test/integration/workspace_performance_simple_test.go
+	@printf "${GREEN}✓ Workspace performance tests completed${NC}\n"
+
+test-e2e-workspace:
+	@printf "${BLUE}Running workspace E2E tests...${NC}\n"
+	${GO} test -v -race -timeout 15m ./test/e2e/workspace_complete_flow_test.go
+	@printf "${GREEN}✓ Workspace E2E tests completed${NC}\n"
+
+test-workspace-complete:
+	@printf "${BLUE}Running complete workspace test suite...${NC}\n"
+	@if ! docker info >/dev/null 2>&1; then \
+		printf "${RED}✗ Docker daemon not available, running E2E tests only${NC}\n"; \
+		make test-e2e-workspace; \
+	else \
+		make test-workspace-integration && \
+		make test-workspace-performance && \
+		make test-e2e-workspace; \
+	fi
+	@printf "${GREEN}✓ Complete workspace test suite completed${NC}\n"
+
+test-workspace-isolation:
+	@printf "${BLUE}Running workspace isolation tests...${NC}\n"
+	@if ! docker info >/dev/null 2>&1; then \
+		printf "${RED}✗ Docker daemon not available, skipping isolation tests${NC}\n"; \
+		exit 1; \
+	fi
+	${GO} test -v -race -timeout 10m -run "TestWorkspaceResourceIsolation|TestSecurityConstraints|TestMultiUserWorkspaceIsolation" ./test/integration/... ./test/e2e/...
+	@printf "${GREEN}✓ Workspace isolation tests completed${NC}\n"
+
+test-workspace-chaos:
+	@printf "${BLUE}Running workspace chaos engineering tests...${NC}\n"
+	@if ! docker info >/dev/null 2>&1; then \
+		printf "${RED}✗ Docker daemon not available, skipping chaos tests${NC}\n"; \
+		exit 1; \
+	fi
+	${GO} test -v -race -timeout 20m -run "TestErrorRecoveryScenarios|TestConcurrentWorkspaceOperations" ./test/integration/...
+	@printf "${GREEN}✓ Workspace chaos tests completed${NC}\n"

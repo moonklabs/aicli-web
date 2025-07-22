@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"aicli-web/internal/auth"
-	"aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/config"
 )
 
 // LoginRequest 로그인 요청 구조체

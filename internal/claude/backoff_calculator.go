@@ -414,23 +414,23 @@ func (c *CongestionControlBackoff) Calculate(success bool) time.Duration {
 // CircuitBreakerAwareBackoff는 Circuit Breaker 상태를 고려한 백오프입니다
 type CircuitBreakerAwareBackoff struct {
 	calculator     BackoffCalculator
-	circuitBreaker CircuitBreakerState
+	circuitBreaker CircuitBreakerStatus
 }
 
-// CircuitBreakerState는 Circuit Breaker 상태입니다
-type CircuitBreakerState int
+// CircuitBreakerStatus는 Circuit Breaker 상태입니다 (backoff calculator용)
+type CircuitBreakerStatus int
 
 const (
-	CircuitClosed CircuitBreakerState = iota
-	CircuitHalfOpen
-	CircuitOpen
+	CircuitClosedStatusStatus CircuitBreakerStatus = iota
+	CircuitHalfOpenStatusStatus
+	CircuitOpenStatusStatus
 )
 
 // NewCircuitBreakerAwareBackoff는 Circuit Breaker 인식 백오프를 생성합니다
 func NewCircuitBreakerAwareBackoff(calculator BackoffCalculator) *CircuitBreakerAwareBackoff {
 	return &CircuitBreakerAwareBackoff{
 		calculator:     calculator,
-		circuitBreaker: CircuitClosed,
+		circuitBreaker: CircuitClosedStatus,
 	}
 }
 
@@ -444,12 +444,12 @@ func (c *CircuitBreakerAwareBackoff) Calculate(
 	baseBackoff := c.calculator.Calculate(attempt, baseDelay, maxDelay, strategy, err)
 	
 	switch c.circuitBreaker {
-	case CircuitClosed:
+	case CircuitClosedStatus:
 		return baseBackoff
-	case CircuitHalfOpen:
+	case CircuitHalfOpenStatus:
 		// Half-open 상태에서는 더 보수적
 		return time.Duration(float64(baseBackoff) * 1.5)
-	case CircuitOpen:
+	case CircuitOpenStatus:
 		// Open 상태에서는 훨씬 더 긴 대기
 		return time.Duration(float64(baseBackoff) * 3.0)
 	default:

@@ -127,10 +127,10 @@ jobs:
           echo "📦 Building $CLI_NAME..."
           go build -v -trimpath \
             -ldflags "-s -w -extldflags '-static' \
-              -X github.com/drumcap/aicli-web/pkg/version.Version=$VERSION \
-              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=main" \
+              -X github.com/aicli/aicli-web/pkg/version.Version=$VERSION \
+              -X github.com/aicli/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitBranch=main" \
             -o "dist/$CLI_NAME" \
             ./cmd/aicli
           
@@ -138,10 +138,10 @@ jobs:
           echo "📦 Building $API_NAME..."
           go build -v -trimpath \
             -ldflags "-s -w -extldflags '-static' \
-              -X github.com/drumcap/aicli-web/pkg/version.Version=$VERSION \
-              -X github.com/drumcap/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
-              -X github.com/drumcap/aicli-web/pkg/version.GitBranch=main" \
+              -X github.com/aicli/aicli-web/pkg/version.Version=$VERSION \
+              -X github.com/aicli/aicli-web/pkg/version.BuildTime=${{ steps.build-info.outputs.build_time }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitCommit=${{ steps.build-info.outputs.commit }} \
+              -X github.com/aicli/aicli-web/pkg/version.GitBranch=main" \
             -o "dist/$API_NAME" \
             ./cmd/api
           
@@ -244,21 +244,21 @@ jobs:
           
           ### macOS (Intel)
           \`\`\`bash
-          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-amd64 -o aicli
+          curl -L https://github.com/aicli/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-amd64 -o aicli
           chmod +x aicli
           sudo mv aicli /usr/local/bin/
           \`\`\`
           
           ### macOS (Apple Silicon)
           \`\`\`bash
-          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-arm64 -o aicli
+          curl -L https://github.com/aicli/aicli-web/releases/download/$TAG/aicli-$TAG-darwin-arm64 -o aicli
           chmod +x aicli
           sudo mv aicli /usr/local/bin/
           \`\`\`
           
           ### Linux (x64)
           \`\`\`bash
-          curl -L https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-linux-amd64 -o aicli
+          curl -L https://github.com/aicli/aicli-web/releases/download/$TAG/aicli-$TAG-linux-amd64 -o aicli
           chmod +x aicli
           sudo mv aicli /usr/local/bin/
           \`\`\`
@@ -266,7 +266,7 @@ jobs:
           ### Windows
           PowerShell에서 실행:
           \`\`\`powershell
-          Invoke-WebRequest -Uri "https://github.com/drumcap/aicli-web/releases/download/$TAG/aicli-$TAG-windows-amd64.exe" -OutFile "aicli.exe"
+          Invoke-WebRequest -Uri "https://github.com/aicli/aicli-web/releases/download/$TAG/aicli-$TAG-windows-amd64.exe" -OutFile "aicli.exe"
           \`\`\`
           
           ## 🔍 체크섬 검증
@@ -300,7 +300,7 @@ jobs:
           
           ---
           
-          **Full Changelog**: https://github.com/drumcap/aicli-web/compare/$PREVIOUS_TAG...$TAG
+          **Full Changelog**: https://github.com/aicli/aicli-web/compare/$PREVIOUS_TAG...$TAG
           EOF
           
           # 릴리스 노트를 출력으로 저장
@@ -324,7 +324,7 @@ jobs:
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           echo "✅ 릴리스 $TAG가 성공적으로 생성되었습니다!"
-          echo "🔗 릴리스 페이지: https://github.com/drumcap/aicli-web/releases/tag/$TAG"
+          echo "🔗 릴리스 페이지: https://github.com/aicli/aicli-web/releases/tag/$TAG"
 
       - name: 실패 시 정리
         if: failure()
@@ -347,7 +347,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            drumcap/aicli-web
+            aicli/aicli-web
           tags: |
             type=ref,event=tag
             type=semver,pattern={{version}}

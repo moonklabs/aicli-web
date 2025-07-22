@@ -2,8 +2,8 @@ package claude
 
 import "fmt"
 
-// ProcessError 프로세스 관련 에러
-type ProcessError struct {
+// ClaudeProcessError 프로세스 관련 에러 (claude 패키지용)
+type ClaudeProcessError struct {
 	Type    string
 	Message string
 	Cause   error
@@ -12,7 +12,7 @@ type ProcessError struct {
 }
 
 // Error 에러 메시지를 반환합니다
-func (e *ProcessError) Error() string {
+func (e *ClaudeProcessError) Error() string {
 	if e.Cause != nil {
 		return fmt.Sprintf("%s (PID: %d, 상태: %s): %s: %v",
 			e.Type, e.PID, e.Status, e.Message, e.Cause)
@@ -22,13 +22,13 @@ func (e *ProcessError) Error() string {
 }
 
 // Unwrap 래핑된 에러를 반환합니다
-func (e *ProcessError) Unwrap() error {
+func (e *ClaudeProcessError) Unwrap() error {
 	return e.Cause
 }
 
-// NewProcessError 새로운 프로세스 에러를 생성합니다
-func NewProcessError(errorType, message string, cause error, pid int, status ProcessStatus) *ProcessError {
-	return &ProcessError{
+// NewClaudeProcessError 새로운 프로세스 에러를 생성합니다
+func NewClaudeProcessError(errorType, message string, cause error, pid int, status ProcessStatus) *ClaudeProcessError {
+	return &ClaudeProcessError{
 		Type:    errorType,
 		Message: message,
 		Cause:   cause,

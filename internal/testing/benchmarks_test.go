@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
-	"github.com/claude-ai/aicli-web/internal/testing/test_helpers"
+	"github.com/aicli/aicli-web/internal/testing/test_helpers"
 )
 
 // BenchmarkSessionThroughput 세션 처리량 벤치마크

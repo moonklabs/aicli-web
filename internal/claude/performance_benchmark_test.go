@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drumcap/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // BenchmarkSessionManagement는 세션 관리 성능을 벤치마크합니다.

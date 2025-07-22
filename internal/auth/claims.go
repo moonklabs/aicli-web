@@ -32,14 +32,9 @@ func NewClaims(userID, userName, role string, expirationTime time.Time) *Claims 
 
 // Valid 클레임 유효성 검증
 func (c *Claims) Valid() error {
-	// RegisteredClaims의 Valid 메서드 호출
-	if err := c.RegisteredClaims.Valid(); err != nil {
-		return err
-	}
-	
 	// 추가 검증 로직 (필요시)
 	if c.UserID == "" {
-		return jwt.NewValidationError("user_id is required", jwt.ValidationErrorClaimsInvalid)
+		return jwt.ErrTokenInvalidClaims
 	}
 	
 	return nil

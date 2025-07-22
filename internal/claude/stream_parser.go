@@ -14,8 +14,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Message는 Claude CLI로 전송할 메시지를 나타냅니다.
-type Message struct {
+// StreamMessage는 Claude CLI로 전송할 메시지를 나타냅니다.
+type StreamMessage struct {
 	Type    string                 `json:"type"`
 	Content string                 `json:"content"`
 	Meta    map[string]interface{} `json:"meta,omitempty"`

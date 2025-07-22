@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/sijinhui/aicli-web/internal/storage/sqlite"
+	"github.com/aicli/aicli-web/internal/storage/sqlite"
 )
 
 // SessionExample demonstrates how to use the session management system

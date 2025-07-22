@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // 이 파일은 프로세스 관리자 사용 예제입니다.

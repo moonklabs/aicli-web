@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/config"
 	"gopkg.in/yaml.v3"
 )
 

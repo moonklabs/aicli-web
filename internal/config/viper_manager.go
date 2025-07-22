@@ -92,22 +92,22 @@ func (cm *ConfigManager) setDefaults() {
 	homeDir, _ := os.UserHomeDir()
 
 	// Claude 기본값
-	cm.viper.SetDefault("claude.model", DefaultClaudeModelSimple)
-	cm.viper.SetDefault("claude.temperature", DefaultClaudeTemperatureSimple)
-	cm.viper.SetDefault("claude.timeout", DefaultClaudeTimeoutSimple)
+	cm.viper.SetDefault("claude.model", DefaultClaudeModel)
+	cm.viper.SetDefault("claude.temperature", DefaultClaudeTemperature)
+	cm.viper.SetDefault("claude.timeout", DefaultClaudeTimeout)
 
 	// Workspace 기본값
 	cm.viper.SetDefault("workspace.default_path", filepath.Join(homeDir, ".aicli", "workspaces"))
 	cm.viper.SetDefault("workspace.auto_sync", true)
-	cm.viper.SetDefault("workspace.max_projects", DefaultMaxProjectsSimple)
+	cm.viper.SetDefault("workspace.max_projects", DefaultMaxProjects)
 
 	// Output 기본값
-	cm.viper.SetDefault("output.format", DefaultOutputFormatSimple)
-	cm.viper.SetDefault("output.color_mode", DefaultColorModeSimple)
-	cm.viper.SetDefault("output.width", DefaultOutputWidthSimple)
+	cm.viper.SetDefault("output.format", DefaultOutputFormat)
+	cm.viper.SetDefault("output.color_mode", DefaultColorMode)
+	cm.viper.SetDefault("output.width", DefaultOutputWidth)
 
 	// Logging 기본값
-	cm.viper.SetDefault("logging.level", DefaultLogLevelSimple)
+	cm.viper.SetDefault("logging.level", DefaultLogLevel)
 	cm.viper.SetDefault("logging.file_path", filepath.Join(homeDir, ".aicli", "logs", "aicli.log"))
 }
 
@@ -215,22 +215,22 @@ func (cm *ConfigManager) setDefaultsForViper(v *viper.Viper) {
 	homeDir, _ := os.UserHomeDir()
 
 	// Claude 기본값
-	v.SetDefault("claude.model", DefaultClaudeModelSimple)
-	v.SetDefault("claude.temperature", DefaultClaudeTemperatureSimple)
-	v.SetDefault("claude.timeout", DefaultClaudeTimeoutSimple)
+	v.SetDefault("claude.model", DefaultClaudeModel)
+	v.SetDefault("claude.temperature", DefaultClaudeTemperature)
+	v.SetDefault("claude.timeout", DefaultClaudeTimeout)
 
 	// Workspace 기본값
 	v.SetDefault("workspace.default_path", filepath.Join(homeDir, ".aicli", "workspaces"))
 	v.SetDefault("workspace.auto_sync", true)
-	v.SetDefault("workspace.max_projects", DefaultMaxProjectsSimple)
+	v.SetDefault("workspace.max_projects", DefaultMaxProjects)
 
 	// Output 기본값
-	v.SetDefault("output.format", DefaultOutputFormatSimple)
-	v.SetDefault("output.color_mode", DefaultColorModeSimple)
-	v.SetDefault("output.width", DefaultOutputWidthSimple)
+	v.SetDefault("output.format", DefaultOutputFormat)
+	v.SetDefault("output.color_mode", DefaultColorMode)
+	v.SetDefault("output.width", DefaultOutputWidth)
 
 	// Logging 기본값
-	v.SetDefault("logging.level", DefaultLogLevelSimple)
+	v.SetDefault("logging.level", DefaultLogLevel)
 	v.SetDefault("logging.file_path", filepath.Join(homeDir, ".aicli", "logs", "aicli.log"))
 }
 

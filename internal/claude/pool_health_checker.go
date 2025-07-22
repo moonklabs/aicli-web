@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// HealthChecker는 세션 풀의 헬스를 체크합니다
-type HealthChecker struct {
+// PoolPoolHealthChecker는 세션 풀의 헬스를 체크합니다
+type PoolHealthChecker struct {
 	pool   *AdvancedSessionPool
 	config HealthCheckConfig
 	
@@ -32,7 +32,7 @@ type HealthChecker struct {
 // SessionHealth는 개별 세션의 헬스 상태입니다
 type SessionHealth struct {
 	SessionID         string                `json:"session_id"`
-	Status            HealthStatus          `json:"status"`
+	Status            PoolHealthStatus          `json:"status"`
 	LastCheckTime     time.Time             `json:"last_check_time"`
 	ConsecutiveFailures int                 `json:"consecutive_failures"`
 	ConsecutiveSuccess  int                 `json:"consecutive_success"`
@@ -47,7 +47,7 @@ type SessionHealth struct {
 
 // OverallHealth는 전체 풀의 헬스 상태입니다
 type OverallHealth struct {
-	Status            HealthStatus    `json:"status"`
+	Status            PoolHealthStatus    `json:"status"`
 	HealthySessions   int             `json:"healthy_sessions"`
 	UnhealthySessions int             `json:"unhealthy_sessions"`
 	TotalSessions     int             `json:"total_sessions"`
@@ -75,11 +75,11 @@ type HealthIssue struct {
 	Count       int           `json:"count"`
 }
 
-// HealthStatus는 헬스 상태입니다
-type HealthStatus int
+// PoolHealthStatus는 헬스 상태입니다
+type PoolHealthStatus int
 
 const (
-	HealthUnknown HealthStatus = iota
+	HealthUnknown PoolHealthStatus = iota
 	HealthHealthy
 	HealthWarning
 	HealthCritical
@@ -112,17 +112,17 @@ const (
 type IssueSeverity int
 
 const (
-	SeverityLow IssueSeverity = iota
-	SeverityMedium
-	SeverityHigh
-	SeverityCritical
+	PoolPoolSeverityLow IssueSeverity = iota
+	PoolPoolSeverityMedium
+	PoolPoolSeverityHigh
+	PoolPoolSeverityCritical
 )
 
-// NewHealthChecker는 새로운 헬스 체커를 생성합니다
-func NewHealthChecker(pool *AdvancedSessionPool, config HealthCheckConfig) *HealthChecker {
+// NewPoolHealthChecker는 새로운 헬스 체커를 생성합니다
+func NewPoolHealthChecker(pool *AdvancedSessionPool, config HealthCheckConfig) *PoolHealthChecker {
 	ctx, cancel := context.WithCancel(context.Background())
 	
-	hc := &HealthChecker{
+	hc := &PoolHealthChecker{
 		pool:          pool,
 		config:        config,
 		sessionHealth: make(map[string]*SessionHealth),
@@ -141,7 +141,7 @@ func NewHealthChecker(pool *AdvancedSessionPool, config HealthCheckConfig) *Heal
 }
 
 // Start는 헬스 체커를 시작합니다
-func (hc *HealthChecker) Start() {
+func (hc *PoolHealthChecker) Start() {
 	if !hc.running.CompareAndSwap(false, true) {
 		return // 이미 실행 중
 	}
@@ -150,7 +150,7 @@ func (hc *HealthChecker) Start() {
 }
 
 // Stop은 헬스 체커를 중지합니다
-func (hc *HealthChecker) Stop() {
+func (hc *PoolHealthChecker) Stop() {
 	if !hc.running.CompareAndSwap(true, false) {
 		return // 이미 중지됨
 	}
@@ -160,7 +160,7 @@ func (hc *HealthChecker) Stop() {
 }
 
 // GetOverallHealth는 전체 헬스 상태를 반환합니다
-func (hc *HealthChecker) GetOverallHealth() *OverallHealth {
+func (hc *PoolHealthChecker) GetOverallHealth() *OverallHealth {
 	health := hc.overallHealth.Load().(*OverallHealth)
 	
 	// 복사본 반환
@@ -172,7 +172,7 @@ func (hc *HealthChecker) GetOverallHealth() *OverallHealth {
 }
 
 // GetSessionHealth는 세션별 헬스 상태를 반환합니다
-func (hc *HealthChecker) GetSessionHealth(sessionID string) *SessionHealth {
+func (hc *PoolHealthChecker) GetSessionHealth(sessionID string) *SessionHealth {
 	hc.healthMutex.RLock()
 	defer hc.healthMutex.RUnlock()
 	
@@ -188,7 +188,7 @@ func (hc *HealthChecker) GetSessionHealth(sessionID string) *SessionHealth {
 }
 
 // GetAllSessionHealth는 모든 세션의 헬스 상태를 반환합니다
-func (hc *HealthChecker) GetAllSessionHealth() map[string]*SessionHealth {
+func (hc *PoolHealthChecker) GetAllSessionHealth() map[string]*SessionHealth {
 	hc.healthMutex.RLock()
 	defer hc.healthMutex.RUnlock()
 	
@@ -204,7 +204,7 @@ func (hc *HealthChecker) GetAllSessionHealth() map[string]*SessionHealth {
 }
 
 // CheckSessionHealth는 특정 세션의 헬스를 체크합니다
-func (hc *HealthChecker) CheckSessionHealth(sessionID string) *HealthCheckResult {
+func (hc *PoolHealthChecker) CheckSessionHealth(sessionID string) *HealthCheckResult {
 	startTime := time.Now()
 	
 	// 세션 존재 여부 확인
@@ -262,7 +262,7 @@ func (hc *HealthChecker) CheckSessionHealth(sessionID string) *HealthCheckResult
 
 // 내부 메서드들
 
-func (hc *HealthChecker) healthCheckLoop() {
+func (hc *PoolHealthChecker) healthCheckLoop() {
 	for {
 		select {
 		case <-hc.ctx.Done():
@@ -273,7 +273,7 @@ func (hc *HealthChecker) healthCheckLoop() {
 	}
 }
 
-func (hc *HealthChecker) performHealthChecks() {
+func (hc *PoolHealthChecker) performHealthChecks() {
 	// 활성 세션 목록 가져오기
 	sessions := hc.getActiveSessions()
 	
@@ -296,19 +296,19 @@ func (hc *HealthChecker) performHealthChecks() {
 	hc.detectIssues()
 }
 
-func (hc *HealthChecker) getActiveSessions() []string {
+func (hc *PoolHealthChecker) getActiveSessions() []string {
 	// 실제 구현에서는 풀에서 활성 세션 목록을 가져와야 함
 	// 여기서는 더미 구현
 	return []string{}
 }
 
-func (hc *HealthChecker) getSession(sessionID string) *PooledSession {
+func (hc *PoolHealthChecker) getSession(sessionID string) *PooledSession {
 	// 실제 구현에서는 풀에서 세션을 가져와야 함
 	// 여기서는 더미 구현
 	return nil
 }
 
-func (hc *HealthChecker) checkSessionPing(session *PooledSession) HealthCheckResult {
+func (hc *PoolHealthChecker) checkSessionPing(session *PooledSession) HealthCheckResult {
 	startTime := time.Now()
 	
 	// 기본 ping 체크 (세션이 응답하는지)
@@ -325,7 +325,7 @@ func (hc *HealthChecker) checkSessionPing(session *PooledSession) HealthCheckRes
 	}
 }
 
-func (hc *HealthChecker) checkSessionProcess(session *PooledSession) HealthCheckResult {
+func (hc *PoolHealthChecker) checkSessionProcess(session *PooledSession) HealthCheckResult {
 	startTime := time.Now()
 	
 	// 프로세스 상태 체크
@@ -339,7 +339,7 @@ func (hc *HealthChecker) checkSessionProcess(session *PooledSession) HealthCheck
 	}
 }
 
-func (hc *HealthChecker) checkSessionMemory(session *PooledSession) HealthCheckResult {
+func (hc *PoolHealthChecker) checkSessionMemory(session *PooledSession) HealthCheckResult {
 	startTime := time.Now()
 	
 	// 메모리 사용량 체크
@@ -353,7 +353,7 @@ func (hc *HealthChecker) checkSessionMemory(session *PooledSession) HealthCheckR
 	}
 }
 
-func (hc *HealthChecker) checkSessionResponse(session *PooledSession) HealthCheckResult {
+func (hc *PoolHealthChecker) checkSessionResponse(session *PooledSession) HealthCheckResult {
 	startTime := time.Now()
 	
 	// 응답 시간 체크
@@ -367,7 +367,7 @@ func (hc *HealthChecker) checkSessionResponse(session *PooledSession) HealthChec
 	}
 }
 
-func (hc *HealthChecker) checkSessionLoad(session *PooledSession) HealthCheckResult {
+func (hc *PoolHealthChecker) checkSessionLoad(session *PooledSession) HealthCheckResult {
 	startTime := time.Now()
 	
 	// 부하 상태 체크
@@ -381,7 +381,7 @@ func (hc *HealthChecker) checkSessionLoad(session *PooledSession) HealthCheckRes
 	}
 }
 
-func (hc *HealthChecker) updateSessionHealth(sessionID string, result *HealthCheckResult) {
+func (hc *PoolHealthChecker) updateSessionHealth(sessionID string, result *HealthCheckResult) {
 	hc.healthMutex.Lock()
 	defer hc.healthMutex.Unlock()
 	
@@ -428,11 +428,11 @@ func (hc *HealthChecker) updateSessionHealth(sessionID string, result *HealthChe
 	}
 	
 	// 헬스 상태 및 점수 계산
-	health.Status = hc.calculateHealthStatus(health)
+	health.Status = hc.calculatePoolHealthStatus(health)
 	health.HealthScore = hc.calculateHealthScore(health)
 }
 
-func (hc *HealthChecker) calculateHealthStatus(health *SessionHealth) HealthStatus {
+func (hc *PoolHealthChecker) calculatePoolHealthStatus(health *SessionHealth) PoolHealthStatus {
 	// 연속 실패 확인
 	if health.ConsecutiveFailures >= hc.config.FailureThreshold {
 		return HealthFailed
@@ -457,7 +457,7 @@ func (hc *HealthChecker) calculateHealthStatus(health *SessionHealth) HealthStat
 	return HealthUnknown
 }
 
-func (hc *HealthChecker) calculateHealthScore(health *SessionHealth) float64 {
+func (hc *PoolHealthChecker) calculateHealthScore(health *SessionHealth) float64 {
 	if health.TotalChecks == 0 {
 		return 0.5 // 미지수
 	}
@@ -494,7 +494,7 @@ func (hc *HealthChecker) calculateHealthScore(health *SessionHealth) float64 {
 	return score
 }
 
-func (hc *HealthChecker) updateOverallHealth() {
+func (hc *PoolHealthChecker) updateOverallHealth() {
 	hc.healthMutex.RLock()
 	defer hc.healthMutex.RUnlock()
 	
@@ -538,7 +538,7 @@ func (hc *HealthChecker) updateOverallHealth() {
 	hc.overallHealth.Store(overall)
 }
 
-func (hc *HealthChecker) detectIssues() {
+func (hc *PoolHealthChecker) detectIssues() {
 	hc.healthMutex.RLock()
 	defer hc.healthMutex.RUnlock()
 	
@@ -550,7 +550,7 @@ func (hc *HealthChecker) detectIssues() {
 		if health.AverageResponseTime > 5*time.Second {
 			issues = append(issues, HealthIssue{
 				Type:        IssueHighLatency,
-				Severity:    SeverityMedium,
+				Severity:    PoolSeverityMedium,
 				Description: fmt.Sprintf("High average response time: %v", health.AverageResponseTime),
 				SessionID:   sessionID,
 				Timestamp:   time.Now(),
@@ -564,7 +564,7 @@ func (hc *HealthChecker) detectIssues() {
 			if errorRate > 0.1 { // 10% 이상
 				issues = append(issues, HealthIssue{
 					Type:        IssueHighErrorRate,
-					Severity:    SeverityHigh,
+					Severity:    PoolSeverityHigh,
 					Description: fmt.Sprintf("High error rate: %.2f%%", errorRate*100),
 					SessionID:   sessionID,
 					Timestamp:   time.Now(),
@@ -577,7 +577,7 @@ func (hc *HealthChecker) detectIssues() {
 		if health.ConsecutiveFailures >= hc.config.FailureThreshold {
 			issues = append(issues, HealthIssue{
 				Type:        IssueProcessDead,
-				Severity:    SeverityCritical,
+				Severity:    PoolSeverityCritical,
 				Description: fmt.Sprintf("Session consecutive failures: %d", health.ConsecutiveFailures),
 				SessionID:   sessionID,
 				Timestamp:   time.Now(),
@@ -592,7 +592,7 @@ func (hc *HealthChecker) detectIssues() {
 	}
 }
 
-func (hc *HealthChecker) reportIssue(issue HealthIssue) {
+func (hc *PoolHealthChecker) reportIssue(issue HealthIssue) {
 	// 실제 구현에서는 알림 시스템으로 전송
 	fmt.Printf("[HEALTH_ISSUE] %s: %s (Session: %s)\n", 
 		hc.getIssueTypeString(issue.Type), 
@@ -600,7 +600,7 @@ func (hc *HealthChecker) reportIssue(issue HealthIssue) {
 		issue.SessionID)
 }
 
-func (hc *HealthChecker) getIssueTypeString(issueType IssueType) string {
+func (hc *PoolHealthChecker) getIssueTypeString(issueType IssueType) string {
 	switch issueType {
 	case IssueHighLatency:
 		return "HIGH_LATENCY"
@@ -618,7 +618,7 @@ func (hc *HealthChecker) getIssueTypeString(issueType IssueType) string {
 }
 
 // RemoveSession은 세션 헬스 정보를 제거합니다
-func (hc *HealthChecker) RemoveSession(sessionID string) {
+func (hc *PoolHealthChecker) RemoveSession(sessionID string) {
 	hc.healthMutex.Lock()
 	defer hc.healthMutex.Unlock()
 	

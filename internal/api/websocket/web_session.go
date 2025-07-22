@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/drumcap/aicli-web/internal/claude"
-	"github.com/drumcap/aicli-web/internal/auth"
-	"github.com/drumcap/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // WebSessionController는 웹 세션 관련 REST API를 처리합니다

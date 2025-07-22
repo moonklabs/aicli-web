@@ -9,7 +9,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
-	"github.com/drumcap/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // ClaudeFormatter는 Claude 메시지 출력을 위한 인터페이스입니다.

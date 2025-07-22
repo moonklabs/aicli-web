@@ -226,7 +226,7 @@ func (p *SessionPool) GetPoolStats() PoolStats {
 }
 
 // PoolStats는 세션 풀 통계입니다
-type PoolStats struct {
+type SessionPoolStats struct {
 	TotalSessions  int `json:"total_sessions"`
 	ActiveSessions int `json:"active_sessions"`
 	IdleSessions   int `json:"idle_sessions"`

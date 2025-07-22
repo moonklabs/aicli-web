@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/claude-ai/aicli-web/internal/claude"
-	"github.com/claude-ai/aicli-web/internal/testing/test_helpers"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/testing/test_helpers"
 )
 
 // TestAdvancedIntegrationSuite 고급 통합 테스트 스위트

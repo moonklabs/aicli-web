@@ -5,7 +5,7 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
-	"github.com/drumcap/aicli-web/pkg/version"
+	"github.com/aicli/aicli-web/pkg/version"
 )
 
 // NewVersionCmd는 version 명령어를 생성합니다.
@@ -52,8 +52,8 @@ func NewVersionCmd() *cobra.Command {
 			
 			// 라이센스 정보
 			fmt.Printf("\nLicense: MIT\n")
-			fmt.Printf("Documentation: https://github.com/drumcap/aicli-web\n")
-			fmt.Printf("Report Issues: https://github.com/drumcap/aicli-web/issues\n")
+			fmt.Printf("Documentation: https://github.com/aicli/aicli-web\n")
+			fmt.Printf("Report Issues: https://github.com/aicli/aicli-web/issues\n")
 		},
 	}
 	

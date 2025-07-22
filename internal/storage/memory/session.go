@@ -2,12 +2,10 @@ package memory
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // SessionStorage 메모리 기반 세션 스토리지 구현
@@ -31,7 +29,7 @@ func (s *SessionStorage) Create(ctx context.Context, session *models.Session) er
 	defer s.mu.Unlock()
 
 	if _, exists := s.sessions[session.ID]; exists {
-		return storage.ErrAlreadyExists
+		return ErrAlreadyExists
 	}
 
 	// 생성 시간 설정
@@ -54,7 +52,7 @@ func (s *SessionStorage) GetByID(ctx context.Context, id string) (*models.Sessio
 
 	session, exists := s.sessions[id]
 	if !exists {
-		return nil, storage.ErrNotFound
+		return nil, ErrNotFound
 	}
 
 	// 깊은 복사하여 반환
@@ -63,7 +61,7 @@ func (s *SessionStorage) GetByID(ctx context.Context, id string) (*models.Sessio
 }
 
 // List 세션 목록 조회
-func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.Session], error) {
+func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -109,12 +107,9 @@ func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 	
 	items := filtered[start:end]
 	
-	return &models.PagingResponse[*models.Session]{
-		Items:      items,
-		Total:      total,
-		Page:       paging.Page,
-		Limit:      paging.Limit,
-		TotalPages: (total + paging.Limit - 1) / paging.Limit,
+	return &models.PaginationResponse{
+		Data: items,
+		Meta: models.NewPaginationMeta(paging.Page, paging.Limit, total),
 	}, nil
 }
 
@@ -124,7 +119,7 @@ func (s *SessionStorage) Update(ctx context.Context, session *models.Session) er
 	defer s.mu.Unlock()
 
 	if _, exists := s.sessions[session.ID]; !exists {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	// 업데이트 시간 설정
@@ -143,7 +138,7 @@ func (s *SessionStorage) Delete(ctx context.Context, id string) error {
 	defer s.mu.Unlock()
 
 	if _, exists := s.sessions[id]; !exists {
-		return storage.ErrNotFound
+		return ErrNotFound
 	}
 
 	delete(s.sessions, id)

@@ -2,12 +2,21 @@ package testutil
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+// GenerateRandomID generates a random ID for testing
+func GenerateRandomID() string {
+	bytes := make([]byte, 8)
+	rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
 
 // TempDir 테스트용 임시 디렉토리 생성 및 정리
 func TempDir(t *testing.T, prefix string) string {

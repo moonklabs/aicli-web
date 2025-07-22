@@ -180,11 +180,11 @@ type StatisticsConfig struct {
 	MaxPatterns         int           `json:"max_patterns"`
 	TrendAnalysisWindow int           `json:"trend_analysis_window"` // 데이터 포인트 수
 	PredictionEnabled   bool          `json:"prediction_enabled"`
-	AlertThresholds     AlertThresholds `json:"alert_thresholds"`
+	StatisticsAlertThresholds     StatisticsAlertThresholds `json:"alert_thresholds"`
 }
 
-// AlertThresholds는 알림 임계값입니다
-type AlertThresholds struct {
+// StatisticsAlertThresholds는 알림 임계값입니다 (통계용)
+type StatisticsAlertThresholds struct {
 	ErrorRateThreshold      float64 `json:"error_rate_threshold"`
 	RecoveryFailureThreshold float64 `json:"recovery_failure_threshold"`
 	DowntimeThreshold       time.Duration `json:"downtime_threshold"`

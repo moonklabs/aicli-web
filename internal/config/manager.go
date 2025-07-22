@@ -81,7 +81,7 @@ func (m *Manager) Save() error {
 // Get 는 현재 설정을 반환합니다
 func (m *Manager) Get() *Config {
 	if m.config == nil {
-		m.config = DefaultConfig()
+		m.config = GetDefaultConfig()
 	}
 	return m.config
 }
@@ -131,7 +131,7 @@ func (m *Manager) Validate(config *Config) error {
 
 // Reset 은 설정을 기본값으로 초기화합니다
 func (m *Manager) Reset() error {
-	m.config = DefaultConfig()
+	m.config = GetDefaultConfig()
 	return m.Save()
 }
 
@@ -281,20 +281,6 @@ func isValidLogLevel(level string) bool {
 	return false
 }
 
-// validateDirectory 는 디렉토리 경로가 유효한지 검증합니다
-func validateDirectory(fl validator.FieldLevel) bool {
-	path := fl.Field().String()
-	if path == "" {
-		return true // 빈 값은 허용
-	}
-	
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	
-	return info.IsDir()
-}
 
 // isValidStorageType 는 스토리지 타입이 유효한지 검증합니다
 func isValidStorageType(storageType string) bool {
@@ -413,8 +399,3 @@ func (m *Manager) ConvertValue(key string, value string) (interface{}, error) {
 	}
 }
 
-// Reset은 설정을 기본값으로 초기화합니다
-func (m *Manager) Reset() error {
-	m.config = GetDefaultConfig()
-	return m.Save()
-}

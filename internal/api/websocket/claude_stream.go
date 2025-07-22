@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/drumcap/aicli-web/internal/claude"
-	"github.com/drumcap/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/auth"
 )
 
 // ClaudeStreamHandler는 Claude 세션과 WebSocket 간의 실시간 스트림을 처리합니다

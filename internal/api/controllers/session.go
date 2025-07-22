@@ -6,7 +6,6 @@ import (
 
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/services"
-	"github.com/aicli/aicli-web/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -19,9 +18,10 @@ type SessionController struct {
 
 // NewSessionController 새 세션 컨트롤러 생성
 func NewSessionController(sessionService *services.SessionService) *SessionController {
+	logger, _ := zap.NewProduction()
 	return &SessionController{
 		sessionService: sessionService,
-		logger:         logger.Get(),
+		logger:         logger,
 	}
 }
 

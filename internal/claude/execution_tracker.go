@@ -4,15 +4,25 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/aicli/aicli-web/internal/websocket"
 )
+
+// Message는 브로드캐스트 메시지 구조체입니다.
+type TrackerMessage struct {
+	Type string                 `json:"type"`
+	Data map[string]interface{} `json:"data"`
+}
+
+// MessageBroadcaster는 메시지 브로드캐스트 인터페이스입니다.
+type MessageBroadcaster interface {
+	Broadcast(message interface{})
+	BroadcastToWorkspace(workspaceID string, message interface{})
+}
 
 // ExecutionTracker는 Claude 실행 상태를 추적합니다.
 type ExecutionTracker struct {
 	executions map[string]*ExecutionStatus
 	mu         sync.RWMutex
-	wsHub      *websocket.Hub
+	broadcaster MessageBroadcaster
 }
 
 // ExecutionStatus는 실행 상태를 나타냅니다.
@@ -49,10 +59,10 @@ type ProgressUpdate struct {
 }
 
 // NewExecutionTracker는 새로운 실행 추적기를 생성합니다.
-func NewExecutionTracker(wsHub *websocket.Hub) *ExecutionTracker {
+func NewExecutionTracker(broadcaster MessageBroadcaster) *ExecutionTracker {
 	return &ExecutionTracker{
 		executions: make(map[string]*ExecutionStatus),
-		wsHub:      wsHub,
+		broadcaster: broadcaster,
 	}
 }
 
@@ -202,11 +212,11 @@ func (t *ExecutionTracker) CleanupExpiredExecutions(maxAge time.Duration) {
 
 // broadcastStatusUpdate는 상태 업데이트를 WebSocket으로 브로드캐스트합니다.
 func (t *ExecutionTracker) broadcastStatusUpdate(status *ExecutionStatus) {
-	if t.wsHub == nil {
+	if t.broadcaster == nil {
 		return
 	}
 
-	message := websocket.Message{
+	message := Message{
 		Type: "execution_status",
 		Data: map[string]interface{}{
 			"execution_id": status.ID,
@@ -219,16 +229,16 @@ func (t *ExecutionTracker) broadcastStatusUpdate(status *ExecutionStatus) {
 		},
 	}
 
-	t.wsHub.Broadcast <- message
+	t.broadcaster.Broadcast(message)
 }
 
 // broadcastProgressUpdate는 진행 상황 업데이트를 WebSocket으로 브로드캐스트합니다.
 func (t *ExecutionTracker) broadcastProgressUpdate(executionID string, status *ExecutionStatus, message string) {
-	if t.wsHub == nil {
+	if t.broadcaster == nil {
 		return
 	}
 
-	wsMessage := websocket.Message{
+	wsMessage := Message{
 		Type: "execution_progress",
 		Data: map[string]interface{}{
 			"execution_id": executionID,
@@ -252,7 +262,7 @@ func (t *ExecutionTracker) broadcastProgressUpdate(executionID string, status *E
 		wsMessage.Data["result"] = status.Result
 	}
 
-	t.wsHub.Broadcast <- wsMessage
+	t.broadcaster.Broadcast(wsMessage)
 }
 
 // GetExecutionStats는 실행 통계를 반환합니다.

@@ -2,21 +2,8 @@ package storage
 
 import (
 	"context"
-	"errors"
 	
 	"github.com/aicli/aicli-web/internal/models"
-)
-
-// 에러 정의
-var (
-	// ErrNotFound 리소스를 찾을 수 없음
-	ErrNotFound = errors.New("resource not found")
-	
-	// ErrAlreadyExists 리소스가 이미 존재함
-	ErrAlreadyExists = errors.New("resource already exists")
-	
-	// ErrInvalidInput 잘못된 입력
-	ErrInvalidInput = errors.New("invalid input")
 )
 
 // WorkspaceStorage 워크스페이스 스토리지 인터페이스
@@ -76,7 +63,7 @@ type SessionStorage interface {
 	GetByID(ctx context.Context, id string) (*models.Session, error)
 	
 	// List 세션 목록 조회
-	List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.Session], error)
+	List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error)
 	
 	// Update 세션 업데이트
 	Update(ctx context.Context, session *models.Session) error
@@ -97,7 +84,7 @@ type TaskStorage interface {
 	GetByID(ctx context.Context, id string) (*models.Task, error)
 	
 	// List 태스크 목록 조회
-	List(ctx context.Context, filter *models.TaskFilter, paging *models.PagingRequest) ([]*models.Task, int, error)
+	List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error)
 	
 	// Update 태스크 업데이트
 	Update(ctx context.Context, task *models.Task) error
@@ -106,7 +93,7 @@ type TaskStorage interface {
 	Delete(ctx context.Context, id string) error
 	
 	// GetBySessionID 세션 ID로 태스크 목록 조회
-	GetBySessionID(ctx context.Context, sessionID string, paging *models.PagingRequest) ([]*models.Task, int, error)
+	GetBySessionID(ctx context.Context, sessionID string, paging *models.PaginationRequest) ([]*models.Task, int, error)
 	
 	// GetActiveCount 활성 태스크 수 조회
 	GetActiveCount(ctx context.Context, sessionID string) (int64, error)

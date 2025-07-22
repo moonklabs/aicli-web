@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aicli-web/internal/cache"
-	"github.com/aicli-web/internal/profiling"
+	"github.com/aicli/aicli-web/internal/cache"
+	"github.com/aicli/aicli-web/internal/profiling"
 )
 
 // 메모리 풀 테스트

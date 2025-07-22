@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/auth"
 )
 
 // JWTAuth JWT 인증 미들웨어

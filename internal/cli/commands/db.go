@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.etcd.io/bbolt"
 	
-	"github.com/drumcap/aicli-web/internal/config"
-	"github.com/drumcap/aicli-web/internal/storage"
-	"github.com/drumcap/aicli-web/internal/storage/migration"
+	"github.com/aicli/aicli-web/internal/config"
+	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/migration"
 )
 
 // newDBCommand DB 관련 명령어 그룹 생성

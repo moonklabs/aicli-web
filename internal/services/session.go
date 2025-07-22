@@ -8,7 +8,6 @@ import (
 
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
-	"github.com/aicli/aicli-web/pkg/logger"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -52,7 +51,7 @@ func NewSessionService(storage storage.Storage, projectService *ProjectService, 
 	s := &SessionService{
 		storage:        storage,
 		projectService: projectService,
-		logger:         logger.Get(),
+		logger:         zap.NewNop(),
 		activeSessions: make(map[string]*models.Session),
 		maxConcurrent:  config.MaxConcurrent,
 		cleanupTicker:  time.NewTicker(config.CleanupInterval),
@@ -135,7 +134,7 @@ func (s *SessionService) GetByID(ctx context.Context, id string) (*models.Sessio
 }
 
 // List 세션 목록 조회
-func (s *SessionService) List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.Session], error) {
+func (s *SessionService) List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse, error) {
 	return s.storage.Session().List(ctx, filter, paging)
 }
 
