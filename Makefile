@@ -114,7 +114,7 @@ test-unit:
 
 test-integration:
 	@printf "${BLUE}Running integration tests...${NC}\n"
-	${GO} test -v -race -tags=integration ./test/integration/...
+	${GO} test -v -race -tags=integration ./internal/testing/...
 	@printf "${GREEN}✓ Integration tests completed${NC}\n"
 
 test-e2e:
@@ -148,6 +148,42 @@ test-bench:
 	@printf "${BLUE}Running benchmark tests...${NC}\n"
 	${GO} test -bench=. -benchmem ./...
 	@printf "${GREEN}✓ Benchmark tests completed${NC}\n"
+
+# 고급 통합 테스트 명령어들
+test-advanced:
+	@printf "${BLUE}Running advanced integration tests...${NC}\n"
+	${GO} test -v -race -timeout=10m ./internal/testing/
+	@printf "${GREEN}✓ Advanced integration tests completed${NC}\n"
+
+test-performance:
+	@printf "${BLUE}Running performance tests...${NC}\n"
+	${GO} test -v -race -timeout=15m -run="TestPerformanceOptimization|TestHighLoadScenario" ./internal/testing/
+	@printf "${GREEN}✓ Performance tests completed${NC}\n"
+
+test-chaos:
+	@printf "${BLUE}Running chaos engineering tests...${NC}\n"
+	${GO} test -v -race -timeout=20m -run="TestChaosEngineering" ./internal/testing/
+	@printf "${GREEN}✓ Chaos tests completed${NC}\n"
+
+test-benchmarks:
+	@printf "${BLUE}Running comprehensive benchmarks...${NC}\n"
+	${GO} test -v -race -bench=. -benchmem -timeout=30m ./internal/testing/
+	@printf "${GREEN}✓ Benchmark tests completed${NC}\n"
+
+test-dev:
+	@printf "${BLUE}Running development tests (fast)...${NC}\n"
+	${GO} test -v -race -short ./internal/testing/
+	@printf "${GREEN}✓ Development tests completed${NC}\n"
+
+test-ci:
+	@printf "${BLUE}Running CI tests (comprehensive)...${NC}\n"
+	${GO} test -v -race -timeout=30m ./internal/testing/
+	@printf "${GREEN}✓ CI tests completed${NC}\n"
+
+test-production:
+	@printf "${BLUE}Running production stability tests...${NC}\n"
+	${GO} test -v -race -timeout=60m -run="TestHighLoadScenario|TestChaosEngineering" ./internal/testing/
+	@printf "${GREEN}✓ Production tests completed${NC}\n"
 
 # 코드 품질 타겟
 lint:
