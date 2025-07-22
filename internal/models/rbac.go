@@ -310,3 +310,22 @@ func (ug *UserGroup) IsValid() bool {
 	}
 	return false
 }
+
+// 목록 조회 요청 모델들
+
+// ListRolesRequest 역할 목록 조회 요청
+type ListRolesRequest struct {
+	Page   int     `json:"page" validate:"min=1"`
+	Limit  int     `json:"limit" validate:"min=1,max=100"`
+	Search string  `json:"search,omitempty"`
+	Active *bool   `json:"active,omitempty"`
+}
+
+// ListPermissionsRequest 권한 목록 조회 요청
+type ListPermissionsRequest struct {
+	Page         int    `json:"page" validate:"min=1"`
+	Limit        int    `json:"limit" validate:"min=1,max=100"`
+	ResourceType string `json:"resource_type,omitempty"`
+	Action       string `json:"action,omitempty"`
+	Effect       string `json:"effect,omitempty"`
+}

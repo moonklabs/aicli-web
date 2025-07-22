@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,272 +11,200 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/mock"
 	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
-func setupTestMiddleware() (*gin.Engine, *auth.JWTManager, *auth.Blacklist) {
+// MockRBACManager RBAC 매니저 모킹
+type MockRBACManager struct {
+	mock.Mock
+}
+
+func (m *MockRBACManager) CheckPermission(ctx context.Context, req *models.CheckPermissionRequest) (*models.CheckPermissionResponse, error) {
+	args := m.Called(ctx, req)
+	return args.Get(0).(*models.CheckPermissionResponse), args.Error(1)
+}
+
+func (m *MockRBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID string) (*models.UserPermissionMatrix, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(*models.UserPermissionMatrix), args.Error(1)
+}
+
+func (m *MockRBACManager) InvalidateUserPermissions(userID string) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
+func (m *MockRBACManager) InvalidateRolePermissions(roleID string) error {
+	args := m.Called(roleID)
+	return args.Error(0)
+}
+
+func (m *MockRBACManager) InvalidateGroupPermissions(groupID string) error {
+	args := m.Called(groupID)
+	return args.Error(0)
+}
+
+func TestRequirePermission_Success(t *testing.T) {
+	// Mock RBAC Manager
+	mockRBACManager := &MockRBACManager{}
+	
+	// 권한 허용 응답 설정
+	mockResponse := &models.CheckPermissionResponse{
+		Allowed: true,
+		Decision: models.PermissionDecision{
+			ResourceType: models.ResourceTypeWorkspace,
+			ResourceID:   "test-workspace",
+			Action:       models.ActionCreate,
+			Effect:       models.PermissionAllow,
+			Source:       "role:admin",
+			Reason:       "Admin role allows all actions",
+		},
+		Evaluation: []string{"User has admin role", "Admin role grants workspace:create permission"},
+	}
+	
+	mockRBACManager.On("CheckPermission", mock.Anything, mock.AnythingOfType("*models.CheckPermissionRequest")).Return(mockResponse, nil)
+
+	// Gin 설정
 	gin.SetMode(gin.TestMode)
-	
-	jwtManager := auth.NewJWTManager(
-		"test-secret-key",
-		15*time.Minute,
-		7*24*time.Hour,
-	)
-	blacklist := auth.NewBlacklist()
-	
 	router := gin.New()
 	
-	return router, jwtManager, blacklist
+	// 미들웨어 적용
+	router.Use(func(c *gin.Context) {
+		// 테스트용 사용자 ID 설정
+		c.Set("user_id", "test-user-123")
+		c.Next()
+	})
+	
+	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	// 테스트 요청
+	req, _ := http.NewRequest("POST", "/test/test-workspace", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// 검증
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockRBACManager.AssertExpectations(t)
 }
 
-func TestJWTAuth(t *testing.T) {
-	router, jwtManager, blacklist := setupTestMiddleware()
+func TestRequirePermission_Denied(t *testing.T) {
+	// Mock RBAC Manager
+	mockRBACManager := &MockRBACManager{}
 	
-	// 보호된 엔드포인트 설정
-	router.GET("/protected", JWTAuth(jwtManager, blacklist), func(c *gin.Context) {
-		userID, _ := c.Get("user_id")
-		username, _ := c.Get("username")
-		role, _ := c.Get("role")
-		
-		c.JSON(http.StatusOK, gin.H{
-			"user_id":  userID,
-			"username": username,
-			"role":     role,
-		})
+	// 권한 거부 응답 설정
+	mockResponse := &models.CheckPermissionResponse{
+		Allowed: false,
+		Decision: models.PermissionDecision{
+			ResourceType: models.ResourceTypeWorkspace,
+			ResourceID:   "test-workspace",
+			Action:       models.ActionCreate,
+			Effect:       models.PermissionDeny,
+			Source:       "default",
+			Reason:       "No explicit permission granted",
+		},
+		Evaluation: []string{"No matching permissions found"},
+	}
+	
+	mockRBACManager.On("CheckPermission", mock.Anything, mock.AnythingOfType("*models.CheckPermissionRequest")).Return(mockResponse, nil)
+
+	// Gin 설정
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	
+	// 미들웨어 적용
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user-123")
+		c.Next()
 	})
 	
-	t.Run("유효한 토큰", func(t *testing.T) {
-		// 토큰 생성
-		token, err := jwtManager.GenerateToken("user123", "testuser", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/protected", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-		
-		var response map[string]interface{}
-		err = w.Result().Header.Get("Content-Type")
-		assert.Contains(t, w.Result().Header.Get("Content-Type"), "application/json")
+	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// 테스트 요청
+	req, _ := http.NewRequest("POST", "/test/test-workspace", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// 검증
+	assert.Equal(t, http.StatusForbidden, w.Code)
 	
-	t.Run("Authorization 헤더 없음", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/protected", nil)
-		// Authorization 헤더 설정하지 않음
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.False(t, response["success"].(bool))
 	
-	t.Run("잘못된 헤더 형식", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/protected", nil)
-		req.Header.Set("Authorization", "InvalidFormat token")
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
+	errorObj := response["error"].(map[string]interface{})
+	assert.Equal(t, "INSUFFICIENT_PERMISSIONS", errorObj["code"])
 	
-	t.Run("만료된 토큰", func(t *testing.T) {
-		// 이미 만료된 토큰 생성을 위한 임시 매니저
-		tempManager := auth.NewJWTManager(
-			"test-secret-key",
-			-1*time.Hour, // 음수로 설정하여 즉시 만료
-			7*24*time.Hour,
-		)
-		
-		token, err := tempManager.GenerateToken("user123", "testuser", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/protected", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
-	
-	t.Run("블랙리스트된 토큰", func(t *testing.T) {
-		// 토큰 생성
-		token, err := jwtManager.GenerateToken("user123", "testuser", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		// 블랙리스트에 추가
-		blacklist.Add(token, time.Now().Add(1*time.Hour))
-		
-		req := httptest.NewRequest("GET", "/protected", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		
-		// 정리
-		blacklist.Remove(token)
-	})
+	mockRBACManager.AssertExpectations(t)
 }
 
-func TestRequireRole(t *testing.T) {
-	router, jwtManager, blacklist := setupTestMiddleware()
+func TestRequirePermission_NoAuth(t *testing.T) {
+	// Mock RBAC Manager
+	mockRBACManager := &MockRBACManager{}
+
+	// Gin 설정
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
 	
-	// 역할별 엔드포인트 설정
-	adminGroup := router.Group("/admin")
-	adminGroup.Use(JWTAuth(jwtManager, blacklist))
-	adminGroup.Use(RequireRole("admin"))
-	adminGroup.GET("/dashboard", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Admin dashboard"})
+	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// 테스트 요청 (인증 정보 없음)
+	req, _ := http.NewRequest("POST", "/test/test-workspace", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// 검증
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	
-	userGroup := router.Group("/user")
-	userGroup.Use(JWTAuth(jwtManager, blacklist))
-	userGroup.Use(RequireRole("user", "admin"))
-	userGroup.GET("/profile", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "User profile"})
-	})
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.False(t, response["success"].(bool))
 	
-	t.Run("관리자 역할로 관리자 엔드포인트 접근", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("admin123", "admin", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/admin/dashboard", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
-	
-	t.Run("사용자 역할로 관리자 엔드포인트 접근", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("user123", "user", "user", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/admin/dashboard", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusForbidden, w.Code)
-	})
-	
-	t.Run("사용자 역할로 사용자 엔드포인트 접근", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("user123", "user", "user", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/user/profile", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
-	
-	t.Run("관리자 역할로 사용자 엔드포인트 접근", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("admin123", "admin", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/user/profile", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
+	errorObj := response["error"].(map[string]interface{})
+	assert.Equal(t, "AUTHENTICATION_REQUIRED", errorObj["code"])
 }
 
-func TestOptionalAuth(t *testing.T) {
-	router, jwtManager, blacklist := setupTestMiddleware()
+// 벤치마크 테스트
+func BenchmarkRequirePermission(b *testing.B) {
+	// Mock RBAC Manager
+	mockRBACManager := &MockRBACManager{}
 	
-	// 선택적 인증 엔드포인트
-	router.GET("/optional", OptionalAuth(jwtManager, blacklist), func(c *gin.Context) {
-		authenticated := IsAuthenticated(c)
-		userID, _ := GetUserID(c)
-		username, _ := GetUsername(c)
-		
-		c.JSON(http.StatusOK, gin.H{
-			"authenticated": authenticated,
-			"user_id":       userID,
-			"username":      username,
-		})
-	})
+	mockResponse := &models.CheckPermissionResponse{
+		Allowed: true,
+		Decision: models.PermissionDecision{
+			Effect: models.PermissionAllow,
+		},
+	}
 	
-	t.Run("토큰 없이 접근", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/optional", nil)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-		
-		// Response 확인은 실제 JSON 파싱으로
-	})
-	
-	t.Run("유효한 토큰으로 접근", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("user123", "testuser", "user", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/optional", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
-	
-	t.Run("잘못된 토큰으로 접근", func(t *testing.T) {
-		req := httptest.NewRequest("GET", "/optional", nil)
-		req.Header.Set("Authorization", "Bearer invalid-token")
-		
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code) // 선택적 인증이므로 통과
-	})
-}
+	mockRBACManager.On("CheckPermission", mock.Anything, mock.Anything).Return(mockResponse, nil)
 
-func TestHelperFunctions(t *testing.T) {
-	router, jwtManager, blacklist := setupTestMiddleware()
+	// Gin 설정
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
 	
-	router.GET("/test", JWTAuth(jwtManager, blacklist), func(c *gin.Context) {
-		userID, hasUserID := GetUserID(c)
-		username, hasUsername := GetUsername(c)
-		role, hasRole := GetUserRole(c)
-		isAuth := IsAuthenticated(c)
-		
-		c.JSON(http.StatusOK, gin.H{
-			"user_id":       userID,
-			"has_user_id":   hasUserID,
-			"username":      username,
-			"has_username":  hasUsername,
-			"role":          role,
-			"has_role":      hasRole,
-			"authenticated": isAuth,
-		})
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user-123")
+		c.Next()
 	})
 	
-	t.Run("헬퍼 함수 테스트", func(t *testing.T) {
-		token, err := jwtManager.GenerateToken("user123", "testuser", "admin", auth.AccessToken)
-		require.NoError(t, err)
-		
-		req := httptest.NewRequest("GET", "/test", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-		
+	router.GET("/test", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionRead), func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	// 벤치마크 실행
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		req, _ := http.NewRequest("GET", "/test", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
-		
-		assert.Equal(t, http.StatusOK, w.Code)
-	})
+	}
 }

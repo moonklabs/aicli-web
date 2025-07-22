@@ -24,6 +24,7 @@ type Server struct {
 	jwtManager     *auth.JWTManager
 	blacklist      *auth.Blacklist
 	oauthManager   auth.OAuthManager
+	rbacManager    *auth.RBACManager
 	storage          storage.Storage
 	workspaceService services.WorkspaceService
 	dockerWorkspaceService *services.DockerWorkspaceService // Docker 통합 워크스페이스 서비스 추가
@@ -135,10 +136,16 @@ func New() *Server {
 	// 실행 추적기 초기화
 	executionTracker := claude.NewExecutionTracker(wsHub)
 	
+	// RBAC 매니저 초기화
+	// 캐시는 인메모리 구현 사용 (실제 환경에서는 Redis 사용)
+	rbacCache := auth.NewInMemoryPermissionCache()
+	rbacManager := auth.NewRBACManager(storage.RBAC(), rbacCache)
+	
 	s := &Server{
 		jwtManager:           jwtManager,
 		blacklist:            blacklist,
 		oauthManager:         oauthManager,
+		rbacManager:          rbacManager,
 		storage:              storage,
 		workspaceService:     workspaceService,
 		dockerWorkspaceService: dockerWorkspaceService,

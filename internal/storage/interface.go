@@ -113,6 +113,9 @@ type Storage interface {
 	// Task 태스크 스토리지 반환
 	Task() TaskStorage
 	
+	// RBAC RBAC 스토리지 반환
+	RBAC() RBACStorage
+	
 	// Close 스토리지 연결 종료
 	Close() error
 }

@@ -19,8 +19,10 @@ type RBACStorage interface {
 	GetRoleHierarchy(ctx context.Context, roleID string) ([]models.Role, error)
 	GetAllRoles(ctx context.Context) ([]models.Role, error)
 	GetChildRoles(ctx context.Context, parentID string) ([]models.Role, error)
-	UpdateRole(ctx context.Context, roleID string, updates map[string]interface{}) error
+	ListRoles(ctx context.Context, req models.ListRolesRequest) ([]models.Role, int64, error)
+	UpdateRole(ctx context.Context, role *models.Role) error
 	DeleteRole(ctx context.Context, roleID string) error
+	GetUsersByRoleID(ctx context.Context, roleID string) ([]string, error)
 	
 	// Permission 관련 메서드
 	CreatePermission(ctx context.Context, permission *models.Permission) error
@@ -30,7 +32,8 @@ type RBACStorage interface {
 	GetAllPermissions(ctx context.Context) ([]models.Permission, error)
 	GetPermissionsByResourceType(ctx context.Context, resourceType models.ResourceType) ([]models.Permission, error)
 	GetPermissionsByAction(ctx context.Context, action models.ActionType) ([]models.Permission, error)
-	UpdatePermission(ctx context.Context, permissionID string, updates map[string]interface{}) error
+	ListPermissions(ctx context.Context, req models.ListPermissionsRequest) ([]models.Permission, int64, error)
+	UpdatePermission(ctx context.Context, permission *models.Permission) error
 	DeletePermission(ctx context.Context, permissionID string) error
 	
 	// Resource 관련 메서드
@@ -61,7 +64,7 @@ type RBACStorage interface {
 	UpdateRolePermission(ctx context.Context, roleID, permissionID string, effect models.PermissionEffect, conditions string) error
 	
 	// UserRole 관련 메서드
-	AssignRoleToUser(ctx context.Context, userID, roleID, assignedBy string, resourceID *string, expiresAt *time.Time) error
+	AssignRoleToUser(ctx context.Context, userRole *models.UserRole) error
 	RevokeRoleFromUser(ctx context.Context, userID, roleID string, resourceID *string) error
 	GetUserRoles(ctx context.Context, userID string, resourceID *string) ([]models.UserRole, error)
 	GetUsersInRole(ctx context.Context, roleID string, resourceID *string) ([]models.UserRole, error)

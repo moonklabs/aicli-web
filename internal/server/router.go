@@ -73,6 +73,9 @@ func (s *Server) setupRoutes() {
 		
 		// 태스크 컨트롤러 인스턴스 생성
 		taskController := controllers.NewTaskController(s.taskService)
+		
+		// RBAC 컨트롤러 인스턴스 생성
+		rbacController := controllers.NewRBACController(s.rbacManager, s.storage)
 
 		// Claude 핸들러 인스턴스 생성 (Claude wrapper가 있다고 가정)
 		// TODO: s.claudeWrapper가 Server 구조체에 추가되어야 함
@@ -150,6 +153,47 @@ func (s *Server) setupRoutes() {
 			logs.GET("/workspaces/:id", handlers.GetWorkspaceLogs)
 			logs.GET("/tasks/:id", handlers.GetTaskLogs)
 			// TODO: WebSocket 엔드포인트는 나중에 추가
+		}
+
+		// RBAC 관련 엔드포인트 (인증 필요)
+		rbac := v1.Group("/rbac")
+		rbac.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		{
+			// 역할 관리 API
+			roles := rbac.Group("/roles")
+			{
+				roles.GET("", rbacController.ListRoles)
+				roles.POST("", middleware.RequirePermission(s.rbacManager, models.ResourceTypeSystem, models.ActionManage), rbacController.CreateRole)
+				roles.GET("/:id", rbacController.GetRole)
+				roles.PUT("/:id", middleware.RequirePermission(s.rbacManager, models.ResourceTypeSystem, models.ActionManage), rbacController.UpdateRole)
+				roles.DELETE("/:id", middleware.RequirePermission(s.rbacManager, models.ResourceTypeSystem, models.ActionManage), rbacController.DeleteRole)
+			}
+			
+			// 권한 관리 API
+			permissions := rbac.Group("/permissions")
+			{
+				permissions.GET("", rbacController.ListPermissions)
+				permissions.POST("", middleware.RequirePermission(s.rbacManager, models.ResourceTypeSystem, models.ActionManage), rbacController.CreatePermission)
+			}
+			
+			// 사용자 역할 관리 API
+			userRoles := rbac.Group("/user-roles")
+			{
+				userRoles.POST("", middleware.RequirePermission(s.rbacManager, models.ResourceTypeUser, models.ActionManage), rbacController.AssignRoleToUser)
+			}
+			
+			// 권한 확인 API
+			rbac.POST("/check-permission", rbacController.CheckPermission)
+			
+			// 사용자 권한 조회 API
+			rbac.GET("/users/:user_id/permissions", rbacController.GetUserPermissions)
+			
+			// 캐시 관리 API (관리자만)
+			cache := rbac.Group("/cache")
+			cache.Use(middleware.RequirePermission(s.rbacManager, models.ResourceTypeSystem, models.ActionManage))
+			{
+				cache.POST("/invalidate", rbacController.InvalidateCache)
+			}
 		}
 
 		// 설정 관련 엔드포인트 (인증 필요 + 관리자 권한)
