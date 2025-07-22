@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+// Base 모든 모델의 공통 필드를 포함하는 기본 모델 (BaseModel의 별칭)
+type Base = BaseModel
+
 // BaseModel 모든 모델의 공통 필드를 포함하는 기본 모델
 type BaseModel struct {
 	// 고유 식별자 (UUID v4)

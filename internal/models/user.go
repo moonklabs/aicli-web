@@ -19,6 +19,10 @@ type User struct {
 	
 	// OAuth 관련 필드들
 	OAuthAccounts []OAuthAccount   `json:"oauth_accounts,omitempty"`
+	
+	// RBAC 관련 필드들
+	UserRoles     []UserRole       `json:"user_roles,omitempty"`
+	Groups        []UserGroup      `json:"groups,omitempty"`
 }
 
 // OAuthAccount OAuth 계정 연결 정보
@@ -122,7 +126,7 @@ type UserFilter struct {
 	IsActive   *bool    `json:"is_active,omitempty"`
 	Provider   string   `json:"provider,omitempty"` // OAuth 제공자로 필터링
 	Verified   *bool    `json:"verified,omitempty"` // 이메일 검증 상태
-	Pagination
+	PaginationRequest
 }
 
 // UserStats 사용자 통계
