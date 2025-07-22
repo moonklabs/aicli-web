@@ -1,0 +1,34 @@
+# MkDocs 및 관련 의존성
+mkdocs>=1.5.3
+mkdocs-material>=9.4.0
+
+# 플러그인들
+mkdocs-git-revision-date-localized-plugin>=1.2.0
+mkdocs-minify-plugin>=0.7.1
+mkdocs-include-markdown-plugin>=6.0.0
+mkdocs-mermaid2-plugin>=1.1.0
+
+# 검색 및 다국어 지원
+mkdocs-static-i18n>=1.0.0
+
+# 코드 하이라이트
+pymdown-extensions>=10.3.0
+pygments>=2.16.0
+
+# 마크다운 확장
+markdown>=3.5.0
+markdown-include>=0.8.1
+pyyaml>=6.0.1
+
+# 개발 도구
+mkdocs-awesome-pages-plugin>=2.9.0
+mkdocs-macros-plugin>=1.0.0
+
+# 선택적 의존성 (고급 기능)
+mkdocs-pdf-export-plugin>=0.5.10
+mkdocs-with-pdf>=0.9.3
+weasyprint>=60.0
+
+# 문서 품질 도구
+mkdocs-linkcheck>=0.2.0
+mkdocs-spellcheck>=0.2.0

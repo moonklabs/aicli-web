@@ -13,7 +13,7 @@ import (
 
 // DeviceFingerprintGenerator는 디바이스 핑거프린트를 생성합니다.
 type DeviceFingerprintGenerator struct {
-	parser    *uaparser.Parser
+	parser       *uaparser.Parser
 	geoipService *GeoIPService
 }
 

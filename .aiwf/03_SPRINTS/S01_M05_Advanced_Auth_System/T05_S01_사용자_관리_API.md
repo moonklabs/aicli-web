@@ -1,9 +1,9 @@
 ---
 task_id: T05_S01
 sprint_sequence_id: S01
-status: open
+status: completed
 complexity: Medium
-last_updated: 2025-07-22T18:30:00+0900
+last_updated: 2025-07-22T21:58:00+0900
 ---
 
 # Task: 포괄적인 사용자 관리 API
@@ -19,26 +19,26 @@ last_updated: 2025-07-22T18:30:00+0900
 - 계정 복구 및 비밀번호 재설정 시스템
 
 ## Acceptance Criteria
-- [ ] 사용자 프로파일 CRUD API 완전 동작
-- [ ] 계정 설정 (비밀번호 변경, 이메일 변경 등) API 구현
-- [ ] 보안 설정 (2FA, 로그인 알림 등) API 구현
-- [ ] 관리자용 사용자 검색/필터링 API 구현
-- [ ] 사용자 활동 로그 조회 API 구현
-- [ ] 비밀번호 재설정 및 계정 복구 시스템 동작
-- [ ] 사용자 통계 및 메트릭 API 제공
-- [ ] OpenAPI/Swagger 문서화 완료
+- [x] 사용자 프로파일 CRUD API 완전 동작
+- [x] 계정 설정 (비밀번호 변경, 이메일 변경 등) API 구현
+- [x] 보안 설정 (2FA, 로그인 알림 등) API 구현
+- [x] 관리자용 사용자 검색/필터링 API 구현
+- [x] 사용자 활동 로그 조회 API 구현
+- [x] 비밀번호 재설정 및 계정 복구 시스템 동작
+- [x] 사용자 통계 및 메트릭 API 제공
+- [x] OpenAPI/Swagger 문서화 완료
 
 ## Subtasks
-- [ ] 사용자 프로파일 데이터 모델 확장
-- [ ] 사용자 CRUD API 컨트롤러 구현
-- [ ] 계정 설정 관리 API 구현
-- [ ] 보안 설정 관리 API 구현
-- [ ] 사용자 검색/필터링 시스템 구현
-- [ ] 활동 로그 수집 및 조회 시스템
-- [ ] 비밀번호 재설정 플로우 구현
-- [ ] 이메일 알림 시스템 통합
-- [ ] 관리자 전용 사용자 관리 API
-- [ ] API 문서화 및 테스트 작성
+- [x] 사용자 프로파일 데이터 모델 확장
+- [x] 사용자 CRUD API 컨트롤러 구현
+- [x] 계정 설정 관리 API 구현
+- [x] 보안 설정 관리 API 구현
+- [x] 사용자 검색/필터링 시스템 구현
+- [x] 활동 로그 수집 및 조회 시스템
+- [x] 비밀번호 재설정 플로우 구현
+- [x] 이메일 알림 시스템 통합
+- [x] 관리자 전용 사용자 관리 API
+- [x] API 문서화 및 테스트 작성
 
 ## 기술 가이드
 
@@ -149,7 +149,9 @@ type PasswordResetToken struct {
 ## Output Log
 *(This section is populated as work progresses on the task)*
 
-[YYYY-MM-DD HH:MM:SS] Started task
-[YYYY-MM-DD HH:MM:SS] Modified files: file1.js, file2.js
-[YYYY-MM-DD HH:MM:SS] Completed subtask: Implemented feature X
-[YYYY-MM-DD HH:MM:SS] Task completed
+[2025-07-22 21:45:00] T05_S01_사용자_관리_API 태스크 시작 - 포괄적인 사용자 관리 API 시스템 구현 작업 시작
+[2025-07-22 21:47:00] 사용자 프로파일 데이터 모델 확장 완료 - User 모델에 FirstName, LastName, Avatar, Bio, Location, Website, TwoFactorEnabled 필드 추가, UserActivity/PasswordResetToken/TwoFactorSecret 모델 추가
+[2025-07-22 21:51:00] 사용자 CRUD API 컨트롤러 구현 완료 - UserService 인터페이스 및 구현체, UserController 생성, 프로파일 관리/계정 설정/보안 설정/관리자 기능/비밀번호 재설정 API 포함
+[2025-07-22 21:55:00] NotificationService 구현 완료 - 이메일 발송, 비밀번호 재설정, 이메일 인증, 2FA 알림 템플릿 포함
+[2025-07-22 21:57:00] 포괄적인 테스트 스위트 구현 완료 - UserController 주요 기능에 대한 단위 테스트, Mock 서비스, 인증 컨텍스트 테스트 포함
+[2025-07-22 21:58:00] T05_S01_사용자_관리_API 태스크 완료 - 모든 서브태스크 완성, 포괄적인 사용자 관리 API 시스템 구현 완료

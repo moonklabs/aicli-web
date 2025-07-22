@@ -1,0 +1,204 @@
+# MkDocs 설정 파일
+site_name: AICode Manager 문서
+site_description: Claude CLI 웹 관리 플랫폼 공식 문서
+site_author: AICode Manager Team
+site_url: https://docs.yourdomain.com
+
+# Repository
+repo_name: 'aicli-web'
+repo_url: https://github.com/your-org/aicli-web
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2023 - 2024 AICode Manager Team
+
+# Configuration
+theme:
+  name: material
+  language: ko
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: 다크 모드로 전환
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: 라이트 모드로 전환
+  
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Plugins
+plugins:
+  - search:
+      lang: ko
+  - git-revision-date-localized:
+      type: date
+      timezone: Asia/Seoul
+  - minify:
+      minify_html: true
+  - include-markdown
+  - mermaid2:
+      arguments:
+        theme: auto
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+  - attr_list
+  - def_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+# Navigation
+nav:
+  - 홈: index.md
+  
+  - 시작하기:
+    - 소개: introduction/overview.md
+    - 빠른 시작: introduction/quickstart.md
+    - 설치 가이드: introduction/installation.md
+    - 설정 가이드: introduction/configuration.md
+  
+  - 사용자 가이드:
+    - 워크스페이스 관리: user-guide/workspaces.md
+    - 프로젝트 생성: user-guide/projects.md
+    - 태스크 실행: user-guide/tasks.md
+    - Claude CLI 통합: user-guide/claude-integration.md
+    - 사용자 인터페이스: user-guide/web-interface.md
+  
+  - API 참조:
+    - API 개요: api/overview.md
+    - 인증: api/authentication.md
+    - 워크스페이스 API: api/workspaces.md
+    - 프로젝트 API: api/projects.md
+    - 태스크 API: api/tasks.md
+    - 사용자 API: api/users.md
+    - WebSocket API: api/websocket.md
+    - OpenAPI 스펙: api/openapi.md
+  
+  - 관리자 가이드:
+    - 시스템 아키텍처: admin/architecture.md
+    - 배포 가이드: admin/deployment.md
+    - 운영 가이드: operations/운영_가이드.md
+    - 보안 설정: security/보안_설정_가이드.md
+    - 모니터링: admin/monitoring.md
+    - 백업 및 복구: admin/backup-recovery.md
+  
+  - 개발자 가이드:
+    - 개발 환경 설정: development/setup.md
+    - 통합 가이드: development/개발자_통합_가이드.md
+    - 코딩 표준: development/coding-standards.md
+    - 테스트 가이드: development/testing.md
+    - 기여 가이드: development/contributing.md
+  
+  - 보안:
+    - 보안 개요: security/overview.md
+    - 인증 및 권한: security/auth.md
+    - 보안 모범 사례: security/best-practices.md
+    - 보안 설정 가이드: security/보안_설정_가이드.md
+    - 취약점 보고: security/vulnerability-reporting.md
+  
+  - 문제 해결:
+    - 일반적인 문제: troubleshooting/common-issues.md
+    - 문제해결 가이드: troubleshooting/문제해결_가이드.md
+    - 디버깅 팁: troubleshooting/debugging.md
+    - FAQ: troubleshooting/faq.md
+  
+  - 마이그레이션:
+    - 마이그레이션 개요: migration/overview.md
+    - 마이그레이션 가이드: migration/마이그레이션_가이드.md
+    - 버전 업그레이드: migration/version-upgrade.md
+    - 환경 이전: migration/environment-migration.md
+  
+  - 참조:
+    - 설정 참조: reference/configuration.md
+    - CLI 명령어: reference/cli-commands.md
+    - 환경 변수: reference/environment-variables.md
+    - 에러 코드: reference/error-codes.md
+    - 용어집: reference/glossary.md
+  
+  - 릴리스 노트:
+    - 최신 릴리스: releases/latest.md
+    - 버전 히스토리: releases/changelog.md
+    - 업그레이드 가이드: releases/upgrade-guide.md
+
+# Extra
+extra:
+  version:
+    provider: mike
+    default: latest
+  
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/aicli-web
+      name: GitHub에서 보기
+    - icon: fontawesome/solid/envelope
+      link: mailto:support@yourdomain.com
+      name: 지원팀 연락
+  
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+    feedback:
+      title: 이 페이지가 도움이 되셨나요?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: 이 페이지는 도움이 됨
+          data: 1
+          note: >-
+            감사합니다! 피드백을 주셔서 감사합니다.
+        - icon: material/thumb-down-outline
+          name: 이 페이지는 개선이 필요함
+          data: 0
+          note: >- 
+            개선할 점을 알려주세요.
+            <a href="https://github.com/your-org/aicli-web/issues/new" target="_blank" rel="noopener">이슈 생성하기</a>
+
+# CSS customization
+extra_css:
+  - stylesheets/extra.css
+
+# JavaScript customization  
+extra_javascript:
+  - javascripts/extra.js

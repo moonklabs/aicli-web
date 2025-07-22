@@ -1,0 +1,39 @@
+{
+  "vulnerability_tests": [
+    {
+      "test_name": "XSS Test",
+      "category": "xss",
+      "severity": "medium",
+      "status": "passed",
+      "description": "Cross-Site Scripting 공격 시도",
+      "payload": "\u003cscript\u003ealert('xss')\u003c/script\u003e",
+      "response": "HTTP 400",
+      "recommendation": "공격이 성공적으로 차단되었습니다."
+    },
+    {
+      "test_name": "Path Traversal Test",
+      "category": "path_traversal",
+      "severity": "high",
+      "status": "passed",
+      "description": "Path Traversal 공격 시도",
+      "payload": "../../../etc/passwd",
+      "response": "HTTP 400",
+      "recommendation": "공격이 성공적으로 차단되었습니다."
+    },
+    {
+      "test_name": "SQL Injection Test",
+      "category": "injection",
+      "severity": "high",
+      "status": "failed",
+      "description": "SQL Injection 공격 시도",
+      "payload": "'; DROP TABLE users; --",
+      "response": "HTTP 200",
+      "recommendation": "injection 공격이 차단되지 않았습니다. 입력 검증을 강화하세요."
+    }
+  ],
+  "total_tests": 3,
+  "passed_tests": 2,
+  "failed_tests": 1,
+  "execution_time": 131933,
+  "timestamp": "2025-07-23T00:28:55.187723764+09:00"
+}

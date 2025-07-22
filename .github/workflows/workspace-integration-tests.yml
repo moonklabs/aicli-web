@@ -1,0 +1,253 @@
+name: Workspace Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'internal/docker/**'
+      - 'internal/services/**'
+      - 'test/integration/**'
+      - 'test/e2e/**'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'internal/docker/**'
+      - 'internal/services/**'
+      - 'test/integration/**'
+      - 'test/e2e/**'
+      - 'go.mod'
+      - 'go.sum'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'integration'
+          - 'performance'
+          - 'e2e'
+          - 'isolation'
+          - 'chaos'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  workspace-integration-tests:
+    name: Workspace Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22']
+      fail-fast: false
+      
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+          cache-dependency-path: go.sum
+          
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            
+      - name: Download dependencies
+        run: go mod download && go mod verify
+        
+      - name: Wait for Docker
+        run: |
+          timeout 60 sh -c 'until docker info; do 
+            echo "Waiting for Docker daemon..."
+            sleep 2
+          done'
+          
+      - name: Verify Docker setup
+        run: |
+          docker version
+          docker info
+          docker run --rm hello-world
+          
+      - name: Build test binaries
+        run: |
+          go build -v ./cmd/aicli
+          go build -v ./cmd/api
+          
+      - name: Run workspace integration tests
+        if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'integration' || github.event.inputs.test_suite == '' }}
+        run: make test-workspace-integration
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          TEST_TIMEOUT: "10m"
+          
+      - name: Run workspace performance tests
+        if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'performance' || github.event.inputs.test_suite == '' }}
+        run: make test-workspace-performance
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          TEST_TIMEOUT: "15m"
+          
+      - name: Run workspace E2E tests
+        if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'e2e' || github.event.inputs.test_suite == '' }}
+        run: make test-e2e-workspace
+        env:
+          TEST_TIMEOUT: "15m"
+          
+      - name: Run workspace isolation tests
+        if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == 'isolation' }}
+        run: make test-workspace-isolation
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          TEST_TIMEOUT: "10m"
+          
+      - name: Run workspace chaos tests
+        if: ${{ github.event.inputs.test_suite == 'chaos' }}
+        run: make test-workspace-chaos
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          TEST_TIMEOUT: "20m"
+          
+      - name: Generate test reports
+        if: always()
+        run: |
+          mkdir -p reports
+          go test -v -json ./test/integration/... ./test/e2e/... > reports/test-results.json || true
+          
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports-go${{ matrix.go-version }}
+          path: reports/
+          retention-days: 30
+          
+      - name: Docker cleanup
+        if: always()
+        run: |
+          docker system prune -af || true
+          docker volume prune -f || true
+          
+  workspace-load-tests:
+    name: Workspace Load Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.test_suite == 'all'
+    
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+          
+      - name: Wait for Docker
+        run: |
+          timeout 60 sh -c 'until docker info; do 
+            echo "Waiting for Docker daemon..."
+            sleep 2
+          done'
+          
+      - name: Run high-load workspace tests
+        run: |
+          go test -v -race -timeout 30m -run "TestConcurrentWorkspaceOperations" ./test/integration/... \
+            -args -concurrency=50 -iterations=100
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          TEST_HIGH_LOAD: "1"
+          
+      - name: Run stress tests
+        run: |
+          go test -v -race -timeout 30m -run "BenchmarkWorkspaceCreation" ./test/integration/... \
+            -bench=. -benchtime=60s
+        env:
+          DOCKER_INTEGRATION_TEST: "1"
+          
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: reports/
+          retention-days: 7
+          
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [workspace-integration-tests]
+    if: always()
+    
+    steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: test-results/
+          
+      - name: Generate test summary
+        run: |
+          echo "# Workspace Integration Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results by Go Version" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          for dir in test-results/test-reports-go*/; do
+            if [ -d "$dir" ]; then
+              go_version=$(basename "$dir" | sed 's/test-reports-//')
+              echo "### $go_version" >> $GITHUB_STEP_SUMMARY
+              
+              if [ -f "$dir/test-results.json" ]; then
+                # 간단한 테스트 결과 파싱
+                total_tests=$(grep -c '"Action":"pass"\|"Action":"fail"' "$dir/test-results.json" || echo "0")
+                passed_tests=$(grep -c '"Action":"pass"' "$dir/test-results.json" || echo "0")
+                failed_tests=$(grep -c '"Action":"fail"' "$dir/test-results.json" || echo "0")
+                
+                echo "- Total Tests: $total_tests" >> $GITHUB_STEP_SUMMARY
+                echo "- Passed: $passed_tests" >> $GITHUB_STEP_SUMMARY
+                echo "- Failed: $failed_tests" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "- No test results found" >> $GITHUB_STEP_SUMMARY
+              fi
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+      - name: Check test status
+        run: |
+          if [ "${{ needs.workspace-integration-tests.result }}" != "success" ]; then
+            echo "❌ Workspace integration tests failed"
+            exit 1
+          else
+            echo "✅ All workspace integration tests passed"
+          fi

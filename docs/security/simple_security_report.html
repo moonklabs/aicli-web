@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>보안 평가 보고서 - AICode Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { background: #2c3e50; color: white; padding: 20px; margin-bottom: 30px; }
+        .summary { background: #ecf0f1; padding: 20px; margin-bottom: 30px; }
+        .section { margin-bottom: 30px; }
+        .status-passed { color: #27ae60; }
+        .status-failed { color: #e74c3c; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #bdc3c7; padding: 8px; text-align: left; }
+        th { background: #34495e; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>보안 평가 보고서</h1>
+        <p>프로젝트: AICode Manager | 평가일: 2025-07-23</p>
+    </div>
+    
+    <div class="summary">
+        <h2>요약</h2>
+        <p><strong>총 테스트:</strong> 3개 (통과: 2, 실패: 1)</p>
+        <p><strong>실행 시간:</strong> 131.933µs</p>
+    </div>
+    
+    <div class="section">
+        <h2>취약점 테스트 결과</h2>
+        <table>
+            <tr>
+                <th>테스트명</th>
+                <th>카테고리</th>
+                <th>심각도</th>
+                <th>상태</th>
+                <th>권장사항</th>
+            </tr>
+            
+            <tr>
+                <td>XSS Test</td>
+                <td>xss</td>
+                <td>medium</td>
+                <td class="status-passed">passed</td>
+                <td>공격이 성공적으로 차단되었습니다.</td>
+            </tr>
+            <tr>
+                <td>Path Traversal Test</td>
+                <td>path_traversal</td>
+                <td>high</td>
+                <td class="status-passed">passed</td>
+                <td>공격이 성공적으로 차단되었습니다.</td>
+            </tr>
+            <tr>
+                <td>SQL Injection Test</td>
+                <td>injection</td>
+                <td>high</td>
+                <td class="status-failed">failed</td>
+                <td>injection 공격이 차단되지 않았습니다. 입력 검증을 강화하세요.</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

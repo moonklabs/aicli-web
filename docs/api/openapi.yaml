@@ -1,0 +1,993 @@
+openapi: 3.0.3
+info:
+  title: AICode Manager - Advanced Authentication System API
+  description: |
+    AICode Manager의 고급 인증 시스템 API 문서입니다.
+    
+    이 API는 OAuth2.0, RBAC, 세션 관리, 보안 미들웨어 등을 포함한 
+    포괄적인 인증 및 권한 관리 시스템을 제공합니다.
+    
+    ## 주요 기능
+    - OAuth2.0 인증 (Google, GitHub)
+    - Role-Based Access Control (RBAC)
+    - 세션 관리 및 토큰 기반 인증
+    - 실시간 보안 모니터링
+    - 사용자 및 프로젝트 관리
+    
+    ## 보안
+    모든 API 엔드포인트는 JWT 토큰 기반 인증을 사용합니다.
+    민감한 데이터는 HTTPS를 통해서만 전송됩니다.
+  version: 1.0.0
+  contact:
+    name: AICode Manager Team
+    url: https://github.com/aicli/aicli-web
+    email: support@aicli.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.aicli.dev/v1
+    description: Production server
+  - url: https://staging-api.aicli.dev/v1
+    description: Staging server
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+paths:
+  # 인증 관련 엔드포인트
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: 사용자 로그인
+      description: 이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: 토큰 새로고침
+      description: Refresh Token으로 새로운 Access Token을 발급받습니다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: 토큰 새로고침 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: 로그아웃
+      description: 현재 세션을 종료하고 토큰을 무효화합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 로그아웃 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # OAuth 관련 엔드포인트
+  /auth/oauth/{provider}:
+    get:
+      tags:
+        - OAuth
+      summary: OAuth 인증 시작
+      description: 지정된 OAuth 프로바이더로 인증을 시작합니다.
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, github]
+          description: OAuth 프로바이더
+      responses:
+        '302':
+          description: OAuth 프로바이더로 리다이렉트
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/oauth/{provider}/callback:
+    get:
+      tags:
+        - OAuth
+      summary: OAuth 콜백 처리
+      description: OAuth 프로바이더로부터의 콜백을 처리합니다.
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google, github]
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth 인증 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # 사용자 관리 엔드포인트
+  /users:
+    get:
+      tags:
+        - Users
+      summary: 사용자 목록 조회
+      description: 사용자 목록을 페이지네이션으로 조회합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - name: role
+          in: query
+          schema:
+            type: string
+          description: 역할별 필터링
+      responses:
+        '200':
+          description: 사용자 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Users
+      summary: 새 사용자 생성
+      description: 새로운 사용자를 생성합니다.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: 사용자 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: 특정 사용자 조회
+      description: ID로 특정 사용자의 정보를 조회합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 사용자 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Users
+      summary: 사용자 정보 수정
+      description: 사용자 정보를 수정합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: 사용자 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      tags:
+        - Users
+      summary: 사용자 삭제
+      description: 사용자를 삭제합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 사용자 삭제 성공
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # RBAC 관련 엔드포인트
+  /roles:
+    get:
+      tags:
+        - RBAC
+      summary: 역할 목록 조회
+      description: 시스템의 모든 역할을 조회합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 역할 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - RBAC
+      summary: 새 역할 생성
+      description: 새로운 역할을 생성합니다.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: 역할 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}/roles:
+    post:
+      tags:
+        - RBAC
+      summary: 사용자에게 역할 할당
+      description: 특정 사용자에게 역할을 할당합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '200':
+          description: 역할 할당 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # 세션 관리 엔드포인트
+  /sessions:
+    get:
+      tags:
+        - Sessions
+      summary: 활성 세션 목록 조회
+      description: 현재 사용자의 활성 세션 목록을 조회합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 세션 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/{id}:
+    delete:
+      tags:
+        - Sessions
+      summary: 특정 세션 종료
+      description: 지정된 세션을 종료합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 세션 종료 성공
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # 프로젝트 관리 엔드포인트
+  /projects:
+    get:
+      tags:
+        - Projects
+      summary: 프로젝트 목록 조회
+      description: 사용자가 접근 가능한 프로젝트 목록을 조회합니다.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: 프로젝트 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Projects
+      summary: 새 프로젝트 생성
+      description: 새로운 프로젝트를 생성합니다.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: 프로젝트 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # 시스템 상태 엔드포인트
+  /health:
+    get:
+      tags:
+        - System
+      summary: 시스템 상태 확인
+      description: 시스템의 전반적인 상태를 확인합니다.
+      responses:
+        '200':
+          description: 시스템 정상
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: 시스템 메트릭 조회
+      description: 시스템 메트릭 정보를 조회합니다.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 메트릭 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT 토큰 기반 인증
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: 페이지 번호
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: 페이지당 항목 수
+
+  schemas:
+    # 인증 관련 스키마
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        tokens:
+          $ref: '#/components/schemas/TokenResponse'
+        expires_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          example: 3600
+
+    # 사용자 관련 스키마
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "홍길동"
+        avatar_url:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        provider:
+          type: string
+          enum: [local, google, github]
+          example: "local"
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        last_login_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "newuser@example.com"
+        name:
+          type: string
+          example: "새사용자"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "securepassword"
+        role_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["123e4567-e89b-12d3-a456-426614174000"]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "수정된이름"
+        avatar_url:
+          type: string
+          format: uri
+          example: "https://example.com/new-avatar.jpg"
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # RBAC 관련 스키마
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "admin"
+        display_name:
+          type: string
+          example: "관리자"
+        description:
+          type: string
+          example: "시스템 관리자 권한"
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "users.read"
+        resource:
+          type: string
+          example: "users"
+        action:
+          type: string
+          example: "read"
+        description:
+          type: string
+          example: "사용자 정보 조회 권한"
+
+    CreateRoleRequest:
+      type: object
+      required:
+        - name
+        - display_name
+      properties:
+        name:
+          type: string
+          example: "moderator"
+        display_name:
+          type: string
+          example: "중재자"
+        description:
+          type: string
+          example: "콘텐츠 중재 권한"
+        permission_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AssignRoleRequest:
+      type: object
+      required:
+        - role_id
+      properties:
+        role_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    # 세션 관련 스키마
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "sess_123456789"
+        user_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        device_info:
+          type: string
+          example: "Chrome on Windows"
+        ip_address:
+          type: string
+          format: ipv4
+          example: "192.168.1.100"
+        location:
+          type: string
+          example: "Seoul, South Korea"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        last_accessed_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        expires_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    # 프로젝트 관련 스키마
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "My Project"
+        description:
+          type: string
+          example: "프로젝트 설명"
+        status:
+          type: string
+          enum: [active, inactive, archived]
+          example: "active"
+        owner_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    CreateProjectRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "새 프로젝트"
+        description:
+          type: string
+          example: "새 프로젝트 설명"
+
+    ProjectListResponse:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # 시스템 관련 스키마
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        services:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [healthy, unhealthy]
+              example: "healthy"
+            redis:
+              type: string
+              enum: [healthy, unhealthy]
+              example: "healthy"
+            auth:
+              type: string
+              enum: [healthy, unhealthy]
+              example: "healthy"
+
+    MetricsResponse:
+      type: object
+      properties:
+        active_users:
+          type: integer
+          example: 150
+        total_requests:
+          type: integer
+          example: 50000
+        error_rate:
+          type: number
+          format: float
+          example: 0.01
+        response_time_avg:
+          type: number
+          format: float
+          example: 250.5
+        memory_usage:
+          type: object
+          properties:
+            used:
+              type: integer
+              example: 1024
+            total:
+              type: integer
+              example: 2048
+            unit:
+              type: string
+              example: "MB"
+
+    # 공통 스키마
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+        total_pages:
+          type: integer
+          example: 5
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "작업이 성공적으로 완료되었습니다."
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_REQUEST"
+            message:
+              type: string
+              example: "요청이 잘못되었습니다."
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 인증이 필요함
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: 권한이 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalError:
+      description: 서버 내부 오류
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Authentication
+    description: 사용자 인증 관련 API
+  - name: OAuth
+    description: OAuth 소셜 로그인 API
+  - name: Users
+    description: 사용자 관리 API
+  - name: RBAC
+    description: 역할 기반 접근 제어 API
+  - name: Sessions
+    description: 세션 관리 API
+  - name: Projects
+    description: 프로젝트 관리 API
+  - name: System
+    description: 시스템 상태 및 메트릭 API
