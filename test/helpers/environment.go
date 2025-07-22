@@ -12,8 +12,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"aicli-web/internal/claude"
-	"aicli-web/internal/server"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/server"
 )
 
 // TestEnvironment는 통합 테스트를 위한 환경을 설정합니다

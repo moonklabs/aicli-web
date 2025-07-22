@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drumcap/aicli-web/internal/server"
-	"github.com/drumcap/aicli-web/internal/testutil"
+	"github.com/aicli/aicli-web/internal/server"
+	"github.com/aicli/aicli-web/internal/testutil"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )

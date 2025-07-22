@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 )
 
 // WebSocketMessage는 WebSocket 메시지 구조체입니다

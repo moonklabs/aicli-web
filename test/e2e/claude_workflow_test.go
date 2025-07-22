@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/claude"
 	"aicli-web/test/helpers"
 )
 
