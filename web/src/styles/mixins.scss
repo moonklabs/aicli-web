@@ -1,0 +1,343 @@
+// AICLI Web - SCSS 믹스인 정의
+
+@use './variables' as *;
+
+// 반응형 브레이크포인트
+@mixin mobile {
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin mobile-up {
+  @media (min-width: #{$breakpoint-sm}) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+// 플렉스박스 유틸리티
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+// 텍스트 유틸리티
+@mixin text-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 스크롤바 스타일링
+@mixin scrollbar-thin {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // 다크 모드 스크롤바
+  .dark & {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+}
+
+@mixin scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// 카드 스타일
+@mixin card-base {
+  background: $light-bg-primary;
+  border: 1px solid map-get($gray-colors, 200);
+  border-radius: $border-radius-lg;
+  padding: $spacing-6;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  .dark & {
+    background: $dark-bg-secondary;
+    border-color: $dark-bg-tertiary;
+  }
+}
+
+@mixin card-hover {
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-1px);
+    border-color: map-get($primary-colors, 300);
+
+    .dark & {
+      border-color: map-get($primary-colors, 600);
+    }
+  }
+}
+
+// 버튼 스타일
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: $border-radius-md;
+  font-weight: $font-weight-medium;
+  font-size: $font-size-sm;
+  line-height: $line-height-tight;
+  padding: $spacing-2 $spacing-4;
+  cursor: pointer;
+  transition: $transition-base;
+  text-decoration: none;
+  user-select: none;
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background: map-get($primary-colors, 500);
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background: map-get($primary-colors, 600);
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    background: map-get($primary-colors, 700);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background: map-get($gray-colors, 100);
+  color: map-get($gray-colors, 800);
+  
+  &:hover:not(:disabled) {
+    background: map-get($gray-colors, 200);
+    transform: translateY(-1px);
+    box-shadow: $shadow-sm;
+  }
+  
+  .dark & {
+    background: $dark-bg-tertiary;
+    color: $dark-text-primary;
+    
+    &:hover:not(:disabled) {
+      background: lighten($dark-bg-tertiary, 10%);
+    }
+  }
+}
+
+// 입력 필드 스타일
+@mixin input-base {
+  width: 100%;
+  padding: $spacing-3 $spacing-4;
+  border: 1px solid map-get($gray-colors, 300);
+  border-radius: $border-radius-md;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  background: $light-bg-primary;
+  color: $light-text-primary;
+  transition: $transition-base;
+  
+  &:focus {
+    outline: none;
+    border-color: map-get($primary-colors, 500);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  }
+  
+  &::placeholder {
+    color: map-get($gray-colors, 500);
+  }
+  
+  .dark & {
+    background: $dark-bg-secondary;
+    color: $dark-text-primary;
+    border-color: $dark-bg-tertiary;
+    
+    &::placeholder {
+      color: $dark-text-tertiary;
+    }
+    
+    &:focus {
+      border-color: map-get($primary-colors, 400);
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
+  }
+}
+
+// 터미널 스타일
+@mixin terminal-base {
+  background: $terminal-bg;
+  color: $terminal-text;
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+  padding: $spacing-4;
+  border-radius: $border-radius-md;
+  overflow: auto;
+  @include scrollbar-thin;
+}
+
+// 로딩 애니메이션
+@mixin loading-spinner {
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  animation: spin 1s linear infinite;
+}
+
+// 페이드 인 애니메이션
+@mixin fade-in($duration: 0.3s) {
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  animation: fade-in $duration ease-out;
+}
+
+// 슬라이드 애니메이션
+@mixin slide-in-right($duration: 0.3s) {
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  animation: slide-in-right $duration ease-out;
+}
+
+// 상태 표시 뱃지
+@mixin status-badge($color) {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $border-radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  
+  background: lighten($color, 40%);
+  color: darken($color, 20%);
+  
+  .dark & {
+    background: rgba($color, 0.2);
+    color: lighten($color, 20%);
+  }
+}
+
+// 코드 블록 스타일
+@mixin code-block {
+  background: map-get($gray-colors, 100);
+  color: map-get($gray-colors, 800);
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  padding: $spacing-2 $spacing-3;
+  border-radius: $border-radius-base;
+  border: 1px solid map-get($gray-colors, 200);
+  
+  .dark & {
+    background: $dark-bg-tertiary;
+    color: $dark-text-primary;
+    border-color: lighten($dark-bg-tertiary, 10%);
+  }
+}

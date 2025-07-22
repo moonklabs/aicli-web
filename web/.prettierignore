@@ -1,0 +1,46 @@
+# Prettier 무시 파일
+
+# 빌드 출력
+dist/
+dist-ssr/
+build/
+
+# 종속성
+node_modules/
+
+# 커버리지 리포트
+coverage/
+
+# 환경 파일
+.env
+.env.local
+.env.*.local
+
+# 로그 파일
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 캐시 디렉토리
+.nuxt
+.cache
+.parcel-cache
+.next
+.out
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 운영 체제
+.DS_Store
+Thumbs.db
+
+# 기타 생성 파일
+*.tgz
+*.tar.gz

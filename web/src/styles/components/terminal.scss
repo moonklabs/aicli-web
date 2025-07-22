@@ -1,0 +1,305 @@
+// 터미널 컴포넌트 스타일
+
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.terminal {
+  @include terminal-base;
+  
+  &__container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  &__header {
+    @include flex-between;
+    padding: $spacing-3 $spacing-4;
+    background: lighten($terminal-bg, 5%);
+    border-bottom: 1px solid lighten($terminal-bg, 10%);
+    border-radius: $border-radius-md $border-radius-md 0 0;
+    
+    &-title {
+      color: $terminal-text;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+    }
+    
+    &-controls {
+      display: flex;
+      gap: $spacing-2;
+      
+      button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        
+        &.close {
+          background: #ff5f56;
+          
+          &:hover {
+            background: darken(#ff5f56, 10%);
+          }
+        }
+        
+        &.minimize {
+          background: #ffbd2e;
+          
+          &:hover {
+            background: darken(#ffbd2e, 10%);
+          }
+        }
+        
+        &.maximize {
+          background: #27ca3f;
+          
+          &:hover {
+            background: darken(#27ca3f, 10%);
+          }
+        }
+      }
+    }
+  }
+  
+  &__content {
+    flex: 1;
+    padding: $spacing-4;
+    overflow-y: auto;
+    @include scrollbar-thin;
+    
+    font-family: $font-family-mono;
+    font-size: $font-size-sm;
+    line-height: $line-height-normal;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  &__input {
+    @include flex-between;
+    padding: $spacing-3 $spacing-4;
+    border-top: 1px solid lighten($terminal-bg, 10%);
+    background: lighten($terminal-bg, 2%);
+    
+    &-prompt {
+      color: $terminal-cursor;
+      font-family: $font-family-mono;
+      font-size: $font-size-sm;
+      margin-right: $spacing-2;
+      flex-shrink: 0;
+    }
+    
+    &-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: $terminal-text;
+      font-family: $font-family-mono;
+      font-size: $font-size-sm;
+      outline: none;
+      
+      &::placeholder {
+        color: rgba($terminal-text, 0.5);
+      }
+    }
+    
+    &-submit {
+      @include button-base;
+      background: map-get($primary-colors, 600);
+      color: white;
+      padding: $spacing-1 $spacing-3;
+      margin-left: $spacing-2;
+      
+      &:hover:not(:disabled) {
+        background: map-get($primary-colors, 700);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  // 로그 타입별 스타일
+  &__log {
+    margin-bottom: $spacing-1;
+    
+    &--input {
+      color: $terminal-cursor;
+      
+      &::before {
+        content: '$ ';
+        color: rgba($terminal-text, 0.7);
+      }
+    }
+    
+    &--output {
+      color: $terminal-text;
+    }
+    
+    &--error {
+      color: #ff6b6b;
+    }
+    
+    &--system {
+      color: #74c0fc;
+      font-style: italic;
+    }
+    
+    &-timestamp {
+      color: rgba($terminal-text, 0.5);
+      font-size: $font-size-xs;
+      margin-right: $spacing-2;
+    }
+    
+    &-content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  }
+  
+  // 커서 깜빡임 애니메이션
+  &__cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1em;
+    background: $terminal-cursor;
+    margin-left: 2px;
+    animation: cursor-blink 1s infinite;
+    
+    @keyframes cursor-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+  }
+  
+  // 터미널 크기별 변형
+  &--small {
+    .terminal__content {
+      font-size: $font-size-xs;
+      padding: $spacing-2;
+    }
+    
+    .terminal__input {
+      padding: $spacing-2;
+      
+      &-field, &-prompt {
+        font-size: $font-size-xs;
+      }
+    }
+  }
+  
+  &--large {
+    .terminal__content {
+      font-size: $font-size-base;
+      padding: $spacing-6;
+    }
+    
+    .terminal__input {
+      padding: $spacing-4;
+      
+      &-field, &-prompt {
+        font-size: $font-size-base;
+      }
+    }
+  }
+  
+  // 반응형 스타일
+  @include mobile {
+    .terminal__header {
+      padding: $spacing-2 $spacing-3;
+      
+      &-title {
+        font-size: $font-size-xs;
+      }
+      
+      &-controls button {
+        width: 10px;
+        height: 10px;
+      }
+    }
+    
+    .terminal__content {
+      font-size: $font-size-xs;
+      padding: $spacing-3;
+    }
+    
+    .terminal__input {
+      padding: $spacing-2 $spacing-3;
+      
+      &-field, &-prompt {
+        font-size: $font-size-xs;
+      }
+      
+      &-submit {
+        padding: $spacing-1 $spacing-2;
+        font-size: $font-size-xs;
+      }
+    }
+  }
+}
+
+// 터미널 탭 스타일
+.terminal-tabs {
+  display: flex;
+  background: darken($terminal-bg, 5%);
+  border-radius: $border-radius-md $border-radius-md 0 0;
+  overflow-x: auto;
+  @include scrollbar-hidden;
+  
+  &__tab {
+    @include flex-center;
+    padding: $spacing-2 $spacing-4;
+    background: transparent;
+    border: none;
+    color: rgba($terminal-text, 0.7);
+    font-size: $font-size-sm;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: $transition-base;
+    border-bottom: 2px solid transparent;
+    
+    &:hover {
+      background: rgba($terminal-text, 0.1);
+      color: $terminal-text;
+    }
+    
+    &--active {
+      background: $terminal-bg;
+      color: $terminal-text;
+      border-bottom-color: $terminal-cursor;
+    }
+    
+    &-close {
+      margin-left: $spacing-2;
+      width: 16px;
+      height: 16px;
+      @include flex-center;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      opacity: 0.7;
+      
+      &:hover {
+        opacity: 1;
+        background: rgba($terminal-text, 0.2);
+      }
+    }
+  }
+  
+  &__add {
+    @include flex-center;
+    padding: $spacing-2 $spacing-3;
+    background: transparent;
+    border: none;
+    color: rgba($terminal-text, 0.7);
+    cursor: pointer;
+    
+    &:hover {
+      color: $terminal-text;
+      background: rgba($terminal-text, 0.1);
+    }
+  }
+}
