@@ -143,7 +143,7 @@ func (c *CleanupService) cleanupInactiveSessions(ctx context.Context) error {
 	}
 	
 	inactiveThreshold := time.Now().Add(-c.inactiveThreshold)
-	var inactiveSessions []*models.Session
+	var inactiveSessions []*models.AuthSession
 	
 	// 비활성 세션 식별
 	for _, session := range activeSessions {
@@ -169,7 +169,7 @@ func (c *CleanupService) cleanupInactiveSessions(ctx context.Context) error {
 }
 
 // processBatch는 세션 배치를 처리합니다.
-func (c *CleanupService) processBatch(ctx context.Context, sessions []*models.Session, reason string) error {
+func (c *CleanupService) processBatch(ctx context.Context, sessions []*models.AuthSession, reason string) error {
 	for _, session := range sessions {
 		// 세션 비활성화
 		session.IsActive = false

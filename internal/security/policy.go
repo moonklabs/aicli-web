@@ -2,7 +2,6 @@ package security
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -91,7 +90,7 @@ type PolicyService interface {
 	GetPolicy(ctx context.Context, id string) (*SecurityPolicy, error)
 	UpdatePolicy(ctx context.Context, id string, req *UpdatePolicyRequest) (*SecurityPolicy, error)
 	DeletePolicy(ctx context.Context, id string) error
-	ListPolicies(ctx context.Context, filter *PolicyFilter) (*models.PaginatedResponse, error)
+	ListPolicies(ctx context.Context, filter *PolicyFilter) (*models.PaginatedResponse[SecurityPolicy], error)
 	
 	// 정책 적용 및 관리
 	ApplyPolicy(ctx context.Context, id string) error
@@ -111,7 +110,7 @@ type PolicyService interface {
 	
 	// 감사 및 히스토리
 	GetPolicyHistory(ctx context.Context, id string) ([]*PolicyAuditEntry, error)
-	GetPolicyAuditLog(ctx context.Context, filter *AuditFilter) (*models.PaginatedResponse, error)
+	GetPolicyAuditLog(ctx context.Context, filter *AuditFilter) (*models.PaginatedResponse[SecurityEvent], error)
 }
 
 // 요청/응답 구조체들

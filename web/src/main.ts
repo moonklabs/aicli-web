@@ -47,5 +47,12 @@ app.config.globalProperties.$notification = notification
 app.config.globalProperties.$dialog = dialog
 app.config.globalProperties.$loadingBar = loadingBar
 
+// 개발 환경에서 터미널 테스트 활성화
+if (import.meta.env.DEV) {
+  import('./utils/terminal-test').then(({ runDevelopmentTests }) => {
+    runDevelopmentTests()
+  }).catch(console.error)
+}
+
 // 앱 마운트
 app.mount('#app')

@@ -3,7 +3,9 @@ package docker
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
@@ -112,33 +114,70 @@ func (cm *ContainerManager) CreateWorkspaceContainerWithMounts(
 		return nil, fmt.Errorf("inspect created container: %w", err)
 	}
 	
+	// 시간 문자열 파싱
+	createdTime, _ := time.Parse(time.RFC3339Nano, containerInfo.Created)
+	
 	// WorkspaceContainer 생성
 	workspaceContainer := &WorkspaceContainer{
 		ID:          containerInfo.ID,
 		Name:        containerInfo.Name,
 		WorkspaceID: req.WorkspaceID,
 		State:       ContainerState(containerInfo.State.Status),
-		Created:     containerInfo.Created,
+		Created:     createdTime,
 	}
 	
 	// 상태별 추가 정보 설정
 	if containerInfo.State.Running {
-		workspaceContainer.Started = &containerInfo.State.StartedAt
+		if startedTime, err := time.Parse(time.RFC3339Nano, containerInfo.State.StartedAt); err == nil {
+			workspaceContainer.Started = &startedTime
+		}
 	}
-	if containerInfo.State.FinishedAt.UnixNano() > 0 {
-		workspaceContainer.Finished = &containerInfo.State.FinishedAt
+	if containerInfo.State.FinishedAt != "" {
+		if finishedTime, err := time.Parse(time.RFC3339Nano, containerInfo.State.FinishedAt); err == nil {
+			workspaceContainer.Finished = &finishedTime
+		}
 	}
 	if containerInfo.State.ExitCode != 0 {
 		workspaceContainer.ExitCode = &containerInfo.State.ExitCode
 	}
 	
 	// 포트 정보 설정
-	workspaceContainer.Ports = cm.extractPortBindings(containerInfo.NetworkSettings)
+	workspaceContainer.Ports = extractPortBindings(containerInfo.NetworkSettings)
 	
 	// 마운트 정보 설정
-	workspaceContainer.Mounts = cm.extractMountInfo(containerInfo.Mounts)
+	workspaceContainer.Mounts = extractMountInfo(containerInfo.Mounts)
 	
 	return workspaceContainer, nil
+}
+
+// extractPortBindings는 네트워크 설정에서 포트 바인딩 정보를 추출합니다.
+func extractPortBindings(settings *network.NetworkSettings) map[string]string {
+	if settings == nil || settings.Ports == nil {
+		return nil
+	}
+	
+	ports := make(map[string]string)
+	for containerPort, bindings := range settings.Ports {
+		if len(bindings) > 0 && bindings[0].HostPort != "" {
+			ports[string(containerPort)] = bindings[0].HostPort
+		}
+	}
+	return ports
+}
+
+// extractMountInfo는 마운트 정보를 추출합니다.
+func extractMountInfo(mounts []types.MountPoint) []ContainerMount {
+	var containerMounts []ContainerMount
+	for _, mount := range mounts {
+		containerMounts = append(containerMounts, ContainerMount{
+			Source:      mount.Source,
+			Destination: mount.Destination,
+			Mode:        mount.Mode,
+			RW:          mount.RW,
+			Type:        string(mount.Type),
+		})
+	}
+	return containerMounts
 }
 
 // ValidateWorkspaceMounts 워크스페이스 마운트 설정을 검증합니다.

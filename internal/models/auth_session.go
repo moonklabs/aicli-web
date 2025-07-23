@@ -86,8 +86,8 @@ type SessionStatistics struct {
 	SecurityEvents    []SessionSecurityEvent `json:"security_events"`
 }
 
-// SessionCreateRequest 세션 생성 요청
-type SessionCreateRequest struct {
+// AuthSessionCreateRequest 인증 세션 생성 요청
+type AuthSessionCreateRequest struct {
 	UserID       string                 `json:"user_id" binding:"required"`
 	DeviceInfo   *DeviceFingerprint     `json:"device_info,omitempty"`
 	LocationInfo *LocationInfo          `json:"location_info,omitempty"`
@@ -102,8 +102,8 @@ type SessionUpdateRequest struct {
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// SessionFilter 세션 필터
-type SessionFilter struct {
+// AuthSessionFilter 인증 세션 필터
+type AuthSessionFilter struct {
 	UserID      string     `json:"user_id,omitempty"`
 	IsActive    *bool      `json:"is_active,omitempty"`
 	DeviceType  string     `json:"device_type,omitempty"`
@@ -120,12 +120,3 @@ type SessionListResponse struct {
 	Pagination *PaginationMeta    `json:"pagination,omitempty"`
 }
 
-// PaginationMeta 페이지네이션 메타데이터
-type PaginationMeta struct {
-	Page       int `json:"page"`
-	PerPage    int `json:"per_page"`
-	Total      int `json:"total"`
-	TotalPages int `json:"total_pages"`
-	HasNext    bool `json:"has_next"`
-	HasPrev    bool `json:"has_prev"`
-}

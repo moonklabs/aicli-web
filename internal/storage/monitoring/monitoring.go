@@ -20,47 +20,29 @@ type Monitor struct {
 	enabled      bool
 }
 
-// MonitorConfig 모니터링 설정
-type MonitorConfig struct {
-	Enabled          bool
-	SlowThreshold    time.Duration
-	MaxSlowQueries   int
-	MetricsEnabled   bool
-	Logger           *zap.Logger
+// IntegratedMonitorConfig 통합 모니터링 설정
+type IntegratedMonitorConfig struct {
+	QueryMonitorConfig MonitorConfig
+	AnalyzerEnabled    bool
+	Logger            *zap.Logger
 }
 
-// DefaultMonitorConfig 기본 모니터링 설정
-func DefaultMonitorConfig() MonitorConfig {
-	return MonitorConfig{
-		Enabled:        true,
-		SlowThreshold:  100 * time.Millisecond,
-		MaxSlowQueries: 1000,
-		MetricsEnabled: true,
-		Logger:         zap.NewNop(),
+// DefaultIntegratedMonitorConfig 기본 통합 모니터링 설정
+func DefaultIntegratedMonitorConfig() IntegratedMonitorConfig {
+	return IntegratedMonitorConfig{
+		QueryMonitorConfig: DefaultMonitorConfig(),
+		AnalyzerEnabled:    true,
+		Logger:            zap.NewNop(),
 	}
 }
 
 // NewMonitor 새 모니터링 시스템 생성
-func NewMonitor(config MonitorConfig) *Monitor {
-	if !config.Enabled {
-		return &Monitor{
-			enabled: false,
-			logger:  config.Logger,
-		}
-	}
-
-	queryConfig := Config{
-		SlowThreshold:  config.SlowThreshold,
-		MaxSlowQueries: config.MaxSlowQueries,
-		MetricsEnabled: config.MetricsEnabled,
-		Logger:         config.Logger,
-	}
-
+func NewMonitor(config IntegratedMonitorConfig) *Monitor {
 	return &Monitor{
-		queryMonitor: NewQueryMonitor(queryConfig),
+		queryMonitor: NewQueryMonitor(config.QueryMonitorConfig),
 		analyzer:     NewQueryAnalyzer(config.Logger),
 		logger:       config.Logger,
-		enabled:      true,
+		enabled:      config.QueryMonitorConfig.EnableLogging,
 	}
 }
 

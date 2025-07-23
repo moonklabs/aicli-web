@@ -61,14 +61,42 @@ export interface DockerNetwork {
   containers: Record<string, any>
 }
 
+export interface ContainerLogs {
+  containerId: string
+  logs: LogEntry[]
+  isStreaming: boolean
+}
+
+export interface LogEntry {
+  timestamp: Date
+  stream: 'stdout' | 'stderr'
+  message: string
+}
+
+export interface DockerStatusMessage {
+  type: 'container_status' | 'container_stats' | 'container_logs' | 'container_list'
+  containerId?: string
+  workspaceId?: string
+  status?: string
+  stats?: DockerStats
+  logs?: LogEntry[]
+  containers?: DockerContainer[]
+}
+
 export const useDockerStore = defineStore('docker', () => {
   // 상태
   const containers = ref<DockerContainer[]>([])
   const images = ref<DockerImage[]>([])
   const networks = ref<DockerNetwork[]>([])
   const stats = ref<Map<string, DockerStats>>(new Map())
+  const containerLogs = ref<Map<string, ContainerLogs>>(new Map())
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  
+  // WebSocket 모니터링 상태
+  const isMonitoring = ref(false)
+  const wsConnection = ref<WebSocket | null>(null)
+  const connectionStatus = ref<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
 
   // 계산된 속성
   const runningContainers = computed(() =>
@@ -92,6 +120,11 @@ export const useDockerStore = defineStore('docker', () => {
   const totalImages = computed(() => images.value.length)
 
   const totalNetworks = computed(() => networks.value.length)
+
+  // 로그 관련 계산된 속성
+  const getContainerLogs = computed(() => (containerId: string) => 
+    containerLogs.value.get(containerId)
+  )
 
   // 액션
   const setContainers = (containerList: DockerContainer[]) => {
@@ -139,14 +172,218 @@ export const useDockerStore = defineStore('docker', () => {
     error.value = errorMessage
   }
 
-  // 컨테이너 목록 새로고침
+  // 실시간 모니터링 시작
+  const startMonitoring = async (workspaceId?: string): Promise<void> => {
+    if (isMonitoring.value) return
+
+    try {
+      connectionStatus.value = 'connecting'
+      
+      // WebSocket 연결 URL 구성
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      const wsUrl = `${protocol}//${host}/ws/docker-status${workspaceId ? `/${workspaceId}` : ''}`
+      
+      wsConnection.value = new WebSocket(wsUrl)
+      
+      wsConnection.value.onopen = () => {
+        connectionStatus.value = 'connected'
+        isMonitoring.value = true
+        console.log('Docker monitoring WebSocket connected')
+      }
+      
+      wsConnection.value.onmessage = (event) => {
+        try {
+          const data: DockerStatusMessage = JSON.parse(event.data)
+          handleDockerStatusUpdate(data)
+        } catch (err) {
+          console.error('Failed to parse WebSocket message:', err)
+        }
+      }
+      
+      wsConnection.value.onerror = (error) => {
+        connectionStatus.value = 'error'
+        console.error('Docker monitoring WebSocket error:', error)
+      }
+      
+      wsConnection.value.onclose = () => {
+        connectionStatus.value = 'disconnected'
+        isMonitoring.value = false
+        wsConnection.value = null
+        console.log('Docker monitoring WebSocket disconnected')
+      }
+      
+    } catch (err) {
+      connectionStatus.value = 'error'
+      setError(err instanceof Error ? err.message : 'WebSocket 연결 실패')
+    }
+  }
+
+  // 모니터링 중지
+  const stopMonitoring = (): void => {
+    if (wsConnection.value) {
+      wsConnection.value.close()
+      wsConnection.value = null
+    }
+    isMonitoring.value = false
+    connectionStatus.value = 'disconnected'
+  }
+
+  // WebSocket 메시지 처리
+  const handleDockerStatusUpdate = (data: DockerStatusMessage): void => {
+    switch (data.type) {
+      case 'container_status':
+        if (data.containerId && data.status) {
+          updateContainer(data.containerId, { 
+            status: data.status as DockerContainer['status'],
+            startedAt: data.status === 'running' ? new Date().toISOString() : undefined,
+            finishedAt: ['stopped', 'dead'].includes(data.status) ? new Date().toISOString() : undefined
+          })
+        }
+        break
+      
+      case 'container_stats':
+        if (data.containerId && data.stats) {
+          setStats(data.containerId, data.stats)
+        }
+        break
+      
+      case 'container_logs':
+        if (data.containerId && data.logs) {
+          appendContainerLogs(data.containerId, data.logs)
+        }
+        break
+      
+      case 'container_list':
+        if (data.containers) {
+          setContainers(data.containers)
+        }
+        break
+    }
+  }
+
+  // 컨테이너 로그 추가
+  const appendContainerLogs = (containerId: string, newLogs: LogEntry[]): void => {
+    const existingLogs = containerLogs.value.get(containerId)
+    if (existingLogs) {
+      existingLogs.logs.push(...newLogs)
+      // 최대 1000개 로그만 유지
+      if (existingLogs.logs.length > 1000) {
+        existingLogs.logs = existingLogs.logs.slice(-1000)
+      }
+    } else {
+      containerLogs.value.set(containerId, {
+        containerId,
+        logs: newLogs,
+        isStreaming: false
+      })
+    }
+  }
+
+  // 로그 스트리밍 시작/중지
+  const startLogStreaming = (containerId: string): void => {
+    const logs = containerLogs.value.get(containerId)
+    if (logs) {
+      logs.isStreaming = true
+    }
+  }
+
+  const stopLogStreaming = (containerId: string): void => {
+    const logs = containerLogs.value.get(containerId)
+    if (logs) {
+      logs.isStreaming = false
+    }
+  }
+
+  // 컨테이너 목록 새로고침 (더미 데이터 추가)
   const refreshContainers = async (): Promise<boolean> => {
     try {
       setLoading(true)
       setError(null)
 
       // TODO: API 호출로 컨테이너 목록 가져오기
-      console.log('Refreshing container list...')
+      // 더미 데이터 추가
+      const dummyContainers: DockerContainer[] = [
+        {
+          id: 'container-aicli-web',
+          name: 'aicli-web-dev',
+          image: 'node:18-alpine',
+          status: 'running',
+          state: 'running',
+          workspaceId: '1',
+          ports: [
+            { privatePort: 3000, publicPort: 3000, type: 'tcp' },
+            { privatePort: 8080, publicPort: 8080, type: 'tcp' }
+          ],
+          mounts: [
+            { source: '/workspace/aicli-web', destination: '/app', mode: 'rw', type: 'bind' }
+          ],
+          createdAt: '2025-07-23T10:00:00Z',
+          startedAt: '2025-07-23T10:05:00Z',
+          environment: {
+            NODE_ENV: 'development',
+            PORT: '3000'
+          }
+        },
+        {
+          id: 'container-sample-project',
+          name: 'sample-project-dev',
+          image: 'node:20-alpine',
+          status: 'stopped',
+          state: 'exited',
+          workspaceId: '2',
+          ports: [
+            { privatePort: 3000, publicPort: 3001, type: 'tcp' }
+          ],
+          mounts: [
+            { source: '/workspace/sample-project', destination: '/app', mode: 'rw', type: 'bind' }
+          ],
+          createdAt: '2025-07-22T14:00:00Z',
+          finishedAt: '2025-07-22T18:30:00Z'
+        }
+      ]
+      
+      setContainers(dummyContainers)
+
+      // 더미 통계 데이터
+      setStats('container-aicli-web', {
+        containerId: 'container-aicli-web',
+        cpuPercent: 15.5,
+        memoryUsage: 134217728, // 128MB
+        memoryLimit: 536870912, // 512MB
+        memoryPercent: 25,
+        networkRx: 1024000,
+        networkTx: 2048000,
+        blockRead: 512000,
+        blockWrite: 256000,
+        pids: 10,
+        timestamp: new Date().toISOString()
+      })
+
+      // 더미 로그 데이터
+      containerLogs.value.set('container-aicli-web', {
+        containerId: 'container-aicli-web',
+        logs: [
+          {
+            timestamp: new Date('2025-07-23T12:30:00'),
+            stream: 'stdout',
+            message: '[INFO] Server started on port 3000'
+          },
+          {
+            timestamp: new Date('2025-07-23T12:31:00'),
+            stream: 'stdout',
+            message: '[INFO] WebSocket server listening on port 8080'
+          },
+          {
+            timestamp: new Date('2025-07-23T12:32:00'),
+            stream: 'stderr',
+            message: '[WARN] High memory usage detected'
+          }
+        ],
+        isStreaming: false
+      })
+
+      console.log('Container list refreshed with dummy data')
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to refresh containers'
@@ -378,8 +615,11 @@ export const useDockerStore = defineStore('docker', () => {
     images,
     networks,
     stats,
+    containerLogs,
     isLoading,
     error,
+    isMonitoring,
+    connectionStatus,
 
     // 계산된 속성
     runningContainers,
@@ -389,6 +629,7 @@ export const useDockerStore = defineStore('docker', () => {
     totalContainers,
     totalImages,
     totalNetworks,
+    getContainerLogs,
 
     // 액션
     setContainers,
@@ -405,7 +646,6 @@ export const useDockerStore = defineStore('docker', () => {
     stopContainer,
     restartContainer,
     removeContainerById,
-    getContainerLogs,
     refreshImages,
     pullImage,
     startStatsMonitoring,
@@ -414,5 +654,12 @@ export const useDockerStore = defineStore('docker', () => {
     removeImage,
     cleanupContainers,
     cleanupImages,
+
+    // 새로운 액션 (WebSocket 모니터링)
+    startMonitoring,
+    stopMonitoring,
+    appendContainerLogs,
+    startLogStreaming,
+    stopLogStreaming,
   }
 })

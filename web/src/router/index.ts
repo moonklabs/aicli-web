@@ -7,6 +7,7 @@ const WorkspaceView = () => import('@/views/WorkspaceView.vue')
 const WorkspaceDetailView = () => import('@/views/WorkspaceDetailView.vue')
 const TerminalView = () => import('@/views/TerminalView.vue')
 const DockerView = () => import('@/views/DockerView.vue')
+const TerminalTest = () => import('@/views/TerminalTest.vue')
 const LoginView = () => import('@/views/LoginView.vue')
 const NotFoundView = () => import('@/views/NotFoundView.vue')
 
@@ -67,6 +68,15 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         title: 'Docker 관리',
+      },
+    },
+    {
+      path: '/terminal-test',
+      name: 'terminal-test',
+      component: TerminalTest,
+      meta: {
+        requiresAuth: false,
+        title: '터미널 테스트',
       },
     },
     // 리다이렉트 라우트들

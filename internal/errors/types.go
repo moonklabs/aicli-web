@@ -3,6 +3,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -415,4 +416,97 @@ func NewOAuthStateError(reason string) *CLIError {
 	err.AddSuggestion("브라우저 쿠키와 캐시를 확인하세요")
 	err.AddSuggestion("CSRF 공격 방지를 위해 새로운 요청을 시작하세요")
 	return err
+}
+
+// 워크스페이스 관련 에러들 (services 패키지에서 이동)
+var (
+	// 일반적인 에러
+	ErrWorkspaceNotFound           = errors.New("workspace not found")
+	ErrInvalidWorkspaceName        = errors.New("invalid workspace name")
+	ErrInvalidProjectPath          = errors.New("invalid project path")
+	ErrWorkspaceExists             = errors.New("workspace already exists")
+	ErrUnauthorized                = errors.New("unauthorized access")
+	ErrInvalidRequest              = errors.New("invalid request")
+	ErrInvalidWorkspaceStatus      = errors.New("invalid workspace status")
+	ErrWorkspaceNotActive          = errors.New("workspace is not active")
+	ErrWorkspaceArchived           = errors.New("workspace is archived")
+	ErrInsufficientPermissions     = errors.New("insufficient permissions")
+	ErrOwnershipRequired           = errors.New("ownership required")
+	ErrMaxWorkspacesReached        = errors.New("maximum workspaces reached")
+	ErrResourceBusy                = errors.New("resource is busy")
+	ErrDependencyExists            = errors.New("dependency exists")
+
+	// Docker 관련 에러
+	ErrDockerNotRunning            = errors.New("docker daemon is not running")
+	ErrContainerCreationFailed     = errors.New("container creation failed")
+	ErrContainerStartFailed        = errors.New("container start failed")
+	ErrContainerStopFailed         = errors.New("container stop failed")
+	ErrContainerNotFound           = errors.New("container not found")
+	ErrMountFailed                 = errors.New("mount failed")
+	ErrNetworkCreationFailed       = errors.New("network creation failed")
+	ErrPortMappingFailed           = errors.New("port mapping failed")
+
+	// 배치 작업 관련 에러
+	ErrBatchOperationCanceled      = errors.New("batch operation canceled")
+	ErrBatchOperationTimeout       = errors.New("batch operation timeout")
+	ErrBatchPartialFailure         = errors.New("batch partial failure")
+	ErrMaxConcurrentOperations     = errors.New("maximum concurrent operations reached")
+
+	// 복구 관련 에러
+	ErrRecoveryFailed              = errors.New("recovery failed")
+	ErrMaxRecoveryAttemptsReached  = errors.New("maximum recovery attempts reached")
+	ErrRecoveryNotSupported        = errors.New("recovery not supported for this error type")
+)
+
+// 워크스페이스 에러 코드
+const (
+	ErrCodeNotFound         = "NOT_FOUND"
+	ErrCodeAlreadyExists    = "ALREADY_EXISTS"
+	ErrCodeInvalidName      = "INVALID_NAME"
+	ErrCodeInvalidPath      = "INVALID_PATH"
+	ErrCodeInvalidRequest   = "INVALID_REQUEST"
+	ErrCodeInvalidStatus    = "INVALID_STATUS"
+	ErrCodeUnauthorized     = "UNAUTHORIZED"
+	ErrCodeInsufficientPerm = "INSUFFICIENT_PERMISSIONS"
+	ErrCodeOwnershipRequired = "OWNERSHIP_REQUIRED"
+	ErrCodeNotActive        = "NOT_ACTIVE"
+	ErrCodeArchived         = "ARCHIVED"
+	ErrCodeMaxWorkspaces    = "MAX_WORKSPACES_REACHED"
+	ErrCodeResourceBusy     = "RESOURCE_BUSY"
+	ErrCodeDependencyExists = "DEPENDENCY_EXISTS"
+	ErrCodeInternal         = "INTERNAL_ERROR"
+)
+
+// WorkspaceError 워크스페이스 관련 구조화된 에러
+type WorkspaceError struct {
+	Code        string      `json:"code"`
+	Message     string      `json:"message"`
+	Details     interface{} `json:"details,omitempty"`
+	WorkspaceID string      `json:"workspace_id,omitempty"`
+	Operation   string      `json:"operation,omitempty"`
+}
+
+// Error implements the error interface
+func (e *WorkspaceError) Error() string {
+	return fmt.Sprintf("%s: %s", e.Code, e.Message)
+}
+
+// NewWorkspaceError creates a new workspace error
+func NewWorkspaceError(code, message string, details interface{}) *WorkspaceError {
+	return &WorkspaceError{
+		Code:    code,
+		Message: message,
+		Details: details,
+	}
+}
+
+// NewWorkspaceErrorWithContext creates a new workspace error with context
+func NewWorkspaceErrorWithContext(code, message, workspaceID, operation string, details interface{}) *WorkspaceError {
+	return &WorkspaceError{
+		Code:        code,
+		Message:     message,
+		Details:     details,
+		WorkspaceID: workspaceID,
+		Operation:   operation,
+	}
 }

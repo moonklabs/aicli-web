@@ -60,8 +60,8 @@ func (nm *NetworkManager) CreateNetwork(ctx context.Context, req CreateNetworkRe
 		Driver:     req.Driver,
 		Internal:   req.Internal,
 		Attachable: req.Attachable,
-		Labels: nm.client.MergeLabels(
-			nm.client.WorkspaceLabels("", ""),
+		Labels: MergeLabels(
+			WorkspaceLabels("", ""),
 			req.Labels,
 		),
 	}

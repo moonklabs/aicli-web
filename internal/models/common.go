@@ -60,4 +60,12 @@ type PaginationMeta struct {
 	// 전체 페이지 수
 	// example: 10
 	TotalPages int `json:"total_pages"`
+	
+	// 다음 페이지 존재 여부
+	// example: true
+	HasNext bool `json:"has_next"`
+	
+	// 이전 페이지 존재 여부
+	// example: false
+	HasPrev bool `json:"has_prev"`
 }

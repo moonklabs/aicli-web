@@ -8,13 +8,13 @@ import (
 
 	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/interfaces"
 )
 
 // Tracker 워크스페이스 상태 추적자
 type Tracker struct {
 	// 의존성
-	workspaceService services.WorkspaceService
+	workspaceService interfaces.WorkspaceService
 	containerManager docker.ContainerManagement
 	factoryManager   docker.DockerManager
 
@@ -105,7 +105,7 @@ func (l *defaultLogger) Warn(msg string, args ...interface{}) {
 
 // NewTracker 새로운 상태 추적자 생성
 func NewTracker(
-	workspaceService services.WorkspaceService,
+	workspaceService interfaces.WorkspaceService,
 	containerManager docker.ContainerManagement,
 	factoryManager docker.DockerManager,
 ) *Tracker {

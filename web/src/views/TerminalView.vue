@@ -56,32 +56,22 @@
 
     <div class="terminal-content">
       <div v-if="activeSession" class="terminal-container">
-        <div class="terminal-output" ref="terminalOutputRef">
-          <div
-            v-for="log in activeSession.logs"
-            :key="log.id"
-            class="terminal-line"
-            :class="[`log-${log.type}`, `level-${log.level || 'info'}`]"
-          >
-            <span class="log-timestamp">{{ formatTime(log.timestamp) }}</span>
-            <span class="log-content">{{ log.content }}</span>
-          </div>
-        </div>
-
-        <div class="terminal-input">
-          <div class="input-prompt">
-            <span class="prompt-symbol">$</span>
-          </div>
-          <NInput
-            v-model:value="currentCommand"
-            type="text"
-            placeholder="명령어를 입력하세요..."
-            @keypress="handleKeyPress"
-            :disabled="activeSession.status !== 'connected'"
-            class="command-input"
-            ref="commandInputRef"
-          />
-        </div>
+        <TerminalEmulator
+          :session-id="activeSession.id"
+          :session-name="activeSession.title"
+          :logs="activeSession.logs"
+          :is-connected="activeSession.status === 'connected'"
+          :is-executing="activeSession.claudeStream?.isClaudeRunning || false"
+          :last-activity="activeSession.lastActivity"
+          :use-virtual-scrolling="true"
+          :line-height="24"
+          :max-lines="1000"
+          :auto-scroll="true"
+          @execute-command="handleExecuteCommand"
+          @stop-execution="handleStopExecution"
+          @clear-logs="clearTerminal"
+          @export-logs="handleExportLogs"
+        />
       </div>
 
       <div v-else class="empty-terminal">
@@ -123,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
@@ -140,6 +130,7 @@ import {
 import { useTerminalStore } from '@/stores/terminal'
 import { useWorkspaceStore } from '@/stores/workspace'
 import type { TerminalSession } from '@/stores/terminal'
+import TerminalEmulator from '@/components/Terminal/TerminalEmulator.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,9 +139,6 @@ const terminalStore = useTerminalStore()
 const workspaceStore = useWorkspaceStore()
 
 // 상태
-const terminalOutputRef = ref<HTMLElement>()
-const commandInputRef = ref<InstanceType<typeof NInput>>()
-const currentCommand = ref('')
 const showCreateModal = ref(false)
 const createForm = ref({
   workspaceId: '',
@@ -173,10 +161,7 @@ const workspaceOptions = computed(() =>
   })),
 )
 
-// 메서드
-const formatTime = (timestamp: string) => {
-  return new Date(timestamp).toLocaleTimeString()
-}
+// 메서드 (제거됨 - TerminalEmulator 내부에서 처리)
 
 const getStatusType = (status: TerminalSession['status']) => {
   switch (status) {
@@ -253,28 +238,19 @@ const clearTerminal = () => {
 const reconnectSession = async () => {
   if (activeSession.value) {
     try {
-      terminalStore.updateSession(activeSession.value.id, { status: 'connecting' })
-      // TODO: 실제 WebSocket 재연결 로직
-      setTimeout(() => {
-        if (activeSession.value) {
-          terminalStore.updateSession(activeSession.value.id, { status: 'connected' })
-        }
-      }, 1000)
-      message.success('터미널이 재연결되었습니다')
+      const success = await terminalStore.reconnectSession(activeSession.value.id)
+      if (success) {
+        message.success('터미널이 재연결되었습니다')
+      } else {
+        message.error('터미널 재연결에 실패했습니다')
+      }
     } catch (_error) {
       message.error('터미널 재연결에 실패했습니다')
     }
   }
 }
 
-const handleKeyPress = (event: KeyboardEvent) => {
-  if (event.key === 'Enter' && currentCommand.value.trim() && activeSession.value) {
-    executeCommand(currentCommand.value.trim())
-    currentCommand.value = ''
-  }
-}
-
-const executeCommand = async (command: string) => {
+const handleExecuteCommand = async (command: string) => {
   if (!activeSession.value) return
 
   try {
@@ -287,32 +263,103 @@ const executeCommand = async (command: string) => {
   }
 }
 
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (terminalOutputRef.value) {
-      terminalOutputRef.value.scrollTop = terminalOutputRef.value.scrollHeight
-    }
-  })
+const handleStopExecution = () => {
+  if (!activeSession.value) return
+
+  try {
+    terminalStore.stopExecution(activeSession.value.id)
+    message.success('명령 실행이 중단되었습니다')
+  } catch (_error) {
+    message.error('명령 중단에 실패했습니다')
+  }
 }
 
-// Watch for log changes and scroll to bottom
-watch(
-  () => activeSession.value?.logs,
-  () => {
-    scrollToBottom()
-  },
-  { deep: true },
-)
+const handleExportLogs = (format: 'text' | 'html' | 'json') => {
+  if (!activeSession.value) return
 
-// Focus input when session changes
-watch(
-  activeSession,
-  () => {
-    nextTick(() => {
-      commandInputRef.value?.focus()
-    })
-  },
-)
+  try {
+    const logs = activeSession.value.logs
+    let content = ''
+    let filename = `terminal-${activeSession.value.id}-${new Date().toISOString().slice(0, 10)}`
+    let mimeType = 'text/plain'
+
+    switch (format) {
+      case 'text':
+        content = logs.map(log => {
+          const timestamp = new Date(log.timestamp).toLocaleTimeString()
+          const prefix = log.type === 'input' ? '$ ' : ''
+          return `[${timestamp}] ${prefix}${log.content}`
+        }).join('\n')
+        filename += '.txt'
+        break
+
+      case 'html':
+        content = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal Log - ${activeSession.value.title}</title>
+  <style>
+    body { font-family: 'Monaco', 'Menlo', monospace; background: #1a1a1a; color: #fff; }
+    .log-line { margin-bottom: 4px; }
+    .log-timestamp { color: #666; margin-right: 8px; }
+    .log-input { color: #0f0; }
+    .log-error { color: #f66; }
+    .log-system { color: #66f; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>Terminal Log: ${activeSession.value.title}</h1>
+  <div class="terminal-content">
+    ${logs.map(log => `
+      <div class="log-line log-${log.type}">
+        <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+        <span class="log-content">${log.parsed?.html || log.content}</span>
+      </div>
+    `).join('')}
+  </div>
+</body>
+</html>`
+        filename += '.html'
+        mimeType = 'text/html'
+        break
+
+      case 'json':
+        content = JSON.stringify({
+          session: {
+            id: activeSession.value.id,
+            title: activeSession.value.title,
+            workspaceId: activeSession.value.workspaceId,
+            createdAt: activeSession.value.createdAt,
+          },
+          logs,
+          exportedAt: new Date().toISOString(),
+        }, null, 2)
+        filename += '.json'
+        mimeType = 'application/json'
+        break
+    }
+
+    // 파일 다운로드
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    message.success(`로그가 ${format.toUpperCase()} 형식으로 내보내졌습니다`)
+  } catch (_error) {
+    message.error('로그 내보내기에 실패했습니다')
+  }
+}
+
+// 스크롤 함수는 TerminalEmulator 내부에서 처리됨
+
+// 로그 변경 감지는 TerminalEmulator에서 처리됨
 
 // 라이프사이클
 onMounted(() => {
@@ -322,10 +369,7 @@ onMounted(() => {
     router.push({ name: 'terminal' })
   }
 
-  // 자동으로 입력창에 포커스
-  nextTick(() => {
-    commandInputRef.value?.focus()
-  })
+  // 입력창 포커스는 TerminalEmulator에서 처리됨
 })
 
 onUnmounted(() => {

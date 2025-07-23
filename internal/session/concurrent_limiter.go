@@ -131,13 +131,13 @@ const (
 )
 
 // selectSessionsToTerminate는 종료할 세션을 선택합니다.
-func (l *ConcurrentSessionLimiter) selectSessionsToTerminate(sessions []*models.Session, count int, strategy LimitStrategy) []*models.Session {
+func (l *ConcurrentSessionLimiter) selectSessionsToTerminate(sessions []*models.AuthSession, count int, strategy LimitStrategy) []*models.AuthSession {
 	if count <= 0 || count >= len(sessions) {
 		return sessions
 	}
 	
 	// 세션 복사본 생성
-	sessionsCopy := make([]*models.Session, len(sessions))
+	sessionsCopy := make([]*models.AuthSession, len(sessions))
 	copy(sessionsCopy, sessions)
 	
 	switch strategy {
@@ -171,7 +171,7 @@ func (l *ConcurrentSessionLimiter) selectSessionsToTerminate(sessions []*models.
 }
 
 // terminateSession은 세션을 종료합니다.
-func (l *ConcurrentSessionLimiter) terminateSession(ctx context.Context, session *models.Session) error {
+func (l *ConcurrentSessionLimiter) terminateSession(ctx context.Context, session *models.AuthSession) error {
 	// 세션 비활성화
 	session.IsActive = false
 	session.LastAccess = time.Now()

@@ -53,7 +53,11 @@ func (h *HealthChecker) StartMonitoring(ctx context.Context, callback func(error
 
 // GetSystemInfo Docker 시스템 정보를 조회합니다.
 func (h *HealthChecker) GetSystemInfo(ctx context.Context) (*types.Info, error) {
-	return h.client.cli.Info(ctx)
+	info, err := h.client.cli.Info(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &info, nil
 }
 
 // GetVersion Docker 버전 정보를 조회합니다.

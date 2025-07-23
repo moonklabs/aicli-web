@@ -7,7 +7,8 @@ import (
 
 	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/interfaces"
+	"github.com/aicli/aicli-web/internal/errors"
 )
 
 // Mock implementations for testing
@@ -23,7 +24,7 @@ func NewMockWorkspaceService() *MockWorkspaceService {
 	}
 }
 
-func (m *MockWorkspaceService) CreateWorkspace(ctx context.Context, ownerID string, req *models.CreateWorkspaceRequest) (*models.Workspace, error) {
+func (m *MockWorkspaceService) CreateWorkspace(ctx context.Context, req *models.CreateWorkspaceRequest, ownerID string) (*models.Workspace, error) {
 	return nil, nil
 }
 
@@ -31,35 +32,76 @@ func (m *MockWorkspaceService) GetWorkspace(ctx context.Context, workspaceID, ow
 	if workspace, exists := m.workspaces[workspaceID]; exists {
 		return workspace, nil
 	}
-	return nil, services.NewWorkspaceError(services.WorkspaceErrorNotFound, "workspace not found", nil)
+	return nil, errors.NewWorkspaceError(errors.ErrCodeNotFound, "workspace not found", nil)
 }
 
-func (m *MockWorkspaceService) ListWorkspaces(ctx context.Context, ownerID string, opts *services.ListOptions) ([]*models.Workspace, *services.PaginationMeta, error) {
+func (m *MockWorkspaceService) ListWorkspaces(ctx context.Context, ownerID string, req *models.PaginationRequest) (*models.WorkspaceListResponse, error) {
 	var result []*models.Workspace
 	for _, workspace := range m.workspaces {
 		result = append(result, workspace)
 	}
-	return result, &services.PaginationMeta{
-		Page:       1,
-		PerPage:    100,
-		Total:      len(result),
-		TotalPages: 1,
+	
+	return &models.WorkspaceListResponse{
+		Success: true,
+		Data: func() []models.Workspace {
+			workspaces := make([]models.Workspace, len(result))
+			for i, ws := range result {
+				workspaces[i] = *ws
+			}
+			return workspaces
+		}(),
+		Meta: models.PaginationMeta{
+			CurrentPage: 1,
+			PerPage:     100,
+			Total:       len(result),
+			TotalPages:  1,
+		},
 	}, nil
 }
 
-func (m *MockWorkspaceService) UpdateWorkspace(ctx context.Context, workspaceID, ownerID string, req *models.UpdateWorkspaceRequest) (*models.Workspace, error) {
+func (m *MockWorkspaceService) UpdateWorkspace(ctx context.Context, workspaceID string, req *models.UpdateWorkspaceRequest, ownerID string) (*models.Workspace, error) {
 	if workspace, exists := m.workspaces[workspaceID]; exists {
 		if req.Status != "" {
 			workspace.Status = req.Status
 		}
 		return workspace, nil
 	}
-	return nil, services.NewWorkspaceError(services.WorkspaceErrorNotFound, "workspace not found", nil)
+	return nil, errors.NewWorkspaceError(errors.ErrCodeNotFound, "workspace not found", nil)
 }
 
 func (m *MockWorkspaceService) DeleteWorkspace(ctx context.Context, workspaceID, ownerID string) error {
 	delete(m.workspaces, workspaceID)
 	return nil
+}
+
+// 누락된 인터페이스 메서드들 추가
+func (m *MockWorkspaceService) ValidateWorkspace(ctx context.Context, workspace *models.Workspace) error {
+	return nil
+}
+
+func (m *MockWorkspaceService) ActivateWorkspace(ctx context.Context, id string, ownerID string) error {
+	return nil
+}
+
+func (m *MockWorkspaceService) DeactivateWorkspace(ctx context.Context, id string, ownerID string) error {
+	return nil
+}
+
+func (m *MockWorkspaceService) ArchiveWorkspace(ctx context.Context, id string, ownerID string) error {
+	return nil
+}
+
+func (m *MockWorkspaceService) UpdateActiveTaskCount(ctx context.Context, id string, delta int) error {
+	return nil
+}
+
+func (m *MockWorkspaceService) GetWorkspaceStats(ctx context.Context, ownerID string) (*interfaces.WorkspaceStats, error) {
+	return &interfaces.WorkspaceStats{
+		TotalWorkspaces:  len(m.workspaces),
+		ActiveWorkspaces: len(m.workspaces),
+		ArchivedWorkspaces: 0,
+		TotalActiveTasks: 0,
+	}, nil
 }
 
 func (m *MockWorkspaceService) AddWorkspace(workspace *models.Workspace) {

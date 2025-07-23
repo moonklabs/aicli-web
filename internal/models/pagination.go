@@ -61,19 +61,22 @@ func NewPaginationMeta(page, limit, total int) PaginationMeta {
 		PerPage:     limit,
 		Total:       total,
 		TotalPages:  totalPages,
+		HasNext:     page < totalPages,
+		HasPrev:     page > 1,
 	}
 }
 
-// HasMore 다음 페이지 존재 여부
+// HasMore 다음 페이지 존재 여부 (HasNext 필드의 별칭)
 func (m *PaginationMeta) HasMore() bool {
-	return m.CurrentPage < m.TotalPages
-}
-
-// HasPrev 이전 페이지 존재 여부
-func (m *PaginationMeta) HasPrev() bool {
-	return m.CurrentPage > 1
+	return m.HasNext
 }
 
 // 별칭 타입 정의 (호환성을 위한)
 type PagingRequest = PaginationRequest
 type PagingResponse = PaginationResponse
+
+// PaginatedResponse 페이지네이션된 응답을 위한 제네릭 구조체
+type PaginatedResponse[T any] struct {
+	Data       []T             `json:"data"`
+	Pagination PaginationMeta  `json:"pagination"`
+}

@@ -2,14 +2,11 @@ package security
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
-
-	"github.com/aicli/aicli-web/internal/models"
 )
 
 // EventType은 보안 이벤트 타입을 정의합니다.

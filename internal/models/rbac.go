@@ -329,3 +329,48 @@ type ListPermissionsRequest struct {
 	Action       string `json:"action,omitempty"`
 	Effect       string `json:"effect,omitempty"`
 }
+
+// PermissionAuditEntry 권한 감사 엔트리
+type PermissionAuditEntry struct {
+	BaseModel
+	UserID     string    `json:"user_id" db:"user_id"`
+	ResourceID string    `json:"resource_id" db:"resource_id"`
+	Action     string    `json:"action" db:"action"`
+	Result     string    `json:"result" db:"result"`
+	Timestamp  time.Time `json:"timestamp" db:"timestamp"`
+}
+
+// PermissionConflict 권한 충돌
+type PermissionConflict struct {
+	BaseModel
+	ResourceID   string `json:"resource_id" db:"resource_id"`
+	ConflictType string `json:"conflict_type" db:"conflict_type"`
+	Description  string `json:"description" db:"description"`
+}
+
+// RoleOptimizationSuggestion 역할 최적화 제안
+type RoleOptimizationSuggestion struct {
+	BaseModel
+	RoleID      string `json:"role_id" db:"role_id"`
+	Type        string `json:"type" db:"type"`
+	Description string `json:"description" db:"description"`
+	Priority    int    `json:"priority" db:"priority"`
+}
+
+// RoleConsolidationSuggestion 역할 통합 제안
+type RoleConsolidationSuggestion struct {
+	BaseModel
+	SourceRoleID string `json:"source_role_id" db:"source_role_id"`
+	TargetRoleID string `json:"target_role_id" db:"target_role_id"`
+	Reason       string `json:"reason" db:"reason"`
+}
+
+// TemporaryPermission 임시 권한
+type TemporaryPermission struct {
+	BaseModel
+	UserID       string     `json:"user_id" db:"user_id"`
+	ResourceID   string     `json:"resource_id" db:"resource_id"`
+	Action       string     `json:"action" db:"action"`
+	ExpiresAt    time.Time  `json:"expires_at" db:"expires_at"`
+	GrantedBy    string     `json:"granted_by" db:"granted_by"`
+}

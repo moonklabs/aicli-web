@@ -7,37 +7,12 @@ import (
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/interfaces"
+	wsinterfaces "github.com/aicli/aicli-web/internal/interfaces"
 )
 
-// WorkspaceService는 워크스페이스 비즈니스 로직을 처리하는 서비스 인터페이스입니다
-type WorkspaceService interface {
-	// CRUD 기본 오퍼레이션
-	CreateWorkspace(ctx context.Context, req *models.CreateWorkspaceRequest, ownerID string) (*models.Workspace, error)
-	GetWorkspace(ctx context.Context, id string, ownerID string) (*models.Workspace, error)
-	UpdateWorkspace(ctx context.Context, id string, req *models.UpdateWorkspaceRequest, ownerID string) (*models.Workspace, error)
-	DeleteWorkspace(ctx context.Context, id string, ownerID string) error
-	
-	// 목록 및 검색
-	ListWorkspaces(ctx context.Context, ownerID string, req *models.PaginationRequest) (*models.WorkspaceListResponse, error)
-	
-	// 비즈니스 로직
-	ValidateWorkspace(ctx context.Context, workspace *models.Workspace) error
-	ActivateWorkspace(ctx context.Context, id string, ownerID string) error
-	DeactivateWorkspace(ctx context.Context, id string, ownerID string) error
-	ArchiveWorkspace(ctx context.Context, id string, ownerID string) error
-	
-	// 상태 관리
-	UpdateActiveTaskCount(ctx context.Context, id string, delta int) error
-	GetWorkspaceStats(ctx context.Context, ownerID string) (*WorkspaceStats, error)
-}
-
-// WorkspaceStats는 워크스페이스 통계 정보를 나타냅니다
-type WorkspaceStats struct {
-	TotalWorkspaces  int `json:"total_workspaces"`
-	ActiveWorkspaces int `json:"active_workspaces"`
-	ArchivedWorkspaces int `json:"archived_workspaces"`
-	TotalActiveTasks int `json:"total_active_tasks"`
-}
+// WorkspaceService 는 interfaces 패키지에서 사용
+type WorkspaceService = wsinterfaces.WorkspaceService
+type WorkspaceStats = wsinterfaces.WorkspaceStats
 
 // workspaceService는 WorkspaceService 인터페이스의 구현체입니다
 type workspaceService struct {

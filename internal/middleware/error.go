@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/aicli/aicli-web/internal/services"
+	apierrors "github.com/aicli/aicli-web/internal/errors"
 )
 
 // ErrorResponse는 표준 에러 응답 구조체입니다.
@@ -191,7 +191,7 @@ func HandleServiceError(c *gin.Context, err error) {
 	}
 	
 	// WorkspaceError 타입 확인
-	var workspaceErr *services.WorkspaceError
+	var workspaceErr *apierrors.WorkspaceError
 	if errors.As(err, &workspaceErr) {
 		statusCode := getHTTPStatusFromWorkspaceError(workspaceErr)
 		AbortWithError(c, statusCode, workspaceErr.Code, workspaceErr.Message, nil)
@@ -200,33 +200,33 @@ func HandleServiceError(c *gin.Context, err error) {
 	
 	// 일반적인 서비스 에러 처리
 	switch err {
-	case services.ErrWorkspaceNotFound:
+	case apierrors.ErrWorkspaceNotFound:
 		NotFoundError(c, "워크스페이스를 찾을 수 없습니다")
-	case services.ErrInvalidWorkspaceName:
+	case apierrors.ErrInvalidWorkspaceName:
 		ValidationError(c, "워크스페이스 이름이 유효하지 않습니다", nil)
-	case services.ErrInvalidProjectPath:
+	case apierrors.ErrInvalidProjectPath:
 		ValidationError(c, "프로젝트 경로가 유효하지 않습니다", nil)
-	case services.ErrWorkspaceExists:
+	case apierrors.ErrWorkspaceExists:
 		ConflictError(c, "이미 존재하는 워크스페이스입니다")
-	case services.ErrUnauthorized:
+	case apierrors.ErrUnauthorized:
 		UnauthorizedError(c, "접근 권한이 없습니다")
-	case services.ErrInvalidRequest:
+	case apierrors.ErrInvalidRequest:
 		ValidationError(c, "잘못된 요청입니다", nil)
-	case services.ErrInvalidWorkspaceStatus:
+	case apierrors.ErrInvalidWorkspaceStatus:
 		ValidationError(c, "워크스페이스 상태가 유효하지 않습니다", nil)
-	case services.ErrWorkspaceNotActive:
+	case apierrors.ErrWorkspaceNotActive:
 		AbortWithError(c, http.StatusBadRequest, "WORKSPACE_NOT_ACTIVE", "워크스페이스가 활성 상태가 아닙니다", nil)
-	case services.ErrWorkspaceArchived:
+	case apierrors.ErrWorkspaceArchived:
 		AbortWithError(c, http.StatusBadRequest, "WORKSPACE_ARCHIVED", "아카이브된 워크스페이스입니다", nil)
-	case services.ErrInsufficientPermissions:
+	case apierrors.ErrInsufficientPermissions:
 		ForbiddenError(c, "권한이 부족합니다")
-	case services.ErrOwnershipRequired:
+	case apierrors.ErrOwnershipRequired:
 		ForbiddenError(c, "소유자 권한이 필요합니다")
-	case services.ErrMaxWorkspacesReached:
+	case apierrors.ErrMaxWorkspacesReached:
 		AbortWithError(c, http.StatusBadRequest, "MAX_WORKSPACES_REACHED", "최대 워크스페이스 수에 도달했습니다", nil)
-	case services.ErrResourceBusy:
+	case apierrors.ErrResourceBusy:
 		AbortWithError(c, http.StatusConflict, "RESOURCE_BUSY", "리소스가 사용 중입니다", nil)
-	case services.ErrDependencyExists:
+	case apierrors.ErrDependencyExists:
 		AbortWithError(c, http.StatusConflict, "DEPENDENCY_EXISTS", "의존성이 존재합니다", nil)
 	default:
 		// 알 수 없는 에러는 내부 서버 에러로 처리
@@ -235,21 +235,21 @@ func HandleServiceError(c *gin.Context, err error) {
 }
 
 // getHTTPStatusFromWorkspaceError는 WorkspaceError의 코드를 HTTP 상태 코드로 변환합니다.
-func getHTTPStatusFromWorkspaceError(err *services.WorkspaceError) int {
+func getHTTPStatusFromWorkspaceError(err *apierrors.WorkspaceError) int {
 	switch err.Code {
-	case services.ErrCodeNotFound:
+	case apierrors.ErrCodeNotFound:
 		return http.StatusNotFound
-	case services.ErrCodeInvalidName, services.ErrCodeInvalidPath, services.ErrCodeInvalidRequest, services.ErrCodeInvalidStatus:
+	case apierrors.ErrCodeInvalidName, apierrors.ErrCodeInvalidPath, apierrors.ErrCodeInvalidRequest, apierrors.ErrCodeInvalidStatus:
 		return http.StatusBadRequest
-	case services.ErrCodeAlreadyExists:
+	case apierrors.ErrCodeAlreadyExists:
 		return http.StatusConflict
-	case services.ErrCodeUnauthorized:
+	case apierrors.ErrCodeUnauthorized:
 		return http.StatusUnauthorized
-	case services.ErrCodeInsufficientPerm, services.ErrCodeOwnershipRequired:
+	case apierrors.ErrCodeInsufficientPerm, apierrors.ErrCodeOwnershipRequired:
 		return http.StatusForbidden
-	case services.ErrCodeMaxWorkspaces, services.ErrCodeNotActive, services.ErrCodeArchived:
+	case apierrors.ErrCodeMaxWorkspaces, apierrors.ErrCodeNotActive, apierrors.ErrCodeArchived:
 		return http.StatusBadRequest
-	case services.ErrCodeResourceBusy, services.ErrCodeDependencyExists:
+	case apierrors.ErrCodeResourceBusy, apierrors.ErrCodeDependencyExists:
 		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError

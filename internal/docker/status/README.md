@@ -67,10 +67,11 @@
 import (
     "github.com/aicli/aicli-web/internal/docker/status"
     "github.com/aicli/aicli-web/internal/services"
+    "github.com/aicli/aicli-web/internal/interfaces"
 )
 
 // 서비스 의존성 설정
-workspaceService := services.NewWorkspaceService(storage)
+var workspaceService interfaces.WorkspaceService = services.NewWorkspaceService(storage)
 containerManager := docker.NewContainerManager(client)
 dockerManager := docker.NewManager(config)
 
