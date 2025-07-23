@@ -61,7 +61,7 @@ func (nm *NetworkManager) CreateNetwork(ctx context.Context, req CreateNetworkRe
 		Internal:   req.Internal,
 		Attachable: req.Attachable,
 		Labels: MergeLabels(
-			WorkspaceLabels("", ""),
+			nm.client.WorkspaceLabels("", ""),
 			req.Labels,
 		),
 	}
@@ -116,7 +116,7 @@ func (nm *NetworkManager) GetNetwork(ctx context.Context, networkID string) (*Do
 	}
 
 	// IPAM 정보 추출
-	if inspect.IPAM != nil && len(inspect.IPAM.Config) > 0 {
+	if inspect.IPAM.Config != nil && len(inspect.IPAM.Config) > 0 {
 		config := inspect.IPAM.Config[0]
 		info.Subnet = config.Subnet
 		info.Gateway = config.Gateway

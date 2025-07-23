@@ -103,7 +103,7 @@ type AdaptiveRetrier struct {
 	classifier   ErrorClassifier
 	
 	// Circuit Breaker 통합
-	circuitBreaker *AdvancedCircuitBreaker
+	circuitBreaker AdvancedCircuitBreaker
 	
 	// 백오프 계산기
 	backoffCalculator BackoffCalculator
@@ -411,7 +411,7 @@ func (r *AdaptiveRetrier) initializeDefaultPolicies() {
 			MaxAttempts:     3,
 			BaseDelay:       2 * time.Second,
 			MaxDelay:        60 * time.Second,
-			BackoffStrategy: LinearBackoff,
+			BackoffStrategy: LinearBackoffType,
 			Jitter:          true,
 			JitterFactor:    0.2,
 			RetryableErrors: []ErrorType{TimeoutError},
@@ -452,7 +452,7 @@ func (r *AdaptiveRetrier) initializeDefaultPolicies() {
 			MaxAttempts:     2,
 			BaseDelay:       60 * time.Second,
 			MaxDelay:        600 * time.Second,
-			BackoffStrategy: FixedDelayBackoff,
+			BackoffStrategy: FixedDelayBackoffType,
 			Jitter:          false,
 			RetryableErrors: []ErrorType{QuotaError},
 			CircuitBreaker:  false,

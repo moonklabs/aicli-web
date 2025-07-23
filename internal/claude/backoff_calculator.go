@@ -69,11 +69,11 @@ func NewSmartBackoffCalculator() *SmartBackoffCalculator {
 		recentDelays: make([]time.Duration, 0, 100),
 		maxSamples:   100,
 		adaptiveFactors: map[BackoffType]float64{
-			LinearBackoff:             1.0,
-			ExponentialBackoff:        1.0,
-			FixedDelayBackoff:        1.0,
-			AdaptiveBackoff:          1.0,
-			DecorrelatedJitterBackoff: 1.0,
+			LinearBackoffType:             1.0,
+			ExponentialBackoffType:        1.0,
+			FixedDelayBackoffType:         1.0,
+			AdaptiveBackoffType:           1.0,
+			DecorrelatedJitterBackoffType: 1.0,
 		},
 	}
 }
@@ -92,15 +92,15 @@ func (c *SmartBackoffCalculator) Calculate(
 	var delay time.Duration
 	
 	switch strategy {
-	case LinearBackoff:
+	case LinearBackoffType:
 		delay = c.calculateLinearBackoff(attempt, baseDelay)
-	case ExponentialBackoff:
+	case ExponentialBackoffType:
 		delay = c.calculateExponentialBackoff(attempt, baseDelay)
-	case FixedDelayBackoff:
+	case FixedDelayBackoffType:
 		delay = baseDelay
-	case AdaptiveBackoff:
+	case AdaptiveBackoffType:
 		delay = c.calculateAdaptiveBackoff(attempt, baseDelay)
-	case DecorrelatedJitterBackoff:
+	case DecorrelatedJitterBackoffType:
 		delay = c.calculateDecorrelatedJitterBackoff(attempt, baseDelay)
 	default:
 		delay = c.calculateExponentialBackoff(attempt, baseDelay)

@@ -266,7 +266,7 @@ func (t *Tracker) calculateNewState(workspace *models.Workspace, containers []*d
 
 		// 메트릭 수집
 		if stats, err := t.factoryManager.Stats().Collect(t.ctx, container.GetID()); err == nil {
-			state.Metrics = t.containerStatsToMetrics(stats, container)
+			state.Metrics = t.containerStatsToMetrics(stats, *container)
 		}
 	} else {
 		// 컨테이너가 없으면 inactive
@@ -364,7 +364,7 @@ func (t *Tracker) syncToDatabase(workspaceID string, state *WorkspaceState) {
 		req := &models.UpdateWorkspaceRequest{
 			Status: state.Status,
 		}
-		if _, err := t.workspaceService.UpdateWorkspace(t.ctx, workspaceID, "", req); err != nil {
+		if _, err := t.workspaceService.UpdateWorkspace(t.ctx, workspaceID, req, ""); err != nil {
 			t.logger.Error("DB 상태 동기화 실패", err, "workspace_id", workspaceID)
 		}
 	}
@@ -372,11 +372,19 @@ func (t *Tracker) syncToDatabase(workspaceID string, state *WorkspaceState) {
 
 // getAllWorkspaces 모든 워크스페이스 조회
 func (t *Tracker) getAllWorkspaces() ([]*models.Workspace, error) {
-	workspaces, _, err := t.workspaceService.ListWorkspaces(t.ctx, "", &services.ListOptions{
-		Page:    1,
-		PerPage: 1000, // 충분히 큰 수
+	response, err := t.workspaceService.ListWorkspaces(t.ctx, "", &models.PaginationRequest{
+		Page:  1,
+		Limit: 1000, // 충분히 큰 수
 	})
-	return workspaces, err
+	if err != nil {
+		return nil, err
+	}
+	// []models.Workspace를 []*models.Workspace로 변환
+	workspaces := make([]*models.Workspace, len(response.Data))
+	for i := range response.Data {
+		workspaces[i] = &response.Data[i]
+	}
+	return workspaces, nil
 }
 
 // cleanupDeletedWorkspaces 삭제된 워크스페이스 정리

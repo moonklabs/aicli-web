@@ -53,6 +53,31 @@ const (
 	ContainerStateDead       ContainerState = "dead"
 )
 
+// GetID는 컨테이너 ID를 반환합니다.
+func (wc *WorkspaceContainer) GetID() string {
+	return wc.ID
+}
+
+// GetName은 컨테이너 이름을 반환합니다.
+func (wc *WorkspaceContainer) GetName() string {
+	return wc.Name
+}
+
+// GetWorkspaceID는 워크스페이스 ID를 반환합니다.
+func (wc *WorkspaceContainer) GetWorkspaceID() string {
+	return wc.WorkspaceID
+}
+
+// GetState는 컨테이너 상태를 반환합니다.
+func (wc *WorkspaceContainer) GetState() string {
+	return string(wc.State)
+}
+
+// GetCreatedAt은 컨테이너 생성 시간을 반환합니다.
+func (wc *WorkspaceContainer) GetCreatedAt() time.Time {
+	return wc.Created
+}
+
 
 // ContainerMount 컨테이너 마운트 정보입니다.
 type ContainerMount struct {

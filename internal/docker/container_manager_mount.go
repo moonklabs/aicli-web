@@ -151,7 +151,7 @@ func (cm *ContainerManager) CreateWorkspaceContainerWithMounts(
 }
 
 // extractPortBindings는 네트워크 설정에서 포트 바인딩 정보를 추출합니다.
-func extractPortBindings(settings *network.NetworkSettings) map[string]string {
+func extractPortBindings(settings *types.NetworkSettings) map[string]string {
 	if settings == nil || settings.Ports == nil {
 		return nil
 	}
@@ -173,8 +173,7 @@ func extractMountInfo(mounts []types.MountPoint) []ContainerMount {
 			Source:      mount.Source,
 			Destination: mount.Destination,
 			Mode:        mount.Mode,
-			RW:          mount.RW,
-			Type:        string(mount.Type),
+			ReadOnly:    !mount.RW, // RW를 ReadOnly로 변환
 		})
 	}
 	return containerMounts
