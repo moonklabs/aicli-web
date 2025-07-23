@@ -1,9 +1,9 @@
 # AICode Manager (aicli-web)
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/drumcap/aicli-web/ci.yml?branch=main)](https://github.com/drumcap/aicli-web/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/moonklabs/aicli-web/ci.yml?branch=main)](https://github.com/moonklabs/aicli-web/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/drumcap/aicli-web)](https://goreportcard.com/report/github.com/drumcap/aicli-web)
+[![Go Report Card](https://goreportcard.com/badge/github.com/moonklabs/aicli-web)](https://goreportcard.com/report/github.com/moonklabs/aicli-web)
 
 AICode Manager는 Claude CLI를 웹 플랫폼으로 관리하는 로컬 우선 시스템입니다. Go 언어로 개발된 네이티브 CLI 도구를 중심으로 각 프로젝트별 격리된 Docker 컨테이너에서 Claude CLI를 실행하고 관리합니다.
 
@@ -57,69 +57,209 @@ AICode Manager는 개발자가 여러 프로젝트에서 Claude CLI를 효율적
 
 ### 설치 방법
 
-#### 방법 1: 바이너리 다운로드 (권장)
+#### 방법 1: Go로 소스에서 빌드 (권장)
 
-최신 릴리스에서 운영체제에 맞는 바이너리를 다운로드하세요:
+Go 1.21 이상이 설치되어 있어야 합니다:
+
+```bash
+# 저장소 클론
+git clone https://github.com/moonklabs/aicli-web.git
+cd aicli-web
+
+# Go 모듈 의존성 다운로드
+go mod download
+
+# 개발 도구 설치 (선택사항)
+make setup
+
+# CLI 도구 빌드
+make build-cli
+
+# API 서버 빌드  
+make build-api
+
+# 또는 모든 바이너리 한 번에 빌드
+make build
+
+# 빌드된 바이너리 확인
+ls -la build/
+# build/aicli        (CLI 도구)
+# build/aicli-api    (API 서버)
+
+# 시스템 PATH에 추가 (선택사항)
+sudo cp build/aicli /usr/local/bin/
+sudo cp build/aicli-api /usr/local/bin/
+```
+
+#### 방법 2: Go install (CLI 도구만)
+
+```bash
+# CLI 도구 설치
+go install github.com/moonklabs/aicli-web/cmd/aicli@latest
+
+# API 서버 설치
+go install github.com/moonklabs/aicli-web/cmd/api@latest
+```
+
+#### 방법 3: Docker로 실행
+
+```bash
+# Docker Compose로 전체 스택 실행
+git clone https://github.com/moonklabs/aicli-web.git
+cd aicli-web
+
+# 개발 환경 실행
+docker-compose up -d
+
+# 또는 프로덕션 Docker 이미지 빌드
+make docker
+```
+
+#### 방법 4: 바이너리 다운로드
+
+릴리스가 준비되면 다음 링크에서 다운로드 가능합니다:
 
 ```bash
 # Linux (amd64)
-wget https://github.com/drumcap/aicli-web/releases/latest/download/aicli-linux-amd64.tar.gz
+wget https://github.com/moonklabs/aicli-web/releases/latest/download/aicli-linux-amd64.tar.gz
 tar -xzf aicli-linux-amd64.tar.gz
 sudo mv aicli /usr/local/bin/
 
 # macOS (Intel)
-wget https://github.com/drumcap/aicli-web/releases/latest/download/aicli-darwin-amd64.tar.gz
+wget https://github.com/moonklabs/aicli-web/releases/latest/download/aicli-darwin-amd64.tar.gz
 tar -xzf aicli-darwin-amd64.tar.gz
 sudo mv aicli /usr/local/bin/
 
 # macOS (Apple Silicon)
-wget https://github.com/drumcap/aicli-web/releases/latest/download/aicli-darwin-arm64.tar.gz
+wget https://github.com/moonklabs/aicli-web/releases/latest/download/aicli-darwin-arm64.tar.gz
 tar -xzf aicli-darwin-arm64.tar.gz
 sudo mv aicli /usr/local/bin/
-```
-
-#### 방법 2: Go install
-
-```bash
-go install github.com/drumcap/aicli-web/cmd/aicli@latest
-```
-
-#### 방법 3: 소스에서 빌드
-
-```bash
-# 저장소 클론
-git clone https://github.com/drumcap/aicli-web.git
-cd aicli-web
-
-# 의존성 설치
-go mod download
-
-# 빌드
-make build
-
-# 바이너리를 PATH에 추가 (선택사항)
-sudo cp build/aicli /usr/local/bin/
 ```
 
 ### 빠른 시작
 
 5분 안에 AICode Manager를 시작하세요:
 
+#### 1. 빌드 후 실행
+
 ```bash
-# 1. 설정 초기화
-aicli config init
+# 프로젝트 빌드 (위의 설치 방법 참조)
+make build
 
-# 2. Claude API 키 설정
-aicli config set claude.api_key "your-api-key"
+# 설정 초기화
+./build/aicli config init
 
-# 3. 새 워크스페이스 생성
-aicli workspace create my-project --path ./my-project
+# Claude API 키 설정
+./build/aicli config set claude.api_key "your-claude-api-key"
 
-# 4. Claude CLI 실행
-aicli task run --workspace my-project "코드 리뷰를 수행해주세요"
+# Docker 데몬 확인 (필요한 경우)
+docker --version
+```
 
-# 5. API 서버 시작 (웹 대시보드용)
-aicli-api serve --port 8080
+#### 2. API 서버 실행
+
+```bash
+# API 서버 시작 (백그라운드)
+./build/aicli-api serve --port 8080 &
+
+# 또는 포그라운드에서 실행 (로그 확인)
+./build/aicli-api serve --port 8080
+
+# 다른 터미널에서 헬스체크
+curl http://localhost:8080/health
+```
+
+#### 3. CLI로 워크스페이스 관리
+
+```bash
+# 새 워크스페이스 생성
+./build/aicli workspace create my-project --path ./my-project
+
+# 워크스페이스 목록 확인
+./build/aicli workspace list
+
+# 워크스페이스 상태 확인
+./build/aicli workspace get my-project
+```
+
+#### 4. Claude 태스크 실행
+
+```bash
+# 간단한 태스크 실행
+./build/aicli task run --workspace my-project "현재 디렉토리의 Go 파일들을 분석해주세요"
+
+# 태스크 목록 확인
+./build/aicli task list
+
+# 실시간 로그 스트리밍
+./build/aicli logs follow <task-id>
+```
+
+#### 5. 웹 대시보드 접속
+
+브라우저에서 `http://localhost:8080`으로 접속하여 웹 대시보드를 확인할 수 있습니다.
+
+#### 개발 모드로 실행
+
+```bash
+# Hot reload로 개발 모드 실행
+make dev
+
+# 또는 Docker Compose로 전체 스택 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+```
+
+## 실제 사용 예제
+
+### 기본 워크플로우
+
+```bash
+# 1. 프로젝트 빌드
+make build
+
+# 2. 설정 초기화
+./build/aicli config init
+
+# 3. Claude API 키 설정
+./build/aicli config set claude.api_key "your-api-key"
+
+# 4. 새 워크스페이스 생성
+./build/aicli workspace create my-go-project --path /path/to/my-go-project
+
+# 5. API 서버 시작 (백그라운드)
+./build/aicli-api serve --port 8080 &
+
+# 6. 코드 분석 태스크 실행
+./build/aicli task run --workspace my-go-project "이 Go 프로젝트의 구조를 분석하고 개선점을 제안해주세요"
+
+# 7. 태스크 상태 확인
+./build/aicli task list
+
+# 8. 실시간 로그 확인
+./build/aicli logs follow <task-id>
+```
+
+### 고급 사용 예제
+
+```bash
+# 여러 워크스페이스 동시 관리
+./build/aicli workspace create frontend --path ./frontend
+./build/aicli workspace create backend --path ./backend
+
+# 병렬 태스크 실행
+./build/aicli task run --workspace frontend "React 컴포넌트 최적화"
+./build/aicli task run --workspace backend "API 성능 최적화"
+
+# 워크스페이스 상태 모니터링
+./build/aicli workspace get frontend
+./build/aicli workspace get backend
+
+# 설정 관리
+./build/aicli config get
+./build/aicli config set claude.temperature 0.7
 ```
 
 ## 사용법
@@ -389,45 +529,65 @@ docker-compose up -d
 ### 빌드 명령어
 
 ```bash
-# 모든 바이너리 빌드
+# 모든 바이너리 빌드 (CLI + API)
 make build
 
 # 특정 바이너리만 빌드
 make build-cli          # CLI 도구만
 make build-api          # API 서버만
 
-# 멀티 플랫폼 빌드
+# 멀티 플랫폼 빌드 (Linux, macOS, Windows)
 make build-all          # 모든 플랫폼용 빌드
 
-# Docker 이미지 빌드
-make docker             # 프로덕션 이미지
-make docker-dev         # 개발 이미지
+# 의존성 관리
+make deps               # 의존성 다운로드 및 정리
+
+# 바이너리 설치
+make install            # GOPATH/bin에 설치
 ```
 
 ### 테스트 실행
 
 ```bash
-# 모든 테스트 실행
+# 기본 테스트 (단위 + 통합)
 make test
 
-# 단위 테스트만 실행
-make test-unit
+# 모든 테스트 (단위 + 통합 + E2E + 벤치마크)
+make test-all
 
-# 통합 테스트만 실행
-make test-integration
+# 테스트 유형별 실행
+make test-unit          # 단위 테스트만
+make test-integration   # 통합 테스트만
+make test-e2e           # E2E 테스트만
+make test-benchmark     # 성능 벤치마크
+make test-stress        # 스트레스 테스트
 
-# 테스트 커버리지 리포트
-make test-coverage
+# 테스트 커버리지
+make test-coverage      # HTML 리포트 생성
 
-# 특정 패키지 테스트
-go test ./internal/cli/...
+# Docker 관련 테스트
+make test-docker        # Docker 통합 테스트
+make test-container     # 컨테이너 생명주기 테스트
+
+# 워크스페이스 테스트
+make test-workspace-integration  # 워크스페이스 통합 테스트
+make test-workspace-complete     # 전체 워크스페이스 테스트
 ```
 
 ### 코드 품질 관리
 
 ```bash
-# 린트 실행
+# 기본 린트
 make lint
+
+# 린트 자동 수정
+make lint-fix
+
+# 전체 린트 검사
+make lint-all
+
+# 린트 리포트 생성
+make lint-report
 
 # 코드 포맷팅
 make fmt
@@ -435,18 +595,71 @@ make fmt
 # 정적 분석
 make vet
 
-# 모든 품질 검사
-make check
+# 보안 검사
+make security
+
+# 종합 품질 검사
+make check              # deps + vet + lint + test
+```
+
+### Docker 개발 환경
+
+```bash
+# Docker 이미지 빌드
+make docker             # 프로덕션 이미지
+make docker-dev-build   # 개발 이미지 빌드
+
+# 개발 환경 실행
+make docker-dev         # 전체 개발 환경 시작
+make docker-dev-api     # API 서버만 시작
+make docker-dev-cli     # CLI 개발 컨테이너 실행
+
+# 개발 환경 관리
+make docker-dev-logs    # 로그 확인
+make docker-dev-down    # 개발 환경 종료
+
+# Docker에서 테스트/린트
+make docker-dev-test    # Docker에서 테스트 실행
+make docker-dev-lint    # Docker에서 린트 실행
 ```
 
 ### 문서 생성
 
 ```bash
-# GoDoc 서버 실행
-make docs
+# Swagger API 문서 생성
+make swagger
 
-# API 문서 생성
-make api-docs
+# Swagger 주석 포맷팅
+make swagger-fmt
+
+# GoDoc 로컬 서버 실행
+go doc -http=:6060
+```
+
+### Pre-commit 훅 관리
+
+```bash
+# Pre-commit 훅 설치
+make pre-commit-install
+
+# Pre-commit 훅 업데이트
+make pre-commit-update
+
+# 모든 파일에 pre-commit 실행
+make pre-commit-run
+```
+
+### 정리 명령어
+
+```bash
+# 빌드 아티팩트 정리
+make clean
+
+# 모든 캐시 및 아티팩트 정리
+make clean-all
+
+# 릴리스 빌드
+make release
 ```
 
 ## 기여하기
@@ -473,10 +686,10 @@ AICode Manager 프로젝트에 기여해주셔서 감사합니다! 다음 가이
 
 ## 지원 및 문의
 
-- 📋 **이슈 트래커**: [GitHub Issues](https://github.com/drumcap/aicli-web/issues)
-- 💬 **토론**: [GitHub Discussions](https://github.com/drumcap/aicli-web/discussions)
-- 📧 **이메일**: drumcap@example.com
-- 📚 **문서**: [프로젝트 위키](https://github.com/drumcap/aicli-web/wiki)
+- 📋 **이슈 트래커**: [GitHub Issues](https://github.com/moonklabs/aicli-web/issues)
+- 💬 **토론**: [GitHub Discussions](https://github.com/moonklabs/aicli-web/discussions)
+- 📧 **이메일**: moonklabs@example.com
+- 📚 **문서**: [프로젝트 위키](https://github.com/moonklabs/aicli-web/wiki)
 
 ---
 
