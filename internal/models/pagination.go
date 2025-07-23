@@ -19,6 +19,8 @@ type PaginationRequest struct {
 	Order string `form:"order,default=desc" binding:"oneof=asc desc"`
 }
 
+// Note: PaginationMeta is defined in common.go to avoid duplication
+
 // PaginationResponse 페이지네이션 응답
 type PaginationResponse struct {
 	// 데이터 배열

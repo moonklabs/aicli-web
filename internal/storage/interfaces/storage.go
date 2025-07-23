@@ -115,4 +115,12 @@ type Storage interface {
 	
 	// Close 스토리지 연결 종료
 	Close() error
+	
+	// Generic methods for policy service compatibility
+	GetByField(ctx context.Context, collection string, field string, value interface{}, result interface{}) error
+	Create(ctx context.Context, collection string, data interface{}) error
+	GetAll(ctx context.Context, collection string, result interface{}) error
+	GetByID(ctx context.Context, collection string, id string, result interface{}) error
+	Update(ctx context.Context, collection string, id string, updates interface{}) error
+	Delete(ctx context.Context, collection string, id string) error
 }
