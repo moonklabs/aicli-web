@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+// BackoffType은 adaptive_retrier.go에서 정의됨
+// 여기서는 기존 호환성을 위한 별칭만 정의
+const (
+	BackoffFixed BackoffType = FixedDelayBackoffType
+	BackoffLinear = LinearBackoffType
+	BackoffExponential = ExponentialBackoffType
+	BackoffJittered = DecorrelatedJitterBackoffType
+)
+
 // BackoffStrategy 백오프 전략 인터페이스
 type BackoffStrategy interface {
 	// NextBackoff 다음 백오프 시간을 반환합니다

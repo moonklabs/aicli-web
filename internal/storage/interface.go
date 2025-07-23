@@ -14,8 +14,14 @@ type WorkspaceStorage interface {
 	// GetByID ID로 워크스페이스 조회
 	GetByID(ctx context.Context, id string) (*models.Workspace, error)
 	
+	// GetByName 이름으로 워크스페이스 조회
+	GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error)
+	
 	// GetByOwnerID 소유자 ID로 워크스페이스 목록 조회
 	GetByOwnerID(ctx context.Context, ownerID string, pagination *models.PaginationRequest) ([]*models.Workspace, int, error)
+	
+	// CountByOwner 소유자별 워크스페이스 개수 조회
+	CountByOwner(ctx context.Context, ownerID string) (int, error)
 	
 	// Update 워크스페이스 업데이트
 	Update(ctx context.Context, id string, updates map[string]interface{}) error
@@ -99,6 +105,24 @@ type TaskStorage interface {
 	GetActiveCount(ctx context.Context, sessionID string) (int64, error)
 }
 
+// RBACStorage RBAC 스토리지 인터페이스
+type RBACStorage interface {
+	// CreateRole 새 역할 생성
+	CreateRole(ctx context.Context, role *models.Role) error
+	
+	// GetRole 역할 조회
+	GetRole(ctx context.Context, id string) (*models.Role, error)
+	
+	// UpdateRole 역할 업데이트
+	UpdateRole(ctx context.Context, role *models.Role) error
+	
+	// DeleteRole 역할 삭제
+	DeleteRole(ctx context.Context, id string) error
+	
+	// ListRoles 역할 목록 조회
+	ListRoles(ctx context.Context, pagination *models.PaginationRequest) ([]*models.Role, int, error)
+}
+
 // Storage 전체 스토리지 인터페이스
 type Storage interface {
 	// Workspace 워크스페이스 스토리지 반환
@@ -118,4 +142,18 @@ type Storage interface {
 	
 	// Close 스토리지 연결 종료
 	Close() error
+}
+
+// IsNotFoundError NotFound 에러 여부 확인
+func IsNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// 에러 타입별 확인
+	switch err.Error() {
+	case "not found", "record not found", "workspace not found", "project not found", "session not found", "task not found":
+		return true
+	default:
+		return false
+	}
 }
