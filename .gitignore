@@ -16,68 +16,30 @@ coverage.html
 coverage.out
 .coverage
 
-# 의존성 디렉토리 (vendor는 사용하지 않지만 혹시 모르니)
+# Go 의존성 디렉토리
 vendor/
 
-# Go 모듈 캐시
-go.sum
+# Go 모듈 캐시 (go.sum은 버전 관리에 포함해야 함)
+# go.sum
 
 # 환경 변수 파일
 .env
 .env.local
 .env.*.local
 
-# IDE 설정 파일
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.DS_Store
+# 로컬 설정
+configs/local/
+*.local.*
 
-# 로그 파일
-*.log
-logs/
-
-# 임시 파일
-tmp/
-temp/
-*.tmp
+# 백업 파일
+*.bak
+*.backup
 
 # 바이너리 실행 파일
 aicli
 aicli-api
 aicli-web
-
-# Docker 관련
-.dockerignore
-docker-compose.override.yml
-
-# 로컬 설정
-configs/local/
-*.local.*
-
-# Air (hot reload) 임시 파일
-tmp/
-air_tmp/
-
-# 데이터베이스 파일
-*.db
-*.sqlite
-*.sqlite3
-
-# 프로파일링 데이터
-*.prof
-*.mem
-*.cpu
-
-# 운영체제 파일
-Thumbs.db
-.DS_Store
-
-# 백업 파일
-*.bak
-*.backup
+aicli-simple
 
 # 민감한 정보
 secrets/
@@ -87,3 +49,159 @@ secrets/
 
 # Claude 작업 디렉토리
 .claude/
+
+# Node.js 관련 (프론트엔드)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# 웹 빌드 산출물
+web/dist/
+web/build/
+web/coverage/
+
+# Package 매니저 lock 파일 (선택적으로 포함/제외)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Vite 관련
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# TypeScript 빌드 정보
+*.tsbuildinfo
+
+# ESLint 캐시
+.eslintcache
+
+# Stylelint 캐시
+.stylelintcache
+
+# Prettier 캐시
+.prettiercache
+
+# Go 임시 파일 및 테스트 관련
+*.prof
+*.mem
+*.cpu
+*_test
+*_test.go.bak
+test_results/
+benchmark_results/
+
+# Go 프로젝트 특화 파일들
+simple_main.go
+*_simple.go
+go*.tar.gz
+go*.zip
+
+# macOS 특화
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows 특화
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux 특화
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+Session.vim
+Sessionx.vim
+
+# 에디터 임시 파일
+.#*
+#*#
+.*.swp
+.*.swo
+
+# 캐시 디렉토리
+.cache/
+.parcel-cache/
+.sass-cache/
+
+# 런타임 데이터
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# 디버그 로그
+debug.log
+error.log
+
+# 성능 분석 파일
+*.trace
+*.heap
+*.cpu.prof
+*.mem.prof
+
+# Air (hot reload) 설정
+.air.toml
+air_tmp/
+
+# Docker 개발 오버라이드
+docker-compose.dev.yml
+docker-compose.local.yml
+docker-compose.test.yml
+
+# 로컬 문서 빌드
+site/
+docs/site/
+
+# 임시 스크립트
+run.sh
+start.sh
+test.sh
+deploy.sh
+
+# 추가 Docker 관련
+.dockerignore
+docker-compose.override.yml
+
+# 추가 로그 파일
+*.log
+logs/
+
+# 추가 임시 파일
+tmp/
+temp/
+*.tmp
+.tmp/
+
+# 추가 데이터베이스 파일
+*.db
+*.sqlite
+*.sqlite3

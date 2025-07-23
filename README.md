@@ -59,37 +59,54 @@ AICode Manager는 개발자가 여러 프로젝트에서 Claude CLI를 효율적
 
 #### 방법 1: Go로 소스에서 빌드 (권장)
 
-Go 1.21 이상이 설치되어 있어야 합니다:
+**Go 1.21 이상 설치 확인**:
+```bash
+# Go 설치 상태 확인
+go version
 
+# Go가 설치되지 않은 경우 (Linux):
+# 1. Go 다운로드 및 설치
+curl -L https://dl.google.com/go/go1.21.5.linux-amd64.tar.gz -o go1.21.5.linux-amd64.tar.gz
+mkdir -p ~/go && tar -C ~/go -xzf go1.21.5.linux-amd64.tar.gz --strip-components=1
+
+# 2. PATH 환경변수에 추가
+export PATH=$PATH:~/go/bin
+echo 'export PATH=$PATH:~/go/bin' >> ~/.bashrc
+
+# Go 설치 재확인
+go version
+```
+
+**프로젝트 빌드**:
 ```bash
 # 저장소 클론
 git clone https://github.com/moonklabs/aicli-web.git
 cd aicli-web
 
-# Go 모듈 의존성 다운로드
-go mod download
+# Go 모듈 의존성 설치
+go mod tidy
 
-# 개발 도구 설치 (선택사항)
-make setup
+# 현재 프로젝트에 일부 빌드 에러가 있으므로 간단한 CLI 버전으로 빌드
+go build -o ./build/aicli-simple ./simple_main.go
 
-# CLI 도구 빌드
-make build-cli
+# 빌드 확인
+ls -la build/
+./build/aicli-simple version
 
-# API 서버 빌드  
-make build-api
-
-# 또는 모든 바이너리 한 번에 빌드
-make build
+# 전체 프로젝트 빌드 (일부 에러 수정 필요)
+# make build
 
 # 빌드된 바이너리 확인
-ls -la build/
+# ls -la build/
 # build/aicli        (CLI 도구)
 # build/aicli-api    (API 서버)
 
 # 시스템 PATH에 추가 (선택사항)
-sudo cp build/aicli /usr/local/bin/
-sudo cp build/aicli-api /usr/local/bin/
+# sudo cp build/aicli /usr/local/bin/
+# sudo cp build/aicli-api /usr/local/bin/
 ```
+
+**현재 상태**: 이 프로젝트는 개발 중이며, 일부 모듈에서 타입 불일치 에러가 발생할 수 있습니다. 기본적인 CLI 구조는 작동하며, 개발팀에서 빌드 에러를 수정 중입니다.
 
 #### 방법 2: Go install (CLI 도구만)
 
@@ -134,6 +151,35 @@ sudo mv aicli /usr/local/bin/
 wget https://github.com/moonklabs/aicli-web/releases/latest/download/aicli-darwin-arm64.tar.gz
 tar -xzf aicli-darwin-arm64.tar.gz
 sudo mv aicli /usr/local/bin/
+```
+
+## 빌드 테스트 결과
+
+최근 Linux 환경에서 테스트한 결과:
+
+```bash
+# Go 1.23.11 설치 완료
+$ go version
+go version go1.23.11 linux/amd64
+
+# 의존성 설치 성공
+$ go mod tidy
+# (성공)
+
+# 간단한 CLI 빌드 성공
+$ go build -o ./build/aicli-simple ./simple_main.go
+
+# 실행 테스트 성공
+$ ./build/aicli-simple
+AICode Manager CLI
+Go 언어로 개발된 Claude CLI 웹 플랫폼 관리 시스템
+
+사용법:
+  aicli version  - 버전 정보 출력
+  aicli help     - 도움말 출력
+
+$ ./build/aicli-simple version
+aicli version dev
 ```
 
 ### 빠른 시작

@@ -190,36 +190,36 @@ type RecoveryClassificationRule struct {
 type RecoveryBackoffType int
 
 const (
-	// BackoffFixed 고정 백오프
-	BackoffFixed RecoveryBackoffType = iota
-	// BackoffExponential 지수 백오프
-	BackoffExponential
-	// BackoffLinear 선형 백오프
-	BackoffLinear
+	// RecoveryBackoffFixed 고정 백오프
+	RecoveryBackoffFixed RecoveryBackoffType = iota
+	// RecoveryBackoffExponential 지수 백오프
+	RecoveryBackoffExponential
+	// RecoveryBackoffLinear 선형 백오프
+	RecoveryBackoffLinear
 )
 
 // String RecoveryBackoffType을 문자열로 변환
 func (b RecoveryBackoffType) String() string {
 	switch b {
-	case BackoffFixed:
+	case RecoveryBackoffFixed:
 		return "fixed"
-	case BackoffExponential:
+	case RecoveryBackoffExponential:
 		return "exponential"
-	case BackoffLinear:
+	case RecoveryBackoffLinear:
 		return "linear"
 	default:
 		return "unknown"
 	}
 }
 
-// RecoveryRecoveryErrorClassifier 에러 분류기 (복구용)
-type RecoveryRecoveryErrorClassifier struct {
+// RecoveryErrorClassifier 에러 분류기 (복구용)
+type RecoveryErrorClassifier struct {
 	rules map[RecoveryErrorType][]RecoveryClassificationRule
 	mutex sync.RWMutex
 }
 
 // NewRecoveryErrorClassifier 새로운 에러 분류기를 생성합니다
-func NewRecoveryErrorClassifier() *RecoveryRecoveryErrorClassifier {
+func NewRecoveryErrorClassifier() *RecoveryErrorClassifier {
 	classifier := &RecoveryErrorClassifier{
 		rules: make(map[RecoveryErrorType][]RecoveryClassificationRule),
 	}
@@ -231,26 +231,26 @@ func NewRecoveryErrorClassifier() *RecoveryRecoveryErrorClassifier {
 }
 
 // addDefaultRules 기본 분류 규칙을 추가합니다
-func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
+func (ec *RecoveryErrorClassifier) addDefaultRules() {
 	// 일시적 에러 규칙
 	ec.rules[RecoveryErrorTypeTransient] = []RecoveryClassificationRule{
 		{
 			ErrorPattern: "connection refused",
 			Action:       ActionRetry,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "timeout",
 			Action:       ActionRetry,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "temporary failure",
 			Action:       ActionRetry,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffLinear,
+			RecoveryBackoffType:  RecoveryBackoffLinear,
 		},
 	}
 
@@ -260,19 +260,19 @@ func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
 			ErrorPattern: "permission denied",
 			Action:       ActionFail,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 		{
 			ErrorPattern: "invalid api key",
 			Action:       ActionFail,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 		{
 			ErrorPattern: "authentication failed",
 			Action:       ActionFail,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 	}
 
@@ -282,19 +282,19 @@ func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
 			ErrorPattern: "process exited",
 			Action:       ActionRestart,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "signal",
 			Action:       ActionRestart,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "unexpected exit",
 			Action:       ActionRestart,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 	}
 
@@ -304,19 +304,19 @@ func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
 			ErrorPattern: "out of memory",
 			Action:       ActionCircuitBreak,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 		{
 			ErrorPattern: "resource limit",
 			Action:       ActionCircuitBreak,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 		{
 			ErrorPattern: "disk full",
 			Action:       ActionFail,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 	}
 
@@ -326,25 +326,25 @@ func (ec *RecoveryRecoveryErrorClassifier) addDefaultRules() {
 			ErrorPattern: "rate limit",
 			Action:       ActionRetry,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "service unavailable",
 			Action:       ActionRetry,
 			Retryable:    true,
-			RecoveryBackoffType:  BackoffExponential,
+			RecoveryBackoffType:  RecoveryBackoffExponential,
 		},
 		{
 			ErrorPattern: "bad request",
 			Action:       ActionFail,
 			Retryable:    false,
-			RecoveryBackoffType:  BackoffFixed,
+			RecoveryBackoffType:  RecoveryBackoffFixed,
 		},
 	}
 }
 
 // ClassifyError 에러를 분류하고 적절한 액션을 반환합니다
-func (ec *RecoveryRecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, RecoveryAction) {
+func (ec *RecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, RecoveryAction) {
 	if err == nil {
 		return RecoveryErrorTypeUnknown, ActionIgnore
 	}
@@ -368,7 +368,7 @@ func (ec *RecoveryRecoveryErrorClassifier) ClassifyError(err error) (RecoveryErr
 }
 
 // AddRule 새로운 분류 규칙을 추가합니다
-func (ec *RecoveryRecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, rule RecoveryClassificationRule) {
+func (ec *RecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, rule RecoveryClassificationRule) {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
 	
@@ -380,7 +380,7 @@ func (ec *RecoveryRecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, 
 }
 
 // GetRules 특정 에러 타입의 규칙들을 반환합니다
-func (ec *RecoveryRecoveryErrorClassifier) GetRules(errorType RecoveryErrorType) []RecoveryClassificationRule {
+func (ec *RecoveryErrorClassifier) GetRules(errorType RecoveryErrorType) []RecoveryClassificationRule {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
 	
