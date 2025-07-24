@@ -2,10 +2,12 @@ package testutil
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +20,7 @@ type CLITestRunner struct {
 	stderr     *bytes.Buffer
 	env        map[string]string
 	workingDir string
+	timeout    time.Duration
 }
 
 // NewCLITestRunner 새로운 CLI 테스트 러너 생성
@@ -49,6 +52,11 @@ func (r *CLITestRunner) SetWorkingDir(dir string) {
 	r.workingDir = dir
 }
 
+// SetTimeout 명령어 실행 타임아웃 설정
+func (r *CLITestRunner) SetTimeout(timeout time.Duration) {
+	r.timeout = timeout
+}
+
 
 // RunCommand 명령어 실행
 func (r *CLITestRunner) RunCommand(args ...string) error {
@@ -71,6 +79,25 @@ func (r *CLITestRunner) RunCommand(args ...string) error {
 	
 	if r.stdin != nil {
 		r.cmd.SetIn(r.stdin)
+	}
+
+	// 타임아웃 설정이 있는 경우 context 사용
+	if r.timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+		defer cancel()
+		
+		// context를 사용하여 실행 (단순화된 구현)
+		done := make(chan error, 1)
+		go func() {
+			done <- r.cmd.Execute()
+		}()
+		
+		select {
+		case err := <-done:
+			return err
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
 
 	return r.cmd.Execute()

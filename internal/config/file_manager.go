@@ -47,6 +47,16 @@ func (fm *FileManager) EnsureConfigDir() error {
 	return nil
 }
 
+// GetConfigDir 는 설정 디렉토리 경로를 반환합니다
+func (fm *FileManager) GetConfigDir() string {
+	return fm.configDir
+}
+
+// GetConfigPath 는 설정 파일 경로를 반환합니다
+func (fm *FileManager) GetConfigPath() string {
+	return fm.configPath
+}
+
 // configExists 는 설정 파일이 존재하는지 확인합니다
 func (fm *FileManager) configExists() bool {
 	_, err := os.Stat(fm.configPath)
@@ -176,11 +186,6 @@ func (fm *FileManager) RestoreBackup() error {
 	}
 
 	return os.Rename(backupPath, fm.configPath)
-}
-
-// GetConfigPath 는 설정 파일의 전체 경로를 반환합니다
-func (fm *FileManager) GetConfigPath() string {
-	return fm.configPath
 }
 
 // RemoveConfig 는 설정 파일을 삭제합니다

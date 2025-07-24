@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
 )
 
 // Storage SQLite 기반 스토리지 구현
@@ -25,6 +26,7 @@ type Storage struct {
 	project   *projectStorage
 	session   *sessionStorage
 	task      *taskStorage
+	rbac      *memory.RBACStorage // 임시로 메모리 RBAC 사용
 	
 	// 최적화 도구들
 	indexManager *IndexManager
@@ -104,6 +106,7 @@ func New(config Config) (*Storage, error) {
 	storage.project = newProjectStorage(storage)
 	storage.session = newSessionStorage(storage)
 	storage.task = newTaskStorage(storage)
+	storage.rbac = memory.NewRBACStorage() // 임시로 메모리 RBAC 사용
 	
 	// 최적화 도구들 초기화
 	storage.indexManager = newIndexManager(storage)
@@ -136,6 +139,11 @@ func (s *Storage) Session() storage.SessionStorage {
 // Task 태스크 스토리지 반환
 func (s *Storage) Task() storage.TaskStorage {
 	return s.task
+}
+
+// RBAC RBAC 스토리지 반환
+func (s *Storage) RBAC() storage.RBACStorage {
+	return s.rbac
 }
 
 // BeginTx 트랜잭션 시작
