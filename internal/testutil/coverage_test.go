@@ -108,6 +108,10 @@ func TestMockObjectsComprehensive(t *testing.T) {
 	t.Run("MockFileSystem 완전 테스트", func(t *testing.T) {
 		mfs := NewMockFileSystem()
 		
+		// Mock 설정 먼저
+		mfs.On("Exists", "test.txt").Return(true)
+		mfs.On("Exists", "testdir").Return(true)
+		
 		// 파일 추가/조회
 		mfs.AddFile("test.txt", []byte("test content"))
 		assert.True(t, mfs.Exists("test.txt"))

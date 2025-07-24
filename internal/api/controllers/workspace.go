@@ -9,12 +9,14 @@ import (
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/services"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // WorkspaceController는 워크스페이스 관련 API를 처리합니다.
 type WorkspaceController struct {
 	service       services.WorkspaceService
 	dockerService *services.DockerWorkspaceService // Docker 통합 서비스 추가
+	storage       storage.Storage                  // 테스트용 storage 접근
 }
 
 // NewWorkspaceController는 새로운 워크스페이스 컨트롤러를 생성합니다.
@@ -22,6 +24,15 @@ func NewWorkspaceController(service services.WorkspaceService, dockerService *se
 	return &WorkspaceController{
 		service:       service,
 		dockerService: dockerService,
+	}
+}
+
+// NewWorkspaceControllerWithStorage는 storage를 포함한 워크스페이스 컨트롤러를 생성합니다 (테스트용).
+func NewWorkspaceControllerWithStorage(service services.WorkspaceService, dockerService *services.DockerWorkspaceService, storageInterface storage.Storage) *WorkspaceController {
+	return &WorkspaceController{
+		service:       service,
+		dockerService: dockerService,
+		storage:       storageInterface,
 	}
 }
 

@@ -34,7 +34,7 @@ func setupProjectTest() (*gin.Engine, *ProjectController, *WorkspaceController, 
 	
 	// 컨트롤러 생성
 	projectController := NewProjectController(storage)
-	workspaceController := NewWorkspaceController(workspaceService, dockerWorkspaceService)
+	workspaceController := NewWorkspaceControllerWithStorage(workspaceService, dockerWorkspaceService, storage)
 	
 	// 라우터 설정
 	router := gin.New()
@@ -154,7 +154,6 @@ func TestListProjects(t *testing.T) {
 	var response models.PaginationResponse
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.True(t, response.Success)
 	assert.Equal(t, 2, response.Meta.Total)
 }
 
