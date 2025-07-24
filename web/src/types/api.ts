@@ -49,6 +49,60 @@ export interface RefreshTokenRequest {
   refreshToken: string
 }
 
+// OAuth 관련 타입
+export interface OAuthProvider {
+  name: 'google' | 'github'
+  displayName: string
+  icon: string
+  enabled: boolean
+}
+
+export interface OAuthAuthUrlRequest {
+  provider: string
+  state?: string
+}
+
+export interface OAuthAuthUrlResponse {
+  authUrl: string
+  state: string
+}
+
+export interface OAuthCallbackRequest {
+  provider: string
+  code: string
+  state: string
+}
+
+export interface OAuthUserInfo {
+  id: string
+  email: string
+  name: string
+  picture?: string
+  verified: boolean
+  provider: string
+}
+
+export interface OAuthAccount {
+  id: string
+  provider: string
+  providerId: string
+  email: string
+  name: string
+  picture?: string
+  connected: boolean
+  connectedAt: string
+}
+
+export interface LinkOAuthRequest {
+  provider: string
+  code: string
+  state: string
+}
+
+export interface UnlinkOAuthRequest {
+  provider: string
+}
+
 // 워크스페이스 관련 타입
 export interface CreateWorkspaceRequest {
   name: string

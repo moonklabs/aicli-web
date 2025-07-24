@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import type { OAuthAccount, OAuthProvider } from '@/types/api'
 
 export interface User {
   id: string
@@ -8,6 +9,7 @@ export interface User {
   displayName?: string
   avatar?: string
   roles?: string[]
+  oauthAccounts?: OAuthAccount[]
 }
 
 export interface AuthState {
@@ -22,6 +24,12 @@ export const useUserStore = defineStore('user', () => {
   const authState = ref<AuthState>({})
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  
+  // OAuth 관련 상태
+  const oauthProviders = ref<OAuthProvider[]>([])
+  const linkedOAuthAccounts = ref<OAuthAccount[]>([])
+  const oauthLoading = ref(false)
+  const oauthError = ref<string | null>(null)
 
   // 계산된 속성
   const isAuthenticated = computed(() => {
@@ -32,6 +40,17 @@ export const useUserStore = defineStore('user', () => {
   })
 
   const currentUser = computed(() => user.value)
+
+  // OAuth 관련 계산된 속성
+  const availableOAuthProviders = computed(() => 
+    oauthProviders.value.filter(provider => provider.enabled)
+  )
+  
+  const isOAuthAccountLinked = computed(() => (providerName: string) => 
+    linkedOAuthAccounts.value.some(account => 
+      account.provider === providerName && account.connected
+    )
+  )
 
   // 액션
   const setUser = (userData: User) => {
@@ -62,6 +81,55 @@ export const useUserStore = defineStore('user', () => {
 
   const setError = (errorMessage: string | null) => {
     error.value = errorMessage
+  }
+
+  // OAuth 관련 액션
+  const setOAuthProviders = (providers: OAuthProvider[]) => {
+    oauthProviders.value = providers
+  }
+
+  const setLinkedOAuthAccounts = (accounts: OAuthAccount[]) => {
+    linkedOAuthAccounts.value = accounts
+    // 사용자 정보에도 동기화
+    if (user.value) {
+      user.value.oauthAccounts = accounts
+    }
+  }
+
+  const setOAuthLoading = (loading: boolean) => {
+    oauthLoading.value = loading
+  }
+
+  const setOAuthError = (errorMessage: string | null) => {
+    oauthError.value = errorMessage
+  }
+
+  const addLinkedOAuthAccount = (account: OAuthAccount) => {
+    const existingIndex = linkedOAuthAccounts.value.findIndex(
+      acc => acc.provider === account.provider
+    )
+    
+    if (existingIndex >= 0) {
+      linkedOAuthAccounts.value[existingIndex] = account
+    } else {
+      linkedOAuthAccounts.value.push(account)
+    }
+    
+    // 사용자 정보에도 동기화
+    if (user.value) {
+      user.value.oauthAccounts = [...linkedOAuthAccounts.value]
+    }
+  }
+
+  const removeLinkedOAuthAccount = (provider: string) => {
+    linkedOAuthAccounts.value = linkedOAuthAccounts.value.filter(
+      account => account.provider !== provider
+    )
+    
+    // 사용자 정보에도 동기화
+    if (user.value) {
+      user.value.oauthAccounts = [...linkedOAuthAccounts.value]
+    }
   }
 
   // 토큰 갱신 함수
@@ -112,10 +180,18 @@ export const useUserStore = defineStore('user', () => {
     authState,
     isLoading,
     error,
+    
+    // OAuth 관련 상태
+    oauthProviders,
+    linkedOAuthAccounts,
+    oauthLoading,
+    oauthError,
 
     // 계산된 속성
     isAuthenticated,
     currentUser,
+    availableOAuthProviders,
+    isOAuthAccountLinked,
 
     // 액션
     setUser,
@@ -125,5 +201,13 @@ export const useUserStore = defineStore('user', () => {
     setError,
     refreshToken,
     initializeAuth,
+    
+    // OAuth 관련 액션
+    setOAuthProviders,
+    setLinkedOAuthAccounts,
+    setOAuthLoading,
+    setOAuthError,
+    addLinkedOAuthAccount,
+    removeLinkedOAuthAccount,
   }
 })

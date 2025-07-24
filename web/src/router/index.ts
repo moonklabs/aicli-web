@@ -9,6 +9,7 @@ const TerminalView = () => import('@/views/TerminalView.vue')
 const DockerView = () => import('@/views/DockerView.vue')
 const TerminalTest = () => import('@/views/TerminalTest.vue')
 const LoginView = () => import('@/views/LoginView.vue')
+const OAuthCallbackView = () => import('@/views/OAuthCallbackView.vue')
 const NotFoundView = () => import('@/views/NotFoundView.vue')
 
 const router = createRouter({
@@ -30,6 +31,15 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: '로그인',
+      },
+    },
+    {
+      path: '/auth/callback',
+      name: 'oauth-callback',
+      component: OAuthCallbackView,
+      meta: {
+        requiresAuth: false,
+        title: 'OAuth 로그인 처리',
       },
     },
     {
