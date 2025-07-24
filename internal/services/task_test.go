@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
-	storage := storage.NewMemoryAdapter()
+	storage := memory.New()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 	

@@ -141,7 +141,7 @@ func TestContainerManager_CreateWorkspaceContainer(t *testing.T) {
 }
 
 func TestContainerManager_ContainerLifecycle(t *testing.T) {
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	projectDir, projectCleanup := createTestProjectDir(t)
@@ -205,7 +205,7 @@ func TestContainerManager_ContainerLifecycle(t *testing.T) {
 }
 
 func TestContainerManager_ListWorkspaceContainers(t *testing.T) {
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	projectDir, projectCleanup := createTestProjectDir(t)
@@ -251,7 +251,7 @@ func TestContainerManager_ListWorkspaceContainers(t *testing.T) {
 }
 
 func TestContainerManager_CleanupWorkspace(t *testing.T) {
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	projectDir, projectCleanup := createTestProjectDir(t)
@@ -423,7 +423,7 @@ func TestContainerManager_SecuritySettings(t *testing.T) {
 }
 
 func TestContainerManager_ErrorHandling(t *testing.T) {
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	ctx := context.Background()

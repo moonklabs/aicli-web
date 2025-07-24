@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSessionService_Create(t *testing.T) {
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, nil)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, nil)
 
 	// 먼저 워크스페이스와 프로젝트 생성
 	workspace := &models.Workspace{
@@ -22,7 +22,7 @@ func TestSessionService_Create(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project := &models.Project{
@@ -31,7 +31,7 @@ func TestSessionService_Create(t *testing.T) {
 		Path:        "/test/path",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project)
+	err = store.Project().Create(context.Background(), project)
 	require.NoError(t, err)
 
 	// 세션 생성
@@ -51,9 +51,9 @@ func TestSessionService_Create(t *testing.T) {
 }
 
 func TestSessionService_UpdateStatus(t *testing.T) {
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, nil)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, nil)
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
@@ -61,7 +61,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project := &models.Project{
@@ -70,7 +70,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 		Path:        "/test/path",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project)
+	err = store.Project().Create(context.Background(), project)
 	require.NoError(t, err)
 
 	session, err := sessionService.Create(context.Background(), &models.SessionCreateRequest{
@@ -121,7 +121,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// 초기 상태 설정
 			session.Status = tc.fromStatus
-			err := storage.Session().Update(context.Background(), session)
+			err := store.Session().Update(context.Background(), session)
 			require.NoError(t, err)
 
 			// 상태 업데이트 시도
@@ -147,9 +147,9 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 		CleanupInterval: 1 * time.Minute,
 	}
 
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, config)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, config)
 	defer sessionService.Stop()
 
 	// 테스트 데이터 준비
@@ -158,7 +158,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project := &models.Project{
@@ -167,7 +167,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 		Path:        "/test/path",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project)
+	err = store.Project().Create(context.Background(), project)
 	require.NoError(t, err)
 
 	// 첫 번째 세션 생성
@@ -204,9 +204,9 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 }
 
 func TestSessionService_UpdateActivity(t *testing.T) {
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, nil)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, nil)
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
@@ -214,7 +214,7 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project := &models.Project{
@@ -223,7 +223,7 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 		Path:        "/test/path",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project)
+	err = store.Project().Create(context.Background(), project)
 	require.NoError(t, err)
 
 	session, err := sessionService.Create(context.Background(), &models.SessionCreateRequest{
@@ -258,9 +258,9 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 }
 
 func TestSessionService_List(t *testing.T) {
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, nil)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, nil)
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
@@ -268,7 +268,7 @@ func TestSessionService_List(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project1 := &models.Project{
@@ -277,7 +277,7 @@ func TestSessionService_List(t *testing.T) {
 		Path:        "/test/path1",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project1)
+	err = store.Project().Create(context.Background(), project1)
 	require.NoError(t, err)
 
 	project2 := &models.Project{
@@ -286,7 +286,7 @@ func TestSessionService_List(t *testing.T) {
 		Path:        "/test/path2",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project2)
+	err = store.Project().Create(context.Background(), project2)
 	require.NoError(t, err)
 
 	// 여러 세션 생성
@@ -343,9 +343,9 @@ func TestSessionService_List(t *testing.T) {
 }
 
 func TestSessionService_UpdateStats(t *testing.T) {
-	storage := storage.NewMemoryAdapter()
-	projectService := NewProjectService(storage)
-	sessionService := NewSessionService(storage, projectService, nil)
+	store := memory.New()
+	projectService := NewProjectService(store)
+	sessionService := NewSessionService(store, projectService, nil)
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
@@ -353,7 +353,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 		OwnerID:  "user-123",
 		ProjectPath: "/test/workspace",
 	}
-	err := storage.Workspace().Create(context.Background(), workspace)
+	err := store.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
 
 	project := &models.Project{
@@ -362,7 +362,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 		Path:        "/test/path",
 		Status:      models.ProjectStatusActive,
 	}
-	err = storage.Project().Create(context.Background(), project)
+	err = store.Project().Create(context.Background(), project)
 	require.NoError(t, err)
 
 	session, err := sessionService.Create(context.Background(), &models.SessionCreateRequest{

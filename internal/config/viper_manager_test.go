@@ -286,7 +286,7 @@ func TestConfigManager_FileCreation(t *testing.T) {
 	defer os.Setenv("HOME", originalHome)
 
 	// ConfigManager 생성
-	cm, err := NewConfigManager()
+	_, err = NewConfigManager()
 	require.NoError(t, err)
 
 	// 설정 파일이 생성되었는지 확인
