@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // WorkspaceStorage 메모리 기반 워크스페이스 스토리지
@@ -17,6 +18,9 @@ type WorkspaceStorage struct {
 	workspaces map[string]*models.Workspace
 	nameIndex  map[string]string // ownerID:name -> workspaceID
 }
+
+// storage.WorkspaceStorage 인터페이스 구현 확인
+var _ storage.WorkspaceStorage = (*WorkspaceStorage)(nil)
 
 // NewWorkspaceStorage 새 워크스페이스 스토리지 생성
 func NewWorkspaceStorage() *WorkspaceStorage {
@@ -250,6 +254,42 @@ func (s *WorkspaceStorage) List(ctx context.Context, pagination *models.Paginati
 	}
 
 	return result, total, nil
+}
+
+// GetByName 이름으로 워크스페이스 조회
+func (s *WorkspaceStorage) GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	nameKey := fmt.Sprintf("%s:%s", ownerID, name)
+	workspaceID, exists := s.nameIndex[nameKey]
+	if !exists {
+		return nil, ErrNotFound
+	}
+
+	workspace, ok := s.workspaces[workspaceID]
+	if !ok || workspace.DeletedAt != nil {
+		return nil, ErrNotFound
+	}
+
+	// 복사본 반환
+	result := *workspace
+	return &result, nil
+}
+
+// CountByOwner 소유자별 워크스페이스 개수 조회
+func (s *WorkspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	count := 0
+	for _, ws := range s.workspaces {
+		if ws.OwnerID == ownerID && ws.DeletedAt == nil {
+			count++
+		}
+	}
+
+	return count, nil
 }
 
 // ExistsByName 이름으로 존재 여부 확인

@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"context"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // Storage 메모리 기반 스토리지 구현
@@ -12,6 +12,9 @@ type Storage struct {
 	task      *taskStorage
 	rbac      *RBACStorage
 }
+
+// storage.Storage 인터페이스 구현 확인
+var _ storage.Storage = (*Storage)(nil)
 
 // New 새 메모리 스토리지 생성
 func New() *Storage {
@@ -25,27 +28,27 @@ func New() *Storage {
 }
 
 // Workspace 워크스페이스 스토리지 반환
-func (s *Storage) Workspace() *WorkspaceStorage {
+func (s *Storage) Workspace() storage.WorkspaceStorage {
 	return s.workspace
 }
 
 // Project 프로젝트 스토리지 반환
-func (s *Storage) Project() *ProjectStorage {
+func (s *Storage) Project() storage.ProjectStorage {
 	return s.project
 }
 
 // Session 세션 스토리지 반환
-func (s *Storage) Session() *SessionStorage {
+func (s *Storage) Session() storage.SessionStorage {
 	return s.session
 }
 
-// Task 태스크 스토리지 반화
-func (s *Storage) Task() *taskStorage {
+// Task 태스크 스토리지 반환
+func (s *Storage) Task() storage.TaskStorage {
 	return s.task
 }
 
 // RBAC RBAC 스토리지 반환
-func (s *Storage) RBAC() *RBACStorage {
+func (s *Storage) RBAC() storage.RBACStorage {
 	return s.rbac
 }
 
@@ -54,38 +57,4 @@ func (s *Storage) Close() error {
 	return nil
 }
 
-// GetByField 필드로 데이터 조회
-func (s *Storage) GetByField(ctx context.Context, collection string, field string, value interface{}, result interface{}) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}
 
-// Create 데이터 생성
-func (s *Storage) Create(ctx context.Context, collection string, data interface{}) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}
-
-// GetAll 전체 데이터 조회
-func (s *Storage) GetAll(ctx context.Context, collection string, result interface{}) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}
-
-// GetByID ID로 데이터 조회
-func (s *Storage) GetByID(ctx context.Context, collection string, id string, result interface{}) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}
-
-// Update 데이터 업데이트
-func (s *Storage) Update(ctx context.Context, collection string, id string, updates interface{}) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}
-
-// Delete 데이터 삭제
-func (s *Storage) Delete(ctx context.Context, collection string, id string) error {
-	// 메모리 스토리지에서는 간단히 구현
-	return nil
-}

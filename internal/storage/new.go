@@ -1,9 +1,5 @@
 package storage
 
-import (
-	"github.com/aicli/aicli-web/internal/storage/memory"
-)
-
 // New 기본 스토리지 인스턴스를 생성합니다 (메모리 스토리지 사용)
 // 이 함수는 CLI에서 간편하게 사용하기 위한 헬퍼 함수입니다
 //
@@ -13,11 +9,6 @@ func New() (Storage, error) {
 	// 현재는 memory 구현체가 Storage 인터페이스와 완전히 호환되지 않으므로
 	// 임시로 nil을 반환합니다. CLI는 직접 memory.New()를 사용해야 합니다.
 	return nil, nil
-}
-
-// NewMemory 메모리 스토리지 인스턴스를 생성합니다
-func NewMemory() *memory.Storage {
-	return memory.New()
 }
 
 // NewWithConfig 설정에 따른 스토리지 인스턴스를 생성합니다

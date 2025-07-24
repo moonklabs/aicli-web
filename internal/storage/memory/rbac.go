@@ -6,6 +6,7 @@ import (
 	"time"
 	
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // RBACStorage 메모리 기반 RBAC 스토리지
@@ -16,6 +17,9 @@ type RBACStorage struct {
 	permissions   map[string]*models.Permission
 	userRoles     map[string][]string // userID -> roleIDs
 }
+
+// storage.RBACStorage 인터페이스 구현 확인
+var _ storage.RBACStorage = (*RBACStorage)(nil)
 
 // NewRBACStorage 새 RBAC 스토리지 생성
 func NewRBACStorage() *RBACStorage {

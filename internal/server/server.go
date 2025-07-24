@@ -5,6 +5,7 @@ import (
 	
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/sirupsen/logrus"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/config"
 	"github.com/aicli/aicli-web/internal/services"
@@ -15,7 +16,6 @@ import (
 	"github.com/aicli/aicli-web/internal/websocket"
 	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/docker"
-	"github.com/aicli/aicli-web/internal/api/controllers"
 	"github.com/aicli/aicli-web/internal/api/handlers"
 )
 
@@ -50,7 +50,7 @@ func New() *Server {
 	utils.RegisterCustomValidators()
 	
 	// 설정 로드
-	cfg := config.DefaultConfig()
+	cfg := config.GetDefaultConfig()
 	
 	// JWT 매니저 초기화
 	jwtManager := auth.NewJWTManager(
@@ -124,11 +124,14 @@ func New() *Server {
 	// WebSocket 핸들러 초기화
 	wsHandler := websocket.NewWebSocketHandler(wsHub, jwtManager, blacklist, nil)
 	
-	// Claude 세션 매니저 초기화
-	sessionManager := claude.NewSessionManager(storage.Session())
+	// 로거 초기화
+	logger := logrus.New()
 	
-	// Claude 프로세스 매니저 초기화 (기존 구현체 사용)
-	processManager := claude.NewProcessManager()
+	// Claude 프로세스 매니저 초기화
+	processManager := claude.NewProcessManager(logger)
+	
+	// Claude 세션 매니저 초기화
+	sessionManager := claude.NewSessionManager(processManager, storage)
 	
 	// Claude 래퍼 초기화
 	claudeWrapper := claude.NewWrapper(sessionManager, processManager)
@@ -136,8 +139,11 @@ func New() *Server {
 	// Claude 스트림 핸들러 초기화
 	claudeStreamHandler := websocket.NewClaudeStreamHandler(wsHub, claudeWrapper)
 	
+	// MessageBroadcaster 어댑터 생성
+	messageBroadcaster := NewMessageBroadcasterAdapter(wsHub)
+	
 	// 실행 추적기 초기화
-	executionTracker := claude.NewExecutionTracker(wsHub)
+	executionTracker := claude.NewExecutionTracker(messageBroadcaster)
 	
 	// RBAC 매니저 초기화
 	// 캐시는 인메모리 구현 사용 (실제 환경에서는 Redis 사용)
@@ -211,74 +217,3 @@ func (s *Server) setupRouter() {
 	s.setupRoutes()
 }
 
-// setupRoutes는 API 엔드포인트를 설정합니다.
-func (s *Server) setupRoutes() {
-	// API 컨트롤러들 초기화
-	s.setupControllers()
-}
-
-// setupControllers는 컨트롤러들을 초기화하고 라우트를 설정합니다.
-func (s *Server) setupControllers() {
-	// 컨트롤러들 초기화
-	workspaceController := controllers.NewWorkspaceController(s.workspaceService, s.dockerWorkspaceService)
-	
-	// 헬스체크 엔드포인트
-	s.router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "service": "aicli-web"})
-	})
-	
-	// API v1 그룹
-	v1 := s.router.Group("/api/v1")
-	{
-		// 인증 없이 접근 가능한 엔드포인트
-		public := v1.Group("/")
-		{
-			public.GET("/health", func(c *gin.Context) {
-				c.JSON(200, gin.H{"status": "ok", "version": "v1"})
-			})
-
-
-		}
-		
-		// 인증이 필요한 엔드포인트
-		protected := v1.Group("/")
-		protected.Use(middleware.AuthMiddleware(s.jwtManager, s.blacklist))
-		{
-			// 워크스페이스 라우트
-			workspaces := protected.Group("/workspaces")
-			{
-				workspaces.GET("/", workspaceController.ListWorkspaces)
-				workspaces.POST("/", workspaceController.CreateWorkspace)
-				workspaces.GET("/:id", workspaceController.GetWorkspace)
-				workspaces.PUT("/:id", workspaceController.UpdateWorkspace)
-				workspaces.DELETE("/:id", workspaceController.DeleteWorkspace)
-				
-				// Docker 통합 엔드포인트 (Docker 서비스가 활성화된 경우에만)
-				if s.dockerWorkspaceService != nil {
-					workspaces.GET("/:id/status", workspaceController.GetWorkspaceStatus)
-					workspaces.POST("/batch", workspaceController.BatchWorkspaceOperation)
-					workspaces.GET("/batch/:batch_id/status", workspaceController.GetBatchOperationStatus)
-					workspaces.POST("/batch/:batch_id/cancel", workspaceController.CancelBatchOperation)
-				}
-			}
-		}
-	}
-	
-	// OAuth 라우트 설정
-	oauthRoutes := s.router.Group("/oauth")
-	{
-		oauthRoutes.GET("/:provider", func(c *gin.Context) {
-			oauthManager := s.oauthManager
-			authHandler := handlers.NewAuthHandler(s.jwtManager, s.blacklist)
-			authHandler.OAuthLogin(c, oauthManager)
-		})
-		oauthRoutes.GET("/:provider/callback", func(c *gin.Context) {
-			oauthManager := s.oauthManager
-			authHandler := handlers.NewAuthHandler(s.jwtManager, s.blacklist)
-			authHandler.OAuthCallback(c, oauthManager)
-		})
-	}
-	
-	// WebSocket 엔드포인트
-	s.router.GET("/ws", middleware.AuthMiddleware(s.jwtManager, s.blacklist), s.wsHandler.HandleWebSocket)
-}

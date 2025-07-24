@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // SessionStorage 메모리 기반 세션 스토리지 구현
@@ -14,6 +15,9 @@ type SessionStorage struct {
 	sessions map[string]*models.Session
 	order    []string // 생성 순서 추적
 }
+
+// storage.SessionStorage 인터페이스 구현 확인
+var _ storage.SessionStorage = (*SessionStorage)(nil)
 
 // NewSessionStorage 새 세션 스토리지 생성
 func NewSessionStorage() *SessionStorage {

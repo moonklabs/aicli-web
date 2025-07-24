@@ -7,7 +7,7 @@ import (
 	"time"
 	
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage/interfaces"
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/docker/status"
 	"github.com/aicli/aicli-web/internal/docker/security"
@@ -41,7 +41,7 @@ type WorkspaceTask struct {
 type DockerWorkspaceService struct {
 	// 기본 서비스
 	baseService   WorkspaceService
-	storage       interfaces.Storage
+	storage       storage.Storage
 	
 	// Docker 관리 컴포넌트
 	dockerManager *docker.Manager
@@ -106,7 +106,7 @@ type CreateContainerRequest struct {
 // NewDockerWorkspaceService 새로운 Docker 통합 워크스페이스 서비스를 생성합니다
 func NewDockerWorkspaceService(
 	baseService WorkspaceService,
-	storage interfaces.Storage,
+	storage storage.Storage,
 	dockerManager *docker.Manager,
 ) *DockerWorkspaceService {
 	

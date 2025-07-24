@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // ProjectStorage 메모리 기반 프로젝트 스토리지
@@ -18,6 +19,9 @@ type ProjectStorage struct {
 	nameIndex map[string]string // workspaceID:name -> projectID
 	pathIndex map[string]string // path -> projectID
 }
+
+// storage.ProjectStorage 인터페이스 구현 확인
+var _ storage.ProjectStorage = (*ProjectStorage)(nil)
 
 // NewProjectStorage 새 프로젝트 스토리지 생성
 func NewProjectStorage() *ProjectStorage {

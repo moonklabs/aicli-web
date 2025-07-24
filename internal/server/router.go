@@ -8,6 +8,7 @@ import (
 	apiHandlers "github.com/aicli/aicli-web/internal/api/handlers"
 	"github.com/aicli/aicli-web/internal/api/controllers"
 	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/pkg/version"
 	"github.com/aicli/aicli-web/internal/docs"
 )
@@ -38,7 +39,7 @@ func (s *Server) setupRoutes() {
 	v1 := s.router.Group("/api/v1")
 	{
 		// 인증 핸들러 생성
-		authHandler := apiHandlers.NewAuthHandler(s.jwtManager, s.blacklist, s.oauthManager)
+		authHandler := apiHandlers.NewAuthHandler(s.jwtManager, s.blacklist)
 		
 		// 인증 엔드포인트 (인증 불필요)
 		auth := v1.Group("/auth")
@@ -67,7 +68,7 @@ func (s *Server) setupRoutes() {
 		}
 
 		// 워크스페이스 컨트롤러 인스턴스 생성
-		workspaceController := controllers.NewWorkspaceController(s.workspaceService)
+		workspaceController := controllers.NewWorkspaceController(s.workspaceService, s.dockerWorkspaceService)
 		
 		// 프로젝트 컨트롤러 인스턴스 생성
 		projectController := controllers.NewProjectController(s.storage)

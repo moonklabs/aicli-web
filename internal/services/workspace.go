@@ -6,7 +6,6 @@ import (
 	
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
-	"github.com/aicli/aicli-web/internal/storage/interfaces"
 	wsinterfaces "github.com/aicli/aicli-web/internal/interfaces"
 )
 
@@ -16,12 +15,12 @@ type WorkspaceStats = wsinterfaces.WorkspaceStats
 
 // workspaceService는 WorkspaceService 인터페이스의 구현체입니다
 type workspaceService struct {
-	storage   interfaces.Storage
+	storage   storage.Storage
 	validator *WorkspaceValidator
 }
 
 // NewWorkspaceService는 새로운 워크스페이스 서비스를 생성합니다
-func NewWorkspaceService(storage interfaces.Storage) WorkspaceService {
+func NewWorkspaceService(storage storage.Storage) WorkspaceService {
 	return &workspaceService{
 		storage:   storage,
 		validator: NewWorkspaceValidator(),

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/google/uuid"
 )
 
@@ -16,6 +17,9 @@ type taskStorage struct {
 	tasks map[string]*models.Task
 	mutex sync.RWMutex
 }
+
+// storage.TaskStorage 인터페이스 구현 확인
+var _ storage.TaskStorage = (*taskStorage)(nil)
 
 // newTaskStorage 새 태스크 스토리지 생성
 func newTaskStorage() *taskStorage {

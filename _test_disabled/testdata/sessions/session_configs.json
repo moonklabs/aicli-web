@@ -1,0 +1,46 @@
+{
+  "test_sessions": [
+    {
+      "name": "code_generator",
+      "system_prompt": "You are a helpful code generator assistant",
+      "tools": ["Write", "Read", "Bash"],
+      "max_turns": 10,
+      "description": "코드 생성 전용 세션"
+    },
+    {
+      "name": "simple_assistant",
+      "system_prompt": "You are a helpful assistant",
+      "tools": [],
+      "max_turns": 5,
+      "description": "단순 질답 세션"
+    },
+    {
+      "name": "file_manager",
+      "system_prompt": "You are a file management assistant",
+      "tools": ["Write", "Read", "LS", "Bash"],
+      "max_turns": 15,
+      "description": "파일 관리 전용 세션"
+    },
+    {
+      "name": "test_runner",
+      "system_prompt": "You are a testing assistant",
+      "tools": ["Write", "Read", "Bash"],
+      "max_turns": 8,
+      "description": "테스트 실행 및 관리 세션"
+    }
+  ],
+  "performance_configs": [
+    {
+      "name": "high_performance",
+      "buffer_size": 1000,
+      "max_concurrent_sessions": 50,
+      "timeout_seconds": 30
+    },
+    {
+      "name": "low_latency",
+      "buffer_size": 100,
+      "max_concurrent_sessions": 10,
+      "timeout_seconds": 5
+    }
+  ]
+}
