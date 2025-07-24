@@ -34,6 +34,16 @@ func NewClaims(userID, userName, email, role string, expirationTime time.Time) *
 
 // Valid 클레임 유효성 검증
 func (c *Claims) Valid() error {
+	// 만료 시간 검증
+	if c.ExpiresAt != nil && c.ExpiresAt.Before(time.Now()) {
+		return jwt.ErrTokenExpired
+	}
+	
+	// Not Before 검증
+	if c.NotBefore != nil && c.NotBefore.After(time.Now()) {
+		return jwt.ErrTokenNotValidYet
+	}
+	
 	// 추가 검증 로직 (필요시)
 	if c.UserID == "" {
 		return jwt.ErrTokenInvalidClaims

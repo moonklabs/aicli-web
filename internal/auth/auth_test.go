@@ -15,7 +15,7 @@ func TestNewClaims(t *testing.T) {
 	role := "admin"
 	expirationTime := time.Now().Add(15 * time.Minute)
 	
-	claims := NewClaims(userID, userName, role, expirationTime)
+	claims := NewClaims(userID, userName, "", role, expirationTime)
 	
 	assert.Equal(t, userID, claims.UserID)
 	assert.Equal(t, userName, claims.UserName)
@@ -26,19 +26,19 @@ func TestNewClaims(t *testing.T) {
 
 func TestClaimsValid(t *testing.T) {
 	t.Run("유효한 클레임", func(t *testing.T) {
-		claims := NewClaims("user123", "testuser", "admin", time.Now().Add(15*time.Minute))
+		claims := NewClaims("user123", "testuser", "", "admin", time.Now().Add(15*time.Minute))
 		err := claims.Valid()
 		assert.NoError(t, err)
 	})
 	
 	t.Run("만료된 클레임", func(t *testing.T) {
-		claims := NewClaims("user123", "testuser", "admin", time.Now().Add(-15*time.Minute))
+		claims := NewClaims("user123", "testuser", "", "admin", time.Now().Add(-15*time.Minute))
 		err := claims.Valid()
 		assert.Error(t, err)
 	})
 	
 	t.Run("UserID가 없는 클레임", func(t *testing.T) {
-		claims := NewClaims("", "testuser", "admin", time.Now().Add(15*time.Minute))
+		claims := NewClaims("", "testuser", "", "admin", time.Now().Add(15*time.Minute))
 		err := claims.Valid()
 		assert.Error(t, err)
 	})
@@ -50,7 +50,7 @@ func TestJWTManager(t *testing.T) {
 	
 	t.Run("액세스 토큰 생성 및 검증", func(t *testing.T) {
 		// 토큰 생성
-		token, err := manager.GenerateToken("user123", "testuser", "admin", AccessToken)
+		token, err := manager.GenerateToken("user123", "testuser", "", "admin", AccessToken)
 		require.NoError(t, err)
 		assert.NotEmpty(t, token)
 		
@@ -64,7 +64,7 @@ func TestJWTManager(t *testing.T) {
 	
 	t.Run("리프레시 토큰 생성 및 검증", func(t *testing.T) {
 		// 토큰 생성
-		token, err := manager.GenerateToken("user123", "testuser", "admin", RefreshToken)
+		token, err := manager.GenerateToken("user123", "testuser", "", "admin", RefreshToken)
 		require.NoError(t, err)
 		assert.NotEmpty(t, token)
 		
@@ -75,7 +75,7 @@ func TestJWTManager(t *testing.T) {
 	})
 	
 	t.Run("잘못된 토큰 타입", func(t *testing.T) {
-		_, err := manager.GenerateToken("user123", "testuser", "admin", TokenType("invalid"))
+		_, err := manager.GenerateToken("user123", "testuser", "", "admin", TokenType("invalid"))
 		assert.Error(t, err)
 	})
 	
@@ -87,7 +87,7 @@ func TestJWTManager(t *testing.T) {
 	t.Run("다른 시크릿 키로 서명된 토큰", func(t *testing.T) {
 		// 다른 시크릿 키로 토큰 생성
 		otherManager := NewJWTManager("other-secret-key", 15*time.Minute, 7*24*time.Hour)
-		token, err := otherManager.GenerateToken("user123", "testuser", "admin", AccessToken)
+		token, err := otherManager.GenerateToken("user123", "testuser", "", "admin", AccessToken)
 		require.NoError(t, err)
 		
 		// 원래 매니저로 검증 시도
@@ -101,7 +101,7 @@ func TestRefreshAccessToken(t *testing.T) {
 	manager := NewJWTManager(secretKey, 15*time.Minute, 7*24*time.Hour)
 	
 	// 리프레시 토큰 생성
-	refreshToken, err := manager.GenerateToken("user123", "testuser", "admin", RefreshToken)
+	refreshToken, err := manager.GenerateToken("user123", "testuser", "", "admin", RefreshToken)
 	require.NoError(t, err)
 	
 	// 액세스 토큰 갱신

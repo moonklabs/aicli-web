@@ -138,7 +138,7 @@ func TestRefresh(t *testing.T) {
 	router, authHandler := setupTestRouter()
 	
 	// 테스트용 리프레시 토큰 생성
-	refreshToken, err := authHandler.jwtManager.GenerateToken("user123", "testuser", "user", auth.RefreshToken)
+	refreshToken, err := authHandler.jwtManager.GenerateToken("user123", "testuser", "", "user", auth.RefreshToken)
 	require.NoError(t, err)
 	
 	t.Run("성공적인 토큰 갱신", func(t *testing.T) {
@@ -222,7 +222,7 @@ func TestLogout(t *testing.T) {
 	router, authHandler := setupTestRouter()
 	
 	// 테스트용 액세스 토큰 생성
-	accessToken, err := authHandler.jwtManager.GenerateToken("user123", "testuser", "user", auth.AccessToken)
+	accessToken, err := authHandler.jwtManager.GenerateToken("user123", "testuser", "", "user", auth.AccessToken)
 	require.NoError(t, err)
 	
 	t.Run("성공적인 로그아웃", func(t *testing.T) {
