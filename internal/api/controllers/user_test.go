@@ -79,9 +79,9 @@ func (m *MockUserService) LogActivity(ctx context.Context, userID, action, resou
 	return args.Error(0)
 }
 
-func (m *MockUserService) GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse, error) {
+func (m *MockUserService) GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse[models.UserActivity], error) {
 	args := m.Called(ctx, userID, pagination)
-	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
+	return args.Get(0).(*models.PaginatedResponse[models.UserActivity]), args.Error(1)
 }
 
 func (m *MockUserService) GetUserStats(ctx context.Context) (*models.UserStats, error) {
@@ -89,9 +89,9 @@ func (m *MockUserService) GetUserStats(ctx context.Context) (*models.UserStats, 
 	return args.Get(0).(*models.UserStats), args.Error(1)
 }
 
-func (m *MockUserService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse, error) {
+func (m *MockUserService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.User], error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
+	return args.Get(0).(*models.PaginatedResponse[models.User]), args.Error(1)
 }
 
 func (m *MockUserService) CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.UserResponse, error) {

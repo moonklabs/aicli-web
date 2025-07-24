@@ -41,9 +41,9 @@ func (m *MockPolicyService) DeletePolicy(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockPolicyService) ListPolicies(ctx context.Context, filter *security.PolicyFilter) (*models.PaginatedResponse, error) {
+func (m *MockPolicyService) ListPolicies(ctx context.Context, filter *security.PolicyFilter) (*models.PaginatedResponse[*security.SecurityPolicy], error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
+	return args.Get(0).(*models.PaginatedResponse[*security.SecurityPolicy]), args.Error(1)
 }
 
 func (m *MockPolicyService) ApplyPolicy(ctx context.Context, id string) error {
@@ -101,9 +101,9 @@ func (m *MockPolicyService) GetPolicyHistory(ctx context.Context, id string) ([]
 	return args.Get(0).([]*security.PolicyAuditEntry), args.Error(1)
 }
 
-func (m *MockPolicyService) GetPolicyAuditLog(ctx context.Context, filter *security.AuditFilter) (*models.PaginatedResponse, error) {
+func (m *MockPolicyService) GetPolicyAuditLog(ctx context.Context, filter *security.AuditFilter) (*models.PaginatedResponse[*security.PolicyAuditEntry], error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
+	return args.Get(0).(*models.PaginatedResponse[*security.PolicyAuditEntry]), args.Error(1)
 }
 
 // 테스트 설정 함수들
@@ -249,15 +249,20 @@ func TestListPolicies(t *testing.T) {
 	controller, mockService := setupPolicyController()
 
 	// 테스트 데이터
-	expectedPolicies := &models.PaginatedResponse{
-		Data: []security.SecurityPolicyResponse{
-			{ID: "pol_1", Name: "Policy 1", Category: "rate_limiting"},
-			{ID: "pol_2", Name: "Policy 2", Category: "authentication"},
-		},
-		Total:      2,
-		Page:       1,
-		Limit:      10,
-		TotalPages: 1,
+	policy1 := &security.SecurityPolicy{
+		Base:     models.Base{ID: "pol_1"},
+		Name:     "Policy 1",
+		Category: "rate_limiting",
+	}
+	policy2 := &security.SecurityPolicy{
+		Base:     models.Base{ID: "pol_2"},
+		Name:     "Policy 2", 
+		Category: "authentication",
+	}
+	
+	expectedPolicies := &models.PaginatedResponse[*security.SecurityPolicy]{
+		Data: []*security.SecurityPolicy{policy1, policy2},
+		Pagination: models.NewPaginationMeta(1, 10, 2),
 	}
 
 	// Mock 설정

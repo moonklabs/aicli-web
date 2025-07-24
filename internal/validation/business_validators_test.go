@@ -41,8 +41,8 @@ func (m *MockWorkspaceStorage) Create(ctx context.Context, workspace *models.Wor
 	return args.Error(0)
 }
 
-func (m *MockWorkspaceStorage) Update(ctx context.Context, workspace *models.Workspace) error {
-	args := m.Called(ctx, workspace)
+func (m *MockWorkspaceStorage) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -51,9 +51,19 @@ func (m *MockWorkspaceStorage) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockWorkspaceStorage) List(ctx context.Context, ownerID string, offset, limit int) ([]*models.Workspace, error) {
-	args := m.Called(ctx, ownerID, offset, limit)
-	return args.Get(0).([]*models.Workspace), args.Error(1)
+func (m *MockWorkspaceStorage) List(ctx context.Context, pagination *models.PaginationRequest) ([]*models.Workspace, int, error) {
+	args := m.Called(ctx, pagination)
+	return args.Get(0).([]*models.Workspace), args.Int(1), args.Error(2)
+}
+
+func (m *MockWorkspaceStorage) ExistsByName(ctx context.Context, ownerID, name string) (bool, error) {
+	args := m.Called(ctx, ownerID, name)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockWorkspaceStorage) GetByOwnerID(ctx context.Context, ownerID string, pagination *models.PaginationRequest) ([]*models.Workspace, int, error) {
+	args := m.Called(ctx, ownerID, pagination)
+	return args.Get(0).([]*models.Workspace), args.Int(1), args.Error(2)
 }
 
 type MockProjectStorage struct {
@@ -86,8 +96,8 @@ func (m *MockProjectStorage) Create(ctx context.Context, project *models.Project
 	return args.Error(0)
 }
 
-func (m *MockProjectStorage) Update(ctx context.Context, project *models.Project) error {
-	args := m.Called(ctx, project)
+func (m *MockProjectStorage) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
@@ -99,6 +109,24 @@ func (m *MockProjectStorage) Delete(ctx context.Context, id string) error {
 func (m *MockProjectStorage) List(ctx context.Context, workspaceID string, offset, limit int) ([]*models.Project, error) {
 	args := m.Called(ctx, workspaceID, offset, limit)
 	return args.Get(0).([]*models.Project), args.Error(1)
+}
+
+func (m *MockProjectStorage) ExistsByName(ctx context.Context, workspaceID, name string) (bool, error) {
+	args := m.Called(ctx, workspaceID, name)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockProjectStorage) GetByPath(ctx context.Context, path string) (*models.Project, error) {
+	args := m.Called(ctx, path)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Project), args.Error(1)
+}
+
+func (m *MockProjectStorage) GetByWorkspaceID(ctx context.Context, workspaceID string, pagination *models.PaginationRequest) ([]*models.Project, int, error) {
+	args := m.Called(ctx, workspaceID, pagination)
+	return args.Get(0).([]*models.Project), args.Int(1), args.Error(2)
 }
 
 func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {

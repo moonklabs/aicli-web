@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -439,35 +440,21 @@ type mockFieldLevel struct {
 
 func (m *mockFieldLevel) Top() interface{} { return nil }
 func (m *mockFieldLevel) Parent() interface{} { return nil }
-func (m *mockFieldLevel) Field() interface{} { 
+func (m *mockFieldLevel) Field() reflect.Value { 
 	if str, ok := m.value.(string); ok {
-		return mockReflectValue{str: str}
+		return reflect.ValueOf(str)
 	}
-	return mockReflectValue{}
+	return reflect.Value{}
 }
 func (m *mockFieldLevel) FieldName() string { return "field" }
 func (m *mockFieldLevel) StructFieldName() string { return "Field" }
 func (m *mockFieldLevel) Param() string { return "" }
 func (m *mockFieldLevel) GetTag() string { return "" }
-func (m *mockFieldLevel) ExtractType(field interface{}) (interface{}, interface{}) { return nil, nil }
-func (m *mockFieldLevel) GetStructFieldOK() (interface{}, string, bool) { return nil, "", false }
+func (m *mockFieldLevel) ExtractType(field reflect.Value) (reflect.Value, reflect.Kind, bool) { 
+	return reflect.Value{}, reflect.Invalid, false 
+}
+func (m *mockFieldLevel) GetStructFieldOK() (reflect.Value, reflect.Kind, bool) { return reflect.Value{}, reflect.Invalid, false }
 func (m *mockFieldLevel) GetStructFieldOKAdvanced(val interface{}, namespace string) (interface{}, string, bool) { return nil, "", false }
-
-type mockReflectValue struct {
-	str string
-}
-
-func (m mockReflectValue) String() string {
-	return m.str
-}
-
-func (m mockReflectValue) Interface() interface{} {
-	return m.str
-}
-
-func (m mockReflectValue) Kind() interface{} {
-	return nil
-}
 
 func TestTranslateValidatorError(t *testing.T) {
 	// 실제 validator를 사용한 에러 번역 테스트

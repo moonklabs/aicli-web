@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/services"
 	"github.com/aicli/aicli-web/internal/storage/memory"
 	"github.com/aicli/aicli-web/internal/utils"
 )
@@ -27,9 +28,13 @@ func setupProjectTest() (*gin.Engine, *ProjectController, *WorkspaceController, 
 	// 메모리 스토리지 생성
 	storage := memory.New()
 	
+	// 서비스 생성
+	workspaceService := services.NewWorkspaceService(storage)
+	dockerWorkspaceService := services.NewDockerWorkspaceService(nil, storage, nil)
+	
 	// 컨트롤러 생성
 	projectController := NewProjectController(storage)
-	workspaceController := NewWorkspaceController(storage)
+	workspaceController := NewWorkspaceController(workspaceService, dockerWorkspaceService)
 	
 	// 라우터 설정
 	router := gin.New()
