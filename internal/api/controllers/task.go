@@ -39,7 +39,10 @@ func (tc *TaskController) Create(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Message: "세션 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_SESSION_ID",
+				Message: "세션 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -47,8 +50,11 @@ func (tc *TaskController) Create(c *gin.Context) {
 	var req models.TaskCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Message: "잘못된 요청 형식입니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "INVALID_REQUEST",
+				Message: "잘못된 요청 형식입니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -59,8 +65,11 @@ func (tc *TaskController) Create(c *gin.Context) {
 	task, err := tc.taskService.Create(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "태스크 생성에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "TASK_CREATE_FAILED",
+				Message: "태스크 생성에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -111,8 +120,11 @@ func (tc *TaskController) List(c *gin.Context) {
 	result, err := tc.taskService.List(c.Request.Context(), &filter, paging)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "태스크 목록 조회에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "TASK_LIST_FAILED",
+				Message: "태스크 목록 조회에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -137,7 +149,10 @@ func (tc *TaskController) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Message: "태스크 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_TASK_ID",
+				Message: "태스크 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -146,13 +161,19 @@ func (tc *TaskController) GetByID(c *gin.Context) {
 	if err != nil {
 		if err.Error() == "태스크 조회 실패: resource not found" {
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
-				Message: "태스크를 찾을 수 없습니다",
+				Error: models.ErrorDetail{
+					Code:    "TASK_NOT_FOUND",
+					Message: "태스크를 찾을 수 없습니다",
+				},
 			})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "태스크 조회에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "TASK_GET_FAILED",
+				Message: "태스크 조회에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -178,7 +199,10 @@ func (tc *TaskController) Cancel(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Message: "태스크 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_TASK_ID",
+				Message: "태스크 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -187,20 +211,29 @@ func (tc *TaskController) Cancel(c *gin.Context) {
 	if err != nil {
 		if err.Error() == "태스크를 찾을 수 없습니다: "+id {
 			c.JSON(http.StatusNotFound, models.ErrorResponse{
-				Message: "태스크를 찾을 수 없습니다",
+				Error: models.ErrorDetail{
+					Code:    "TASK_NOT_FOUND",
+					Message: "태스크를 찾을 수 없습니다",
+				},
 			})
 			return
 		}
 		if contains(err.Error(), "태스크를 취소할 수 없습니다") {
 			c.JSON(http.StatusConflict, models.ErrorResponse{
-				Message: "태스크를 취소할 수 없습니다",
-				Details: err.Error(),
+				Error: models.ErrorDetail{
+					Code:    "TASK_CANNOT_CANCEL",
+					Message: "태스크를 취소할 수 없습니다",
+					Details: err.Error(),
+				},
 			})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "태스크 취소에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "TASK_CANCEL_FAILED",
+				Message: "태스크 취소에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -222,8 +255,11 @@ func (tc *TaskController) GetActiveTasks(c *gin.Context) {
 	tasks, err := tc.taskService.GetActiveTasks(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "활성 태스크 조회에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "ACTIVE_TASKS_GET_FAILED",
+				Message: "활성 태스크 조회에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -245,8 +281,11 @@ func (tc *TaskController) GetStats(c *gin.Context) {
 	stats, err := tc.taskService.GetStats(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Message: "태스크 통계 조회에 실패했습니다",
-			Details: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "TASK_STATS_GET_FAILED",
+				Message: "태스크 통계 조회에 실패했습니다",
+				Details: err.Error(),
+			},
 		})
 		return
 	}

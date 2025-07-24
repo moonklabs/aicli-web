@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/security"
@@ -37,22 +36,21 @@ func NewPolicyController(policyService security.PolicyService) *PolicyController
 // @Failure 403 {object} models.ErrorResponse "권한 없음"
 // @Router /admin/policies [post]
 func (pc *PolicyController) CreatePolicy(c *gin.Context) {
-	claims, exists := c.Get("claims")
+	_, exists := c.Get("claims")
 	if !exists {
 		middleware.UnauthorizedError(c, "인증 정보를 찾을 수 없습니다")
 		return
 	}
-	userClaims := claims.(*auth.Claims)
 
 	var req security.CreatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	policy, err := pc.policyService.CreatePolicy(c.Request.Context(), &req)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 생성 실패", err)
+		middleware.BadRequestError(c, "정책 생성 실패")
 		return
 	}
 
@@ -79,13 +77,13 @@ func (pc *PolicyController) CreatePolicy(c *gin.Context) {
 func (pc *PolicyController) GetPolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	policy, err := pc.policyService.GetPolicy(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.NotFoundError(c, "정책을 찾을 수 없습니다", err)
+		middleware.NotFoundError(c, "정책을 찾을 수 없습니다")
 		return
 	}
 
@@ -113,19 +111,19 @@ func (pc *PolicyController) GetPolicy(c *gin.Context) {
 func (pc *PolicyController) UpdatePolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	var req security.UpdatePolicyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	policy, err := pc.policyService.UpdatePolicy(c.Request.Context(), policyID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 업데이트 실패", err)
+		middleware.BadRequestError(c, "정책 업데이트 실패")
 		return
 	}
 
@@ -153,13 +151,13 @@ func (pc *PolicyController) UpdatePolicy(c *gin.Context) {
 func (pc *PolicyController) DeletePolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	err := pc.policyService.DeletePolicy(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 삭제 실패", err)
+		middleware.BadRequestError(c, "정책 삭제 실패")
 		return
 	}
 
@@ -211,7 +209,7 @@ func (pc *PolicyController) ListPolicies(c *gin.Context) {
 
 	policies, err := pc.policyService.ListPolicies(c.Request.Context(), filter)
 	if err != nil {
-		middleware.InternalServerError(c, "정책 목록 조회 실패", err)
+		middleware.InternalServerError(c, "정책 목록 조회 실패")
 		return
 	}
 
@@ -237,13 +235,13 @@ func (pc *PolicyController) ListPolicies(c *gin.Context) {
 func (pc *PolicyController) ApplyPolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	err := pc.policyService.ApplyPolicy(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 적용 실패", err)
+		middleware.BadRequestError(c, "정책 적용 실패")
 		return
 	}
 
@@ -269,13 +267,13 @@ func (pc *PolicyController) ApplyPolicy(c *gin.Context) {
 func (pc *PolicyController) DeactivatePolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	err := pc.policyService.DeactivatePolicy(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 비활성화 실패", err)
+		middleware.BadRequestError(c, "정책 비활성화 실패")
 		return
 	}
 
@@ -304,18 +302,18 @@ func (pc *PolicyController) RollbackPolicy(c *gin.Context) {
 	version := c.Query("version")
 	
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 	
 	if version == "" {
-		middleware.BadRequestError(c, "롤백할 버전이 필요합니다", nil)
+		middleware.BadRequestError(c, "롤백할 버전이 필요합니다")
 		return
 	}
 
 	err := pc.policyService.RollbackPolicy(c.Request.Context(), policyID, version)
 	if err != nil {
-		middleware.BadRequestError(c, "정책 롤백 실패", err)
+		middleware.BadRequestError(c, "정책 롤백 실패")
 		return
 	}
 
@@ -342,7 +340,7 @@ func (pc *PolicyController) GetActivePolicies(c *gin.Context) {
 
 	policies, err := pc.policyService.GetActivePolicies(c.Request.Context(), category)
 	if err != nil {
-		middleware.InternalServerError(c, "활성 정책 조회 실패", err)
+		middleware.InternalServerError(c, "활성 정책 조회 실패")
 		return
 	}
 
@@ -374,21 +372,21 @@ func (pc *PolicyController) GetActivePolicies(c *gin.Context) {
 func (pc *PolicyController) ValidatePolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	// 정책 조회
 	policy, err := pc.policyService.GetPolicy(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.NotFoundError(c, "정책을 찾을 수 없습니다", err)
+		middleware.NotFoundError(c, "정책을 찾을 수 없습니다")
 		return
 	}
 
 	// 검증 실행
 	result, err := pc.policyService.ValidatePolicy(c.Request.Context(), policy)
 	if err != nil {
-		middleware.InternalServerError(c, "정책 검증 실패", err)
+		middleware.InternalServerError(c, "정책 검증 실패")
 		return
 	}
 
@@ -415,19 +413,19 @@ func (pc *PolicyController) ValidatePolicy(c *gin.Context) {
 func (pc *PolicyController) TestPolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	var testData interface{}
 	if err := c.ShouldBindJSON(&testData); err != nil {
-		middleware.BadRequestError(c, "잘못된 테스트 데이터 형식", err)
+		middleware.BadRequestError(c, "잘못된 테스트 데이터 형식")
 		return
 	}
 
 	result, err := pc.policyService.TestPolicy(c.Request.Context(), policyID, testData)
 	if err != nil {
-		middleware.InternalServerError(c, "정책 테스트 실패", err)
+		middleware.InternalServerError(c, "정책 테스트 실패")
 		return
 	}
 
@@ -453,13 +451,13 @@ func (pc *PolicyController) TestPolicy(c *gin.Context) {
 func (pc *PolicyController) GetPolicyHistory(c *gin.Context) {
 	policyID := c.Param("id")
 	if policyID == "" {
-		middleware.BadRequestError(c, "정책 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
 
 	history, err := pc.policyService.GetPolicyHistory(c.Request.Context(), policyID)
 	if err != nil {
-		middleware.InternalServerError(c, "정책 히스토리 조회 실패", err)
+		middleware.InternalServerError(c, "정책 히스토리 조회 실패")
 		return
 	}
 
@@ -505,7 +503,7 @@ func (pc *PolicyController) GetPolicyAuditLog(c *gin.Context) {
 
 	auditLog, err := pc.policyService.GetPolicyAuditLog(c.Request.Context(), filter)
 	if err != nil {
-		middleware.InternalServerError(c, "감사 로그 조회 실패", err)
+		middleware.InternalServerError(c, "감사 로그 조회 실패")
 		return
 	}
 
@@ -533,13 +531,13 @@ func (pc *PolicyController) GetPolicyAuditLog(c *gin.Context) {
 func (pc *PolicyController) CreateTemplate(c *gin.Context) {
 	var req security.CreateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	template, err := pc.policyService.CreateTemplate(c.Request.Context(), &req)
 	if err != nil {
-		middleware.BadRequestError(c, "템플릿 생성 실패", err)
+		middleware.BadRequestError(c, "템플릿 생성 실패")
 		return
 	}
 
@@ -566,13 +564,13 @@ func (pc *PolicyController) CreateTemplate(c *gin.Context) {
 func (pc *PolicyController) GetTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		middleware.BadRequestError(c, "템플릿 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "템플릿 ID가 필요합니다")
 		return
 	}
 
 	template, err := pc.policyService.GetTemplate(c.Request.Context(), templateID)
 	if err != nil {
-		middleware.NotFoundError(c, "템플릿을 찾을 수 없습니다", err)
+		middleware.NotFoundError(c, "템플릿을 찾을 수 없습니다")
 		return
 	}
 
@@ -596,7 +594,7 @@ func (pc *PolicyController) GetTemplate(c *gin.Context) {
 func (pc *PolicyController) ListTemplates(c *gin.Context) {
 	templates, err := pc.policyService.ListTemplates(c.Request.Context())
 	if err != nil {
-		middleware.InternalServerError(c, "템플릿 목록 조회 실패", err)
+		middleware.InternalServerError(c, "템플릿 목록 조회 실패")
 		return
 	}
 
@@ -623,19 +621,19 @@ func (pc *PolicyController) ListTemplates(c *gin.Context) {
 func (pc *PolicyController) CreatePolicyFromTemplate(c *gin.Context) {
 	templateID := c.Param("id")
 	if templateID == "" {
-		middleware.BadRequestError(c, "템플릿 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "템플릿 ID가 필요합니다")
 		return
 	}
 
 	var req security.CreateFromTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	policy, err := pc.policyService.CreatePolicyFromTemplate(c.Request.Context(), templateID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "템플릿으로부터 정책 생성 실패", err)
+		middleware.BadRequestError(c, "템플릿으로부터 정책 생성 실패")
 		return
 	}
 

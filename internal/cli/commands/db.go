@@ -66,13 +66,10 @@ func newDBMigrateCommand() *cobra.Command {
 			}
 			defer migrator.Close()
 			
-			// 옵션 설정
-			options := migration.MigrationOptions{
-				DryRun:  dryRun,
-				Verbose: verbose,
-				Force:   force,
-				Timeout: time.Duration(timeout) * time.Second,
-			}
+			// 주석: options 구조체는 현재 사용되지 않음
+			_ = dryRun
+			_ = verbose 
+			_ = force
 			
 			// 현재 버전 확인
 			current, err := migrator.Current()

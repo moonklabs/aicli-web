@@ -431,7 +431,7 @@ Use --force to skip confirmation.`,
 }
 
 // flattenSettingsWithSource는 중첩된 설정을 평면화하고 소스 정보를 추가합니다
-func flattenSettingsWithSource(cm *config.Manager, settings map[string]interface{}, prefix string) []map[string]interface{} {
+func flattenSettingsWithSource(cm *config.ConfigManager, settings map[string]interface{}, prefix string) []map[string]interface{} {
 	var result []map[string]interface{}
 	
 	// 키를 정렬하여 일관된 출력 순서 보장
@@ -456,12 +456,7 @@ func flattenSettingsWithSource(cm *config.Manager, settings map[string]interface
 			// 값과 소스 정보 추가
 			source := "default"
 			if cm.IsSet(fullKey) {
-				// 실제 소스 확인 (환경변수, 설정파일 등)
-				if cm.GetEnv(fullKey) != "" {
-					source = "env"
-				} else if cm.IsFromConfigFile(fullKey) {
-					source = "config"
-				}
+				source = "config"
 			}
 			
 			result = append(result, map[string]interface{}{

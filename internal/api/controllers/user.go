@@ -44,7 +44,7 @@ func (uc *UserController) GetProfile(c *gin.Context) {
 
 	profile, err := uc.userService.GetProfile(c.Request.Context(), userClaims.UserID)
 	if err != nil {
-		middleware.InternalServerError(c, "프로파일 조회 실패", err)
+		middleware.InternalServerError(c, "프로파일 조회 실패")
 		return
 	}
 
@@ -76,13 +76,13 @@ func (uc *UserController) UpdateProfile(c *gin.Context) {
 
 	var req models.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	profile, err := uc.userService.UpdateProfile(c.Request.Context(), userClaims.UserID, &req)
 	if err != nil {
-		middleware.InternalServerError(c, "프로파일 업데이트 실패", err)
+		middleware.InternalServerError(c, "프로파일 업데이트 실패")
 		return
 	}
 
@@ -119,13 +119,13 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	err := uc.userService.ChangePassword(c.Request.Context(), userClaims.UserID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "비밀번호 변경 실패", err)
+		middleware.BadRequestError(c, "비밀번호 변경 실패")
 		return
 	}
 
@@ -161,13 +161,13 @@ func (uc *UserController) ChangeEmail(c *gin.Context) {
 
 	var req models.ChangeEmailRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	err := uc.userService.ChangeEmail(c.Request.Context(), userClaims.UserID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "이메일 변경 실패", err)
+		middleware.BadRequestError(c, "이메일 변경 실패")
 		return
 	}
 
@@ -201,7 +201,7 @@ func (uc *UserController) Generate2FASecret(c *gin.Context) {
 
 	secret, err := uc.userService.Generate2FASecret(c.Request.Context(), userClaims.UserID)
 	if err != nil {
-		middleware.InternalServerError(c, "2FA 비밀키 생성 실패", err)
+		middleware.InternalServerError(c, "2FA 비밀키 생성 실패")
 		return
 	}
 
@@ -234,13 +234,13 @@ func (uc *UserController) Enable2FA(c *gin.Context) {
 
 	var req models.Enable2FARequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	_, err := uc.userService.Enable2FA(c.Request.Context(), userClaims.UserID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "2FA 활성화 실패", err)
+		middleware.BadRequestError(c, "2FA 활성화 실패")
 		return
 	}
 
@@ -274,7 +274,7 @@ func (uc *UserController) Disable2FA(c *gin.Context) {
 
 	err := uc.userService.Disable2FA(c.Request.Context(), userClaims.UserID)
 	if err != nil {
-		middleware.InternalServerError(c, "2FA 비활성화 실패", err)
+		middleware.InternalServerError(c, "2FA 비활성화 실패")
 		return
 	}
 
@@ -319,7 +319,7 @@ func (uc *UserController) GetActivities(c *gin.Context) {
 
 	activities, err := uc.userService.GetUserActivities(c.Request.Context(), userClaims.UserID, pagination)
 	if err != nil {
-		middleware.InternalServerError(c, "활동 로그 조회 실패", err)
+		middleware.InternalServerError(c, "활동 로그 조회 실패")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 
 	users, err := uc.userService.ListUsers(c.Request.Context(), filter)
 	if err != nil {
-		middleware.InternalServerError(c, "사용자 목록 조회 실패", err)
+		middleware.InternalServerError(c, "사용자 목록 조회 실패")
 		return
 	}
 
@@ -401,13 +401,13 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 func (uc *UserController) CreateUser(c *gin.Context) {
 	var req models.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	user, err := uc.userService.CreateUser(c.Request.Context(), &req)
 	if err != nil {
-		middleware.BadRequestError(c, "사용자 생성 실패", err)
+		middleware.BadRequestError(c, "사용자 생성 실패")
 		return
 	}
 
@@ -441,13 +441,13 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 func (uc *UserController) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		middleware.BadRequestError(c, "사용자 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "사용자 ID가 필요합니다")
 		return
 	}
 
 	user, err := uc.userService.GetUser(c.Request.Context(), userID)
 	if err != nil {
-		middleware.NotFoundError(c, "사용자를 찾을 수 없습니다", err)
+		middleware.NotFoundError(c, "사용자를 찾을 수 없습니다")
 		return
 	}
 
@@ -475,19 +475,19 @@ func (uc *UserController) GetUser(c *gin.Context) {
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		middleware.BadRequestError(c, "사용자 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "사용자 ID가 필요합니다")
 		return
 	}
 
 	var req models.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	user, err := uc.userService.UpdateUser(c.Request.Context(), userID, &req)
 	if err != nil {
-		middleware.BadRequestError(c, "사용자 업데이트 실패", err)
+		middleware.BadRequestError(c, "사용자 업데이트 실패")
 		return
 	}
 
@@ -522,13 +522,13 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
-		middleware.BadRequestError(c, "사용자 ID가 필요합니다", nil)
+		middleware.BadRequestError(c, "사용자 ID가 필요합니다")
 		return
 	}
 
 	err := uc.userService.DeleteUser(c.Request.Context(), userID)
 	if err != nil {
-		middleware.BadRequestError(c, "사용자 삭제 실패", err)
+		middleware.BadRequestError(c, "사용자 삭제 실패")
 		return
 	}
 
@@ -559,7 +559,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 func (uc *UserController) GetUserStats(c *gin.Context) {
 	stats, err := uc.userService.GetUserStats(c.Request.Context())
 	if err != nil {
-		middleware.InternalServerError(c, "사용자 통계 조회 실패", err)
+		middleware.InternalServerError(c, "사용자 통계 조회 실패")
 		return
 	}
 
@@ -584,13 +584,13 @@ func (uc *UserController) GetUserStats(c *gin.Context) {
 func (uc *UserController) RequestPasswordReset(c *gin.Context) {
 	var req models.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	err := uc.userService.RequestPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		middleware.InternalServerError(c, "비밀번호 재설정 요청 실패", err)
+		middleware.InternalServerError(c, "비밀번호 재설정 요청 실패")
 		return
 	}
 
@@ -613,13 +613,13 @@ func (uc *UserController) RequestPasswordReset(c *gin.Context) {
 func (uc *UserController) ConfirmPasswordReset(c *gin.Context) {
 	var req models.ConfirmResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		middleware.BadRequestError(c, "잘못된 요청 형식", err)
+		middleware.BadRequestError(c, "잘못된 요청 형식")
 		return
 	}
 
 	err := uc.userService.ConfirmPasswordReset(c.Request.Context(), &req)
 	if err != nil {
-		middleware.BadRequestError(c, "비밀번호 재설정 실패", err)
+		middleware.BadRequestError(c, "비밀번호 재설정 실패")
 		return
 	}
 

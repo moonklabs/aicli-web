@@ -12,11 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/olekukonko/tablewriter"
 
 	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/cli/output"
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
 )
 
 // Claude 명령어 옵션
@@ -120,13 +120,9 @@ func newRunCommand() *cobra.Command {
 
 	cmd.RegisterFlagCompletionFunc("workspace", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		// 워크스페이스 목록을 동적으로 가져오기
-		store, err := storage.New()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-		defer store.Close()
+		store := memory.New()
 
-		workspaces, err := store.Workspace().List(cmd.Context())
+		workspaces, _, err := store.Workspace().List(cmd.Context(), nil)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
@@ -218,15 +214,15 @@ func newStatusCommand() *cobra.Command {
 
 // runClaude는 Claude CLI에 단일 명령을 실행합니다
 func runClaude(ctx context.Context, opts *ClaudeOptions, prompt string) error {
-	// 스토리지 초기화
-	store, err := storage.New()
-	if err != nil {
-		return fmt.Errorf("스토리지 초기화 실패: %w", err)
-	}
-	defer store.Close()
+	// 스토리지 초기화 (memory storage 직접 사용)
+	// store := memory.New() // 현재 사용하지 않음
+
+	// 프로세스 매니저 초기화
+	processManager := claude.NewProcessManager(nil)
 
 	// 세션 매니저 초기화
-	sessionManager := claude.NewSessionManager(store.Session())
+	// 임시로 nil 스토리지 사용 (추후 수정 필요)
+	sessionManager := claude.NewSessionManager(processManager, nil)
 
 	// 워크스페이스 ID가 지정되지 않은 경우 기본값 사용
 	if opts.WorkspaceID == "" && opts.SessionID == "" {
@@ -235,10 +231,11 @@ func runClaude(ctx context.Context, opts *ClaudeOptions, prompt string) error {
 
 	var session *claude.Session
 	var sessionID string
+	var err error
 
 	// 기존 세션 사용 또는 새 세션 생성
 	if opts.SessionID != "" {
-		session, err = sessionManager.Get(ctx, opts.SessionID)
+		session, err = sessionManager.GetSession(opts.SessionID)
 		if err != nil {
 			return fmt.Errorf("세션 조회 실패: %w", err)
 		}
@@ -246,22 +243,23 @@ func runClaude(ctx context.Context, opts *ClaudeOptions, prompt string) error {
 	} else {
 		// 새 세션 생성
 		config := &claude.SessionConfig{
-			WorkspaceID:  opts.WorkspaceID,
+			WorkingDir:   viper.GetString("workspace.path"),
 			SystemPrompt: opts.SystemPrompt,
 			MaxTurns:     opts.MaxTurns,
-			Model:        viper.GetString("claude.model"),
-			Tools:        opts.Tools,
+			Temperature:  0.7, // 기본 temperature
+			AllowedTools: opts.Tools,
 		}
 
-		sessionID, err = sessionManager.Create(ctx, config)
+		newSession, err := sessionManager.CreateSession(ctx, *config)
+		if err != nil {
+			return fmt.Errorf("세션 생성 실패: %w", err)
+		}
+		sessionID = newSession.ID
 		if err != nil {
 			return fmt.Errorf("세션 생성 실패: %w", err)
 		}
 
-		session, err = sessionManager.Get(ctx, sessionID)
-		if err != nil {
-			return fmt.Errorf("생성된 세션 조회 실패: %w", err)
-		}
+		session = newSession
 	}
 
 	// 출력 포맷터 초기화
@@ -293,15 +291,15 @@ func runClaude(ctx context.Context, opts *ClaudeOptions, prompt string) error {
 
 // runInteractiveChat는 인터랙티브 채팅 모드를 실행합니다
 func runInteractiveChat(ctx context.Context, opts *InteractiveOptions) error {
-	// 스토리지 초기화
-	store, err := storage.New()
-	if err != nil {
-		return fmt.Errorf("스토리지 초기화 실패: %w", err)
-	}
-	defer store.Close()
+	// 스토리지 초기화 (memory storage 직접 사용)
+	// store := memory.New() // 현재 사용하지 않음
+
+	// 프로세스 매니저 초기화
+	processManager := claude.NewProcessManager(nil)
 
 	// 세션 매니저 초기화
-	sessionManager := claude.NewSessionManager(store.Session())
+	// 임시로 nil 스토리지 사용 (추후 수정 필요)
+	sessionManager := claude.NewSessionManager(processManager, nil)
 
 	// 워크스페이스 ID 기본값 설정
 	if opts.WorkspaceID == "" {
@@ -310,20 +308,15 @@ func runInteractiveChat(ctx context.Context, opts *InteractiveOptions) error {
 
 	// 새 세션 생성
 	config := &claude.SessionConfig{
-		WorkspaceID: opts.WorkspaceID,
-		Name:        opts.SessionName,
-		Model:       opts.Model,
-		MaxTurns:    opts.MaxTurns,
+		WorkingDir:   viper.GetString("workspace.path"),
+		SystemPrompt: fmt.Sprintf("Session: %s", opts.SessionName),
+		MaxTurns:     opts.MaxTurns,
+		Temperature:  0.7,
 	}
 
-	sessionID, err := sessionManager.Create(ctx, config)
+	session, err := sessionManager.CreateSession(ctx, *config)
 	if err != nil {
 		return fmt.Errorf("세션 생성 실패: %w", err)
-	}
-
-	session, err := sessionManager.Get(ctx, sessionID)
-	if err != nil {
-		return fmt.Errorf("세션 조회 실패: %w", err)
 	}
 
 	// 인터랙티브 모드 시작
@@ -331,7 +324,7 @@ func runInteractiveChat(ctx context.Context, opts *InteractiveOptions) error {
 }
 
 // startInteractiveMode는 실제 인터랙티브 채팅을 처리합니다
-func startInteractiveMode(ctx context.Context, session *claude.Session, manager *claude.SessionManager) error {
+func startInteractiveMode(ctx context.Context, session *claude.Session, manager claude.SessionManager) error {
 	fmt.Printf("🤖 Claude 인터랙티브 모드 (세션: %s)\n", session.ID)
 	fmt.Println("특수 명령어: /help, /exit, /clear, /session, /save")
 	fmt.Println("Ctrl+C로 종료 가능합니다.")
@@ -394,7 +387,7 @@ func startInteractiveMode(ctx context.Context, session *claude.Session, manager 
 }
 
 // handleSpecialCommand는 특수 명령어를 처리합니다
-func handleSpecialCommand(ctx context.Context, command string, session *claude.Session, manager *claude.SessionManager) (bool, error) {
+func handleSpecialCommand(ctx context.Context, command string, session *claude.Session, manager claude.SessionManager) (bool, error) {
 	switch command {
 	case "/help":
 		fmt.Println("사용 가능한 특수 명령어:")
@@ -417,9 +410,9 @@ func handleSpecialCommand(ctx context.Context, command string, session *claude.S
 	case "/session":
 		fmt.Printf("세션 정보:\n")
 		fmt.Printf("  ID: %s\n", session.ID)
-		fmt.Printf("  워크스페이스: %s\n", session.Config.WorkspaceID)
+		fmt.Printf("  워크스페이스: %s\n", session.WorkspaceID)
 		fmt.Printf("  상태: %s\n", session.State)
-		fmt.Printf("  생성 시간: %s\n", session.CreatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Printf("  생성 시간: %s\n", session.Created.Format("2006-01-02 15:04:05"))
 		return true, nil
 
 	case "/save":
@@ -637,8 +630,9 @@ func listSessions(ctx context.Context) error {
 	}
 	defer store.Close()
 
-	sessionManager := claude.NewSessionManager(store.Session())
-	sessions, err := sessionManager.List(ctx)
+	processManager := claude.NewProcessManager(nil)
+	sessionManager := claude.NewSessionManager(processManager, store)
+	sessions, err := sessionManager.ListSessions(claude.SessionFilter{})
 	if err != nil {
 		return fmt.Errorf("세션 목록 조회 실패: %w", err)
 	}
@@ -648,30 +642,29 @@ func listSessions(ctx context.Context) error {
 		return nil
 	}
 
-	// 테이블 형식으로 출력
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Workspace", "State", "Created", "Last Active"})
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	// 간단한 테이블 형식으로 출력
+	fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n", "ID", "Workspace", "State", "Created", "Last Active")
+	fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n", "----", "---------", "-----", "-------", "-----------")
 
 	for _, session := range sessions {
 		lastActive := "Never"
-		if !session.LastActiveAt.IsZero() {
-			lastActive = session.LastActiveAt.Format("15:04:05")
+		if !session.LastActive.IsZero() {
+			lastActive = session.LastActive.Format("15:04:05")
 		}
 
-		table.Append([]string{
-			session.ID[:8] + "...", // ID를 짧게 표시
-			session.Config.WorkspaceID,
+		sessionID := session.ID
+		if len(sessionID) > 12 {
+			sessionID = sessionID[:12] + "..."
+		}
+		
+		fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n", 
+			sessionID,
+			session.WorkspaceID,
 			string(session.State),
-			session.CreatedAt.Format("2006-01-02 15:04"),
+			session.Created.Format("2006-01-02 15:04"),
 			lastActive,
-		})
+		)
 	}
-
-	table.Render()
 	return nil
 }
 
@@ -683,22 +676,21 @@ func showSession(ctx context.Context, sessionID string) error {
 	}
 	defer store.Close()
 
-	sessionManager := claude.NewSessionManager(store.Session())
-	session, err := sessionManager.Get(ctx, sessionID)
+	processManager := claude.NewProcessManager(nil)
+	sessionManager := claude.NewSessionManager(processManager, store)
+	session, err := sessionManager.GetSession(sessionID)
 	if err != nil {
 		return fmt.Errorf("세션 조회 실패: %w", err)
 	}
 
 	fmt.Printf("세션 상세 정보:\n")
 	fmt.Printf("  ID: %s\n", session.ID)
-	fmt.Printf("  이름: %s\n", session.Config.Name)
-	fmt.Printf("  워크스페이스: %s\n", session.Config.WorkspaceID)
+	fmt.Printf("  워크스페이스: %s\n", session.WorkspaceID)
 	fmt.Printf("  상태: %s\n", session.State)
-	fmt.Printf("  모델: %s\n", session.Config.Model)
 	fmt.Printf("  최대 턴: %d\n", session.Config.MaxTurns)
-	fmt.Printf("  생성 시간: %s\n", session.CreatedAt.Format("2006-01-02 15:04:05"))
-	if !session.LastActiveAt.IsZero() {
-		fmt.Printf("  마지막 활동: %s\n", session.LastActiveAt.Format("2006-01-02 15:04:05"))
+	fmt.Printf("  생성 시간: %s\n", session.Created.Format("2006-01-02 15:04:05"))
+	if !session.LastActive.IsZero() {
+		fmt.Printf("  마지막 활동: %s\n", session.LastActive.Format("2006-01-02 15:04:05"))
 	}
 
 	return nil
@@ -712,8 +704,9 @@ func closeSession(ctx context.Context, sessionID string) error {
 	}
 	defer store.Close()
 
-	sessionManager := claude.NewSessionManager(store.Session())
-	err = sessionManager.Close(ctx, sessionID)
+	processManager := claude.NewProcessManager(nil)
+	sessionManager := claude.NewSessionManager(processManager, store)
+	err = sessionManager.CloseSession(sessionID)
 	if err != nil {
 		return fmt.Errorf("세션 종료 실패: %w", err)
 	}

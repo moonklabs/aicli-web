@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
+	gorilla_ws "github.com/gorilla/websocket"
 
 	"github.com/aicli/aicli-web/internal/api/websocket"
 	"github.com/aicli/aicli-web/internal/claude"

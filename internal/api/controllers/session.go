@@ -42,7 +42,10 @@ func (c *SessionController) Create(ctx *gin.Context) {
 	projectID := ctx.Param("id")
 	if projectID == "" {
 		ctx.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "프로젝트 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_PROJECT_ID",
+				Message: "프로젝트 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -50,7 +53,11 @@ func (c *SessionController) Create(ctx *gin.Context) {
 	var req models.SessionCreateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "잘못된 요청 형식: " + err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "INVALID_REQUEST",
+				Message: "잘못된 요청 형식",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -73,7 +80,10 @@ func (c *SessionController) Create(ctx *gin.Context) {
 		}
 		
 		ctx.JSON(statusCode, models.ErrorResponse{
-			Error: err.Error(),
+			Error: models.ErrorDetail{
+				Code:    "SESSION_CREATE_FAILED",
+				Message: err.Error(),
+			},
 		})
 		return
 	}
@@ -129,23 +139,25 @@ func (c *SessionController) List(ctx *gin.Context) {
 	if err != nil {
 		c.logger.Error("세션 목록 조회 실패", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error: "세션 목록 조회 실패",
+			Error: models.ErrorDetail{
+				Code:    "SESSION_LIST_FAILED",
+				Message: "세션 목록 조회 실패",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
 	
 	// Response 변환
-	responses := make([]*models.SessionResponse, len(result.Items))
-	for i, session := range result.Items {
+	sessions := result.Data.([]*models.Session)
+	responses := make([]*models.SessionResponse, len(sessions))
+	for i, session := range sessions {
 		responses[i] = session.ToResponse()
 	}
 	
-	ctx.JSON(http.StatusOK, models.PagingResponse[*models.SessionResponse]{
-		Items:      responses,
-		Total:      result.Total,
-		Page:       result.Page,
-		Limit:      result.Limit,
-		TotalPages: result.TotalPages,
+	ctx.JSON(http.StatusOK, models.PaginationResponse{
+		Data: responses,
+		Meta: result.Meta,
 	})
 }
 
@@ -164,7 +176,10 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "세션 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_SESSION_ID",
+				Message: "세션 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -173,7 +188,10 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 	if err != nil {
 		if err.Error() == "세션을 찾을 수 없습니다" {
 			ctx.JSON(http.StatusNotFound, models.ErrorResponse{
-				Error: err.Error(),
+				Error: models.ErrorDetail{
+					Code:    "SESSION_NOT_FOUND",
+					Message: err.Error(),
+				},
 			})
 			return
 		}
@@ -183,7 +201,11 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 			zap.Error(err),
 		)
 		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error: "세션 조회 실패",
+			Error: models.ErrorDetail{
+				Code:    "SESSION_GET_FAILED",
+				Message: "세션 조회 실패",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -206,7 +228,10 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "세션 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_SESSION_ID",
+				Message: "세션 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -215,7 +240,10 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 	if err != nil {
 		if err.Error() == "세션을 찾을 수 없습니다" {
 			ctx.JSON(http.StatusNotFound, models.ErrorResponse{
-				Error: err.Error(),
+				Error: models.ErrorDetail{
+					Code:    "SESSION_NOT_FOUND",
+					Message: err.Error(),
+				},
 			})
 			return
 		}
@@ -225,7 +253,11 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 			zap.Error(err),
 		)
 		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error: "세션 종료 실패",
+			Error: models.ErrorDetail{
+				Code:    "SESSION_TERMINATE_FAILED",
+				Message: "세션 종료 실패",
+				Details: err.Error(),
+			},
 		})
 		return
 	}
@@ -248,7 +280,10 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusBadRequest, models.ErrorResponse{
-			Error: "세션 ID가 필요합니다",
+			Error: models.ErrorDetail{
+				Code:    "MISSING_SESSION_ID",
+				Message: "세션 ID가 필요합니다",
+			},
 		})
 		return
 	}
@@ -257,7 +292,10 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 	if err != nil {
 		if err.Error() == "세션을 찾을 수 없습니다" {
 			ctx.JSON(http.StatusNotFound, models.ErrorResponse{
-				Error: err.Error(),
+				Error: models.ErrorDetail{
+					Code:    "SESSION_NOT_FOUND",
+					Message: err.Error(),
+				},
 			})
 			return
 		}
@@ -267,7 +305,11 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 			zap.Error(err),
 		)
 		ctx.JSON(http.StatusInternalServerError, models.ErrorResponse{
-			Error: "세션 활동 업데이트 실패",
+			Error: models.ErrorDetail{
+				Code:    "SESSION_UPDATE_ACTIVITY_FAILED",
+				Message: "세션 활동 업데이트 실패",
+				Details: err.Error(),
+			},
 		})
 		return
 	}

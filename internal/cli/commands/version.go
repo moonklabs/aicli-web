@@ -41,7 +41,7 @@ func NewVersionCmd() *cobra.Command {
 			fmt.Printf("AICLI - AI-powered Code Management CLI\n")
 			fmt.Printf("Version:      %s\n", version.Version)
 			fmt.Printf("Git Commit:   %s\n", version.GitCommit)
-			fmt.Printf("Built:        %s\n", version.BuildDate)
+			fmt.Printf("Built:        %s\n", version.BuildTime)
 			fmt.Printf("Go Version:   %s\n", runtime.Version())
 			fmt.Printf("OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
 			

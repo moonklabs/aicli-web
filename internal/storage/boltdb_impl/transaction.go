@@ -9,6 +9,7 @@ import (
 
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/interfaces"
 )
 
 // transaction BoltDB 트랜잭션 래퍼
@@ -242,49 +243,6 @@ func (tws *transactionWorkspaceStorage) GetByOwnerID(ctx context.Context, ownerI
 	return result.Items, result.TotalCount, nil
 }
 
-// CountByOwner 소유자별 워크스페이스 개수 조회 (트랜잭션 내)
-func (tws *transactionWorkspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
-	if tws.tx.closed {
-		return 0, fmt.Errorf("transaction is closed")
-	}
-	
-	boltTx := tws.tx.getBoltTx()
-	
-	// 인덱스에서 소유자 ID로 워크스페이스 조회
-	indexer := newIndexManager(tws.tx.storage)
-	workspaceIDs, err := indexer.GetFromIndex(boltTx, IndexOwnerWorkspaces, ownerID)
-	if err != nil {
-		return 0, err
-	}
-	
-	// Soft delete되지 않은 워크스페이스만 카운트
-	count := 0
-	workspaceBucket := boltTx.Bucket([]byte(bucketWorkspaces))
-	if workspaceBucket == nil {
-		return 0, nil
-	}
-	
-	serializer := &WorkspaceSerializer{}
-	for _, id := range workspaceIDs {
-		data := workspaceBucket.Get([]byte(id))
-		if data == nil {
-			continue
-		}
-		
-		workspace, err := serializer.Unmarshal(data)
-		if err != nil {
-			continue
-		}
-		
-		// Soft delete 체크
-		if workspace.DeletedAt == nil {
-			count++
-		}
-	}
-	
-	return count, nil
-}
-
 // Update 워크스페이스 업데이트 (트랜잭션 내)
 func (tws *transactionWorkspaceStorage) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	if tws.tx.closed {
@@ -504,7 +462,7 @@ func (tss *transactionSessionStorage) GetByID(ctx context.Context, id string) (*
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 
-func (tss *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
+func (tss *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *PagingRequest) (*PagingResponse[*models.Session], error) {
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 
@@ -534,7 +492,7 @@ func (tts *transactionTaskStorage) GetByID(ctx context.Context, id string) (*mod
 	return nil, fmt.Errorf("task transaction methods not implemented yet")
 }
 
-func (tts *transactionTaskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error) {
+func (tts *transactionTaskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *PagingRequest) ([]*models.Task, int, error) {
 	return nil, 0, fmt.Errorf("task transaction methods not implemented yet")
 }
 
@@ -546,7 +504,7 @@ func (tts *transactionTaskStorage) Delete(ctx context.Context, id string) error 
 	return fmt.Errorf("task transaction methods not implemented yet")
 }
 
-func (tts *transactionTaskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *models.PaginationRequest) ([]*models.Task, int, error) {
+func (tts *transactionTaskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *PagingRequest) ([]*models.Task, int, error) {
 	return nil, 0, fmt.Errorf("task transaction methods not implemented yet")
 }
 

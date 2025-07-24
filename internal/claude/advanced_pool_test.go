@@ -2,6 +2,7 @@ package claude
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 	
@@ -68,8 +69,11 @@ func TestAdvancedSessionPool(t *testing.T) {
 
 // TestAutoScaler는 자동 스케일러 기능을 테스트합니다
 func TestAutoScaler(t *testing.T) {
-	// Mock 풀 생성
-	mockPool := &MockAdvancedSessionPool{}
+	// 실제 풀 생성 (MockAdvancedSessionPool 대신)
+	mockSessionManager := &MockSessionManager{}
+	poolConfig := DefaultAdvancedPoolConfig()
+	realPool := NewAdvancedSessionPool(mockSessionManager, poolConfig)
+	defer realPool.Shutdown()
 	
 	config := AutoScalingConfig{
 		Enabled:            true,
@@ -83,7 +87,7 @@ func TestAutoScaler(t *testing.T) {
 		ScaleFactor:        1.5,
 	}
 	
-	scaler := NewAutoScaler(mockPool, config)
+	scaler := NewAutoScaler(realPool, config)
 	defer scaler.Stop()
 	
 	t.Run("Scaler Initialization", func(t *testing.T) {
@@ -105,7 +109,11 @@ func TestAutoScaler(t *testing.T) {
 
 // TestPoolMonitor는 풀 모니터 기능을 테스트합니다
 func TestPoolMonitor(t *testing.T) {
-	mockPool := &MockAdvancedSessionPool{}
+	// 실제 풀 생성 (MockAdvancedSessionPool 대신)
+	mockSessionManager := &MockSessionManager{}
+	poolConfig := DefaultAdvancedPoolConfig()
+	realPool := NewAdvancedSessionPool(mockSessionManager, poolConfig)
+	defer realPool.Shutdown()
 	
 	config := MonitoringConfig{
 		MetricsInterval:      30 * time.Second,
@@ -119,7 +127,7 @@ func TestPoolMonitor(t *testing.T) {
 		},
 	}
 	
-	monitor := NewPoolMonitor(mockPool, config)
+	monitor := NewPoolMonitor(realPool, config)
 	defer monitor.Stop()
 	
 	t.Run("Monitor Initialization", func(t *testing.T) {
@@ -153,7 +161,11 @@ func TestPoolMonitor(t *testing.T) {
 
 // TestLoadBalancer는 로드 밸런서 기능을 테스트합니다
 func TestLoadBalancer(t *testing.T) {
-	mockPool := &MockAdvancedSessionPool{}
+	// 실제 풀 생성 (MockAdvancedSessionPool 대신)
+	mockSessionManager := &MockSessionManager{}
+	poolConfig := DefaultAdvancedPoolConfig()
+	realPool := NewAdvancedSessionPool(mockSessionManager, poolConfig)
+	defer realPool.Shutdown()
 	
 	config := LoadBalancingConfig{
 		Strategy:        WeightedRoundRobin,
@@ -163,7 +175,7 @@ func TestLoadBalancer(t *testing.T) {
 		StickyDuration:  30 * time.Minute,
 	}
 	
-	lb := NewLoadBalancer(mockPool, config)
+	lb := NewLoadBalancer(realPool, config)
 	
 	t.Run("LoadBalancer Initialization", func(t *testing.T) {
 		assert.NotNil(t, lb)
@@ -197,7 +209,11 @@ func TestLoadBalancer(t *testing.T) {
 
 // TestHealthChecker는 헬스 체커 기능을 테스트합니다
 func TestHealthChecker(t *testing.T) {
-	mockPool := &MockAdvancedSessionPool{}
+	// 실제 풀 생성 (MockAdvancedSessionPool 대신)
+	mockSessionManager := &MockSessionManager{}
+	poolConfig := DefaultAdvancedPoolConfig()
+	realPool := NewAdvancedSessionPool(mockSessionManager, poolConfig)
+	defer realPool.Shutdown()
 	
 	config := HealthCheckConfig{
 		Interval:         30 * time.Second,
@@ -206,7 +222,7 @@ func TestHealthChecker(t *testing.T) {
 		SuccessThreshold: 2,
 	}
 	
-	hc := NewHealthChecker(mockPool, config)
+	hc := NewHealthChecker(realPool, config)
 	defer hc.Stop()
 	
 	t.Run("HealthChecker Initialization", func(t *testing.T) {
@@ -352,7 +368,7 @@ func (m *MockSessionManager) CreateSession(ctx context.Context, config SessionCo
 	return nil, fmt.Errorf("mock: session creation not implemented")
 }
 
-func (m *MockSessionManager) GetSession(ctx context.Context, sessionID string) (*Session, error) {
+func (m *MockSessionManager) GetSession(sessionID string) (*Session, error) {
 	return nil, fmt.Errorf("mock: session not found")
 }
 
@@ -364,24 +380,7 @@ func (m *MockSessionManager) CloseSession(sessionID string) error {
 	return nil
 }
 
-func (m *MockSessionManager) ListSessions(ctx context.Context) ([]*Session, error) {
+func (m *MockSessionManager) ListSessions(filter SessionFilter) ([]*Session, error) {
 	return []*Session{}, nil
 }
 
-type MockAdvancedSessionPool struct{}
-
-func (m *MockAdvancedSessionPool) GetPoolStats() PoolStatistics {
-	return PoolStatistics{
-		Size:           0,
-		ActiveSessions: 0,
-		IdleSessions:   0,
-	}
-}
-
-func (m *MockAdvancedSessionPool) Scale(targetSize int) error {
-	return fmt.Errorf("mock: scaling not implemented")
-}
-
-func (m *MockAdvancedSessionPool) basePool() interface{} {
-	return nil
-}

@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// LogEntry는 로그 엔트리 구조체입니다.
-type LogEntry struct {
+// LogsEntry는 로그 엔트리 구조체입니다.
+type LogsEntry struct {
 	Timestamp string `json:"timestamp"`
 	Level     string `json:"level"`
 	Message   string `json:"message"`
@@ -17,7 +17,7 @@ type LogEntry struct {
 
 // LogsResponse는 로그 응답 구조체입니다.
 type LogsResponse struct {
-	Logs  []LogEntry `json:"logs"`
+	Logs  []LogsEntry `json:"logs"`
 	Total int        `json:"total"`
 	Since string     `json:"since,omitempty"`
 	Until string     `json:"until,omitempty"`
@@ -41,7 +41,7 @@ func GetWorkspaceLogs(c *gin.Context) {
 	follow := c.Query("follow") == "true"
 
 	// TODO: 실제 로그 데이터베이스에서 조회
-	logs := []LogEntry{
+	logs := []LogsEntry{
 		{
 			Timestamp: "2025-01-20T10:00:00Z",
 			Level:     "info",
@@ -93,7 +93,7 @@ func GetTaskLogs(c *gin.Context) {
 	follow := c.Query("follow") == "true"
 
 	// TODO: 실제 로그 데이터베이스에서 조회
-	logs := []LogEntry{
+	logs := []LogsEntry{
 		{
 			Timestamp: "2025-01-20T10:00:01Z",
 			Level:     "info",

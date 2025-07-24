@@ -96,19 +96,20 @@ func (f *DefaultStorageFactory) Create(config StorageConfig) (Storage, error) {
 
 // createMemoryStorage 메모리 스토리지 생성
 func (f *DefaultStorageFactory) createMemoryStorage(config StorageConfig) (Storage, error) {
-	// 메모리 어댑터 사용
-	return NewMemoryAdapter(), nil
+	// 메모리 스토리지는 순환 의존성 회피를 위해 여기서 직접 생성하지 않습니다
+	// new.go의 NewMemory() 함수를 사용하세요
+	return nil, fmt.Errorf("메모리 스토리지는 storage.NewMemory()를 사용하세요")
 }
 
 // createSQLiteStorage SQLite 스토리지 생성
 func (f *DefaultStorageFactory) createSQLiteStorage(config StorageConfig) (Storage, error) {
-	// SQLite 구현은 T04_S03에서 구현 예정
+	// SQLite 스토리지는 순환 의존성 회피를 위해 여기서 직접 생성하지 않습니다
 	return nil, fmt.Errorf("SQLite 스토리지는 아직 구현되지 않았습니다")
 }
 
 // createBoltDBStorage BoltDB 스토리지 생성  
 func (f *DefaultStorageFactory) createBoltDBStorage(config StorageConfig) (Storage, error) {
-	// BoltDB 구현은 T05_S03에서 구현 예정
+	// BoltDB 스토리지는 순환 의존성 회피를 위해 여기서 직접 생성하지 않습니다
 	return nil, fmt.Errorf("BoltDB 스토리지는 아직 구현되지 않았습니다")
 }
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 
 	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/websocket"
 )
@@ -19,12 +20,12 @@ import (
 // ClaudeHandler는 Claude 관련 API 요청을 처리합니다.
 type ClaudeHandler struct {
 	claudeWrapper claude.Wrapper
-	sessionStore  storage.SessionRepository
+	sessionStore  storage.SessionStorage
 	wsHub         *websocket.Hub
 }
 
 // NewClaudeHandler는 새로운 Claude 핸들러를 생성합니다.
-func NewClaudeHandler(wrapper claude.Wrapper, store storage.SessionRepository, hub *websocket.Hub) *ClaudeHandler {
+func NewClaudeHandler(wrapper claude.Wrapper, store storage.SessionStorage, hub *websocket.Hub) *ClaudeHandler {
 	return &ClaudeHandler{
 		claudeWrapper: wrapper,
 		sessionStore:  store,
@@ -96,22 +97,39 @@ func (h *ClaudeHandler) Execute(c *gin.Context) {
 // getOrCreateSession은 세션을 생성하거나 기존 세션을 가져옵니다.
 func (h *ClaudeHandler) getOrCreateSession(c *gin.Context, req ExecuteRequest) (*claude.Session, error) {
 	// 기존 활성 세션 검색
-	sessions, err := h.sessionStore.FindByWorkspace(req.WorkspaceID)
+	filter := &models.SessionFilter{ProjectID: req.WorkspaceID}
+	result, err := h.sessionStore.List(c.Request.Context(), filter, nil)
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return nil, err
 	}
+	sessions := result.Data.([]*models.Session)
 
 	// 활성 세션 중에서 재사용 가능한 세션 찾기
 	for _, session := range sessions {
-		if session.Status == "idle" && session.WorkspaceID == req.WorkspaceID {
-			// 세션 설정 업데이트
-			if req.SystemPrompt != "" {
-				session.SystemPrompt = req.SystemPrompt
+		if session.Status == models.SessionIdle && session.ProjectID == req.WorkspaceID {
+			// models.Session을 claude.Session으로 변환
+			claudeSession := &claude.Session{
+				ID:          session.ID,
+				WorkspaceID: session.ProjectID,
+				UserID:      "", // models.Session에는 UserID가 없음
+				Config: claude.SessionConfig{
+					WorkingDir:   "/tmp",
+					SystemPrompt: req.SystemPrompt,
+					MaxTurns:     req.MaxTurns,
+					AllowedTools: req.Tools,
+					Temperature:  0.7,
+				},
+				State:      claude.SessionStateIdle,
+				Created:    session.CreatedAt,
+				LastActive: session.LastActive,
+				Metadata:   make(map[string]interface{}),
 			}
-			if req.MaxTurns > 0 {
-				session.MaxTurns = req.MaxTurns
+			// models.Session의 메타데이터를 claude.Session으로 변환
+			for k, v := range session.Metadata {
+				claudeSession.Metadata[k] = v
 			}
-			return session, nil
+			return claudeSession, nil
 		}
 	}
 
@@ -142,15 +160,17 @@ func (h *ClaudeHandler) executeAsync(ctx context.Context, session *claude.Sessio
 		if r := recover(); r != nil {
 			// 패닉 복구 - WebSocket을 통해 에러 전송
 			if h.wsHub != nil {
+				data := map[string]interface{}{
+					"execution_id": executionID,
+					"error":        fmt.Sprintf("Execution panic: %v", r),
+					"timestamp":    time.Now(),
+				}
+				dataBytes, _ := json.Marshal(data)
 				errorMsg := websocket.Message{
 					Type: "execution_error",
-					Data: map[string]interface{}{
-						"execution_id": executionID,
-						"error":        fmt.Sprintf("Execution panic: %v", r),
-						"timestamp":    time.Now(),
-					},
+					Data: dataBytes,
 				}
-				h.wsHub.Broadcast <- errorMsg
+				h.wsHub.Broadcast(&errorMsg)
 			}
 		}
 	}()
@@ -160,32 +180,36 @@ func (h *ClaudeHandler) executeAsync(ctx context.Context, session *claude.Sessio
 	if err != nil {
 		// 에러 메시지를 WebSocket으로 전송
 		if h.wsHub != nil && req.Stream {
+			data := map[string]interface{}{
+				"execution_id": executionID,
+				"session_id":   session.ID,
+				"error":        err.Error(),
+				"timestamp":    time.Now(),
+			}
+			dataBytes, _ := json.Marshal(data)
 			errorMsg := websocket.Message{
 				Type: "execution_error",
-				Data: map[string]interface{}{
-					"execution_id": executionID,
-					"session_id":   session.ID,
-					"error":        err.Error(),
-					"timestamp":    time.Now(),
-				},
+				Data: dataBytes,
 			}
-			h.wsHub.Broadcast <- errorMsg
+			h.wsHub.Broadcast(&errorMsg)
 		}
 		return
 	}
 
 	// 성공 결과를 WebSocket으로 전송
 	if h.wsHub != nil && req.Stream {
+		data := map[string]interface{}{
+			"execution_id": executionID,
+			"session_id":   session.ID,
+			"result":       result,
+			"timestamp":    time.Now(),
+		}
+		dataBytes, _ := json.Marshal(data)
 		successMsg := websocket.Message{
 			Type: "execution_complete",
-			Data: map[string]interface{}{
-				"execution_id": executionID,
-				"session_id":   session.ID,
-				"result":       result,
-				"timestamp":    time.Now(),
-			},
+			Data: dataBytes,
 		}
-		h.wsHub.Broadcast <- successMsg
+		h.wsHub.Broadcast(&successMsg)
 	}
 }
 
@@ -356,7 +380,7 @@ func toSessionResponse(session *claude.Session) SessionResponse {
 	return SessionResponse{
 		ID:           session.ID,
 		WorkspaceID:  session.WorkspaceID,
-		Status:       session.State.Status,
+		Status:       string(session.State),
 		SystemPrompt: session.Config.SystemPrompt,
 		MaxTurns:     session.Config.MaxTurns,
 		CreatedAt:    session.Created,

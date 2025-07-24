@@ -157,6 +157,16 @@ func AbortWithError(c *gin.Context, statusCode int, code string, message string,
 	c.Abort()
 }
 
+// BadRequestError는 잘못된 요청 에러를 처리합니다.
+func BadRequestError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusBadRequest, ErrBadRequest, message, nil)
+}
+
+// InternalServerError는 내부 서버 에러를 처리합니다.
+func InternalServerError(c *gin.Context, message string) {
+	AbortWithError(c, http.StatusInternalServerError, ErrInternal, message, nil)
+}
+
 // ValidationError는 유효성 검사 에러를 처리합니다.
 func ValidationError(c *gin.Context, message string, details interface{}) {
 	AbortWithError(c, http.StatusBadRequest, ErrValidation, message, details)
