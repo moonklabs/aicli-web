@@ -1,4 +1,4 @@
-package storage
+package storage_test
 
 import (
 	"context"
@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/memory"
 )
 
 // TestDefaultTransactionOptions 기본 트랜잭션 옵션 테스트
 func TestDefaultTransactionOptions(t *testing.T) {
-	opts := DefaultTransactionOptions()
+	opts := storage.DefaultTransactionOptions()
 	
 	assert.False(t, opts.ReadOnly)
 	assert.Empty(t, opts.IsolationLevel)
@@ -101,28 +102,28 @@ func TestBaseTx(t *testing.T) {
 
 // MockTransactionalStorage 테스트용 트랜잭션 스토리지
 type MockTransactionalStorage struct {
-	Storage
+	storage.Storage
 	beginTxCalled    int
 	withTxCalled     int
 	beginTxError     error
 	withTxError      error
-	transactions     []*BaseTx
+	transactions     []*storage.BaseTx
 }
 
 // BeginTx 새 트랜잭션 시작
-func (m *MockTransactionalStorage) BeginTx(ctx context.Context) (Transaction, error) {
+func (m *MockTransactionalStorage) BeginTx(ctx context.Context) (storage.Transaction, error) {
 	m.beginTxCalled++
 	if m.beginTxError != nil {
 		return nil, m.beginTxError
 	}
 	
-	tx := NewBaseTx(ctx, m.Storage)
+	tx := storage.NewBaseTx(ctx, m.Storage)
 	m.transactions = append(m.transactions, tx)
 	return tx, nil
 }
 
 // WithTx 트랜잭션 내에서 작업 실행
-func (m *MockTransactionalStorage) WithTx(ctx context.Context, fn func(tx Transaction) error) error {
+func (m *MockTransactionalStorage) WithTx(ctx context.Context, fn func(tx storage.Transaction) error) error {
 	m.withTxCalled++
 	if m.withTxError != nil {
 		return m.withTxError

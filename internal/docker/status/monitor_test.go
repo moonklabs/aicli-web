@@ -131,11 +131,9 @@ func TestResourceMonitor_GetResourceSummary(t *testing.T) {
 	mockFactory := NewMockDockerManager()
 
 	// 테스트 시스템 통계 설정
-	systemStats := &docker.SystemStats{
+	_ = &docker.SystemStats{
 		ContainersRunning: 3,
-		ContainersPaused:  0,
 		ContainersStopped: 1,
-		Images:           5,
 	}
 
 	// 여러 컨테이너 통계 설정

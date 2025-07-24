@@ -94,13 +94,15 @@ func NewClient(id, userID string, conn *websocket.Conn, hub *Hub, config *Client
 	}
 	
 	// WebSocket 설정
-	conn.SetReadLimit(config.MaxMessageSize)
-	conn.SetReadDeadline(time.Now().Add(config.ReadTimeout))
-	conn.SetPongHandler(func(string) error {
-		client.lastPong = time.Now()
+	if conn != nil {
+		conn.SetReadLimit(config.MaxMessageSize)
 		conn.SetReadDeadline(time.Now().Add(config.ReadTimeout))
-		return nil
-	})
+		conn.SetPongHandler(func(string) error {
+			client.lastPong = time.Now()
+			conn.SetReadDeadline(time.Now().Add(config.ReadTimeout))
+			return nil
+		})
+	}
 	
 	return client
 }
