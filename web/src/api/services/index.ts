@@ -4,6 +4,7 @@ export { authApi } from './auth'
 export { workspaceApi } from './workspace'
 export { dockerApi } from './docker'
 export { claudeApi } from './claude'
+export { sessionApi } from './session'
 
 // 타입들도 함께 내보내기
 export type * from '@/types/api'

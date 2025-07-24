@@ -9,6 +9,7 @@ const WorkspaceView = () => import('@/views/WorkspaceView.vue')
 const WorkspaceDetailView = () => import('@/views/WorkspaceDetailView.vue')
 const TerminalView = () => import('@/views/TerminalView.vue')
 const DockerView = () => import('@/views/DockerView.vue')
+const SessionManagementView = () => import('@/views/SessionManagementView.vue')
 const TerminalTest = () => import('@/views/TerminalTest.vue')
 const LoginView = () => import('@/views/LoginView.vue')
 const OAuthCallbackView = () => import('@/views/OAuthCallbackView.vue')
@@ -112,6 +113,18 @@ const router = createRouter({
         adminOnly: true,
         permissions: [
           { resource: 'system', action: 'manage' }
+        ]
+      },
+    },
+    {
+      path: '/profile/sessions',
+      name: 'session-management',
+      component: SessionManagementView,
+      meta: {
+        requiresAuth: true,
+        title: '세션 관리',
+        permissions: [
+          { resource: 'user', action: 'read' }
         ]
       },
     },

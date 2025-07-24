@@ -284,6 +284,84 @@ export interface UserPermissions {
   computedAt: string
 }
 
+// 세션 관리 관련 타입
+export interface UserSession {
+  id: string
+  userId: string
+  deviceInfo: {
+    browser: string
+    os: string
+    device: string
+    userAgent: string
+  }
+  locationInfo?: {
+    ip: string
+    country?: string
+    city?: string
+    timezone?: string
+  }
+  isCurrentSession: boolean
+  createdAt: string
+  lastActivityAt: string
+  expiresAt: string
+  status: 'active' | 'expired' | 'terminated'
+}
+
+export interface SessionSecurityEvent {
+  id: string
+  sessionId: string
+  userId: string
+  eventType: 'login' | 'logout' | 'suspicious_activity' | 'password_change' | 'device_change' | 'location_change'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  description: string
+  metadata: Record<string, any>
+  ipAddress: string
+  userAgent: string
+  createdAt: string
+}
+
+export interface SessionSecuritySettings {
+  userId: string
+  sessionTimeoutMinutes: number
+  maxConcurrentSessions: number
+  allowMultipleDevices: boolean
+  requireReauthForSensitiveActions: boolean
+  notifyOnNewDevice: boolean
+  notifyOnSuspiciousActivity: boolean
+  autoTerminateInactiveSessions: boolean
+  inactivityTimeoutMinutes: number
+  updatedAt: string
+}
+
+export interface TerminateSessionRequest {
+  sessionId: string
+  reason?: string
+}
+
+export interface TerminateAllSessionsRequest {
+  excludeCurrentSession: boolean
+  reason?: string
+}
+
+export interface UpdateSessionSettingsRequest {
+  sessionTimeoutMinutes?: number
+  maxConcurrentSessions?: number
+  allowMultipleDevices?: boolean
+  requireReauthForSensitiveActions?: boolean
+  notifyOnNewDevice?: boolean
+  notifyOnSuspiciousActivity?: boolean
+  autoTerminateInactiveSessions?: boolean
+  inactivityTimeoutMinutes?: number
+}
+
+export interface SessionStatsResponse {
+  totalActiveSessions: number
+  currentDevices: number
+  suspiciousActivities: number
+  lastPasswordChange?: string
+  accountCreatedAt: string
+}
+
 // WebSocket 메시지 타입
 export interface WebSocketMessage {
   type: string
@@ -306,5 +384,14 @@ export interface WorkspaceStatusMessage extends WebSocketMessage {
     status: string
     containerId?: string
     message?: string
+  }
+}
+
+export interface SessionUpdateMessage extends WebSocketMessage {
+  payload: {
+    type: 'session_created' | 'session_terminated' | 'session_activity' | 'security_event'
+    sessionId: string
+    userId: string
+    data: UserSession | SessionSecurityEvent
   }
 }
