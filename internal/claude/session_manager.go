@@ -115,6 +115,7 @@ const (
 	SessionStateError
 )
 
+
 // String은 SessionState의 문자열 표현을 반환합니다
 func (s SessionState) String() string {
 	states := []string{

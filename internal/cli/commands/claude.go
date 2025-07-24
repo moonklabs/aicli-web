@@ -660,7 +660,7 @@ func listSessions(ctx context.Context) error {
 		fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n", 
 			sessionID,
 			session.WorkspaceID,
-			string(session.State),
+			session.State.String(),
 			session.Created.Format("2006-01-02 15:04"),
 			lastActive,
 		)

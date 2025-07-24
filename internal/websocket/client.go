@@ -17,7 +17,7 @@ type Client struct {
 	Conn   *websocket.Conn `json:"-"`
 	
 	// 채널 관리
-	channels   map[string]bool `json:"channels"`
+	channels   map[string]bool `json:"-"`
 	channelsMu sync.RWMutex    `json:"-"`
 	
 	// 메시지 전송

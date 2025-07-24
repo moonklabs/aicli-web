@@ -229,8 +229,6 @@ Use --source to see where each value comes from.`,
 				// 일반 출력 (테이블/JSON/YAML)
 				return formatter.Print(allSettings)
 			}
-
-			return nil
 		},
 	}
 

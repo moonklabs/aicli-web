@@ -262,10 +262,19 @@ func (h *Hub) GetStats() *HubStats {
 	h.stats.mu.RLock()
 	defer h.stats.mu.RUnlock()
 	
-	// 복사본 반환
-	statsCopy := *h.stats
-	statsCopy.ChannelSubscriptions = make(map[string]int)
-	statsCopy.ClientsByUser = make(map[string]int)
+	// 뮤텍스를 제외하고 개별 필드 복사
+	statsCopy := &HubStats{
+		ConnectedClients:     h.stats.ConnectedClients,
+		AuthenticatedClients: h.stats.AuthenticatedClients,
+		TotalConnections:     h.stats.TotalConnections,
+		TotalDisconnections:  h.stats.TotalDisconnections,
+		MessagesSent:         h.stats.MessagesSent,
+		MessagesReceived:     h.stats.MessagesReceived,
+		StartTime:            h.stats.StartTime,
+		LastUpdate:           h.stats.LastUpdate,
+		ChannelSubscriptions: make(map[string]int),
+		ClientsByUser:        make(map[string]int),
+	}
 	
 	for k, v := range h.stats.ChannelSubscriptions {
 		statsCopy.ChannelSubscriptions[k] = v
@@ -274,7 +283,7 @@ func (h *Hub) GetStats() *HubStats {
 		statsCopy.ClientsByUser[k] = v
 	}
 	
-	return &statsCopy
+	return statsCopy
 }
 
 // run 메인 루프
