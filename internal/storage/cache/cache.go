@@ -150,7 +150,7 @@ func (mc *MemoryCache) cleanup() {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
 	
-	now := time.Now()
+	// now := time.Now() // 사용하지 않음
 	var expiredKeys []string
 	var freedSize int64
 	

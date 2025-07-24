@@ -11,14 +11,16 @@ type Claims struct {
 	jwt.RegisteredClaims
 	UserID   string `json:"user_id"`
 	UserName string `json:"username"`
+	Email    string `json:"email,omitempty"`
 	Role     string `json:"role"`
 }
 
 // NewClaims 새로운 JWT 클레임 생성
-func NewClaims(userID, userName, role string, expirationTime time.Time) *Claims {
+func NewClaims(userID, userName, email, role string, expirationTime time.Time) *Claims {
 	return &Claims{
 		UserID:   userID,
 		UserName: userName,
+		Email:    email,
 		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),

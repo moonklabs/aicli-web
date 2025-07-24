@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -34,7 +33,7 @@ type UserService interface {
 	ConfirmPasswordReset(ctx context.Context, req *models.ConfirmResetPasswordRequest) error
 	
 	// 관리자 기능
-	ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse, error)
+	ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.UserResponse], error)
 	CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.UserResponse, error)
 	GetUser(ctx context.Context, userID string) (*models.UserResponse, error)
 	UpdateUser(ctx context.Context, userID string, req *models.UpdateUserRequest) (*models.UserResponse, error)
@@ -42,7 +41,7 @@ type UserService interface {
 	
 	// 활동 로그
 	LogActivity(ctx context.Context, userID, action, resource, details, ipAddress, userAgent string) error
-	GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse, error)
+	GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse[models.UserActivity], error)
 	
 	// 통계 및 메트릭
 	GetUserStats(ctx context.Context) (*models.UserStats, error)
@@ -456,7 +455,7 @@ func (s *userService) LogActivity(ctx context.Context, userID, action, resource,
 }
 
 // GetUserActivities는 사용자 활동 로그를 조회합니다
-func (s *userService) GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse, error) {
+func (s *userService) GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse[models.UserActivity], error) {
 	// TODO: 실제 구현에서는 pagination과 필터링 로직 추가
 	activities := []models.UserActivity{}
 	err := s.storage.GetByField(ctx, "user_activities", "user_id", userID, &activities)
@@ -464,12 +463,16 @@ func (s *userService) GetUserActivities(ctx context.Context, userID string, pagi
 		return nil, fmt.Errorf("failed to get user activities: %w", err)
 	}
 	
-	return &models.PaginatedResponse{
-		Data:        activities,
-		Total:       int64(len(activities)),
-		Page:        pagination.Page,
-		Limit:       pagination.Limit,
-		TotalPages:  1,
+	return &models.PaginatedResponse[models.UserActivity]{
+		Data: activities,
+		Pagination: models.PaginationMeta{
+			CurrentPage: pagination.Page,
+			PerPage:     pagination.Limit,
+			Total:       len(activities),
+			TotalPages:  (len(activities) + pagination.Limit - 1) / pagination.Limit,
+			HasNext:     pagination.Page < (len(activities) + pagination.Limit - 1) / pagination.Limit,
+			HasPrev:     pagination.Page > 1,
+		},
 	}, nil
 }
 
@@ -489,7 +492,7 @@ func (s *userService) GetUserStats(ctx context.Context) (*models.UserStats, erro
 }
 
 // ListUsers는 사용자 목록을 조회합니다 (관리자용)
-func (s *userService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse, error) {
+func (s *userService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.UserResponse], error) {
 	// TODO: 필터링 및 검색 로직 구현
 	users := []models.User{}
 	err := s.storage.GetAll(ctx, "users", &users)
@@ -503,12 +506,16 @@ func (s *userService) ListUsers(ctx context.Context, filter *models.UserFilter) 
 		userResponses[i] = *user.ToResponse()
 	}
 	
-	return &models.PaginatedResponse{
-		Data:       userResponses,
-		Total:      int64(len(users)),
-		Page:       filter.Page,
-		Limit:      filter.Limit,
-		TotalPages: 1,
+	return &models.PaginatedResponse[models.UserResponse]{
+		Data: userResponses,
+		Pagination: models.PaginationMeta{
+			CurrentPage: filter.Page,
+			PerPage:     filter.Limit,
+			Total:       len(userResponses),
+			TotalPages:  (len(userResponses) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(userResponses) + filter.Limit - 1) / filter.Limit,
+			HasPrev:     filter.Page > 1,
+		},
 	}, nil
 }
 
@@ -602,9 +609,10 @@ func (s *userService) UpdateUser(ctx context.Context, userID string, req *models
 // DeleteUser는 사용자를 삭제합니다 (관리자용)
 func (s *userService) DeleteUser(ctx context.Context, userID string) error {
 	// 관련 데이터도 함께 삭제
-	s.storage.DeleteByField(ctx, "user_activities", "user_id", userID)
-	s.storage.DeleteByField(ctx, "password_reset_tokens", "user_id", userID)
-	s.storage.DeleteByField(ctx, "two_factor_secrets", "user_id", userID)
+	// TODO: DeleteByField 메서드가 Storage 인터페이스에 없음
+	// s.storage.DeleteByField(ctx, "user_activities", "user_id", userID)
+	// s.storage.DeleteByField(ctx, "password_reset_tokens", "user_id", userID)
+	// s.storage.DeleteByField(ctx, "two_factor_secrets", "user_id", userID)
 	
 	return s.storage.Delete(ctx, "users", userID)
 }

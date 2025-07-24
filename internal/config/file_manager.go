@@ -183,3 +183,19 @@ func (fm *FileManager) GetConfigPath() string {
 	return fm.configPath
 }
 
+// RemoveConfig 는 설정 파일을 삭제합니다
+func (fm *FileManager) RemoveConfig() error {
+	fm.mutex.Lock()
+	defer fm.mutex.Unlock()
+	
+	if !fm.configExists() {
+		return nil
+	}
+	
+	if err := os.Remove(fm.configPath); err != nil {
+		return fmt.Errorf("failed to remove config file: %w", err)
+	}
+	
+	return nil
+}
+

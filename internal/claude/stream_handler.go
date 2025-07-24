@@ -458,8 +458,8 @@ func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-
 					return
 				}
 				
-				// Response를 Message로 변환
-				msg := Message{
+				// Response를 StreamMessage로 변환
+				msg := StreamMessage{
 					Type:    response.Type,
 					Content: response.Content,
 					Meta:    response.Metadata,

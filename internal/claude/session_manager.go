@@ -243,18 +243,18 @@ func (sm *sessionManager) CreateSession(ctx context.Context, config SessionConfi
 		WorkingDir:   config.WorkingDir,
 		Environment:  config.Environment,
 		OAuthToken:   config.OAuthToken,
-		SystemPrompt: config.SystemPrompt,
-		MaxMemory:    config.MaxMemory,
-		MaxCPU:       config.MaxCPU,
+		ResourceLimits: &ResourceLimits{
+			MaxMemory: config.MaxMemory,
+			MaxCPU:    config.MaxCPU,
+			Timeout:   config.MaxDuration,
+		},
 	}
 
-	process, err := sm.processManager.CreateProcess(ctx, processConfig)
-	if err != nil {
+	// ProcessManager를 직접 생성하고 시작
+	if err := sm.processManager.Start(ctx, &processConfig); err != nil {
 		sm.updateSessionState(session.ID, SessionStateError)
-		return nil, fmt.Errorf("failed to create process: %w", err)
+		return nil, fmt.Errorf("failed to start process: %w", err)
 	}
-
-	session.Process = process
 
 	// 상태를 Ready로 변경
 	if err := sm.updateSessionState(session.ID, SessionStateReady); err != nil {
@@ -406,9 +406,9 @@ func (sm *sessionManager) CloseSession(sessionID string) error {
 
 	// 프로세스 종료
 	if session.Process != nil {
-		if err := sm.processManager.TerminateProcess(session.Process.ID); err != nil {
+		if err := session.Process.Stop(30 * time.Second); err != nil {
 			// 에러가 발생해도 계속 진행
-			fmt.Printf("Failed to terminate process %s: %v\n", session.Process.ID, err)
+			fmt.Printf("Failed to terminate process: %v\n", err)
 		}
 	}
 

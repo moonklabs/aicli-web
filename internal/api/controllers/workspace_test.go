@@ -8,14 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/services"
 	"github.com/aicli/aicli-web/internal/storage/memory"
 	"github.com/aicli/aicli-web/internal/utils"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 // setupTest는 테스트를 위한 설정을 수행합니다

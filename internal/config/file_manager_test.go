@@ -27,7 +27,7 @@ func TestFileManager(t *testing.T) {
 		assert.NotNil(t, fm)
 		
 		expectedDir := filepath.Join(tempDir, ConfigDirName)
-		assert.Equal(t, expectedDir, fm.GetConfigDir())
+		assert.Equal(t, expectedDir, fm.configDir)
 		
 		expectedPath := filepath.Join(expectedDir, ConfigFileName)
 		assert.Equal(t, expectedPath, fm.GetConfigPath())
@@ -59,7 +59,7 @@ func TestFileManager(t *testing.T) {
 		require.NoError(t, err)
 
 		// 초기에는 설정 파일이 없어야 함
-		assert.False(t, fm.ConfigExists())
+		assert.False(t, fm.configExists())
 
 		// 설정 파일 생성
 		err = fm.EnsureConfigDir()
@@ -69,7 +69,7 @@ func TestFileManager(t *testing.T) {
 		require.NoError(t, err)
 
 		// 이제 존재해야 함
-		assert.True(t, fm.ConfigExists())
+		assert.True(t, fm.configExists())
 	})
 
 	t.Run("ReadConfig - 파일이 없을 때", func(t *testing.T) {
@@ -159,7 +159,7 @@ func TestFileManager(t *testing.T) {
 		require.NoError(t, err)
 
 		// 설정 파일 생성
-		config := DefaultConfig()
+		config := GetDefaultConfig()
 		err = fm.WriteConfig(config)
 		require.NoError(t, err)
 
@@ -235,15 +235,15 @@ func TestFileManager(t *testing.T) {
 		require.NoError(t, err)
 
 		// 설정 파일 생성
-		config := DefaultConfig()
+		config := GetDefaultConfig()
 		err = fm.WriteConfig(config)
 		require.NoError(t, err)
-		assert.True(t, fm.ConfigExists())
+		assert.True(t, fm.configExists())
 
 		// 설정 파일 삭제
 		err = fm.RemoveConfig()
 		assert.NoError(t, err)
-		assert.False(t, fm.ConfigExists())
+		assert.False(t, fm.configExists())
 
 		// 이미 없는 파일 삭제 시도
 		err = fm.RemoveConfig()

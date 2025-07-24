@@ -49,6 +49,14 @@ func (e *ClaudeError) Error() string {
 	return e.Message
 }
 
+// Message represents a message in the Claude CLI communication
+type Message struct {
+	ID      string                 `json:"id,omitempty"`
+	Type    string                 `json:"type"`
+	Content string                 `json:"content"`
+	Meta    map[string]interface{} `json:"metadata,omitempty"`
+}
+
 // NewFormattedMessage는 StreamMessage를 FormattedMessage로 변환합니다.
 func NewFormattedMessage(msg *StreamMessage) *FormattedMessage {
 	if msg == nil {

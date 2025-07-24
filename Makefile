@@ -3,7 +3,7 @@
 
 BINARY_NAME_CLI=aicli
 BINARY_NAME_API=aicli-api
-GO=/home/node/go-local/go/bin/go
+GO=go
 GOFLAGS=-v
 BUILD_DIR=./build
 SCRIPTS_DIR=./scripts

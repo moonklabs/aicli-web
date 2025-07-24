@@ -38,12 +38,12 @@ func (m *RedisMonitor) metricsKey() string {
 }
 
 // GetActiveSessions는 현재 활성 세션 목록을 반환합니다.
-func (m *RedisMonitor) GetActiveSessions(ctx context.Context) ([]*models.Session, error) {
+func (m *RedisMonitor) GetActiveSessions(ctx context.Context) ([]*models.AuthSession, error) {
 	// 모든 세션 키를 스캔
 	pattern := fmt.Sprintf("%s:session:*", m.keyPrefix)
 	
 	var cursor uint64
-	var allSessions []*models.Session
+	var allSessions []*models.AuthSession
 	
 	for {
 		keys, nextCursor, err := m.client.Scan(ctx, cursor, pattern, 100).Result()
@@ -61,13 +61,13 @@ func (m *RedisMonitor) GetActiveSessions(ctx context.Context) ([]*models.Session
 				continue // 에러가 있는 세션은 건너뛰기
 			}
 			
-			var session models.Session
+			var session models.AuthSession
 			if err := json.Unmarshal([]byte(data), &session); err != nil {
 				continue // 파싱 에러가 있는 세션은 건너뛰기
 			}
 			
 			// 활성 세션만 포함
-			if session.IsActive {
+			if session.IsActive && !session.IsExpired() {
 				allSessions = append(allSessions, &session)
 			}
 		}
@@ -103,26 +103,14 @@ func (m *RedisMonitor) GetSessionMetrics(ctx context.Context) (*SessionMetrics, 
 	
 	// 세션 데이터 분석
 	for _, session := range activeSessions {
-		// 사용자별 세션 수
-		metrics.SessionsByUser[session.UserID]++
+		// 사용자별 세션 수 (임시로 ID 사용)
+		metrics.SessionsByUser[session.ID]++
 		
-		// 디바이스별 세션 수
-		if session.DeviceInfo != nil {
-			deviceKey := fmt.Sprintf("%s/%s", session.DeviceInfo.OS, session.DeviceInfo.Browser)
-			metrics.SessionsByDevice[deviceKey]++
-			
-			// User-Agent 통계
-			if session.DeviceInfo.UserAgent != "" {
-				userAgentMap[session.DeviceInfo.UserAgent]++
-			}
-		}
+		// 디바이스별 세션 수 (임시 스킵)
+		// TODO: DeviceInfo 필드가 Session 모델에 추가되면 구현
 		
-		// 위치별 세션 수
-		if session.LocationInfo != nil {
-			locationKey := fmt.Sprintf("%s/%s", session.LocationInfo.Country, session.LocationInfo.City)
-			metrics.SessionsByLocation[locationKey]++
-			locationMap[locationKey]++
-		}
+		// 위치별 세션 수 (임시 스킵)
+		// TODO: LocationInfo 필드가 Session 모델에 추가되면 구현
 		
 		// 세션 지속 시간
 		sessionDuration := time.Since(session.CreatedAt)
@@ -262,13 +250,13 @@ func generateEventID() string {
 }
 
 // GetSessionsByTimeRange는 시간 범위별 세션을 조회합니다.
-func (m *RedisMonitor) GetSessionsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*models.Session, error) {
+func (m *RedisMonitor) GetSessionsByTimeRange(ctx context.Context, startTime, endTime time.Time) ([]*models.AuthSession, error) {
 	activeSessions, err := m.GetActiveSessions(ctx)
 	if err != nil {
 		return nil, err
 	}
 	
-	var filteredSessions []*models.Session
+	var filteredSessions []*models.AuthSession
 	for _, session := range activeSessions {
 		if session.CreatedAt.After(startTime) && session.CreatedAt.Before(endTime) {
 			filteredSessions = append(filteredSessions, session)

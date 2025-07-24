@@ -14,10 +14,10 @@ type RecoveryOrchestrator struct {
 	strategiesMutex sync.RWMutex
 	
 	// 핵심 컴포넌트들
-	processManager *ProcessManager
+	processManager ProcessManager // 인터페이스이므로 포인터 제거
 	sessionManager SessionManager
-	healthChecker  *HealthChecker
-	alertManager   *AlertManager
+	healthChecker  HealthChecker // 인터페이스로 변경
+	alertManager   AlertManager // 인터페이스로 변경
 	
 	// 에러 분류기
 	classifier ErrorClassifier
@@ -151,10 +151,10 @@ type RecoveryConfig struct {
 
 // NewRecoveryOrchestrator는 새로운 복구 오케스트레이터를 생성합니다
 func NewRecoveryOrchestrator(
-	processManager *ProcessManager,
+	processManager ProcessManager, // 인터페이스로 변경
 	sessionManager SessionManager,
-	healthChecker *HealthChecker,
-	alertManager *AlertManager,
+	healthChecker HealthChecker, // 인터페이스로 변경
+	alertManager AlertManager, // 인터페이스로 변경
 	classifier ErrorClassifier,
 	config RecoveryConfig,
 ) *RecoveryOrchestrator {
@@ -201,7 +201,7 @@ func (ro *RecoveryOrchestrator) RegisterStrategy(errorType ErrorType, strategy R
 	strategies := ro.strategies[errorType]
 	for i := 0; i < len(strategies); i++ {
 		for j := i + 1; j < len(strategies); j++ {
-			if strategies[i].GetPriority() < strategies[j].GetPriority() {
+			if strategies[i].GetSuccessRate() < strategies[j].GetSuccessRate() {
 				strategies[i], strategies[j] = strategies[j], strategies[i]
 			}
 		}
@@ -237,7 +237,7 @@ func (ro *RecoveryOrchestrator) RecoverFromError(ctx context.Context, err error,
 	// 알림 발송
 	if ro.alertManager != nil {
 		ro.alertManager.SendAlert(AlertLevelWarning, 
-			fmt.Sprintf("Recovery started for %s", target.Type),
+			fmt.Sprintf("Recovery started for %s", target.GetType()),
 			map[string]interface{}{
 				"target":   target,
 				"strategy": strategy.GetName(),
@@ -386,11 +386,10 @@ func (ro *RecoveryOrchestrator) executeRecovery(execution *RecoveryExecution) {
 			if execution.Status == RecoveryStatusFailed {
 				level = AlertLevelError
 			}
-			
 			ro.alertManager.SendAlert(level,
 				fmt.Sprintf("Recovery %s for %s", 
 					ro.statusToString(execution.Status),
-					execution.Target.Type),
+					execution.Target.GetType()),
 				map[string]interface{}{
 					"execution_id": execution.ID,
 					"target":       execution.Target,
@@ -457,7 +456,10 @@ func (ro *RecoveryOrchestrator) completeStep(execution *RecoveryExecution, stepI
 
 func (ro *RecoveryOrchestrator) shouldRetry(execution *RecoveryExecution) bool {
 	// 간단한 재시도 로직 (실제로는 더 복잡한 조건)
-	return execution.Target.Priority >= RecoveryPriorityHigh
+	if p, ok := execution.Target.(interface{ GetPriority() RecoveryPriority }); ok {
+		return p.GetPriority() >= RecoveryPriorityHigh
+	}
+	return false
 }
 
 func (ro *RecoveryOrchestrator) retryRecovery(execution *RecoveryExecution) {
@@ -520,22 +522,29 @@ func (ro *RecoveryOrchestrator) performHealthCheck() {
 	if ro.healthChecker == nil {
 		return
 	}
-	
 	// 전체 시스템 건강 상태 확인
-	health := ro.healthChecker.GetOverallHealth()
+	healthInterface := ro.healthChecker.GetOverallHealth()
+	if healthInterface == nil {
+		return
+	}
 	
-	// 건강하지 않은 상태면 자동 복구 시도
+	// OverallHealth 타입으로 assertion
+	health, ok := healthInterface.(*OverallHealth)
+	if !ok {
+		return
+	}
+	
 	if health.Status != HealthHealthy {
 		for _, issue := range health.Issues {
-			target := RecoveryTarget{
+			target := &RecoveryTargetImpl{
 				Type:       "system",
-				Identifier: issue.Component,
+				Identifier: issue.SessionID, // Component 대신 SessionID 사용
 				Context: map[string]interface{}{
 					"issue": issue,
+					"type":  issue.Type,
 				},
-				Priority: ro.mapHealthToPriority(health.Status),
+				Priority: ro.mapHealthToPriority(int(health.Status)),
 			}
-			
 			// 복구 시도 (에러 생성)
 			err := fmt.Errorf("health check failed: %s", issue.Description)
 			ro.RecoverFromError(ro.ctx, err, target)
@@ -543,14 +552,14 @@ func (ro *RecoveryOrchestrator) performHealthCheck() {
 	}
 }
 
-func (ro *RecoveryOrchestrator) mapHealthToPriority(status HealthStatus) RecoveryPriority {
+func (ro *RecoveryOrchestrator) mapHealthToPriority(status int) RecoveryPriority {
 	switch status {
-	case HealthDegraded:
+	case 2: // HealthWarning
 		return RecoveryPriorityMedium
-	case HealthUnhealthy:
-		return RecoveryPriorityHigh
-	case HealthCritical:
+	case 3: // HealthCritical
 		return RecoveryPriorityCritical
+	case 4: // HealthFailed
+		return RecoveryPriorityEmergency
 	default:
 		return RecoveryPriorityLow
 	}
@@ -633,7 +642,7 @@ func (ro *RecoveryOrchestrator) registerDefaultStrategies() {
 
 // ProcessRecoveryStrategy는 프로세스 복구 전략입니다
 type ProcessRecoveryStrategy struct {
-	processManager *ProcessManager
+	processManager ProcessManager // 인터페이스로 변경
 }
 
 func (s *ProcessRecoveryStrategy) CanRecover(ctx context.Context, err error) bool {
@@ -642,7 +651,10 @@ func (s *ProcessRecoveryStrategy) CanRecover(ctx context.Context, err error) boo
 
 func (s *ProcessRecoveryStrategy) Execute(ctx context.Context, target RecoveryTarget) error {
 	// 프로세스 재시작 로직
-	return s.processManager.RestartProcess(target.Identifier)
+	if t, ok := target.(interface{ GetIdentifier() string }); ok {
+		return s.processManager.RestartProcess(t.GetIdentifier())
+	}
+	return fmt.Errorf("invalid target for process recovery")
 }
 
 func (s *ProcessRecoveryStrategy) GetEstimatedTime() time.Duration {

@@ -36,26 +36,26 @@ func (f StateChangeFunc) OnStateChange(from, to ProcessStatus) {
 func NewStateMachine() *StateMachine {
 	sm := &StateMachine{
 		current: StatusStopped,
-		transitions: map[StateTransition]bool{
+		transitions: map[ProcessStateTransition]bool{
 			// 정상적인 생명주기 전환
-			{StatusStopped, StatusStarting}:  true,
-			{StatusStarting, StatusRunning}:  true,
-			{StatusRunning, StatusStopping}:  true,
-			{StatusStopping, StatusStopped}:  true,
+			{From: StatusStopped, To: StatusStarting}:  true,
+			{From: StatusStarting, To: StatusRunning}:  true,
+			{From: StatusRunning, To: StatusStopping}:  true,
+			{From: StatusStopping, To: StatusStopped}:  true,
 			
 			// 에러 상태로의 전환
-			{StatusStarting, StatusError}:    true,
-			{StatusRunning, StatusError}:     true,
-			{StatusStopping, StatusError}:    true,
+			{From: StatusStarting, To: StatusError}:    true,
+			{From: StatusRunning, To: StatusError}:     true,
+			{From: StatusStopping, To: StatusError}:    true,
 			
 			// 에러 상태에서의 전환
-			{StatusError, StatusStopped}:     true,
-			{StatusError, StatusStarting}:    true,
+			{From: StatusError, To: StatusStopped}:     true,
+			{From: StatusError, To: StatusStarting}:    true,
 			
 			// 강제 종료
-			{StatusStarting, StatusStopped}:  true,
-			{StatusRunning, StatusStopped}:   true,
-			{StatusError, StatusStopped}:     true,
+			{From: StatusStarting, To: StatusStopped}:  true,
+			{From: StatusRunning, To: StatusStopped}:   true,
+			{From: StatusError, To: StatusStopped}:     true,
 		},
 		listeners: make([]StateChangeListener, 0),
 	}
@@ -73,7 +73,7 @@ func (sm *StateMachine) GetState() ProcessStatus {
 func (sm *StateMachine) TransitionTo(newState ProcessStatus) error {
 	sm.mutex.Lock()
 	
-	transition := StateTransition{
+	transition := ProcessStateTransition{
 		From: sm.current,
 		To:   newState,
 	}
@@ -111,7 +111,7 @@ func (sm *StateMachine) CanTransitionTo(newState ProcessStatus) bool {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
 	
-	transition := StateTransition{
+	transition := ProcessStateTransition{
 		From: sm.current,
 		To:   newState,
 	}

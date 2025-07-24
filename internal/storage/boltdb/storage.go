@@ -3,6 +3,7 @@ package boltdb
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -107,7 +108,7 @@ func New(config Config) (*Storage, error) {
 	}
 	
 	// BoltDB 열기
-	db, err := bbolt.Open(config.Path, config.Mode, config.Options)
+	db, err := bbolt.Open(config.Path, os.FileMode(config.Mode), config.Options)
 	if err != nil {
 		return nil, fmt.Errorf("BoltDB 열기 실패: %w", err)
 	}

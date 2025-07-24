@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/smtp"
 	"strings"
 
 	"gopkg.in/mail.v2"

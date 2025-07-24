@@ -15,7 +15,7 @@ type AdvancedSessionPool struct {
 	scaler        *AutoScaler
 	monitor       *PoolMonitor
 	loadBalancer  *LoadBalancer
-	healthChecker *HealthChecker
+	healthChecker *PoolHealthChecker
 	metrics       *PoolMetrics
 	
 	// 설정
@@ -199,8 +199,8 @@ func NewAdvancedSessionPool(manager SessionManager, config AdvancedPoolConfig) *
 	pool.scaler = NewAutoScaler(pool, config.AutoScaling)
 	pool.monitor = NewPoolMonitor(pool, config.Monitoring)
 	pool.loadBalancer = NewLoadBalancer(pool, config.LoadBalancing)
-	pool.healthChecker = NewHealthChecker(pool, config.HealthCheck)
-	pool.metrics = NewPoolMetrics()
+	pool.healthChecker = NewPoolHealthChecker(pool, config.HealthCheck)
+	pool.metrics = &PoolMetrics{}
 	
 	// 초기 부하값 설정
 	pool.currentLoad.Store(0.0)
@@ -280,7 +280,7 @@ func (p *AdvancedSessionPool) Scale(targetSize int) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	
-	currentSize := p.basePool.GetPoolStats().TotalSessions
+	currentSize := p.basePool.GetPoolStats().Total
 	
 	if targetSize > currentSize {
 		// 스케일 업
@@ -320,9 +320,9 @@ func (p *AdvancedSessionPool) GetPoolStats() PoolStatistics {
 	runtime.ReadMemStats(&memUsage)
 	
 	return PoolStatistics{
-		Size:            baseStats.TotalSessions,
-		ActiveSessions:  baseStats.ActiveSessions,
-		IdleSessions:    baseStats.IdleSessions,
+		Size:            baseStats.Total,
+		ActiveSessions:  baseStats.Active,
+		IdleSessions:    baseStats.Idle,
 		MemoryUsage:     int64(memUsage.Alloc),
 		CPUUsage:        p.monitor.GetCurrentCPUUsage(),
 		ThroughputRPS:   p.metrics.GetThroughputRPS(),
@@ -390,7 +390,10 @@ func (p *AdvancedSessionPool) initSessionMetrics(session *PooledSession) {
 }
 
 func (p *AdvancedSessionPool) updateMetrics(session *PooledSession, action string) {
-	p.metrics.RecordAction(action, session)
+	// RecordAction 호출 수정 - session이 있으면 성공, 없으면 실패로 기록
+	success := session != nil
+	duration := time.Since(time.Now()) // TODO: 실제 duration 계산 필요
+	p.metrics.RecordAction(action, success, duration)
 	
 	if session != nil {
 		p.monitor.UpdateSessionMetrics(session.ID, action)
@@ -399,7 +402,7 @@ func (p *AdvancedSessionPool) updateMetrics(session *PooledSession, action strin
 
 func (p *AdvancedSessionPool) scaleUp(count int) error {
 	// 최대값 체크
-	currentSize := p.basePool.GetPoolStats().TotalSessions
+	currentSize := p.basePool.GetPoolStats().Total
 	if currentSize+count > p.config.AutoScaling.MaxSessions {
 		count = p.config.AutoScaling.MaxSessions - currentSize
 	}
@@ -410,7 +413,7 @@ func (p *AdvancedSessionPool) scaleUp(count int) error {
 
 func (p *AdvancedSessionPool) scaleDown(count int) error {
 	// 최소값 체크
-	currentSize := p.basePool.GetPoolStats().TotalSessions
+	currentSize := p.basePool.GetPoolStats().Total
 	if currentSize-count < p.config.AutoScaling.MinSessions {
 		count = currentSize - p.config.AutoScaling.MinSessions
 	}
@@ -421,11 +424,11 @@ func (p *AdvancedSessionPool) scaleDown(count int) error {
 
 func (p *AdvancedSessionPool) calculateUtilization() float64 {
 	stats := p.basePool.GetPoolStats()
-	if stats.TotalSessions == 0 {
+	if stats.Total == 0 {
 		return 0.0
 	}
 	
-	return float64(stats.ActiveSessions) / float64(stats.TotalSessions)
+	return float64(stats.Active) / float64(stats.Total)
 }
 
 func (p *AdvancedSessionPool) startBackgroundTasks() {
@@ -441,7 +444,7 @@ func (p *AdvancedSessionPool) startBackgroundTasks() {
 	}
 	
 	// 메트릭 수집 시작
-	go p.metrics.Start()
+	go p.metrics.Start(p.ctx)
 }
 
 // SessionStatus는 세션 상태입니다

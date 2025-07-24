@@ -10,12 +10,11 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
-	
+
 	"github.com/spf13/cobra"
 	"go.etcd.io/bbolt"
-	
+
 	"github.com/aicli/aicli-web/internal/config"
-	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/migration"
 )
 

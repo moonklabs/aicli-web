@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"go.etcd.io/bbolt"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // QueryHelper 쿼리 헬퍼
@@ -33,6 +31,19 @@ func newQueryHelper(storage *Storage, indexMgr *IndexManager) *QueryHelper {
 	return &QueryHelper{
 		storage:  storage,
 		indexMgr: indexMgr,
+		serializers: &Serializers{
+			Workspace: &WorkspaceSerializer{},
+			Project:   &ProjectSerializer{},
+			Session:   &SessionSerializer{},
+			Task:      &TaskSerializer{},
+			Index:     &IndexSerializer{},
+		},
+	}
+}
+
+// NewQueryHelper 새 쿼리 헬퍼 생성 (전역 생성자)
+func NewQueryHelper() *QueryHelper {
+	return &QueryHelper{
 		serializers: &Serializers{
 			Workspace: &WorkspaceSerializer{},
 			Project:   &ProjectSerializer{},
@@ -249,7 +260,7 @@ func (qh *QueryHelper) ProjectQuery(tx *bbolt.Tx, options *QueryOptions) (*Query
 	}
 	
 	// 정렬
-	qh.sortProjects(projects, options.Sort, options.Order)
+	qh.SortProjects(projects, options.Sort, options.Order)
 	
 	// 페이지네이션
 	start := options.GetOffset()
@@ -539,7 +550,8 @@ func (qh *QueryHelper) sortWorkspaces(workspaces []*models.Workspace, sortBy str
 	})
 }
 
-func (qh *QueryHelper) sortProjects(projects []*models.Project, sortBy string, order SortOrder) {
+// SortProjects 프로젝트 목록 정렬
+func (qh *QueryHelper) SortProjects(projects []*models.Project, sortBy string, order SortOrder) {
 	sort.Slice(projects, func(i, j int) bool {
 		var less bool
 		
@@ -640,7 +652,7 @@ func (qh *QueryHelper) CountBy(tx *bbolt.Tx, bucketName string, filter map[strin
 	count := 0
 	cursor := bucket.Cursor()
 	
-	for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+	for k, _ := cursor.First(); k != nil; k, _ = cursor.Next() {
 		// 여기서는 단순히 전체 카운트 반환
 		// 실제로는 filter 조건에 맞는 항목만 카운트해야 함
 		count++
@@ -671,4 +683,62 @@ func (qh *QueryHelper) GetLatest(tx *bbolt.Tx, bucketName string, limit int) ([]
 	}
 	
 	return results, nil
+}
+
+// CalculatePagination 페이지네이션 계산
+func (qh *QueryHelper) CalculatePagination(total int, pagination *models.PaginationRequest) (start, end int) {
+	if pagination == nil {
+		return 0, total
+	}
+	
+	start = (pagination.Page - 1) * pagination.Limit
+	if start > total {
+		start = total
+	}
+	
+	end = start + pagination.Limit
+	if end > total {
+		end = total
+	}
+	
+	return start, end
+}
+
+// SortTasks 태스크 목록 정렬 (Public)
+func (qh *QueryHelper) SortTasks(tasks []*models.Task, sortBy string, reverse bool) {
+	order := SortOrderAsc
+	if reverse {
+		order = SortOrderDesc
+	}
+	qh.sortTasks(tasks, sortBy, order)
+}
+
+// TokenizeCommand 명령어 토큰화
+func (qh *QueryHelper) TokenizeCommand(command string) []string {
+	if command == "" {
+		return []string{}
+	}
+	
+	// 명령어를 소문자로 변환하고 공백으로 분리
+	words := strings.Fields(strings.ToLower(command))
+	
+	// 중복 제거
+	wordMap := make(map[string]bool)
+	for _, word := range words {
+		// 특수문자 제거
+		word = strings.TrimFunc(word, func(r rune) bool {
+			return !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
+		})
+		if word != "" && len(word) > 2 { // 2글자 이하 단어 제외
+			wordMap[word] = true
+		}
+	}
+	
+	// 결과 배열 생성
+	result := make([]string, 0, len(wordMap))
+	for word := range wordMap {
+		result = append(result, word)
+	}
+	
+	return result
 }

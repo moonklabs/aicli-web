@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/aicli/aicli-web/internal/config"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 

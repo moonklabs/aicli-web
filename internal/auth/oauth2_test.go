@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
 )
 
 // MockOAuthServer OAuth 테스트를 위한 목업 서버
@@ -192,25 +191,25 @@ func TestOAuthManagerImpl_GetUserInfo(t *testing.T) {
 	defer mockServer.Close()
 	
 	// 테스트 설정
-	configs := map[OAuthProvider]*OAuthConfig{
-		ProviderGoogle: {
-			Provider: ProviderGoogle,
-			Enabled:  true,
-		},
-		ProviderGitHub: {
-			Provider: ProviderGitHub,
-			Enabled:  true,
-		},
-	}
+	// configs := map[OAuthProvider]*OAuthConfig{
+	// 	ProviderGoogle: {
+	// 		Provider: ProviderGoogle,
+	// 		Enabled:  true,
+	// 	},
+	// 	ProviderGitHub: {
+	// 		Provider: ProviderGitHub,
+	// 		Enabled:  true,
+	// 	},
+	// }
 	
-	jwtManager := NewJWTManager("test-secret", 1*time.Hour, 24*time.Hour)
-	oauthManager := NewOAuthManager(configs, jwtManager)
+	// jwtManager := NewJWTManager("test-secret", 1*time.Hour, 24*time.Hour)
+	// oauthManager := NewOAuthManager(configs, jwtManager)
 	
 	// 테스트용 토큰
-	token := &oauth2.Token{
-		AccessToken: "test-access-token",
-		TokenType:   "Bearer",
-	}
+	// token := &oauth2.Token{
+	// 	AccessToken: "test-access-token",
+	// 	TokenType:   "Bearer",
+	// }
 	
 	t.Run("Google 사용자 정보 조회 성공", func(t *testing.T) {
 		// Google의 userinfo URL을 mock 서버로 변경

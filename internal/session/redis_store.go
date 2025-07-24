@@ -12,18 +12,23 @@ import (
 
 // RedisStore는 Redis를 백엔드로 하는 세션 저장소입니다.
 type RedisStore struct {
-	client     redis.UniversalClient
+	client     RedisClient
 	keyPrefix  string
 	defaultTTL time.Duration
 }
 
 // NewRedisStore는 새로운 Redis 세션 저장소를 생성합니다.
-func NewRedisStore(client redis.UniversalClient, keyPrefix string, defaultTTL time.Duration) *RedisStore {
+func NewRedisStore(client RedisClient, keyPrefix string, defaultTTL time.Duration) *RedisStore {
 	return &RedisStore{
 		client:     client,
 		keyPrefix:  keyPrefix,
 		defaultTTL: defaultTTL,
 	}
+}
+
+// NewRedisStoreFromUniversal은 redis.UniversalClient로부터 Redis 세션 저장소를 생성합니다.
+func NewRedisStoreFromUniversal(client redis.UniversalClient, keyPrefix string, defaultTTL time.Duration) *RedisStore {
+	return NewRedisStore(NewRedisClientAdapter(client), keyPrefix, defaultTTL)
 }
 
 // sessionKey는 세션 ID로부터 Redis 키를 생성합니다.

@@ -136,8 +136,8 @@ func BenchmarkBackpressure(b *testing.B) {
 	}
 }
 
-// BenchmarkMessageRouter는 메시지 라우터 성능을 벤치마킹합니다.
-func BenchmarkMessageRouter(b *testing.B) {
+// BenchmarkStreamMessageRouter는 스트림 메시지 라우터 성능을 벤치마킹합니다.
+func BenchmarkStreamMessageRouter(b *testing.B) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
 

@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/aicli/aicli-web/internal/claude"
-	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/websocket"
 )
 

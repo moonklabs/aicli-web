@@ -275,7 +275,7 @@ func (s *StreamSession) streamClaude() {
 					"execution_id": s.ID,
 					"message_type": msg.Type,
 					"content":      msg.Content,
-					"metadata":     msg.Metadata,
+					"metadata":     nil, // msg.Metadata 필드 없음
 				},
 			}
 

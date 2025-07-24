@@ -424,20 +424,4 @@ func TestResourceMonitor_Performance(t *testing.T) {
 	t.Logf("Resource summary for 100 workspaces completed in %v", elapsed)
 }
 
-// 헬퍼 함수들
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr ||
-		len(s) > len(substr) && (
-			s[:len(substr)] == substr ||
-			s[len(s)-len(substr):] == substr ||
-			containsInner(s, substr)))
-}
-
-func containsInner(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}
+// 헬퍼 함수들 - contains와 containsInner는 events.go에 정의되어 있음

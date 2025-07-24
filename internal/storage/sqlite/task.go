@@ -3,7 +3,6 @@ package sqlite
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -114,9 +113,9 @@ func (t *taskStorage) GetByID(ctx context.Context, id string) (*models.Task, err
 }
 
 // List 태스크 목록 조회
-func (t *taskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *PagingRequest) ([]*models.Task, int, error) {
+func (t *taskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	if paging == nil {
-		paging = &PagingRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
+		paging = &models.PaginationRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
 	}
 	paging.Normalize()
 	
@@ -236,9 +235,9 @@ func (t *taskStorage) Delete(ctx context.Context, id string) error {
 }
 
 // GetBySessionID 세션 ID로 태스크 목록 조회
-func (t *taskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *PagingRequest) ([]*models.Task, int, error) {
+func (t *taskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	if paging == nil {
-		paging = &PagingRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
+		paging = &models.PaginationRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
 	}
 	paging.Normalize()
 	
@@ -326,6 +325,7 @@ func (t *taskStorage) scanTask(row *sql.Row) (*models.Task, error) {
 	
 	return task, nil
 }
+
 
 // scanTasks 여러 태스크 스캔
 func (t *taskStorage) scanTasks(rows *sql.Rows) ([]*models.Task, error) {

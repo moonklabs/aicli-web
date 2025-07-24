@@ -400,7 +400,8 @@ func (dws *DockerWorkspaceService) executeCreateTask(ctx context.Context, task *
 	}
 	
 	// Step 2: 격리 설정 생성
-	isolation, err := dws.isolationMgr.CreateWorkspaceIsolation(workspace)
+	// TODO: isolation 설정을 컨테이너 생성 요청에 추가
+	_, err = dws.isolationMgr.CreateWorkspaceIsolation(workspace)
 	if err != nil {
 		return fmt.Errorf("create isolation config: %w", err)
 	}

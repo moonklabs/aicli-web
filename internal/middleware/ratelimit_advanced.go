@@ -14,7 +14,6 @@ import (
 	"golang.org/x/time/rate"
 	"go.uber.org/zap"
 
-	"github.com/aicli/aicli-web/internal/models"
 )
 
 // AdvancedRateLimitConfig는 고급 Rate Limiting 설정입니다.
@@ -109,7 +108,7 @@ func (arl *AdvancedRateLimiter) Handler() gin.HandlerFunc {
 		if arl.redis == nil {
 			// Fallback to local limiter
 			if !arl.localLimiter.Allow() {
-				arl.handleRateLimitExceeded(c, "global", 0)
+				arl.handleRateLimitExceeded(c, "global", time.Now().Add(time.Minute))
 				return
 			}
 			c.Next()

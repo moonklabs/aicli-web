@@ -12,7 +12,7 @@ import (
 // errorRecoveryManager 에러 복구 관리자 구현
 type errorRecoveryManager struct {
 	policy          *RecoveryPolicy
-	classifier      *ErrorClassifier
+	classifier      *RecoveryErrorClassifier
 	stats           *RecoveryStats
 	circuitBreaker  CircuitBreaker
 	backoff         BackoffStrategy
@@ -40,7 +40,7 @@ type errorRecoveryManager struct {
 // RecoveryMetric 복구 메트릭
 type RecoveryMetric struct {
 	Timestamp   time.Time     `json:"timestamp"`
-	ErrorType   ErrorType     `json:"error_type"`
+	ErrorType   RecoveryErrorType     `json:"error_type"`
 	Action      RecoveryAction `json:"action"`
 	Success     bool          `json:"success"`
 	Duration    time.Duration `json:"duration"`
@@ -65,7 +65,7 @@ func NewErrorRecoveryManager(
 	
 	manager := &errorRecoveryManager{
 		policy:         policy,
-		classifier:     NewErrorClassifier(),
+		classifier:     NewRecoveryErrorClassifier(),
 		stats:          NewRecoveryStats(),
 		circuitBreaker: NewCircuitBreaker(policy.CircuitBreakerConfig, logger),
 		backoff:        NewExponentialBackoff(policy),
@@ -150,7 +150,7 @@ func (erm *errorRecoveryManager) HandleError(err error) RecoveryAction {
 }
 
 // processAction 액션을 처리하고 최종 액션을 반환합니다
-func (erm *errorRecoveryManager) processAction(action RecoveryAction, errorType ErrorType, err error) RecoveryAction {
+func (erm *errorRecoveryManager) processAction(action RecoveryAction, errorType RecoveryErrorType, err error) RecoveryAction {
 	switch action {
 	case ActionRestart:
 		if erm.shouldAllowRestart() {
@@ -339,7 +339,7 @@ func (erm *errorRecoveryManager) GetRecoveryStats() *RecoveryStats {
 		LastRestart:   erm.stats.LastRestart,
 		SuccessfulRuns: erm.stats.SuccessfulRuns,
 		AverageUptime: erm.calculateAverageUptime(),
-		ErrorsByType:  make(map[ErrorType]int64),
+		ErrorsByType:  make(map[RecoveryErrorType]int64),
 		ActionsByType: make(map[RecoveryAction]int64),
 	}
 	

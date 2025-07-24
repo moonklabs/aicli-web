@@ -379,15 +379,6 @@ func (cp *CSRFProtection) storeTokenInRedis(c *gin.Context, token, sessionID, us
 	ctx := c.Request.Context()
 	redisKey := cp.getRedisTokenKey(sessionID, token)
 
-	csrfToken := CSRFToken{
-		Token:     token,
-		SessionID: sessionID,
-		UserID:    userID,
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(cp.config.TokenLifetime),
-		Used:      false,
-	}
-
 	// 토큰 정보를 JSON으로 저장
 	err := cp.redis.Set(ctx, redisKey, "valid", cp.config.TokenLifetime).Err()
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 
-	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/security"
 )
 

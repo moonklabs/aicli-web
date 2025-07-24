@@ -130,7 +130,7 @@ type SmartCircuitBreaker struct {
 	metricsMutex  sync.RWMutex
 	
 	// 상태 기록
-	stateHistory  []StateTransition
+	stateHistory  []CircuitStateTransition
 	historyMutex  sync.RWMutex
 	maxHistory    int
 	
@@ -145,7 +145,7 @@ type SmartCircuitBreaker struct {
 	maxRTSamples  int
 	
 	// 리스너들
-	listeners     []StateChangeListener
+	listeners     []CircuitStateChangeListener
 	listenerMutex sync.RWMutex
 	
 	// Half-open 상태 관리
@@ -189,13 +189,13 @@ func NewSmartCircuitBreaker(thresholds CircuitThresholds) *SmartCircuitBreaker {
 	cb := &SmartCircuitBreaker{
 		state:         CircuitClosed,
 		thresholds:    thresholds,
-		stateHistory:  make([]StateTransition, 0),
+		stateHistory:  make([]CircuitStateTransition, 0),
 		maxHistory:    100,
 		callHistory:   make([]CallResult, 0),
 		maxCalls:      1000,
 		responseTimes: make([]time.Duration, 0),
 		maxRTSamples:  500,
-		listeners:     make([]StateChangeListener, 0),
+		listeners:     make([]CircuitStateChangeListener, 0),
 		ctx:           ctx,
 		cancel:        cancel,
 		metrics: CircuitMetrics{
@@ -368,7 +368,7 @@ func (cb *SmartCircuitBreaker) GetMetrics() CircuitMetrics {
 }
 
 // RegisterStateListener는 상태 변화 리스너를 등록합니다
-func (cb *SmartCircuitBreaker) RegisterStateListener(listener StateChangeListener) {
+func (cb *SmartCircuitBreaker) RegisterStateListener(listener CircuitStateChangeListener) {
 	cb.listenerMutex.Lock()
 	cb.listeners = append(cb.listeners, listener)
 	cb.listenerMutex.Unlock()
@@ -716,14 +716,14 @@ func (cb *SmartCircuitBreaker) recordStateTransition(from, to CircuitState, reas
 
 func (cb *SmartCircuitBreaker) notifyStateChange(oldState, newState CircuitState) {
 	cb.listenerMutex.RLock()
-	listeners := make([]StateChangeListener, len(cb.listeners))
+	listeners := make([]CircuitStateChangeListener, len(cb.listeners))
 	copy(listeners, cb.listeners)
 	cb.listenerMutex.RUnlock()
 	
-	metrics := cb.GetMetrics()
+	currentMetrics := cb.GetMetrics()
 	
 	for _, listener := range listeners {
-		go listener(oldState, newState, metrics)
+		go listener(oldState, newState, currentMetrics)
 	}
 }
 

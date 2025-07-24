@@ -123,7 +123,13 @@ func (m *Monitor) GetStats() (Stats, error) {
 		return Stats{}, ErrMonitoringDisabled
 	}
 	
-	return m.queryMonitor.GetStats(), nil
+	queryStats := m.queryMonitor.GetStats()
+	return Stats{
+		TotalQueries:   int64(queryStats.TotalQueries),
+		SlowQueries:    int64(queryStats.SlowQueries),
+		FailedQueries:  int64(queryStats.ErrorQueries),
+		AverageDuration: queryStats.AverageDuration,
+	}, nil
 }
 
 // UpdateSlowThreshold 느린 쿼리 임계값 업데이트
@@ -156,10 +162,10 @@ func NewMonitoredExecutor(monitor *Monitor, db *sql.DB, storageType string) *Mon
 func (e *MonitoredExecutor) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	opts := WrapOptions{
 		Query:       query,
-		QueryType:   getQueryType(query),
+		Table:       getQueryType(query),
 		StorageType: e.storage,
 		Operation:   "exec",
-		Context:     "executor",
+		Context:     QueryContext{StorageType: e.storage},
 	}
 	
 	var result sql.Result
@@ -181,10 +187,10 @@ func (e *MonitoredExecutor) ExecContext(ctx context.Context, query string, args 
 func (e *MonitoredExecutor) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	opts := WrapOptions{
 		Query:       query,
-		QueryType:   getQueryType(query),
+		Table:       getQueryType(query),
 		StorageType: e.storage,
 		Operation:   "query",
-		Context:     "executor",
+		Context:     QueryContext{StorageType: e.storage},
 	}
 	
 	var rows *sql.Rows
@@ -206,10 +212,10 @@ func (e *MonitoredExecutor) QueryContext(ctx context.Context, query string, args
 func (e *MonitoredExecutor) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	opts := WrapOptions{
 		Query:       query,
-		QueryType:   getQueryType(query),
+		Table:       getQueryType(query),
 		StorageType: e.storage,
 		Operation:   "query_row",
-		Context:     "executor",
+		Context:     QueryContext{StorageType: e.storage},
 	}
 	
 	var row *sql.Row
@@ -224,6 +230,14 @@ func (e *MonitoredExecutor) QueryRowContext(ctx context.Context, query string, a
 }
 
 // 유틸리티 함수들
+
+const (
+	// 쿼리 타입 상수
+	QueryTypeSelect = "SELECT"
+	QueryTypeInsert = "INSERT"
+	QueryTypeUpdate = "UPDATE"
+	QueryTypeDelete = "DELETE"
+)
 
 // getQueryType 쿼리 타입 추출
 func getQueryType(query string) string {

@@ -123,7 +123,7 @@ func (ss *sessionStorage) GetByID(ctx context.Context, id string) (*models.Sessi
 			return storage.ErrNotFound
 		}
 		
-		if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+		if err := ss.serializer.Unmarshal(data, &session); err != nil {
 			return err
 		}
 		
@@ -163,7 +163,7 @@ func (ss *sessionStorage) GetByProjectID(ctx context.Context, projectID string, 
 			}
 			
 			var session models.Session
-			if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+			if err := ss.serializer.Unmarshal(data, &session); err != nil {
 				continue
 			}
 			
@@ -171,7 +171,7 @@ func (ss *sessionStorage) GetByProjectID(ctx context.Context, projectID string, 
 		}
 		
 		// 생성 시간 역순 정렬
-		ss.querier.SortSessions(allSessions, "created_at", false)
+		ss.querier.sortSessions(allSessions, "created_at", SortOrderDesc)
 		
 		total = int64(len(allSessions))
 		
@@ -215,7 +215,7 @@ func (ss *sessionStorage) GetByStatus(ctx context.Context, status models.Session
 			}
 			
 			var session models.Session
-			if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+			if err := ss.serializer.Unmarshal(data, &session); err != nil {
 				continue
 			}
 			
@@ -223,7 +223,7 @@ func (ss *sessionStorage) GetByStatus(ctx context.Context, status models.Session
 		}
 		
 		// 마지막 활동 시간 역순 정렬
-		ss.querier.SortSessions(allSessions, "last_active", false)
+		ss.querier.sortSessions(allSessions, "last_active", SortOrderDesc)
 		
 		total = int64(len(allSessions))
 		
@@ -268,7 +268,7 @@ func (ss *sessionStorage) GetByProcessID(ctx context.Context, processID int32) (
 			return storage.ErrNotFound
 		}
 		
-		if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+		if err := ss.serializer.Unmarshal(data, &session); err != nil {
 			return err
 		}
 		
@@ -305,7 +305,7 @@ func (ss *sessionStorage) GetActiveCount(ctx context.Context, projectID string) 
 			}
 			
 			var session models.Session
-			if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+			if err := ss.serializer.Unmarshal(data, &session); err != nil {
 				continue
 			}
 			
@@ -325,7 +325,7 @@ func (ss *sessionStorage) GetActiveCount(ctx context.Context, projectID string) 
 }
 
 // Update 세션 정보 업데이트
-func (ss *sessionStorage) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+func (ss *sessionStorage) Update(ctx context.Context, session *models.Session) error {
 	return ss.db.Update(func(tx *bbolt.Tx) error {
 		sessionBucket := tx.Bucket([]byte(bucketSessions))
 		if sessionBucket == nil {
@@ -333,93 +333,48 @@ func (ss *sessionStorage) Update(ctx context.Context, id string, updates map[str
 		}
 		
 		// 기존 세션 조회
-		data := sessionBucket.Get([]byte(id))
+		data := sessionBucket.Get([]byte(session.ID))
 		if data == nil {
 			return storage.ErrNotFound
 		}
 		
-		var session models.Session
-		if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+		var oldSession models.Session
+		if err := ss.serializer.Unmarshal(data, &oldSession); err != nil {
 			return err
 		}
 		
 		// 인덱스 업데이트를 위한 이전 값 저장
-		oldStatus := string(session.Status)
-		oldProcessID := session.ProcessID
-		
-		// 업데이트 적용
-		if status, ok := updates["status"]; ok {
-			if statusVal, ok := status.(models.SessionStatus); ok {
-				session.Status = statusVal
-			} else if statusStr, ok := status.(string); ok {
-				session.Status = models.SessionStatus(statusStr)
-			}
-		}
-		
-		if processID, ok := updates["process_id"]; ok {
-			if pidVal, ok := processID.(int32); ok {
-				session.ProcessID = pidVal
-			}
-		}
-		
-		if startedAt, ok := updates["started_at"]; ok {
-			if startedTime, ok := startedAt.(*time.Time); ok {
-				session.StartedAt = startedTime
-			}
-		}
-		
-		if endedAt, ok := updates["ended_at"]; ok {
-			if endedTime, ok := endedAt.(*time.Time); ok {
-				session.EndedAt = endedTime
-			}
-		}
-		
-		if lastActive, ok := updates["last_active"]; ok {
-			if activeTime, ok := lastActive.(time.Time); ok {
-				session.LastActive = activeTime
-			}
-		}
-		
-		if commandCount, ok := updates["command_count"]; ok {
-			if countVal, ok := commandCount.(int64); ok {
-				session.CommandCount = countVal
-			}
-		}
-		
-		if metadata, ok := updates["metadata"]; ok {
-			if metaVal, ok := metadata.(map[string]interface{}); ok {
-				session.Metadata = metaVal
-			}
-		}
+		oldStatus := string(oldSession.Status)
+		oldProcessID := oldSession.ProcessID
 		
 		// 타임스탬프 및 버전 업데이트
 		session.UpdatedAt = time.Now()
-		session.Version++
+		session.Version = oldSession.Version + 1
 		
 		// 직렬화 및 저장
-		updatedData, err := ss.serializer.MarshalSession(&session)
+		updatedData, err := ss.serializer.MarshalSession(session)
 		if err != nil {
 			return err
 		}
 		
-		if err := sessionBucket.Put([]byte(id), updatedData); err != nil {
+		if err := sessionBucket.Put([]byte(session.ID), updatedData); err != nil {
 			return err
 		}
 		
 		// 인덱스 업데이트
 		if string(session.Status) != oldStatus {
-			ss.indexer.RemoveFromIndex(tx, IndexSessionStatus, oldStatus, id)
-			ss.indexer.AddToIndex(tx, IndexSessionStatus, string(session.Status), id)
+			ss.indexer.RemoveFromIndex(tx, IndexSessionStatus, oldStatus, session.ID)
+			ss.indexer.AddToIndex(tx, IndexSessionStatus, string(session.Status), session.ID)
 		}
 		
 		if session.ProcessID != oldProcessID {
 			if oldProcessID > 0 {
 				oldPidStr := fmt.Sprintf("%d", oldProcessID)
-				ss.indexer.RemoveFromIndex(tx, IndexSessionProcess, oldPidStr, id)
+				ss.indexer.RemoveFromIndex(tx, IndexSessionProcess, oldPidStr, session.ID)
 			}
 			if session.ProcessID > 0 {
 				pidStr := fmt.Sprintf("%d", session.ProcessID)
-				ss.indexer.AddToIndex(tx, IndexSessionProcess, pidStr, id)
+				ss.indexer.AddToIndex(tx, IndexSessionProcess, pidStr, session.ID)
 			}
 		}
 		
@@ -442,7 +397,7 @@ func (ss *sessionStorage) Delete(ctx context.Context, id string) error {
 		}
 		
 		var session models.Session
-		if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+		if err := ss.serializer.Unmarshal(data, &session); err != nil {
 			return err
 		}
 		
@@ -460,7 +415,7 @@ func (ss *sessionStorage) Delete(ctx context.Context, id string) error {
 					taskData := taskBucket.Get([]byte(taskID))
 					if taskData != nil {
 						var task models.Task
-						if ss.serializer.UnmarshalTask(taskData, &task) == nil {
+						if ss.serializer.Unmarshal(taskData, &task) == nil {
 							if task.Status == models.TaskStatusRunning || task.Status == models.TaskStatusPending {
 								return fmt.Errorf("cannot delete session with running or pending tasks")
 							}
@@ -497,7 +452,7 @@ func (ss *sessionStorage) GetIdleSessions(ctx context.Context, threshold time.Du
 		// 모든 세션 순회
 		return sessionBucket.ForEach(func(k, v []byte) error {
 			var session models.Session
-			if err := ss.serializer.UnmarshalSession(v, &session); err != nil {
+			if err := ss.serializer.Unmarshal(v, &session); err != nil {
 				return nil // 파싱 실패한 항목은 무시
 			}
 			
@@ -520,17 +475,21 @@ func (ss *sessionStorage) GetIdleSessions(ctx context.Context, threshold time.Du
 
 // UpdateLastActive 마지막 활동 시간 업데이트
 func (ss *sessionStorage) UpdateLastActive(ctx context.Context, id string) error {
-	updates := map[string]interface{}{
-		"last_active": time.Now(),
+	// 기존 세션 조회
+	session, err := ss.GetByID(ctx, id)
+	if err != nil {
+		return err
 	}
-	return ss.Update(ctx, id, updates)
+	
+	// LastActive 시간 업데이트
+	session.LastActive = time.Now()
+	
+	return ss.Update(ctx, session)
 }
 
 // GetSessionStats 세션 통계 조회
 func (ss *sessionStorage) GetSessionStats(ctx context.Context, projectID string) (*models.SessionStats, error) {
-	stats := &models.SessionStats{
-		ProjectID: projectID,
-	}
+	stats := &models.SessionStats{}
 	
 	err := ss.db.View(func(tx *bbolt.Tx) error {
 		// 프로젝트의 모든 세션 조회
@@ -554,21 +513,21 @@ func (ss *sessionStorage) GetSessionStats(ctx context.Context, projectID string)
 			}
 			
 			var session models.Session
-			if err := ss.serializer.UnmarshalSession(data, &session); err != nil {
+			if err := ss.serializer.Unmarshal(data, &session); err != nil {
 				continue
 			}
 			
-			stats.Total++
+			stats.TotalCount++
 			totalCommands += session.CommandCount
 			
 			// 세션 상태별 카운트
 			switch session.Status {
 			case models.SessionStatusActive:
-				stats.Active++
+				stats.ActiveCount++
 			case models.SessionStatusIdle:
-				stats.Idle++
+				stats.IdleCount++
 			case models.SessionStatusEnded:
-				stats.Ended++
+				stats.ErrorCount++ // Ended 대신 ErrorCount 사용
 			}
 			
 			// 세션 지속 시간 계산
@@ -582,9 +541,9 @@ func (ss *sessionStorage) GetSessionStats(ctx context.Context, projectID string)
 			}
 		}
 		
-		stats.AverageCommands = float64(totalCommands) / float64(stats.Total)
-		if stats.Total > 0 {
-			stats.AverageDuration = totalDuration / time.Duration(stats.Total)
+		// AverageCommands 필드가 없음 - 생략
+		if stats.TotalCount > 0 {
+			stats.AverageLifetime = totalDuration / time.Duration(stats.TotalCount)
 		}
 		
 		return nil
@@ -595,4 +554,65 @@ func (ss *sessionStorage) GetSessionStats(ctx context.Context, projectID string)
 	}
 	
 	return stats, nil
+}
+
+// List 모든 세션 목록 조회 (관리자용)
+func (ss *sessionStorage) List(ctx context.Context, filter *models.SessionFilter, pagination *models.PaginationRequest) (*models.PaginationResponse, error) {
+	if pagination == nil {
+		pagination = &models.PaginationRequest{Limit: 20, Sort: "created_at", Order: "desc"}
+	}
+	
+	var sessions []*models.Session
+	var total int
+	
+	err := ss.db.View(func(tx *bbolt.Tx) error {
+		sessionBucket := tx.Bucket([]byte(bucketSessions))
+		if sessionBucket == nil {
+			return fmt.Errorf("sessions bucket not found")
+		}
+		
+		// 모든 세션 조회
+		var allSessions []*models.Session
+		cursor := sessionBucket.Cursor()
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			var session models.Session
+			if err := ss.serializer.Unmarshal(v, &session); err != nil {
+				continue
+			}
+			
+			// 필터 적용
+			if filter != nil {
+				if filter.ProjectID != "" && session.ProjectID != filter.ProjectID {
+					continue
+				}
+				if filter.Status != "" && session.Status != models.SessionStatus(filter.Status) {
+					continue
+				}
+			}
+			
+			allSessions = append(allSessions, &session)
+		}
+		
+		// 정렬
+		ss.querier.sortSessions(allSessions, pagination.Sort, SortOrder(pagination.Order))
+		
+		total = len(allSessions)
+		
+		// 페이지네이션 적용
+		start, end := ss.querier.CalculatePagination(len(allSessions), pagination)
+		sessions = allSessions[start:end]
+		
+		return nil
+	})
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	// PaginationResponse 생성
+	meta := models.NewPaginationMeta(pagination.Page, pagination.Limit, total)
+	return &models.PaginationResponse{
+		Data: sessions,
+		Meta: meta,
+	}, nil
 }

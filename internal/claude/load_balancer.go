@@ -325,7 +325,7 @@ func (lb *LoadBalancer) selectResponseTimeBased(ctx context.Context, config Sess
 
 func (lb *LoadBalancer) getAvailableSessions() []*PooledSession {
 	baseStats := lb.pool.basePool.GetPoolStats()
-	if baseStats.IdleSessions == 0 {
+	if baseStats.Idle == 0 {
 		return []*PooledSession{}
 	}
 	
@@ -347,9 +347,14 @@ func (lb *LoadBalancer) getAvailableSession(sessionID string) *PooledSession {
 }
 
 func (lb *LoadBalancer) generateAffinityKey(config SessionConfig) string {
-	// WorkspaceID를 기본 어피니티 키로 사용
+	// WorkspaceID를 Environment에서 가져와서 어피니티 키로 사용
+	workspaceID := ""
+	if wid, ok := config.Environment["WORKSPACE_ID"]; ok {
+		workspaceID = wid
+	}
+	
 	affinityKey := AffinityKey{
-		WorkspaceID: config.WorkspaceID,
+		WorkspaceID: workspaceID,
 	}
 	
 	// 사용자 정보가 있다면 추가
@@ -542,10 +547,10 @@ func (rt *ResponseTimeTracker) GetSessionResponseTime(sessionID string) *Session
 	
 	if sessionTime, exists := rt.sessions[sessionID]; exists {
 		// 복사본 반환
-		copy := *sessionTime
-		copy.RecentTimes = make([]time.Duration, len(sessionTime.RecentTimes))
-		copy.Copy(sessionTime.RecentTimes, copy.RecentTimes)
-		return &copy
+		copyTime := *sessionTime
+		copyTime.RecentTimes = make([]time.Duration, len(sessionTime.RecentTimes))
+		copy(copyTime.RecentTimes, sessionTime.RecentTimes)
+		return &copyTime
 	}
 	
 	return nil

@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -10,8 +12,6 @@ import (
 
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/security"
-	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/errors"
 )
 
 // SecurityController는 보안 관리 API 컨트롤러입니다.

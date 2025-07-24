@@ -1,7 +1,6 @@
 package test_helpers
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"net/http"

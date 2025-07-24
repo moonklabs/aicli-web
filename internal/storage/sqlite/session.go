@@ -36,6 +36,14 @@ type PagingResponse[T any] struct {
 	Meta PaginationMeta `json:"meta"`
 }
 
+// PaginationMeta 페이지네이션 메타데이터
+type PaginationMeta struct {
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	Total      int `json:"total"`
+	TotalPages int `json:"total_pages"`
+}
+
 // Normalize 페이징 요청 정규화
 func (p *PagingRequest) Normalize() {
 	if p.Page < 1 {
@@ -58,6 +66,20 @@ func (p *PagingRequest) Normalize() {
 // GetOffset 오프셋 계산
 func (p *PagingRequest) GetOffset() int {
 	return (p.Page - 1) * p.Limit
+}
+
+// NewPaginationMeta 페이지네이션 메타데이터 생성
+func NewPaginationMeta(page, limit, total int) PaginationMeta {
+	totalPages := total / limit
+	if total%limit > 0 {
+		totalPages++
+	}
+	return PaginationMeta{
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
 }
 
 const (
@@ -174,9 +196,9 @@ func (s *sessionStorage) GetByID(ctx context.Context, id string) (*models.Sessio
 }
 
 // List 세션 목록 조회
-func (s *sessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *PagingRequest) (*PagingResponse[*models.Session], error) {
+func (s *sessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
 	if paging == nil {
-		paging = &PagingRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
+		paging = &models.PaginationRequest{Page: 1, Limit: 20, Sort: "created_at", Order: "desc"}
 	}
 	paging.Normalize()
 	
@@ -234,11 +256,21 @@ func (s *sessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 	}
 	
 	// 페이징 메타 생성
-	meta := NewPaginationMeta(paging.Page, paging.Limit, total)
+	totalPages := total / paging.Limit
+	if total%paging.Limit > 0 {
+		totalPages++
+	}
 	
-	return &PagingResponse[*models.Session]{
+	return &models.PaginationResponse{
 		Data: sessions,
-		Meta: meta,
+		Meta: models.PaginationMeta{
+			CurrentPage: paging.Page,
+			PerPage:     paging.Limit,
+			Total:       total,
+			TotalPages:  totalPages,
+			HasNext:     paging.Page < totalPages,
+			HasPrev:     paging.Page > 1,
+		},
 	}, nil
 }
 

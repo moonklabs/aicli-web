@@ -164,11 +164,11 @@ func (hc *PoolHealthChecker) GetOverallHealth() *OverallHealth {
 	health := hc.overallHealth.Load().(*OverallHealth)
 	
 	// 복사본 반환
-	copy := *health
-	copy.Issues = make([]HealthIssue, len(health.Issues))
-	copy(copy.Issues, health.Issues)
+	healthCopy := *health
+	healthCopy.Issues = make([]HealthIssue, len(health.Issues))
+	copy(healthCopy.Issues, health.Issues)
 	
-	return &copy
+	return &healthCopy
 }
 
 // GetSessionHealth는 세션별 헬스 상태를 반환합니다
@@ -178,10 +178,10 @@ func (hc *PoolHealthChecker) GetSessionHealth(sessionID string) *SessionHealth {
 	
 	if health, exists := hc.sessionHealth[sessionID]; exists {
 		// 복사본 반환
-		copy := *health
-		copy.Checks = make([]HealthCheckResult, len(health.Checks))
-		copy(copy.Checks, health.Checks)
-		return &copy
+		healthCopy := *health
+		healthCopy.Checks = make([]HealthCheckResult, len(health.Checks))
+		copy(healthCopy.Checks, health.Checks)
+		return &healthCopy
 	}
 	
 	return nil
@@ -194,10 +194,10 @@ func (hc *PoolHealthChecker) GetAllSessionHealth() map[string]*SessionHealth {
 	
 	result := make(map[string]*SessionHealth)
 	for sessionID, health := range hc.sessionHealth {
-		copy := *health
-		copy.Checks = make([]HealthCheckResult, len(health.Checks))
-		copy(copy.Checks, health.Checks)
-		result[sessionID] = &copy
+		healthCopy := *health
+		healthCopy.Checks = make([]HealthCheckResult, len(health.Checks))
+		copy(healthCopy.Checks, health.Checks)
+		result[sessionID] = &healthCopy
 	}
 	
 	return result
@@ -550,7 +550,7 @@ func (hc *PoolHealthChecker) detectIssues() {
 		if health.AverageResponseTime > 5*time.Second {
 			issues = append(issues, HealthIssue{
 				Type:        IssueHighLatency,
-				Severity:    PoolSeverityMedium,
+				Severity:    PoolPoolSeverityMedium,
 				Description: fmt.Sprintf("High average response time: %v", health.AverageResponseTime),
 				SessionID:   sessionID,
 				Timestamp:   time.Now(),
@@ -564,7 +564,7 @@ func (hc *PoolHealthChecker) detectIssues() {
 			if errorRate > 0.1 { // 10% 이상
 				issues = append(issues, HealthIssue{
 					Type:        IssueHighErrorRate,
-					Severity:    PoolSeverityHigh,
+					Severity:    PoolPoolSeverityHigh,
 					Description: fmt.Sprintf("High error rate: %.2f%%", errorRate*100),
 					SessionID:   sessionID,
 					Timestamp:   time.Now(),
@@ -577,7 +577,7 @@ func (hc *PoolHealthChecker) detectIssues() {
 		if health.ConsecutiveFailures >= hc.config.FailureThreshold {
 			issues = append(issues, HealthIssue{
 				Type:        IssueProcessDead,
-				Severity:    PoolSeverityCritical,
+				Severity:    PoolPoolSeverityCritical,
 				Description: fmt.Sprintf("Session consecutive failures: %d", health.ConsecutiveFailures),
 				SessionID:   sessionID,
 				Timestamp:   time.Now(),

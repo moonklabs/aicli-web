@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
@@ -112,7 +111,8 @@ func (ps *policyService) UpdatePolicy(ctx context.Context, id string, req *secur
 	}
 
 	// 변경사항 추적을 위한 이전 데이터 보관
-	oldData := map[string]interface{}{
+	// TODO: oldData를 활동 로그에 사용
+	_ = map[string]interface{}{
 		"name":        policy.Name,
 		"description": policy.Description,
 		"config_data": policy.ConfigData,
@@ -215,7 +215,7 @@ func (ps *policyService) DeletePolicy(ctx context.Context, id string) error {
 }
 
 // ListPolicies는 보안 정책 목록을 조회합니다
-func (ps *policyService) ListPolicies(ctx context.Context, filter *security.PolicyFilter) (*models.PaginatedResponse, error) {
+func (ps *policyService) ListPolicies(ctx context.Context, filter *security.PolicyFilter) (*models.PaginatedResponse[*security.SecurityPolicy], error) {
 	// TODO: 실제 필터링 및 페이지네이션 로직 구현
 	policies := []security.SecurityPolicy{}
 	err := ps.storage.GetAll(ctx, "security_policies", &policies)
@@ -232,12 +232,22 @@ func (ps *policyService) ListPolicies(ctx context.Context, filter *security.Poli
 		responses[i] = *policy.ToResponse()
 	}
 
-	return &models.PaginatedResponse{
-		Data:       responses,
-		Total:      int64(len(responses)),
-		Page:       filter.Page,
-		Limit:      filter.Limit,
-		TotalPages: (int64(len(responses)) + int64(filter.Limit) - 1) / int64(filter.Limit),
+	// *security.SecurityPolicy 타입의 슬라이스로 변환
+	policyPtrs := make([]*security.SecurityPolicy, len(filteredPolicies))
+	for i, policy := range filteredPolicies {
+		policyPtrs[i] = &policy
+	}
+	
+	return &models.PaginatedResponse[*security.SecurityPolicy]{
+		Data: policyPtrs,
+		Pagination: models.PaginationMeta{
+			CurrentPage: filter.Page,
+			PerPage:     filter.Limit,
+			Total:       len(policyPtrs),
+			TotalPages:  (len(policyPtrs) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(policyPtrs) + filter.Limit - 1) / filter.Limit,
+			HasPrev:     filter.Page > 1,
+		},
 	}, nil
 }
 
@@ -420,7 +430,7 @@ func (ps *policyService) GetPolicyHistory(ctx context.Context, id string) ([]*se
 }
 
 // GetPolicyAuditLog는 정책 감사 로그를 조회합니다
-func (ps *policyService) GetPolicyAuditLog(ctx context.Context, filter *security.AuditFilter) (*models.PaginatedResponse, error) {
+func (ps *policyService) GetPolicyAuditLog(ctx context.Context, filter *security.AuditFilter) (*models.PaginatedResponse[*security.PolicyAuditEntry], error) {
 	auditEntries := []security.PolicyAuditEntry{}
 	err := ps.storage.GetAll(ctx, "policy_audit_entries", &auditEntries)
 	if err != nil {
@@ -430,12 +440,22 @@ func (ps *policyService) GetPolicyAuditLog(ctx context.Context, filter *security
 	// 필터링 적용
 	filteredEntries := ps.applyAuditFilters(auditEntries, filter)
 
-	return &models.PaginatedResponse{
-		Data:       filteredEntries,
-		Total:      int64(len(filteredEntries)),
-		Page:       filter.Page,
-		Limit:      filter.Limit,
-		TotalPages: (int64(len(filteredEntries)) + int64(filter.Limit) - 1) / int64(filter.Limit),
+	// 포인터 슬라이스로 변환
+	entryPtrs := make([]*security.PolicyAuditEntry, len(filteredEntries))
+	for i := range filteredEntries {
+		entryPtrs[i] = &filteredEntries[i]
+	}
+	
+	return &models.PaginatedResponse[*security.PolicyAuditEntry]{
+		Data: entryPtrs,
+		Pagination: models.PaginationMeta{
+			CurrentPage: filter.Page,
+			PerPage:     filter.Limit,
+			Total:       len(filteredEntries),
+			TotalPages:  (len(filteredEntries) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(filteredEntries) + filter.Limit - 1) / filter.Limit,
+			HasPrev:     filter.Page > 1,
+		},
 	}, nil
 }
 

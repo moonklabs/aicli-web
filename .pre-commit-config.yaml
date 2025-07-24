@@ -20,7 +20,7 @@ repos:
     description: YAML 파일 문법 검증
   - id: check-added-large-files
     name: Check for large files
-    description: 대용량 파일 커밋 방지 (기본값: 500KB)
+    description: "대용량 파일 커밋 방지 (기본값: 500KB)"
     args: ['--maxkb=500']
   - id: check-merge-conflict
     name: Check merge conflicts

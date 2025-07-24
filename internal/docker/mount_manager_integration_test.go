@@ -141,12 +141,13 @@ func TestContainerManager_WithMounts(t *testing.T) {
 		ProjectPath: tempDir,
 	}
 
-	req := &CreateContainerRequest{
-		WorkspaceID: workspace.ID,
-		Name:        "test-mount-container",
-		Image:       "alpine:latest",
-		Command:     []string{"sh", "-c", "ls -la /workspace && sleep 10"},
-	}
+	// 실제 테스트에서 사용될 요청 객체 (현재는 주석 처리된 코드에서만 사용)
+	// req := &CreateContainerRequest{
+	// 	WorkspaceID: workspace.ID,
+	// 	Name:        "test-mount-container",
+	// 	Image:       "alpine:latest",
+	// 	Command:     []string{"sh", "-c", "ls -la /workspace && sleep 10"},
+	// }
 
 	t.Run("validate workspace mounts", func(t *testing.T) {
 		err := containerManager.ValidateWorkspaceMounts(workspace, mountManager, nil)

@@ -1,13 +1,11 @@
 package session
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewDeviceFingerprintGenerator(t *testing.T) {

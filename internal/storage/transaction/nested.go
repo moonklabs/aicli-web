@@ -82,8 +82,8 @@ func (ntm *NestedTransactionManager) RunNestedTx(ctx context.Context, fn func(ct
 }
 
 // RunNestedTxWithResult 결과와 함께 중첩 트랜잭션 실행
-func (ntm *NestedTransactionManager) RunNestedTxWithResult[T any](ctx context.Context, fn func(ctx context.Context) (T, error), opts ...*storage.TransactionOptions) (T, error) {
-	var zero T
+func (ntm *NestedTransactionManager) RunNestedTxWithResult(ctx context.Context, fn func(ctx context.Context) (interface{}, error), opts ...*storage.TransactionOptions) (interface{}, error) {
+	var zero interface{}
 	
 	// 옵션 설정
 	var txOpts *storage.TransactionOptions

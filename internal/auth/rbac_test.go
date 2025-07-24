@@ -108,7 +108,7 @@ func (m *MockPermissionCache) InvalidateGroup(groupID string) error {
 // createTestRole 테스트용 역할 생성
 func createTestRole(id, name, description string, level int, parentID *string) *models.Role {
 	return &models.Role{
-		Base: models.Base{
+		BaseModel: models.BaseModel{
 			ID:        id,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -125,7 +125,7 @@ func createTestRole(id, name, description string, level int, parentID *string) *
 // createTestPermission 테스트용 권한 생성
 func createTestPermission(id, name string, resourceType models.ResourceType, action models.ActionType, effect models.PermissionEffect) *models.Permission {
 	return &models.Permission{
-		Base: models.Base{
+		BaseModel: models.BaseModel{
 			ID:        id,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -141,7 +141,7 @@ func createTestPermission(id, name string, resourceType models.ResourceType, act
 // createTestUserGroup 테스트용 사용자 그룹 생성
 func createTestUserGroup(id, name, description, groupType string, parentID *string) *models.UserGroup {
 	return &models.UserGroup{
-		Base: models.Base{
+		BaseModel: models.BaseModel{
 			ID:        id,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -226,6 +226,9 @@ func TestRBACManager_CheckPermission_Deny(t *testing.T) {
 	// Mock 설정: 사용자에게 역할이 없음
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{}, nil)
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{}, nil)
+	
+	// Mock 설정: 캐시 저장 (빈 권한)
+	mockCache.On("SetUserPermissionMatrix", userID, mock.AnythingOfType("*models.UserPermissionMatrix"), 30*time.Minute).Return(nil)
 	
 	req := &models.CheckPermissionRequest{
 		UserID:       userID,

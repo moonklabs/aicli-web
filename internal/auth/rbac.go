@@ -329,11 +329,11 @@ func (jce *JSONConditionEvaluator) EvaluateConditions(conditions string, context
 	}
 	
 	// 간단한 조건 평가 구현
-	return rm.evaluateConditionMap(conditionMap, context), nil
+	return jce.evaluateConditionMap(conditionMap, context), nil
 }
 
 // evaluateConditionMap 조건 맵 평가
-func (rm *RBACManager) evaluateConditionMap(conditions map[string]interface{}, context map[string]interface{}) bool {
+func (jce *JSONConditionEvaluator) evaluateConditionMap(conditions map[string]interface{}, context map[string]interface{}) bool {
 	for key, expectedValue := range conditions {
 		contextValue, exists := context[key]
 		if !exists {

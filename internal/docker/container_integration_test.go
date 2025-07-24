@@ -144,7 +144,7 @@ func TestContainerManager_ConcurrentOperations(t *testing.T) {
 		t.Skip("Docker tests are disabled")
 	}
 
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	projectDir, projectCleanup := createTestProjectDir(t)
@@ -314,7 +314,7 @@ func TestContainerManager_ErrorRecovery(t *testing.T) {
 		t.Skip("Docker tests are disabled")
 	}
 
-	client, manager, cleanup := setupTestEnvironment(t)
+	_, manager, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
 	projectDir, projectCleanup := createTestProjectDir(t)

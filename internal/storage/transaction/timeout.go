@@ -133,8 +133,8 @@ func (tm *TimeoutManager) RunWithTimeout(ctx context.Context, timeout time.Durat
 }
 
 // RunWithTimeoutAndResult 결과와 함께 타임아웃 트랜잭션 실행
-func (tm *TimeoutManager) RunWithTimeoutAndResult[T any](ctx context.Context, timeout time.Duration, fn func(ctx context.Context) (T, error), opts ...*storage.TransactionOptions) (T, error) {
-	var zero T
+func (tm *TimeoutManager) RunWithTimeoutAndResult(ctx context.Context, timeout time.Duration, fn func(ctx context.Context) (interface{}, error), opts ...*storage.TransactionOptions) (interface{}, error) {
+	var zero interface{}
 	
 	tx, err := tm.BeginWithTimeout(ctx, timeout, getTransactionOptions(opts...))
 	if err != nil {

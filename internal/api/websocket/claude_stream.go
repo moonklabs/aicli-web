@@ -141,7 +141,20 @@ func NewClaudeStreamHandler(sessionManager claude.SessionManager, authValidator 
 // HandleWebSocket는 WebSocket 연결을 처리합니다
 func (h *ClaudeStreamHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// 인증 확인
-	userInfo, err := h.authValidator.ValidateRequest(r)
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+		return
+	}
+	
+	// Bearer 토큰 추출
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
+		return
+	}
+	
+	userInfo, err := (*h.authValidator).ValidateToken(r.Context(), tokenStr)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -308,7 +321,7 @@ func (h *ClaudeStreamHandler) createClientConnection(conn *websocket.Conn, userI
 	
 	return &ClientConnection{
 		ID:          fmt.Sprintf("conn_%d", time.Now().UnixNano()),
-		UserID:      userInfo.UserID,
+		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		Conn:        conn,
 		Permission:  h.determinePermission(userInfo),

@@ -49,7 +49,8 @@ type ErrorClass struct {
 type ErrorType int
 
 const (
-	NetworkError ErrorType = iota
+	ErrorTypeNone ErrorType = iota
+	NetworkError
 	ProcessError
 	AuthError
 	ResourceError
@@ -89,6 +90,7 @@ const (
 // ClassificationRule은 분류 규칙입니다
 type ClassificationRule struct {
 	ID          string     `json:"id"`
+	Name        string     `json:"name"`
 	Pattern     string     `json:"pattern"`
 	ErrorClass  ErrorClass `json:"error_class"`
 	Weight      float64    `json:"weight"`
@@ -306,6 +308,19 @@ func (e *ErrorClassificationEngine) AddClassificationRule(rule ClassificationRul
 	return nil
 }
 
+// NewErrorStatistics는 새로운 ErrorStatistics를 생성합니다
+func NewErrorStatistics() *ErrorStatistics {
+	return &ErrorStatistics{
+		ErrorsByType:     make(map[ErrorType]int64),
+		ErrorsBySeverity: make(map[ErrorSeverity]int64),
+		ErrorsByCategory: make(map[string]int64),
+		TopErrors:        make([]ErrorPattern, 0),
+		RecentErrors:     make([]ClassifiedError, 0),
+		StartTime:        time.Now(),
+		LastUpdated:      time.Now(),
+	}
+}
+
 // LearnFromError는 에러로부터 학습합니다
 func (e *ErrorClassificationEngine) LearnFromError(err error, actualClass ErrorClass) error {
 	if err == nil {
@@ -362,11 +377,21 @@ func (e *ErrorClassificationEngine) GetErrorStatistics() *ErrorStatistics {
 	return stats
 }
 
+// RecordError는 에러를 기록합니다
+func (e *ErrorStatistics) RecordError(err error, class ErrorClass) {
+	e.TotalErrors++
+	e.ErrorsByType[class.Type]++
+	e.ErrorsBySeverity[class.Severity]++
+	e.ErrorsByCategory[class.Category]++
+	e.LastUpdated = time.Now()
+}
+
 // 내부 메서드들
 
 func (e *ErrorClassificationEngine) initializeDefaultRules() {
 	defaultRules := []ClassificationRule{
 		{
+			Name:    "Connection Refused",
 			Pattern: "connection.*refused",
 			ErrorClass: ErrorClass{
 				Type:        NetworkError,
@@ -380,6 +405,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 		{
+			Name:    "Timeout Error",
 			Pattern: "timeout",
 			ErrorClass: ErrorClass{
 				Type:        TimeoutError,
@@ -393,6 +419,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 		{
+			Name:    "Process Exit Error",
 			Pattern: "process.*exit.*code",
 			ErrorClass: ErrorClass{
 				Type:        ProcessError,
@@ -406,6 +433,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 		{
+			Name:    "Authentication Failed",
 			Pattern: "unauthorized|authentication.*failed",
 			ErrorClass: ErrorClass{
 				Type:        AuthError,
@@ -419,6 +447,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 		{
+			Name:    "Memory Allocation Failed",
 			Pattern: "out of memory|memory allocation failed",
 			ErrorClass: ErrorClass{
 				Type:        ResourceError,
@@ -432,6 +461,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 		{
+			Name:    "Quota Exceeded",
 			Pattern: "quota.*exceeded|rate.*limit",
 			ErrorClass: ErrorClass{
 				Type:        QuotaError,

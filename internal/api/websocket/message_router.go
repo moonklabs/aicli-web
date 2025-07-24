@@ -325,8 +325,8 @@ func (r *MessageRouter) handleSessionJoin(ctx *MessageContext) error {
 	// 토큰 검증 및 세션 ID 추출 (실제 구현 필요)
 	// 여기서는 시뮬레이션
 	sessionID := ctx.SessionID
-	if sessionID == "" {
-		return fmt.Errorf("invalid share token")
+	if sessionID == "" || shareToken == "" {
+		return fmt.Errorf("invalid share token: %s", shareToken)
 	}
 
 	// 세션 참여

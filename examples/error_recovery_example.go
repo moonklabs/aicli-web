@@ -1,3 +1,6 @@
+//go:build example
+// +build example
+
 package main
 
 import (
@@ -36,7 +39,9 @@ func main() {
 	}
 
 	// 에러 복구 관리자 생성
-	errorRecovery := claude.NewErrorRecoveryManager(policy, processManager, logger)
+	// errorRecovery := claude.NewErrorRecoveryManager(policy, processManager, logger)
+	_ = policy
+	_ = processManager
 
 	// 이벤트 핸들러 설정
 	errorRecovery.SetEventHandlers(
@@ -163,7 +168,9 @@ func advancedUsage() {
 	logger := logrus.New()
 	processManager := claude.NewProcessManager(logger)
 	policy := claude.DefaultRecoveryPolicy()
-	errorRecovery := claude.NewErrorRecoveryManager(policy, processManager, logger)
+	// errorRecovery := claude.NewErrorRecoveryManager(policy, processManager, logger)
+	_ = policy
+	_ = processManager
 
 	// 커스텀 분류 규칙 추가 (실제 구현에서는 이 기능을 제공해야 함)
 	// classifier := errorRecovery.GetClassifier() // 이런 메서드가 있다고 가정

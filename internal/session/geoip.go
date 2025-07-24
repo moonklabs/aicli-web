@@ -1,6 +1,7 @@
 package session
 
 import (
+	"math"
 	"net"
 	"os"
 	"sync"
@@ -143,6 +144,51 @@ func (g *GeoIPService) GetLocationInfo(ipAddress string) (*models.LocationInfo, 
 	}
 
 	return locationInfo, nil
+}
+
+// isLocalIP은 IP가 로컬 IP인지 확인합니다.
+func (g *GeoIPService) isLocalIP(ip net.IP) bool {
+	// 로컬 IP 범위 체크
+	privateIPBlocks := []string{
+		"127.0.0.0/8",    // Loopback
+		"10.0.0.0/8",     // RFC1918
+		"172.16.0.0/12",  // RFC1918
+		"192.168.0.0/16", // RFC1918
+		"::1/128",        // IPv6 loopback
+		"fc00::/7",       // IPv6 unique local
+		"fe80::/10",      // IPv6 link local
+	}
+	
+	for _, block := range privateIPBlocks {
+		_, cidr, err := net.ParseCIDR(block)
+		if err == nil && cidr.Contains(ip) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// CalculateDistance은 두 위치 사이의 거리를 계산합니다 (km 단위).
+func (g *GeoIPService) CalculateDistance(loc1, loc2 *models.LocationInfo) float64 {
+	if loc1 == nil || loc2 == nil {
+		return 0
+	}
+	
+	const R = 6371 // 지구 반지름 (km)
+	
+	lat1 := loc1.Latitude * math.Pi / 180
+	lat2 := loc2.Latitude * math.Pi / 180
+	deltaLat := (loc2.Latitude - loc1.Latitude) * math.Pi / 180
+	deltaLon := (loc2.Longitude - loc1.Longitude) * math.Pi / 180
+	
+	a := math.Sin(deltaLat/2)*math.Sin(deltaLat/2) +
+		math.Cos(lat1)*math.Cos(lat2)*
+		math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
+		
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	
+	return R * c
 }
 
 // IsAvailable은 GeoIP 서비스가 사용 가능한지 확인합니다.

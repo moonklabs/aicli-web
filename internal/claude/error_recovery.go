@@ -2,12 +2,9 @@ package claude
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 // ErrorRecovery 에러 복구 인터페이스

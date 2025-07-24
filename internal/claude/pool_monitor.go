@@ -2,6 +2,8 @@ package claude
 
 import (
 	"context"
+	"fmt"
+	"math"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -285,8 +287,6 @@ func (m *PoolMonitor) collectPoolMetrics() {
 func (m *PoolMonitor) updateSessionMetrics() {
 	m.sessionMutex.Lock()
 	defer m.sessionMutex.Unlock()
-	
-	now := time.Now()
 	
 	// 각 세션의 메트릭 업데이트
 	for sessionID, metrics := range m.sessionMetrics {

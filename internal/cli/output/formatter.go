@@ -10,7 +10,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -164,23 +163,12 @@ func (f *baseFormatter) SetColorEnabled(enabled bool) {
 // Format은 데이터를 테이블 형식으로 포맷합니다.
 func (tf *TableFormatter) Format(data interface{}) (string, error) {
 	var output strings.Builder
-	table := tablewriter.NewWriter(&output)
+	table := NewWriter(&output)
 	
 	// 테이블 스타일 설정
-	table.SetBorder(false)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	
-	// 색상 설정
-	if tf.colorEnabled {
-		table.SetHeaderColor(
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		)
-	}
+	table.SetBorders(Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.SetAlignment(ALIGN_LEFT)
 	
 	// 데이터 타입에 따라 처리
 	switch v := data.(type) {
@@ -253,10 +241,10 @@ func (tf *TableFormatter) formatStructSlice(data interface{}) (string, error) {
 	}
 	
 	var output strings.Builder
-	table := tablewriter.NewWriter(&output)
+	table := NewWriter(&output)
 	table.SetBorder(false)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(ALIGN_LEFT)
+	table.SetHeaderAlignment(ALIGN_LEFT)
 	
 	// 첫 번째 요소에서 필드 이름 추출
 	firstElem := value.Index(0)
@@ -285,11 +273,8 @@ func (tf *TableFormatter) formatStructSlice(data interface{}) (string, error) {
 	}
 	
 	if tf.colorEnabled {
-		colorHeaders := make([]tablewriter.Colors, len(headers))
-		for i := range colorHeaders {
-			colorHeaders[i] = tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor}
-		}
-		table.SetHeaderColor(colorHeaders...)
+		// 색상 설정 (스텁에서는 무시됨)
+		table.SetHeaderColor()
 	}
 	
 	table.SetHeader(headers)
@@ -331,16 +316,14 @@ func (tf *TableFormatter) formatSingleStruct(data interface{}) (string, error) {
 	}
 	
 	var output strings.Builder
-	table := tablewriter.NewWriter(&output)
+	table := NewWriter(&output)
 	table.SetBorder(false)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(ALIGN_LEFT)
+	table.SetHeaderAlignment(ALIGN_LEFT)
 	
 	if tf.colorEnabled {
-		table.SetHeaderColor(
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-			tablewriter.Colors{tablewriter.Bold, tablewriter.FgCyanColor},
-		)
+		// 색상 설정 (스텁에서는 무시됨)
+		table.SetHeaderColor()
 	}
 	
 	table.SetHeader([]string{"Field", "Value"})

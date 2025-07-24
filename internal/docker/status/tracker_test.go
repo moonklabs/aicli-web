@@ -119,11 +119,11 @@ func NewMockContainerManager() *MockContainerManager {
 	}
 }
 
-func (m *MockContainerManager) CreateWorkspaceContainer(ctx context.Context, req *docker.CreateContainerRequest) (docker.WorkspaceContainer, error) {
+func (m *MockContainerManager) CreateWorkspaceContainer(ctx context.Context, req *docker.CreateContainerRequest) (*docker.WorkspaceContainer, error) {
 	return nil, nil
 }
 
-func (m *MockContainerManager) InspectContainer(ctx context.Context, containerID string) (docker.WorkspaceContainer, error) {
+func (m *MockContainerManager) InspectContainer(ctx context.Context, containerID string) (*docker.WorkspaceContainer, error) {
 	return nil, nil
 }
 
@@ -157,6 +157,17 @@ func (m *MockContainerManager) RemoveContainer(ctx context.Context, containerID 
 
 func (m *MockContainerManager) CleanupWorkspace(ctx context.Context, workspaceID string, force bool) error {
 	return nil
+}
+
+func (m *MockContainerManager) ListContainers(ctx context.Context) ([]*docker.WorkspaceContainer, error) {
+	var allContainers []*docker.WorkspaceContainer
+	for _, containers := range m.containers {
+		for _, container := range containers {
+			var wc docker.WorkspaceContainer = container
+			allContainers = append(allContainers, &wc)
+		}
+	}
+	return allContainers, nil
 }
 
 func (m *MockContainerManager) AddContainer(workspaceID string, container *MockWorkspaceContainer) {

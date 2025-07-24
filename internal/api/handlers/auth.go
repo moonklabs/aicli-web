@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
@@ -40,17 +39,15 @@ type RefreshResponse struct {
 
 // AuthHandler 인증 핸들러
 type AuthHandler struct {
-	jwtManager   *auth.JWTManager
-	blacklist    *auth.Blacklist
-	oauthManager auth.OAuthManager
+	jwtManager *auth.JWTManager
+	blacklist  *auth.Blacklist
 }
 
 // NewAuthHandler 새로운 인증 핸들러 생성
-func NewAuthHandler(jwtManager *auth.JWTManager, blacklist *auth.Blacklist, oauthManager auth.OAuthManager) *AuthHandler {
+func NewAuthHandler(jwtManager *auth.JWTManager, blacklist *auth.Blacklist) *AuthHandler {
 	return &AuthHandler{
-		jwtManager:   jwtManager,
-		blacklist:    blacklist,
-		oauthManager: oauthManager,
+		jwtManager: jwtManager,
+		blacklist:  blacklist,
 	}
 }
 
@@ -100,7 +97,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// 액세스 토큰 생성
-	accessToken, err := h.jwtManager.GenerateToken(userID, req.Username, role, auth.AccessToken)
+	email := req.Username + "@example.com" // 임시 이메일
+	accessToken, err := h.jwtManager.GenerateToken(userID, req.Username, email, role, auth.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -113,7 +111,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// 리프레시 토큰 생성
-	refreshToken, err := h.jwtManager.GenerateToken(userID, req.Username, role, auth.RefreshToken)
+	refreshToken, err := h.jwtManager.GenerateToken(userID, req.Username, email, role, auth.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -293,7 +291,7 @@ type OAuthLoginResponse struct {
 // @Success 200 {object} map[string]interface{} "로그인 URL 생성 성공"
 // @Failure 400 {object} map[string]interface{} "잘못된 요청"
 // @Router /auth/oauth/{provider} [get]
-func (h *AuthHandler) OAuthLogin(c *gin.Context) {
+func (h *AuthHandler) OAuthLogin(c *gin.Context, oauthManager auth.OAuthManager) {
 	var req OAuthLoginRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -308,29 +306,18 @@ func (h *AuthHandler) OAuthLogin(c *gin.Context) {
 	}
 
 	// state 생성 (CSRF 보호)
-	state, err := h.generateSecureState()
+	stateBytes := make([]byte, 32)
+	_, err := rand.Read(stateBytes)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error": gin.H{
-				"code":    "STATE_GENERATION_ERROR",
-				"message": "Failed to generate security state",
-			},
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate state"})
 		return
 	}
+	state := base64.URLEncoding.EncodeToString(stateBytes)
 
 	// OAuth 인증 URL 생성
-	authURL, err := h.oauthManager.GetAuthURL(req.Provider, state)
+	authURL, err := oauthManager.GetAuthURL(req.Provider, state)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error": gin.H{
-				"code":    "AUTH_URL_ERROR",
-				"message": "Failed to generate OAuth URL",
-				"details": err.Error(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -355,7 +342,7 @@ func (h *AuthHandler) OAuthLogin(c *gin.Context) {
 // @Failure 400 {object} map[string]interface{} "잘못된 요청"
 // @Failure 401 {object} map[string]interface{} "인증 실패"
 // @Router /auth/oauth/{provider}/callback [get]
-func (h *AuthHandler) OAuthCallback(c *gin.Context) {
+func (h *AuthHandler) OAuthCallback(c *gin.Context, oauthManager auth.OAuthManager) {
 	var req OAuthCallbackRequest
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -382,30 +369,16 @@ func (h *AuthHandler) OAuthCallback(c *gin.Context) {
 	}
 
 	// 인증 코드를 액세스 토큰으로 교환
-	oauthToken, err := h.oauthManager.ExchangeCode(req.Provider, req.Code, req.State)
+	token, err := oauthManager.ExchangeCode(req.Provider, req.Code, req.State)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"error": gin.H{
-				"code":    "TOKEN_EXCHANGE_ERROR",
-				"message": "Failed to exchange OAuth code",
-				"details": err.Error(),
-			},
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	// 사용자 정보 조회
-	userInfo, err := h.oauthManager.GetUserInfo(req.Provider, oauthToken)
+	// 사용자 정보 가져오기
+	userInfo, err := oauthManager.GetUserInfo(req.Provider, token)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"error": gin.H{
-				"code":    "USER_INFO_ERROR",
-				"message": "Failed to get user information",
-				"details": err.Error(),
-			},
-		})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -419,7 +392,7 @@ func (h *AuthHandler) OAuthCallback(c *gin.Context) {
 	role := "user" // OAuth 사용자는 기본적으로 user 역할
 
 	// JWT 토큰 생성 (기존 시스템과 동일)
-	accessToken, err := h.jwtManager.GenerateToken(userID, userName, role, auth.AccessToken)
+	accessToken, err := h.jwtManager.GenerateToken(userID, userName, userInfo.Email, role, auth.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -431,7 +404,7 @@ func (h *AuthHandler) OAuthCallback(c *gin.Context) {
 		return
 	}
 
-	refreshToken, err := h.jwtManager.GenerateToken(userID, userName, role, auth.RefreshToken)
+	refreshToken, err := h.jwtManager.GenerateToken(userID, userName, userInfo.Email, role, auth.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,

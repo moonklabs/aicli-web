@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"go.etcd.io/bbolt"
@@ -137,9 +138,9 @@ func (ts *taskStorage) GetByID(ctx context.Context, id string) (*models.Task, er
 }
 
 // GetBySessionID 세션별 태스크 목록 조회
-func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pagination *models.PaginationRequest) ([]*models.Task, int64, error) {
+func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pagination *models.PaginationRequest) ([]*models.Task, int, error) {
 	var tasks []*models.Task
-	var total int64
+	var total int
 	
 	err := ts.db.View(func(tx *bbolt.Tx) error {
 		// 인덱스에서 태스크 ID 목록 가져오기
@@ -172,7 +173,7 @@ func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pag
 		// 생성 시간 역순 정렬
 		ts.querier.SortTasks(allTasks, "created_at", false)
 		
-		total = int64(len(allTasks))
+		total = len(allTasks)
 		
 		// 페이지네이션 적용
 		start, end := ts.querier.CalculatePagination(len(allTasks), pagination)
@@ -189,9 +190,9 @@ func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pag
 }
 
 // GetByStatus 상태별 태스크 조회
-func (ts *taskStorage) GetByStatus(ctx context.Context, status models.TaskStatus, pagination *models.PaginationRequest) ([]*models.Task, int64, error) {
+func (ts *taskStorage) GetByStatus(ctx context.Context, status models.TaskStatus, pagination *models.PaginationRequest) ([]*models.Task, int, error) {
 	var tasks []*models.Task
-	var total int64
+	var total int
 	
 	err := ts.db.View(func(tx *bbolt.Tx) error {
 		// 인덱스에서 태스크 ID 목록 가져오기
@@ -224,7 +225,7 @@ func (ts *taskStorage) GetByStatus(ctx context.Context, status models.TaskStatus
 		// 시작 시간 역순 정렬 (최신 태스크가 먼저)
 		ts.querier.SortTasks(allTasks, "started_at", false)
 		
-		total = int64(len(allTasks))
+		total = len(allTasks)
 		
 		// 페이지네이션 적용
 		start, end := ts.querier.CalculatePagination(len(allTasks), pagination)
@@ -283,9 +284,9 @@ func (ts *taskStorage) GetActiveCount(ctx context.Context, sessionID string) (in
 }
 
 // SearchByCommand 명령어로 태스크 검색
-func (ts *taskStorage) SearchByCommand(ctx context.Context, query string, pagination *models.PaginationRequest) ([]*models.Task, int64, error) {
+func (ts *taskStorage) SearchByCommand(ctx context.Context, query string, pagination *models.PaginationRequest) ([]*models.Task, int, error) {
 	var tasks []*models.Task
-	var total int64
+	var total int
 	
 	err := ts.db.View(func(tx *bbolt.Tx) error {
 		// 쿼리 토큰화
@@ -349,7 +350,7 @@ func (ts *taskStorage) SearchByCommand(ctx context.Context, query string, pagina
 		// 관련성 순으로 정렬 (정확한 매치가 우선)
 		ts.sortTasksByRelevance(allTasks, query)
 		
-		total = int64(len(allTasks))
+		total = len(allTasks)
 		
 		// 페이지네이션 적용
 		start, end := ts.querier.CalculatePagination(len(allTasks), pagination)
@@ -366,7 +367,7 @@ func (ts *taskStorage) SearchByCommand(ctx context.Context, query string, pagina
 }
 
 // Update 태스크 정보 업데이트
-func (ts *taskStorage) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+func (ts *taskStorage) Update(ctx context.Context, task *models.Task) error {
 	return ts.db.Update(func(tx *bbolt.Tx) error {
 		taskBucket := tx.Bucket([]byte(bucketTasks))
 		if taskBucket == nil {
@@ -374,99 +375,53 @@ func (ts *taskStorage) Update(ctx context.Context, id string, updates map[string
 		}
 		
 		// 기존 태스크 조회
-		data := taskBucket.Get([]byte(id))
+		data := taskBucket.Get([]byte(task.ID))
 		if data == nil {
 			return storage.ErrNotFound
 		}
 		
-		var task models.Task
-		if err := ts.serializer.UnmarshalTask(data, &task); err != nil {
+		var oldTask models.Task
+		if err := ts.serializer.UnmarshalTask(data, &oldTask); err != nil {
 			return err
 		}
 		
 		// 인덱스 업데이트를 위한 이전 값 저장
-		oldStatus := string(task.Status)
-		oldCommand := task.Command
-		
-		// 업데이트 적용
-		if status, ok := updates["status"]; ok {
-			if statusVal, ok := status.(models.TaskStatus); ok {
-				task.Status = statusVal
-			} else if statusStr, ok := status.(string); ok {
-				task.Status = models.TaskStatus(statusStr)
-			}
-		}
-		
-		if command, ok := updates["command"]; ok {
-			if cmdStr, ok := command.(string); ok {
-				task.Command = cmdStr
-			}
-		}
-		
-		if startedAt, ok := updates["started_at"]; ok {
-			if startedTime, ok := startedAt.(*time.Time); ok {
-				task.StartedAt = startedTime
-			}
-		}
-		
-		if completedAt, ok := updates["completed_at"]; ok {
-			if completedTime, ok := completedAt.(*time.Time); ok {
-				task.CompletedAt = completedTime
-			}
-		}
-		
-		if duration, ok := updates["duration"]; ok {
-			if durationVal, ok := duration.(int64); ok {
-				task.Duration = durationVal
-			}
-		}
-		
-		if output, ok := updates["output"]; ok {
-			if outputStr, ok := output.(string); ok {
-				task.Output = outputStr
-			}
-		}
-		
-		if errorMsg, ok := updates["error"]; ok {
-			if errorStr, ok := errorMsg.(string); ok {
-				task.Error = errorStr
-			}
-		}
+		oldStatus := string(oldTask.Status)
+		oldCommand := oldTask.Command
 		
 		// 타임스탬프 및 버전 업데이트
 		task.UpdatedAt = time.Now()
-		task.Version++
+		task.Version = oldTask.Version + 1
 		
 		// 직렬화 및 저장
-		updatedData, err := ts.serializer.MarshalTask(&task)
+		updatedData, err := ts.serializer.MarshalTask(task)
 		if err != nil {
 			return err
 		}
 		
-		if err := taskBucket.Put([]byte(id), updatedData); err != nil {
+		if err := taskBucket.Put([]byte(task.ID), updatedData); err != nil {
 			return err
 		}
 		
 		// 인덱스 업데이트
 		if string(task.Status) != oldStatus {
-			ts.indexer.RemoveFromIndex(tx, IndexTaskStatus, oldStatus, id)
-			ts.indexer.AddToIndex(tx, IndexTaskStatus, string(task.Status), id)
+			ts.indexer.RemoveFromIndex(tx, IndexTaskStatus, oldStatus, task.ID)
+			ts.indexer.AddToIndex(tx, IndexTaskStatus, string(task.Status), task.ID)
 		}
 		
 		if task.Command != oldCommand {
-			// 이전 명령어 인덱스 제거
+			// 간단한 토큰화 - strings.Fields 사용
 			if oldCommand != "" {
-				oldWords := ts.querier.TokenizeCommand(oldCommand)
+				oldWords := strings.Fields(strings.ToLower(oldCommand))
 				for _, word := range oldWords {
-					ts.indexer.RemoveFromIndex(tx, IndexTaskCommand, word, id)
+					ts.indexer.RemoveFromIndex(tx, IndexTaskStatus, word, task.ID)
 				}
 			}
 			
-			// 새 명령어 인덱스 추가
 			if task.Command != "" {
-				newWords := ts.querier.TokenizeCommand(task.Command)
+				newWords := strings.Fields(strings.ToLower(task.Command))
 				for _, word := range newWords {
-					ts.indexer.AddToIndex(tx, IndexTaskCommand, word, id)
+					ts.indexer.AddToIndex(tx, IndexTaskStatus, word, task.ID)
 				}
 			}
 		}
@@ -727,4 +682,60 @@ func (ts *taskStorage) calculateRelevanceScore(command, query string) float64 {
 	}
 	
 	return float64(matches) / float64(len(queryWords)) * 50
+}
+
+// List 모든 태스크 목록 조회 (관리자용)
+func (ts *taskStorage) List(ctx context.Context, filter *models.TaskFilter, pagination *models.PaginationRequest) ([]*models.Task, int, error) {
+	if pagination == nil {
+		pagination = &models.PaginationRequest{Limit: 20, Sort: "created_at", Order: "desc"}
+	}
+	
+	var tasks []*models.Task
+	var total int
+	
+	err := ts.db.View(func(tx *bbolt.Tx) error {
+		taskBucket := tx.Bucket([]byte(bucketTasks))
+		if taskBucket == nil {
+			return fmt.Errorf("tasks bucket not found")
+		}
+		
+		// 모든 태스크 조회
+		var allTasks []*models.Task
+		cursor := taskBucket.Cursor()
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			var task models.Task
+			if err := ts.serializer.UnmarshalTask(v, &task); err != nil {
+				continue
+			}
+			
+			// 필터 적용
+			if filter != nil {
+				if filter.SessionID != nil && *filter.SessionID != "" && task.SessionID != *filter.SessionID {
+					continue
+				}
+				if filter.Status != nil && task.Status != *filter.Status {
+					continue
+				}
+			}
+			
+			allTasks = append(allTasks, &task)
+		}
+		
+		// 정렬
+		ts.querier.sortTasks(allTasks, pagination.Sort, SortOrder(pagination.Order))
+		
+		total = len(allTasks)
+		
+		// 페이지네이션 적용
+		start, end := ts.querier.CalculatePagination(len(allTasks), pagination)
+		tasks = allTasks[start:end]
+		
+		return nil
+	})
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	return tasks, total, nil
 }

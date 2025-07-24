@@ -216,7 +216,7 @@ func (t *ExecutionTracker) broadcastStatusUpdate(status *ExecutionStatus) {
 		return
 	}
 
-	message := Message{
+	message := TrackerMessage{
 		Type: "execution_status",
 		Data: map[string]interface{}{
 			"execution_id": status.ID,
@@ -238,7 +238,7 @@ func (t *ExecutionTracker) broadcastProgressUpdate(executionID string, status *E
 		return
 	}
 
-	wsMessage := Message{
+	wsMessage := TrackerMessage{
 		Type: "execution_progress",
 		Data: map[string]interface{}{
 			"execution_id": executionID,

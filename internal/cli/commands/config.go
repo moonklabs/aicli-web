@@ -5,10 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/aicli/aicli-web/internal/config"
 	"github.com/aicli/aicli-web/internal/cli/output"
-	"gopkg.in/yaml.v3"
+	"github.com/aicli/aicli-web/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // NewConfigCommand는 Viper 기반 config 관련 명령어를 생성합니다

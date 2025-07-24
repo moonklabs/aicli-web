@@ -104,6 +104,23 @@ func (w *workspaceStorage) GetByID(ctx context.Context, id string) (*models.Work
 	return workspace, nil
 }
 
+// GetByName 이름으로 워크스페이스 조회
+func (w *workspaceStorage) GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error) {
+	query := selectWorkspaceQuery + ` WHERE owner_id = ? AND name = ? AND deleted_at IS NULL`
+	
+	row := w.storage.queryRowContext(ctx, query, ownerID, name)
+	
+	workspace, err := w.scanWorkspace(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotFound
+		}
+		return nil, storage.ConvertError(err, "get workspace by name", "sqlite")
+	}
+	
+	return workspace, nil
+}
+
 // GetByOwnerID 소유자 ID로 워크스페이스 목록 조회
 func (w *workspaceStorage) GetByOwnerID(ctx context.Context, ownerID string, pagination *models.PaginationRequest) ([]*models.Workspace, int, error) {
 	if pagination == nil {
@@ -268,6 +285,19 @@ func (w *workspaceStorage) ExistsByName(ctx context.Context, ownerID, name strin
 	}
 	
 	return exists == 1, nil
+}
+
+// CountByOwner 소유자별 워크스페이스 개수 조회
+func (w *workspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
+	query := countWorkspacesQuery + ` WHERE owner_id = ? AND deleted_at IS NULL`
+	
+	var count int
+	err := w.storage.queryRowContext(ctx, query, ownerID).Scan(&count)
+	if err != nil {
+		return 0, storage.ConvertError(err, "count workspaces by owner", "sqlite")
+	}
+	
+	return count, nil
 }
 
 // scanWorkspace 단일 워크스페이스 스캔

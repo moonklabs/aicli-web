@@ -277,6 +277,36 @@ func (t *transactionWorkspaceStorage) ExistsByName(ctx context.Context, ownerID,
 	return exists == 1, nil
 }
 
+// CountByOwner 소유자별 워크스페이스 개수 조회 (트랜잭션 내)
+func (t *transactionWorkspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
+	query := countWorkspacesQuery + ` WHERE owner_id = ? AND deleted_at IS NULL`
+	
+	var count int
+	err := t.queryRowContext(ctx, query, ownerID).Scan(&count)
+	if err != nil {
+		return 0, storage.ConvertError(err, "count workspaces by owner in tx", "sqlite")
+	}
+	
+	return count, nil
+}
+
+// GetByName 이름으로 워크스페이스 조회 (트랜잭션 내)
+func (t *transactionWorkspaceStorage) GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error) {
+	query := selectWorkspaceQuery + ` WHERE owner_id = ? AND name = ? AND deleted_at IS NULL`
+	
+	row := t.queryRowContext(ctx, query, ownerID, name)
+	
+	workspace, err := t.scanWorkspace(row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, storage.ErrNotFound
+		}
+		return nil, storage.ConvertError(err, "get workspace by name in tx", "sqlite")
+	}
+	
+	return workspace, nil
+}
+
 // 다른 스토리지 타입들의 트랜잭션 래퍼들 (기본 구현)
 
 // transactionProjectStorage 트랜잭션용 프로젝트 스토리지 (기본 구현)
@@ -328,7 +358,7 @@ func (t *transactionSessionStorage) GetByID(ctx context.Context, id string) (*mo
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 
-func (t *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PagingRequest) (*models.PagingResponse[*models.Session], error) {
+func (t *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 

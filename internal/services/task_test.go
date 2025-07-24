@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage/memory"
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 	
@@ -28,20 +28,17 @@ func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
 	
 	// 테스트용 워크스페이스와 프로젝트, 세션 생성
 	workspace := &models.Workspace{
-		BaseModel: models.BaseModel{ID: "ws-test"},
-		Name:      "Test Workspace",
-		OwnerID:   "user-test",
-		Settings:  map[string]interface{}{},
+		Name:        "Test Workspace",
+		OwnerID:     "user-test",
+		ProjectPath: "/test/workspace",
 	}
 	_ = storage.Workspace().Create(context.Background(), workspace)
 	
 	project := &models.Project{
-		BaseModel:   models.BaseModel{ID: "proj-test"},
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/tmp/test",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	_ = storage.Project().Create(context.Background(), project)
 	
@@ -234,7 +231,7 @@ func TestTaskService_List(t *testing.T) {
 			result, err := taskService.List(context.Background(), tt.filter, tt.paging)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.Len(t, result.Items, tt.wantCount)
+			assert.Len(t, result.Data.([]*models.Task), tt.wantCount)
 		})
 	}
 }

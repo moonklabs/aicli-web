@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	apierrors "github.com/aicli/aicli-web/internal/errors"
@@ -118,23 +119,25 @@ func determineStatusCode(err *gin.Error) int {
 
 // NewAPIError는 새로운 API 에러를 생성합니다.
 func NewAPIError(code string, message string, details interface{}) *gin.Error {
+	var detailsMap map[string]interface{}
+	if details != nil {
+		if dm, ok := details.(map[string]interface{}); ok {
+			detailsMap = dm
+		}
+	}
+	
 	return &gin.Error{
-		Err:  &APIError{Code: code, Message: message, Details: details},
+		Err: &APIError{
+			Code:      code,
+			Message:   message,
+			Details:   detailsMap,
+			TraceID:   "",
+			Timestamp: time.Now(),
+		},
 		Type: gin.ErrorTypePublic,
 	}
 }
 
-// APIError는 사용자 정의 API 에러 타입입니다.
-type APIError struct {
-	Code    string
-	Message string
-	Details interface{}
-}
-
-// Error는 error 인터페이스 구현입니다.
-func (e *APIError) Error() string {
-	return e.Message
-}
 
 // AbortWithError는 에러와 함께 요청을 중단합니다.
 func AbortWithError(c *gin.Context, statusCode int, code string, message string, details interface{}) {

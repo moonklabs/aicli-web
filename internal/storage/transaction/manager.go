@@ -19,8 +19,7 @@ type Manager interface {
 	// RunInTx 함수 내에서 트랜잭션 실행
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error, opts ...*storage.TransactionOptions) error
 	
-	// RunInTxWithResult 결과와 함께 트랜잭션 실행
-	RunInTxWithResult[T any](ctx context.Context, fn func(ctx context.Context) (T, error), opts ...*storage.TransactionOptions) (T, error)
+	// RunInTxWithResult 결과와 함께 트랜잭션 실행 (제네릭 지원 안함, interface{} 사용)
 	
 	// Current 현재 컨텍스트에서 트랜잭션 가져오기
 	Current(ctx context.Context) (storage.Transaction, bool)
@@ -153,11 +152,11 @@ func (tm *TransactionManager) RunInTx(ctx context.Context, fn func(ctx context.C
 }
 
 // RunInTxWithResult 결과와 함께 트랜잭션 실행
-func (tm *TransactionManager) RunInTxWithResult[T any](ctx context.Context, fn func(ctx context.Context) (T, error), opts ...*storage.TransactionOptions) (T, error) {
-	var zero T
+func (tm *TransactionManager) RunInTxWithResult(ctx context.Context, fn func(ctx context.Context) (interface{}, error), opts ...*storage.TransactionOptions) (interface{}, error) {
+	var zero interface{}
 	
 	// 기존 트랜잭션이 있는 경우 재사용 (중첩 트랜잭션)
-	if existingTx, exists := storage.GetTxFromContext(ctx); exists {
+	if _, exists := storage.GetTxFromContext(ctx); exists {
 		if tm.logger != nil {
 			tm.logger.Printf("기존 트랜잭션을 재사용합니다")
 		}

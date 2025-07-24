@@ -1,10 +1,13 @@
 package session
 
 import (
+	"math"
 	"net"
 	"testing"
 
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewGeoIPService(t *testing.T) {
@@ -30,7 +33,9 @@ func TestNewGeoIPService(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service, err := NewGeoIPService(tt.geoipDataDir)
+			service, err := NewGeoIPService(&GeoIPConfig{
+				DatabasePath: tt.geoipDataDir,
+			})
 			
 			if tt.expectError {
 				assert.Error(t, err, tt.description)
@@ -107,12 +112,12 @@ func TestGetLocationInfoLocalIP(t *testing.T) {
 	tests := []struct {
 		name     string
 		ip       string
-		expected *LocationInfo
+		expected *models.LocationInfo
 	}{
 		{
 			name: "loopback IP",
 			ip:   "127.0.0.1",
-			expected: &LocationInfo{
+			expected: &models.LocationInfo{
 				Country:     "Local",
 				CountryCode: "LOCAL",
 				City:        "Local",
@@ -124,7 +129,7 @@ func TestGetLocationInfoLocalIP(t *testing.T) {
 		{
 			name: "private IP",
 			ip:   "192.168.1.1",
-			expected: &LocationInfo{
+			expected: &models.LocationInfo{
 				Country:     "Local",
 				CountryCode: "LOCAL",
 				City:        "Local",
@@ -201,7 +206,10 @@ func TestCalculateDistance(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			distance := service.CalculateDistance(tt.lat1, tt.lon1, tt.lat2, tt.lon2)
+			distance := service.CalculateDistance(
+				&models.LocationInfo{Latitude: tt.lat1, Longitude: tt.lon1},
+				&models.LocationInfo{Latitude: tt.lat2, Longitude: tt.lon2},
+			)
 			assert.InDelta(t, tt.expected, distance, tt.tolerance)
 		})
 	}
@@ -216,37 +224,37 @@ func TestMathHelperFunctions(t *testing.T) {
 	}{
 		{
 			name: "cosine(0)",
-			function: func() float64 { return cosine(0) },
+			function: func() float64 { return math.Cos(0) },
 			expected: 1.0,
 			tolerance: 0.01,
 		},
 		{
 			name: "sqrt(4)",
-			function: func() float64 { return sqrt(4) },
+			function: func() float64 { return math.Sqrt(4) },
 			expected: 2.0,
 			tolerance: 0.01,
 		},
 		{
 			name: "sqrt(0)",
-			function: func() float64 { return sqrt(0) },
+			function: func() float64 { return math.Sqrt(0) },
 			expected: 0.0,
 			tolerance: 0.01,
 		},
 		{
 			name: "sqrt negative",
-			function: func() float64 { return sqrt(-1) },
+			function: func() float64 { return math.Sqrt(-1) },
 			expected: 0.0,
 			tolerance: 0.01,
 		},
 		{
 			name: "arcsine(0)",
-			function: func() float64 { return arcsine(0) },
+			function: func() float64 { return math.Asin(0) },
 			expected: 0.0,
 			tolerance: 0.01,
 		},
 		{
 			name: "arcsine out of range",
-			function: func() float64 { return arcsine(2) },
+			function: func() float64 { return math.Asin(2) },
 			expected: 0.0,
 			tolerance: 0.01,
 		},
@@ -276,7 +284,10 @@ func BenchmarkCalculateDistance(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		service.CalculateDistance(lat1, lon1, lat2, lon2)
+		service.CalculateDistance(
+			&models.LocationInfo{Latitude: lat1, Longitude: lon1},
+			&models.LocationInfo{Latitude: lat2, Longitude: lon2},
+		)
 	}
 }
 
@@ -293,19 +304,19 @@ func BenchmarkIsLocalIP(b *testing.B) {
 func BenchmarkMathFunctions(b *testing.B) {
 	b.Run("cosine", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			cosine(0.5)
+			math.Cos(0.5)
 		}
 	})
 
 	b.Run("sqrt", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			sqrt(16.0)
+			math.Sqrt(16.0)
 		}
 	})
 
 	b.Run("arcsine", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			arcsine(0.5)
+			math.Asin(0.5)
 		}
 	})
 }

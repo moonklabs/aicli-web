@@ -3,12 +3,10 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
 	"github.com/aicli/aicli-web/internal/claude"
 )
 
@@ -699,23 +697,3 @@ func (mf *MarkdownFormatter) FormatProgress(progress *claude.ProgressInfo) strin
 	return result.String()
 }
 
-// detectColorSupport는 터미널이 색상을 지원하는지 확인합니다.
-func detectColorSupport() bool {
-	// stdout이 터미널이고 색상이 강제로 비활성화되지 않았는지 확인
-	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		return false
-	}
-	
-	// NO_COLOR 환경 변수가 설정되어 있으면 색상 비활성화
-	if os.Getenv("NO_COLOR") != "" {
-		return false
-	}
-	
-	// FORCE_COLOR가 설정되어 있으면 색상 강제 활성화
-	if os.Getenv("FORCE_COLOR") != "" {
-		return true
-	}
-	
-	// 기본적으로 터미널에서는 색상 지원
-	return true
-}

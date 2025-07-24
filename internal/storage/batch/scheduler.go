@@ -3,6 +3,7 @@ package batch
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -511,7 +512,3 @@ func (js *JobScheduler) CleanupCompletedJobs(olderThan time.Duration) int {
 	return cleaned
 }
 
-// 임시 rand import (실제로는 crypto/rand를 사용해야 함)
-import (
-	"math/rand"
-)

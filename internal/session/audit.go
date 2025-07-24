@@ -325,7 +325,7 @@ func (a *AuditLogger) matchFilter(log *AuditLog, filter *AuditFilter) bool {
 // CleanupOldLogs는 오래된 감사 로그를 정리합니다.
 func (a *AuditLogger) CleanupOldLogs(ctx context.Context) error {
 	// 보관 기간을 넘은 키들을 찾아서 삭제
-	cutoffDate := time.Now().Add(-a.retention)
+	// cutoffDate := time.Now().Add(-a.retention)
 	
 	patterns := []string{
 		fmt.Sprintf("%s:audit:session:*", a.keyPrefix),

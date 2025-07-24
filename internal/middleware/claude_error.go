@@ -20,6 +20,11 @@ type APIError struct {
 	Timestamp time.Time              `json:"timestamp"`
 }
 
+// Error는 error 인터페이스를 구현합니다.
+func (e *APIError) Error() string {
+	return e.Message
+}
+
 // ClaudeErrorHandler는 Claude 관련 에러를 처리하는 미들웨어입니다.
 func ClaudeErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {

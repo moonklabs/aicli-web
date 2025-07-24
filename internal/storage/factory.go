@@ -6,8 +6,6 @@ import (
 	"time"
 	
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage/interfaces"
-	"github.com/aicli/aicli-web/internal/storage/memory"
 )
 
 // StorageType 스토리지 백엔드 타입 정의
@@ -68,10 +66,10 @@ func DefaultStorageConfig() StorageConfig {
 // StorageFactory 스토리지 팩토리 인터페이스
 type StorageFactory interface {
 	// Create 설정에 따른 스토리지 인스턴스 생성
-	Create(config StorageConfig) (interfaces.Storage, error)
+	Create(config StorageConfig) (Storage, error)
 	
 	// HealthCheck 스토리지 연결 상태 확인
-	HealthCheck(ctx context.Context, storage interfaces.Storage) error
+	HealthCheck(ctx context.Context, storage Storage) error
 }
 
 // DefaultStorageFactory 기본 스토리지 팩토리
@@ -83,7 +81,7 @@ func NewDefaultStorageFactory() *DefaultStorageFactory {
 }
 
 // Create 설정에 따른 스토리지 인스턴스 생성
-func (f *DefaultStorageFactory) Create(config StorageConfig) (interfaces.Storage, error) {
+func (f *DefaultStorageFactory) Create(config StorageConfig) (Storage, error) {
 	switch config.Type {
 	case StorageTypeMemory:
 		return f.createMemoryStorage(config)
@@ -97,25 +95,25 @@ func (f *DefaultStorageFactory) Create(config StorageConfig) (interfaces.Storage
 }
 
 // createMemoryStorage 메모리 스토리지 생성
-func (f *DefaultStorageFactory) createMemoryStorage(config StorageConfig) (interfaces.Storage, error) {
-	// memory 패키지는 이미 구현되어 있음
-	return memory.New(), nil
+func (f *DefaultStorageFactory) createMemoryStorage(config StorageConfig) (Storage, error) {
+	// 메모리 어댑터 사용
+	return NewMemoryAdapter(), nil
 }
 
 // createSQLiteStorage SQLite 스토리지 생성
-func (f *DefaultStorageFactory) createSQLiteStorage(config StorageConfig) (interfaces.Storage, error) {
+func (f *DefaultStorageFactory) createSQLiteStorage(config StorageConfig) (Storage, error) {
 	// SQLite 구현은 T04_S03에서 구현 예정
 	return nil, fmt.Errorf("SQLite 스토리지는 아직 구현되지 않았습니다")
 }
 
 // createBoltDBStorage BoltDB 스토리지 생성  
-func (f *DefaultStorageFactory) createBoltDBStorage(config StorageConfig) (interfaces.Storage, error) {
+func (f *DefaultStorageFactory) createBoltDBStorage(config StorageConfig) (Storage, error) {
 	// BoltDB 구현은 T05_S03에서 구현 예정
 	return nil, fmt.Errorf("BoltDB 스토리지는 아직 구현되지 않았습니다")
 }
 
 // HealthCheck 스토리지 연결 상태 확인
-func (f *DefaultStorageFactory) HealthCheck(ctx context.Context, storage interfaces.Storage) error {
+func (f *DefaultStorageFactory) HealthCheck(ctx context.Context, storage Storage) error {
 	if storage == nil {
 		return fmt.Errorf("스토리지가 nil입니다")
 	}

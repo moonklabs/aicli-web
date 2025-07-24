@@ -35,7 +35,7 @@ func NewSessionSecurityMiddleware(
 		sessionManager:       sessionManager,
 		securityChecker:     securityChecker,
 		auditLogger:         auditLogger,
-		deviceGenerator:     session.NewDeviceFingerprintGenerator(),
+		deviceGenerator:     session.NewDeviceFingerprintGeneratorWithoutGeoIP(),
 		enableDeviceCheck:   true,
 		enableLocationCheck: true,
 		enableSuspiciousCheck: true,
@@ -136,7 +136,7 @@ func (m *SessionSecurityMiddleware) extractSessionIDFromToken(authHeader string)
 }
 
 // performSecurityChecks는 보안 검사를 수행합니다.
-func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessionData *models.Session) error {
+func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessionData *models.AuthSession) error {
 	// 1. 디바이스 핑거프린트 검사
 	if m.enableDeviceCheck {
 		currentDevice := m.deviceGenerator.GenerateFromRequest(c.Request)
@@ -242,7 +242,7 @@ func (m *SessionSecurityMiddleware) handleSessionError(c *gin.Context, sessionID
 }
 
 // handleSecurityViolation는 보안 위반을 처리합니다.
-func (m *SessionSecurityMiddleware) handleSecurityViolation(c *gin.Context, sessionData *models.Session, err error) {
+func (m *SessionSecurityMiddleware) handleSecurityViolation(c *gin.Context, sessionData *models.AuthSession, err error) {
 	var statusCode int
 	var message string
 	var code string

@@ -85,9 +85,10 @@ func (dws *DockerWorkspaceService) handleDockerError(workspace *models.Workspace
 		case docker.ContainerStateDead:
 			// 컨테이너가 죽은 경우 재생성
 			return dws.recreateWorkspace(workspace.ID, strategy)
-		case docker.ContainerStateOOMKilled:
-			// 메모리 부족으로 종료된 경우 리소스 제한 조정 후 재시작
-			return dws.recreateWorkspaceWithMoreResources(workspace.ID, strategy)
+		// TODO: OOMKilled 상태 처리 추가
+		// case docker.ContainerStateOOMKilled:
+		// 	// 메모리 부족으로 종료된 경우 리소스 제한 조정 후 재시작
+		// 	return dws.recreateWorkspaceWithMoreResources(workspace.ID, strategy)
 		}
 	}
 	
@@ -193,8 +194,6 @@ func (dws *DockerWorkspaceService) retryStorageMount(workspaceID string, strateg
 
 // applyFallbackAction 폴백 액션을 적용합니다
 func (dws *DockerWorkspaceService) applyFallbackAction(workspaceID string, strategy *ErrorRecoveryStrategy) error {
-	ctx := context.Background()
-	
 	switch strategy.FallbackAction {
 	case "stop":
 		task := &WorkspaceTask{

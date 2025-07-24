@@ -553,3 +553,91 @@ func (w *workspaceStorage) GetByOwners(ctx context.Context, ownerIDs []string) (
 	
 	return workspaces, err
 }
+
+// CountByOwner 소유자별 워크스페이스 개수 조회
+func (w *workspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
+	var count int
+	
+	err := w.storage.View(func(tx *bbolt.Tx) error {
+		workspaceIDs, err := w.indexMgr.GetFromIndex(tx, IndexWorkspaceOwner, ownerID)
+		if err != nil {
+			return err
+		}
+		
+		bucket := tx.Bucket([]byte(BucketWorkspaces))
+		if bucket == nil {
+			return fmt.Errorf("워크스페이스 버킷이 존재하지 않습니다")
+		}
+		
+		// 삭제되지 않은 워크스페이스만 카운트
+		for _, workspaceID := range workspaceIDs {
+			data := bucket.Get([]byte(workspaceID))
+			if data == nil {
+				continue
+			}
+			
+			workspace, err := w.serializer.Unmarshal(data)
+			if err != nil {
+				continue
+			}
+			
+			// Soft delete 체크
+			if workspace.DeletedAt == nil {
+				count++
+			}
+		}
+		
+		return nil
+	})
+	
+	return count, err
+}
+
+// GetByName 이름으로 워크스페이스 조회
+func (w *workspaceStorage) GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error) {
+	var workspace *models.Workspace
+	
+	err := w.storage.View(func(tx *bbolt.Tx) error {
+		nameKey := fmt.Sprintf("%s:%s", ownerID, name)
+		
+		// 인덱스에서 워크스페이스 ID 조회
+		workspaceIDs, err := w.indexMgr.GetFromIndex(tx, IndexWorkspaceName, nameKey)
+		if err != nil {
+			return err
+		}
+		
+		if len(workspaceIDs) == 0 {
+			return storage.ErrNotFound
+		}
+		
+		// 첫 번째 매치 (이름은 고유해야 함)
+		bucket := tx.Bucket([]byte(BucketWorkspaces))
+		if bucket == nil {
+			return fmt.Errorf("워크스페이스 버킷이 존재하지 않습니다")
+		}
+		
+		data := bucket.Get([]byte(workspaceIDs[0]))
+		if data == nil {
+			return storage.ErrNotFound
+		}
+		
+		ws, err := w.serializer.Unmarshal(data)
+		if err != nil {
+			return fmt.Errorf("워크스페이스 역직렬화 실패: %w", err)
+		}
+		
+		// Soft delete 체크
+		if ws.DeletedAt != nil {
+			return storage.ErrNotFound
+		}
+		
+		workspace = ws
+		return nil
+	})
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	return workspace, nil
+}

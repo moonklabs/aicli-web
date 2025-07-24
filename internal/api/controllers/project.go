@@ -3,13 +3,13 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/services"
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/utils"
+	"github.com/gin-gonic/gin"
 )
 
 // ProjectController는 프로젝트 관련 API를 처리합니다.
@@ -191,16 +191,14 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 	
 	// 응답 생성
 	response := models.PaginationResponse{
-		SuccessResponse: models.SuccessResponse{
-			Success: true,
-			Message: "프로젝트 목록을 조회했습니다",
-		},
 		Data: projects,
 		Meta: models.PaginationMeta{
-			Page:       req.Page,
-			Limit:      req.Limit,
-			Total:      total,
-			TotalPages: (total + req.Limit - 1) / req.Limit,
+			CurrentPage: req.Page,
+			PerPage:     req.Limit,
+			Total:       total,
+			TotalPages:  (total + req.Limit - 1) / req.Limit,
+			HasNext:     req.Page < (total+req.Limit-1)/req.Limit,
+			HasPrev:     req.Page > 1,
 		},
 	}
 	

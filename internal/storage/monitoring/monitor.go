@@ -53,6 +53,34 @@ type QueryContext struct {
 	Parameters  map[string]string `json:"parameters,omitempty"`
 }
 
+// WrapOptions 쿼리 래핑 옵션
+type WrapOptions struct {
+	Operation   string
+	Table       string
+	Query       string
+	StorageType string
+	Context     QueryContext
+}
+
+// SlowQuery 느린 쿼리 정보
+type SlowQuery struct {
+	Query       string
+	QueryType   string
+	StorageType string
+	Duration    time.Duration
+	Timestamp   time.Time
+	Context     map[string]interface{}
+	Error       string
+}
+
+// Stats 통계 정보
+type Stats struct {
+	TotalQueries   int64
+	SlowQueries    int64
+	FailedQueries  int64
+	AverageDuration time.Duration
+}
+
 // MonitorConfig 모니터링 설정
 type MonitorConfig struct {
 	SlowQueryThreshold time.Duration
@@ -159,8 +187,8 @@ func (qm *QueryMonitor) StartQuery(ctx context.Context, operation, table, query 
 	return tracker
 }
 
-// Finish 쿼리 추적 완료
-func (qt *QueryTracker) Finish(err error) {
+// End 쿼리 추적 완료
+func (qt *QueryTracker) End(err error) {
 	if qt == nil || qt.monitor == nil {
 		return
 	}
@@ -265,6 +293,66 @@ func (qm *QueryMonitor) alertSlowQuery(queryLog QueryLog) {
 	// 현재는 로그만 남김
 	log.Printf("SLOW QUERY ALERT: %s on %s took %v", 
 		queryLog.Operation, queryLog.Table, queryLog.Duration)
+}
+
+// Wrap 쿼리 실행을 모니터링으로 래핑
+func (qm *QueryMonitor) Wrap(ctx context.Context, opts WrapOptions, fn func() error) error {
+	// 쿼리 추적 시작
+	tracker := qm.StartQuery(ctx, opts.Operation, opts.Table, opts.Query, opts.Context)
+	
+	// 실행
+	err := fn()
+	
+	// 완료 처리
+	if tracker != nil {
+		tracker.End(err)
+	}
+	
+	return err
+}
+
+// GetSlowQueries 느린 쿼리 목록 조회
+func (qm *QueryMonitor) GetSlowQueries() []SlowQuery {
+	qm.mu.RLock()
+	defer qm.mu.RUnlock()
+	
+	var slowQueries []SlowQuery
+	for _, log := range qm.queryLog {
+		if log.IsSlow {
+			slowQueries = append(slowQueries, SlowQuery{
+				Query:       log.Query,
+				QueryType:   log.Operation,
+				StorageType: log.Context.StorageType,
+				Duration:    log.Duration,
+				Timestamp:   log.Timestamp,
+				Error:       log.Error,
+			})
+		}
+	}
+	
+	return slowQueries
+}
+
+// ClearSlowQueries 느린 쿼리 목록 초기화
+func (qm *QueryMonitor) ClearSlowQueries() {
+	qm.mu.Lock()
+	defer qm.mu.Unlock()
+	
+	// 느린 쿼리만 제거
+	var newLog []QueryLog
+	for _, log := range qm.queryLog {
+		if !log.IsSlow {
+			newLog = append(newLog, log)
+		}
+	}
+	qm.queryLog = newLog
+}
+
+// UpdateSlowThreshold 느린 쿼리 임계값 업데이트
+func (qm *QueryMonitor) UpdateSlowThreshold(threshold time.Duration) {
+	qm.mu.Lock()
+	defer qm.mu.Unlock()
+	qm.slowQueryThreshold = threshold
 }
 
 // GetStats 통계 조회

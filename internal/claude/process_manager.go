@@ -67,6 +67,8 @@ type ProcessManager interface {
 	Wait() error
 	// HealthCheck 프로세스 상태를 확인합니다
 	HealthCheck() error
+	// RestartProcess 프로세스를 재시작합니다
+	RestartProcess(identifier string) error
 }
 
 // ProcessConfig 프로세스 실행 설정
@@ -371,6 +373,42 @@ func (pm *claudeProcessManager) HealthCheck() error {
 		return fmt.Errorf("프로세스 헬스체크 실패: %w", err)
 	}
 
+	return nil
+}
+
+// RestartProcess 프로세스를 재시작합니다
+func (pm *claudeProcessManager) RestartProcess(identifier string) error {
+	pm.logger.WithField("identifier", identifier).Info("프로세스 재시작을 시작합니다")
+	
+	// 현재 설정 저장
+	pm.mutex.RLock()
+	config := pm.config
+	ctx := pm.ctx
+	pm.mutex.RUnlock()
+	
+	if config == nil {
+		return fmt.Errorf("프로세스 설정이 없습니다")
+	}
+	
+	// 프로세스 중지
+	if pm.IsRunning() {
+		if err := pm.Stop(30 * time.Second); err != nil {
+			pm.logger.WithError(err).Warn("프로세스 정상 중지 실패, 강제 종료 시도")
+			if killErr := pm.Kill(); killErr != nil {
+				return fmt.Errorf("프로세스 중지 실패: %w", killErr)
+			}
+		}
+	}
+	
+	// 잠시 대기
+	time.Sleep(2 * time.Second)
+	
+	// 프로세스 재시작
+	if err := pm.Start(ctx, config); err != nil {
+		return fmt.Errorf("프로세스 재시작 실패: %w", err)
+	}
+	
+	pm.logger.WithField("identifier", identifier).Info("프로세스가 성공적으로 재시작되었습니다")
 	return nil
 }
 

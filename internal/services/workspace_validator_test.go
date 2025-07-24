@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,7 +49,7 @@ func TestWorkspaceValidator_ValidateCreate(t *testing.T) {
 		{
 			name: "너무 긴 이름",
 			req: &models.CreateWorkspaceRequest{
-				Name:        "a" + "b"*99, // 100자 초과
+				Name:        "a" + strings.Repeat("b", 99), // 100자 초과
 				ProjectPath: "/tmp/test",
 			},
 			wantErr: true,
@@ -290,13 +291,13 @@ func TestWorkspaceValidator_validateName(t *testing.T) {
 		},
 		{
 			name:    "너무 긴 이름",
-			input:   "a" + "b"*99, // 100자 초과
+			input:   "a" + strings.Repeat("b", 99), // 100자 초과
 			wantErr: true,
 			errCode: ErrCodeInvalidName,
 		},
 		{
 			name:    "최대 길이 이름",
-			input:   "a" + "b"*98, // 정확히 100자
+			input:   "a" + strings.Repeat("b", 98), // 정확히 100자
 			wantErr: false,
 		},
 	}

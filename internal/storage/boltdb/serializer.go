@@ -8,6 +8,56 @@ import (
 	"github.com/aicli/aicli-web/internal/models"
 )
 
+// Serializer는 BoltDB용 직렬화 인터페이스 구현입니다
+type Serializer struct {
+	// JSON 직렬화를 기본으로 사용
+}
+
+// NewSerializer 새 직렬화 도구 생성
+func NewSerializer() *Serializer {
+	return &Serializer{}
+}
+
+// Marshal 객체를 바이트로 직렬화
+func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
+	return MarshalJSON(v)
+}
+
+// Unmarshal 바이트를 객체로 역직렬화
+func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
+	return UnmarshalJSON(data, v)
+}
+
+// MarshalProject 프로젝트를 직렬화
+func (s *Serializer) MarshalProject(project *models.Project) ([]byte, error) {
+	return s.Marshal(project)
+}
+
+// UnmarshalProject 프로젝트를 역직렬화
+func (s *Serializer) UnmarshalProject(data []byte, project *models.Project) error {
+	return s.Unmarshal(data, project)
+}
+
+// MarshalSession 세션을 직렬화
+func (s *Serializer) MarshalSession(session *models.Session) ([]byte, error) {
+	return s.Marshal(session)
+}
+
+// UnmarshalSession 세션을 역직렬화
+func (s *Serializer) UnmarshalSession(data []byte, session *models.Session) error {
+	return s.Unmarshal(data, session)
+}
+
+// MarshalTask 태스크를 직렬화
+func (s *Serializer) MarshalTask(task *models.Task) ([]byte, error) {
+	return s.Marshal(task)
+}
+
+// UnmarshalTask 태스크를 역직렬화  
+func (s *Serializer) UnmarshalTask(data []byte, task *models.Task) error {
+	return s.Unmarshal(data, task)
+}
+
 // SerializationError 직렬화 에러
 type SerializationError struct {
 	Type string

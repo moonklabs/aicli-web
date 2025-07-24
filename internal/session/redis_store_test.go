@@ -111,7 +111,7 @@ func (m *mockRedisClient) Expire(ctx context.Context, key string, expiration tim
 }
 
 func (m *mockRedisClient) TTL(ctx context.Context, key string) *redis.DurationCmd {
-	cmd := redis.NewDurationCmd(ctx)
+	cmd := redis.NewDurationCmd(ctx, time.Second)
 	if ttl, exists := m.ttls[key]; exists {
 		cmd.SetVal(ttl)
 	} else {
@@ -133,7 +133,7 @@ func (m *mockRedisClient) Exists(ctx context.Context, keys ...string) *redis.Int
 }
 
 func (m *mockRedisClient) Scan(ctx context.Context, cursor uint64, match string, count int64) *redis.ScanCmd {
-	cmd := redis.NewScanCmd(ctx)
+	cmd := redis.NewScanCmd(ctx, nil)
 	var keys []string
 	for key := range m.data {
 		keys = append(keys, key)
@@ -142,11 +142,6 @@ func (m *mockRedisClient) Scan(ctx context.Context, cursor uint64, match string,
 	return cmd
 }
 
-// 기타 Redis 인터페이스 구현 (빈 구현)
-func (m *mockRedisClient) Process(ctx context.Context, cmd redis.Cmder) error      { return nil }
-func (m *mockRedisClient) Subscribe(ctx context.Context, channels ...string) *redis.PubSub { return nil }
-func (m *mockRedisClient) PSubscribe(ctx context.Context, channels ...string) *redis.PubSub { return nil }
-func (m *mockRedisClient) Close() error { return nil }
 
 func TestNewRedisStore(t *testing.T) {
 	client := newMockRedisClient()

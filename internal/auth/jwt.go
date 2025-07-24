@@ -34,7 +34,7 @@ func NewJWTManager(secretKey string, accessExpiry, refreshExpiry time.Duration) 
 }
 
 // GenerateToken 토큰 생성
-func (m *JWTManager) GenerateToken(userID, userName, role string, tokenType TokenType) (string, error) {
+func (m *JWTManager) GenerateToken(userID, userName, email, role string, tokenType TokenType) (string, error) {
 	var expirationTime time.Time
 	
 	switch tokenType {
@@ -47,7 +47,7 @@ func (m *JWTManager) GenerateToken(userID, userName, role string, tokenType Toke
 	}
 
 	// 클레임 생성
-	claims := NewClaims(userID, userName, role, expirationTime)
+	claims := NewClaims(userID, userName, email, role, expirationTime)
 	
 	// 토큰 생성
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -94,7 +94,7 @@ func (m *JWTManager) RefreshAccessToken(refreshTokenString string) (string, erro
 	}
 	
 	// 새로운 액세스 토큰 생성
-	newAccessToken, err := m.GenerateToken(claims.UserID, claims.UserName, claims.Role, AccessToken)
+	newAccessToken, err := m.GenerateToken(claims.UserID, claims.UserName, claims.Email, claims.Role, AccessToken)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate new access token: %w", err)
 	}

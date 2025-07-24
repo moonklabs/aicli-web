@@ -22,6 +22,13 @@ func newIndexManager(storage *Storage) *IndexManager {
 	}
 }
 
+// NewIndexManager 새 인덱스 관리자 생성 (전역 생성자)
+func NewIndexManager() *IndexManager {
+	return &IndexManager{
+		serializer: &IndexSerializer{},
+	}
+}
+
 // IndexType 인덱스 타입
 type IndexType string
 
@@ -83,6 +90,62 @@ var (
 	IndexEntityStatus = Index{
 		Name:       "entity_status",
 		BucketName: BucketIndexStatus,
+		Type:       IndexTypeMultiple,
+	}
+	
+	// 프로젝트 관련 추가 인덱스 (별칭)
+	IndexWorkspaceProjects = IndexProjectWorkspace
+	IndexProjectName = Index{
+		Name:       "project_name",
+		BucketName: BucketIndexWorkspace,
+		Type:       IndexTypeMultiple,
+	}
+	IndexProjectStatus = Index{
+		Name:       "project_status",
+		BucketName: BucketIndexStatus,
+		Type:       IndexTypeMultiple,
+	}
+	IndexProjectLanguage = Index{
+		Name:       "project_language",
+		BucketName: BucketIndexStatus,
+		Type:       IndexTypeMultiple,
+	}
+	IndexProjectSessions = Index{
+		Name:       "project_sessions",
+		BucketName: BucketIndexProject,
+		Type:       IndexTypeMultiple,
+	}
+	
+	// 세션 관련 인덱스
+	IndexSessionStatus = Index{
+		Name:       "session_status",
+		BucketName: BucketIndexStatus,
+		Type:       IndexTypeMultiple,
+	}
+	
+	IndexSessionProcess = Index{
+		Name:       "session_process",
+		BucketName: BucketIndexSession,
+		Type:       IndexTypeMultiple,
+	}
+	
+	IndexSessionTasks = Index{
+		Name:       "session_tasks",
+		BucketName: BucketIndexSession,
+		Type:       IndexTypeMultiple,
+	}
+	
+	// 태스크 상태 인덱스
+	IndexTaskStatus = Index{
+		Name:       "task_status",
+		BucketName: BucketIndexStatus,
+		Type:       IndexTypeMultiple,
+	}
+	
+	// 태스크 명령어 인덱스
+	IndexTaskCommand = Index{
+		Name:       "task_command",
+		BucketName: BucketIndexSession,
 		Type:       IndexTypeMultiple,
 	}
 )

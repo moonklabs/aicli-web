@@ -1,19 +1,16 @@
 package middleware
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/aicli/aicli-web/internal/auth"
-	"github.com/aicli/aicli-web/internal/models"
 )
 
 // MockRBACManager RBAC 매니저 모킹

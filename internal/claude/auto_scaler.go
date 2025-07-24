@@ -108,7 +108,7 @@ func (s *AutoScaler) ScaleUp() error {
 		return fmt.Errorf("scale up cooldown not elapsed")
 	}
 	
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	targetSize := int(math.Ceil(float64(currentSize) * s.config.ScaleFactor))
 	
 	if targetSize > s.config.MaxSessions {
@@ -124,7 +124,7 @@ func (s *AutoScaler) ScaleDown() error {
 		return fmt.Errorf("scale down cooldown not elapsed")
 	}
 	
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	targetSize := int(math.Floor(float64(currentSize) / s.config.ScaleFactor))
 	
 	if targetSize < s.config.MinSessions {
@@ -136,7 +136,7 @@ func (s *AutoScaler) ScaleDown() error {
 
 // ScaleUpBy는 지정된 수만큼 스케일업합니다
 func (s *AutoScaler) ScaleUpBy(count int) error {
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	targetSize := currentSize + count
 	
 	if targetSize > s.config.MaxSessions {
@@ -148,7 +148,7 @@ func (s *AutoScaler) ScaleUpBy(count int) error {
 
 // ScaleDownBy는 지정된 수만큼 스케일다운합니다
 func (s *AutoScaler) ScaleDownBy(count int) error {
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	targetSize := currentSize - count
 	
 	if targetSize < s.config.MinSessions {
@@ -243,7 +243,7 @@ func (s *AutoScaler) evaluateScaling() ScalingDecision {
 	avgUtilization := s.calculateAverageUtilization()
 	avgCPUUsage := s.calculateAverageCPUUsage()
 	avgResponseTime := s.calculateAverageResponseTime()
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	
 	// 스케일업 검토
 	if s.shouldScaleUp(avgUtilization, avgCPUUsage, avgResponseTime) {
@@ -318,7 +318,7 @@ func (s *AutoScaler) shouldScaleDown(utilization, cpuUsage float64, responseTime
 	}
 	
 	// 최소 세션 수 보호
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	if currentSize <= s.config.MinSessions {
 		return false
 	}
@@ -350,7 +350,7 @@ func (s *AutoScaler) executeScalingDecision(decision ScalingDecision) {
 }
 
 func (s *AutoScaler) scaleToSize(targetSize int, reason string) error {
-	currentSize := s.pool.basePool.GetPoolStats().TotalSessions
+	currentSize := s.pool.basePool.GetPoolStats().Total
 	
 	if targetSize == currentSize {
 		return nil // 변경 불필요

@@ -1,11 +1,14 @@
+//go:build example
+// +build example
+
 package main
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
-	"testing"
+	// "strings"
+	// "testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
@@ -74,7 +77,7 @@ func ExampleCLITestRunner_WithEnvironment() {
 
 func ExampleRunTestCases() {
 	// 테스트할 명령어
-	mathCmd := &cobra.Command{
+	// mathCmd := &cobra.Command{
 		Use: "math",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 3 {

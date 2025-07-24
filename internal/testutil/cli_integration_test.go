@@ -1,12 +1,8 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"

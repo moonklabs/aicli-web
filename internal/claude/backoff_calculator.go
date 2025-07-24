@@ -421,9 +421,9 @@ type CircuitBreakerAwareBackoff struct {
 type CircuitBreakerStatus int
 
 const (
-	CircuitClosedStatusStatus CircuitBreakerStatus = iota
-	CircuitHalfOpenStatusStatus
-	CircuitOpenStatusStatus
+	CircuitClosedStatus CircuitBreakerStatus = iota
+	CircuitHalfOpenStatus
+	CircuitOpenStatus
 )
 
 // NewCircuitBreakerAwareBackoff는 Circuit Breaker 인식 백오프를 생성합니다
@@ -459,5 +459,13 @@ func (c *CircuitBreakerAwareBackoff) Calculate(
 
 // UpdateCircuitState는 Circuit Breaker 상태를 업데이트합니다
 func (c *CircuitBreakerAwareBackoff) UpdateCircuitState(state CircuitBreakerState) {
-	c.circuitBreaker = state
+	// CircuitBreakerState를 CircuitBreakerStatus로 변환
+	switch state {
+	case StateClosed:
+		c.circuitBreaker = CircuitClosedStatus
+	case StateHalfOpen:
+		c.circuitBreaker = CircuitHalfOpenStatus
+	case StateOpen:
+		c.circuitBreaker = CircuitOpenStatus
+	}
 }

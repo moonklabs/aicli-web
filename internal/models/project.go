@@ -26,6 +26,7 @@ type Project struct {
 	Status       ProjectStatus  `json:"status" validate:"omitempty,project_status"`
 	Config       ProjectConfig  `json:"config" validate:"-"`
 	GitInfo      *GitInfo       `json:"git_info,omitempty" validate:"-"`
+	Version      int            `json:"version,omitempty" validate:"min=0"`
 	CreatedAt    time.Time      `json:"created_at" validate:"-"`
 	UpdatedAt    time.Time      `json:"updated_at" validate:"-"`
 	DeletedAt    *time.Time     `json:"deleted_at,omitempty" validate:"-"`

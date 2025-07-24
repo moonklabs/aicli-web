@@ -2,7 +2,6 @@ package claude
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"

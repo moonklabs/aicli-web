@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/docker/docker/api/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -212,7 +213,7 @@ func TestClient_NetworkSetup(t *testing.T) {
 
 	// 네트워크 정보 확인
 	ctx := context.Background()
-	inspect, err := client.cli.NetworkInspect(ctx, client.networkID, map[string]bool{})
+	inspect, err := client.cli.NetworkInspect(ctx, client.networkID, types.NetworkInspectOptions{})
 	require.NoError(t, err)
 	
 	assert.Equal(t, config.NetworkName, inspect.Name)

@@ -16,10 +16,13 @@ import (
 	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/api/controllers"
+	"github.com/aicli/aicli-web/internal/api/handlers"
 )
 
 // Server는 API 서버의 핵심 구조체입니다.
 type Server struct {
+	authHandler          *handlers.AuthHandler
+	shutdown             chan struct{}
 	router         *gin.Engine
 	jwtManager     *auth.JWTManager
 	blacklist      *auth.Blacklist
@@ -156,6 +159,8 @@ func New() *Server {
 		executionTracker:     executionTracker,
 		wsHub:                wsHub,
 		wsHandler:            wsHandler,
+		authHandler:          handlers.NewAuthHandler(jwtManager, blacklist),
+		shutdown:             make(chan struct{}),
 	}
 	
 	// 태스크 서비스 시작
@@ -231,6 +236,8 @@ func (s *Server) setupControllers() {
 			public.GET("/health", func(c *gin.Context) {
 				c.JSON(200, gin.H{"status": "ok", "version": "v1"})
 			})
+
+
 		}
 		
 		// 인증이 필요한 엔드포인트
@@ -255,6 +262,21 @@ func (s *Server) setupControllers() {
 				}
 			}
 		}
+	}
+	
+	// OAuth 라우트 설정
+	oauthRoutes := s.router.Group("/oauth")
+	{
+		oauthRoutes.GET("/:provider", func(c *gin.Context) {
+			oauthManager := s.oauthManager
+			authHandler := handlers.NewAuthHandler(s.jwtManager, s.blacklist)
+			authHandler.OAuthLogin(c, oauthManager)
+		})
+		oauthRoutes.GET("/:provider/callback", func(c *gin.Context) {
+			oauthManager := s.oauthManager
+			authHandler := handlers.NewAuthHandler(s.jwtManager, s.blacklist)
+			authHandler.OAuthCallback(c, oauthManager)
+		})
 	}
 	
 	// WebSocket 엔드포인트

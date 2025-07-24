@@ -11,11 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
-	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/api/websocket"
+	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/storage"
 )
 

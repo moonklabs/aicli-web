@@ -30,7 +30,7 @@ func NewSessionManager(redisClient redis.UniversalClient, config SessionConfig) 
 	monitor := session.NewRedisMonitor(redisClient, store, config.KeyPrefix)
 	securityChecker := session.NewRedisSecurityChecker(store, monitor)
 	limiter := session.NewConcurrentSessionLimiter(store, monitor, config.MaxConcurrentSessions)
-	deviceGenerator := session.NewDeviceFingerprintGenerator()
+	deviceGenerator := session.NewDeviceFingerprintGeneratorWithoutGeoIP()
 	
 	return &SessionManager{
 		store:                 store,
@@ -53,7 +53,7 @@ type SessionConfig struct {
 }
 
 // CreateSession은 새로운 세션을 생성합니다.
-func (sm *SessionManager) CreateSession(ctx context.Context, userID string, deviceInfo *models.DeviceFingerprint, locationInfo *models.LocationInfo) (*models.Session, error) {
+func (sm *SessionManager) CreateSession(ctx context.Context, userID string, deviceInfo *models.DeviceFingerprint, locationInfo *models.LocationInfo) (*models.AuthSession, error) {
 	// 보안 검사 (활성화된 경우)
 	if sm.enableSecurity {
 		// 디바이스 핑거프린트 검증
@@ -74,7 +74,7 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 	}
 	
 	// 세션 생성
-	sessionData := &models.Session{
+	sessionData := &models.AuthSession{
 		ID:           generateSessionID(),
 		UserID:       userID,
 		DeviceInfo:   deviceInfo,
@@ -111,7 +111,7 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 }
 
 // ValidateSession은 세션을 검증하고 갱신합니다.
-func (sm *SessionManager) ValidateSession(ctx context.Context, sessionID string) (*models.Session, error) {
+func (sm *SessionManager) ValidateSession(ctx context.Context, sessionID string) (*models.AuthSession, error) {
 	// 세션 조회
 	sessionData, err := sm.store.Get(ctx, sessionID)
 	if err != nil {
@@ -208,7 +208,7 @@ func (sm *SessionManager) TerminateSession(ctx context.Context, sessionID string
 }
 
 // terminateSession은 내부적으로 세션을 종료합니다.
-func (sm *SessionManager) terminateSession(ctx context.Context, sessionData *models.Session, reason string) error {
+func (sm *SessionManager) terminateSession(ctx context.Context, sessionData *models.AuthSession, reason string) error {
 	// 세션 비활성화
 	sessionData.IsActive = false
 	sessionData.LastAccess = time.Now()
@@ -259,7 +259,7 @@ func (sm *SessionManager) TerminateUserSessions(ctx context.Context, userID stri
 }
 
 // GetUserSessions는 사용자의 활성 세션 목록을 반환합니다.
-func (sm *SessionManager) GetUserSessions(ctx context.Context, userID string) ([]*models.Session, error) {
+func (sm *SessionManager) GetUserSessions(ctx context.Context, userID string) ([]*models.AuthSession, error) {
 	return sm.store.GetUserSessions(ctx, userID)
 }
 

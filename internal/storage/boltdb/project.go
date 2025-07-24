@@ -57,7 +57,7 @@ func (ps *projectStorage) Create(ctx context.Context, project *models.Project) e
 		
 		// 워크스페이스가 삭제되지 않았는지 확인
 		var workspace models.Workspace
-		if err := ps.serializer.UnmarshalWorkspace(workspaceData, &workspace); err != nil {
+		if err := ps.serializer.Unmarshal(workspaceData, &workspace); err != nil {
 			return err
 		}
 		if workspace.DeletedAt != nil {
@@ -84,7 +84,7 @@ func (ps *projectStorage) Create(ctx context.Context, project *models.Project) e
 		}
 		
 		// 프로젝트 직렬화 및 저장
-		data, err := ps.serializer.MarshalProject(project)
+		data, err := ps.serializer.Marshal(project)
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func (ps *projectStorage) GetByID(ctx context.Context, id string) (*models.Proje
 			return storage.ErrNotFound
 		}
 		
-		if err := ps.serializer.UnmarshalProject(data, &project); err != nil {
+		if err := ps.serializer.Unmarshal(data, &project); err != nil {
 			return err
 		}
 		
@@ -157,9 +157,9 @@ func (ps *projectStorage) GetByID(ctx context.Context, id string) (*models.Proje
 }
 
 // GetByWorkspaceID 워크스페이스별 프로젝트 목록 조회
-func (ps *projectStorage) GetByWorkspaceID(ctx context.Context, workspaceID string, pagination *models.PaginationRequest) ([]*models.Project, int64, error) {
+func (ps *projectStorage) GetByWorkspaceID(ctx context.Context, workspaceID string, pagination *models.PaginationRequest) ([]*models.Project, int, error) {
 	var projects []*models.Project
-	var total int64
+	var total int
 	
 	err := ps.db.View(func(tx *bbolt.Tx) error {
 		// 인덱스에서 프로젝트 ID 목록 가져오기
@@ -195,9 +195,9 @@ func (ps *projectStorage) GetByWorkspaceID(ctx context.Context, workspaceID stri
 		}
 		
 		// 생성 시간 역순 정렬
-		ps.querier.SortProjects(activeProjects, "created_at", false)
+		ps.querier.SortProjects(activeProjects, "created_at", SortOrderDesc)
 		
-		total = int64(len(activeProjects))
+		total = len(activeProjects)
 		
 		// 페이지네이션 적용
 		start, end := ps.querier.CalculatePagination(len(activeProjects), pagination)
@@ -239,7 +239,7 @@ func (ps *projectStorage) GetByPath(ctx context.Context, path string) (*models.P
 			return storage.ErrNotFound
 		}
 		
-		if err := ps.serializer.UnmarshalProject(data, &project); err != nil {
+		if err := ps.serializer.Unmarshal(data, &project); err != nil {
 			return err
 		}
 		
@@ -286,7 +286,7 @@ func (ps *projectStorage) Update(ctx context.Context, id string, updates map[str
 		}
 		
 		var project models.Project
-		if err := ps.serializer.UnmarshalProject(data, &project); err != nil {
+		if err := ps.serializer.Unmarshal(data, &project); err != nil {
 			return err
 		}
 		
@@ -345,8 +345,11 @@ func (ps *projectStorage) Update(ctx context.Context, id string, updates map[str
 		}
 		
 		if gitInfo, ok := updates["git_info"]; ok {
-			if gitVal, ok := gitInfo.(models.GitInfo); ok {
-				project.GitInfo = gitVal
+			switch v := gitInfo.(type) {
+			case *models.GitInfo:
+				project.GitInfo = v
+			case models.GitInfo:
+				project.GitInfo = &v
 			}
 		}
 		
@@ -412,7 +415,7 @@ func (ps *projectStorage) Delete(ctx context.Context, id string) error {
 		}
 		
 		var project models.Project
-		if err := ps.serializer.UnmarshalProject(data, &project); err != nil {
+		if err := ps.serializer.Unmarshal(data, &project); err != nil {
 			return err
 		}
 		
@@ -511,9 +514,9 @@ func (ps *projectStorage) existsByNameInWorkspace(tx *bbolt.Tx, workspaceID, nam
 }
 
 // GetByLanguage 언어별 프로젝트 조회
-func (ps *projectStorage) GetByLanguage(ctx context.Context, language string, pagination *models.PaginationRequest) ([]*models.Project, int64, error) {
+func (ps *projectStorage) GetByLanguage(ctx context.Context, language string, pagination *models.PaginationRequest) ([]*models.Project, int, error) {
 	var projects []*models.Project
-	var total int64
+	var total int
 	
 	err := ps.db.View(func(tx *bbolt.Tx) error {
 		// 인덱스에서 프로젝트 ID 목록 가져오기
@@ -549,9 +552,9 @@ func (ps *projectStorage) GetByLanguage(ctx context.Context, language string, pa
 		}
 		
 		// 이름순 정렬
-		ps.querier.SortProjects(activeProjects, "name", true)
+		ps.querier.SortProjects(activeProjects, "name", SortOrderAsc)
 		
-		total = int64(len(activeProjects))
+		total = len(activeProjects)
 		
 		// 페이지네이션 적용
 		start, end := ps.querier.CalculatePagination(len(activeProjects), pagination)
@@ -568,9 +571,9 @@ func (ps *projectStorage) GetByLanguage(ctx context.Context, language string, pa
 }
 
 // GetByStatus 상태별 프로젝트 조회
-func (ps *projectStorage) GetByStatus(ctx context.Context, status models.ProjectStatus, pagination *models.PaginationRequest) ([]*models.Project, int64, error) {
+func (ps *projectStorage) GetByStatus(ctx context.Context, status models.ProjectStatus, pagination *models.PaginationRequest) ([]*models.Project, int, error) {
 	var projects []*models.Project
-	var total int64
+	var total int
 	
 	err := ps.db.View(func(tx *bbolt.Tx) error {
 		// 인덱스에서 프로젝트 ID 목록 가져오기
@@ -606,9 +609,9 @@ func (ps *projectStorage) GetByStatus(ctx context.Context, status models.Project
 		}
 		
 		// 업데이트 시간 역순 정렬
-		ps.querier.SortProjects(activeProjects, "updated_at", false)
+		ps.querier.SortProjects(activeProjects, "updated_at", SortOrderDesc)
 		
-		total = int64(len(activeProjects))
+		total = len(activeProjects)
 		
 		// 페이지네이션 적용
 		start, end := ps.querier.CalculatePagination(len(activeProjects), pagination)

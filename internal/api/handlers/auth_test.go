@@ -27,11 +27,10 @@ func setupTestRouter() (*gin.Engine, *AuthHandler) {
 	blacklist := auth.NewBlacklist()
 	
 	// 테스트용 OAuth 설정 (빈 설정)
-	oauthConfigs := make(map[auth.OAuthProvider]*auth.OAuthConfig)
-	oauthManager := auth.NewOAuthManager(oauthConfigs, jwtManager)
+	// OAuth 관련 코드는 필요시 추가
 	
 	// 핸들러 생성
-	authHandler := NewAuthHandler(jwtManager, blacklist, oauthManager)
+	authHandler := NewAuthHandler(jwtManager, blacklist)
 	
 	// 라우터 설정
 	router := gin.New()

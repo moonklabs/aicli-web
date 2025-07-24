@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/ratelimit"
-	"github.com/aicli/aicli-web/internal/auth"
 )
 
 // RateLimitConfig는 Rate Limit 미들웨어 설정입니다.
@@ -263,21 +262,15 @@ func (rlm *RateLimitMiddleware) GetStats() map[string]interface{} {
 	stats := make(map[string]interface{})
 	
 	// 기본 limiter 통계
-	if memLimiter, ok := rlm.defaultLimiter.(*ratelimit.MemoryLimiter); ok {
-		stats["default"] = memLimiter.GetStats()
-	}
+	stats["default"] = rlm.defaultLimiter.GetStats()
 	
 	// 인증된 사용자 limiter 통계
-	if memLimiter, ok := rlm.authLimiter.(*ratelimit.MemoryLimiter); ok {
-		stats["authenticated"] = memLimiter.GetStats()
-	}
+	stats["authenticated"] = rlm.authLimiter.GetStats()
 	
 	// 엔드포인트별 limiter 통계
 	endpointStats := make(map[string]interface{})
 	for endpoint, limiter := range rlm.endpointLimiters {
-		if memLimiter, ok := limiter.(*ratelimit.MemoryLimiter); ok {
-			endpointStats[endpoint] = memLimiter.GetStats()
-		}
+		endpointStats[endpoint] = limiter.GetStats()
 	}
 	stats["endpoints"] = endpointStats
 	

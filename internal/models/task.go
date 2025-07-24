@@ -13,6 +13,13 @@ const (
 	TaskCompleted TaskStatus = "completed" // 완료
 	TaskFailed    TaskStatus = "failed"    // 실패
 	TaskCancelled TaskStatus = "cancelled" // 취소됨
+	
+	// Alias for consistency with usage
+	TaskStatusPending   = TaskPending
+	TaskStatusRunning   = TaskRunning
+	TaskStatusCompleted = TaskCompleted
+	TaskStatusFailed    = TaskFailed
+	TaskStatusCancelled = TaskCancelled
 )
 
 // Task 태스크 모델

@@ -461,7 +461,7 @@ func (tss *transactionSessionStorage) GetByID(ctx context.Context, id string) (*
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 
-func (tss *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *PagingRequest) (*PagingResponse[*models.Session], error) {
+func (tss *transactionSessionStorage) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
 	return nil, fmt.Errorf("session transaction methods not implemented yet")
 }
 
@@ -491,7 +491,7 @@ func (tts *transactionTaskStorage) GetByID(ctx context.Context, id string) (*mod
 	return nil, fmt.Errorf("task transaction methods not implemented yet")
 }
 
-func (tts *transactionTaskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *PagingRequest) ([]*models.Task, int, error) {
+func (tts *transactionTaskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	return nil, 0, fmt.Errorf("task transaction methods not implemented yet")
 }
 
@@ -503,7 +503,7 @@ func (tts *transactionTaskStorage) Delete(ctx context.Context, id string) error 
 	return fmt.Errorf("task transaction methods not implemented yet")
 }
 
-func (tts *transactionTaskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *PagingRequest) ([]*models.Task, int, error) {
+func (tts *transactionTaskStorage) GetBySessionID(ctx context.Context, sessionID string, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	return nil, 0, fmt.Errorf("task transaction methods not implemented yet")
 }
 

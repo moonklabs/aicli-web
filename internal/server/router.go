@@ -50,8 +50,12 @@ func (s *Server) setupRoutes() {
 			// OAuth 엔드포인트
 			oauth := auth.Group("/oauth")
 			{
-				oauth.GET("/:provider", authHandler.OAuthLogin)
-				oauth.GET("/:provider/callback", authHandler.OAuthCallback)
+				oauth.GET("/:provider", func(c *gin.Context) {
+					authHandler.OAuthLogin(c, s.oauthManager)
+				})
+				oauth.GET("/:provider/callback", func(c *gin.Context) {
+					authHandler.OAuthCallback(c, s.oauthManager)
+				})
 			}
 		}
 		

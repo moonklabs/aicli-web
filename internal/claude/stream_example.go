@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
-	"os"
 	"os/exec"
 	"time"
 
@@ -61,10 +59,11 @@ func (se *StreamExample) BasicUsage() error {
 	defer se.handler.Close()
 
 	// 메시지 전송
-	message := &Message{
+	message := &StreamMessage{
 		Type:    "query",
 		Content: "Hello, Claude! How are you today?",
 		Meta:    map[string]interface{}{"temperature": 0.7},
+		ID:      "msg-1",
 	}
 
 	if err := se.handler.SendMessage(message); err != nil {
@@ -169,9 +168,10 @@ func (se *StreamExample) EventHandlingExample() error {
 	}()
 
 	// 메시지 전송
-	message := &Message{
+	message := &StreamMessage{
 		Type:    "test",
 		Content: "Event handling test message",
+		ID:      "msg-test",
 	}
 
 	if err := se.handler.SendMessage(message); err != nil {
@@ -239,10 +239,11 @@ func (se *StreamExample) HighThroughputExample() error {
 	// 대량 메시지 전송
 	start := time.Now()
 	for i := 0; i < 50; i++ {
-		message := &Message{
+		message := &StreamMessage{
 			Type:    "batch_query",
 			Content: fmt.Sprintf("Batch message %d", i),
 			Meta:    map[string]interface{}{"batch_id": i},
+			ID:      fmt.Sprintf("msg-batch-%d", i),
 		}
 
 		if err := se.handler.SendMessage(message); err != nil {
@@ -356,9 +357,10 @@ func (se *StreamExample) StreamStatsExample() error {
 
 	// 메시지 전송과 응답 수신
 	for i := 0; i < 5; i++ {
-		message := &Message{
+		message := &StreamMessage{
 			Type:    "stats_test",
 			Content: fmt.Sprintf("Stats test message %d", i),
+			ID:      fmt.Sprintf("msg-stats-%d", i),
 		}
 
 		if err := se.handler.SendMessage(message); err != nil {

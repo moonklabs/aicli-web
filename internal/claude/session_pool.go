@@ -209,17 +209,22 @@ func (p *SessionPool) GetPoolStats() PoolStats {
 	defer p.mu.RUnlock()
 
 	stats := PoolStats{
-		TotalSessions:  len(p.sessions),
-		ActiveSessions: 0,
-		IdleSessions:   0,
+		Total:  len(p.sessions),
+		Active: 0,
+		Idle:   0,
+		MaxCapacity: p.maxSessions,
 	}
 
 	for _, s := range p.sessions {
 		if s.inUse {
-			stats.ActiveSessions++
+			stats.Active++
 		} else {
-			stats.IdleSessions++
+			stats.Idle++
 		}
+	}
+	
+	if stats.Total > 0 {
+		stats.Utilization = float64(stats.Active) / float64(stats.Total)
 	}
 
 	return stats
@@ -308,7 +313,8 @@ func (p *SessionPool) cleanup() {
 func (p *SessionPool) isSessionValid(pooledSession *PooledSession) bool {
 	// 프로세스가 살아있는지 확인
 	if pooledSession.Process != nil {
-		if process, err := p.manager.(*sessionManager).processManager.GetProcess(pooledSession.Process.ID); err != nil || process == nil {
+		// ProcessManager의 IsRunning 메서드로 상태 확인
+		if !pooledSession.Process.IsRunning() {
 			return false
 		}
 	}

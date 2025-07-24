@@ -240,11 +240,12 @@ func (dws *DockerWorkspaceService) GetWorkspaceStatus(ctx context.Context, works
 	}
 	
 	// 상태 추적기가 있으면 메트릭 추가
-	if dws.statusTracker != nil {
-		if metrics, err := dws.statusTracker.GetWorkspaceMetrics(workspaceID); err == nil {
-			status.Metrics = metrics
-		}
-	}
+	// TODO: status tracker integration
+	// if dws.statusTracker != nil {
+	// 	if metrics, err := dws.statusTracker.GetWorkspaceMetrics(workspaceID); err == nil {
+	// 		status.Metrics = metrics
+	// 	}
+	// }
 	
 	return status, nil
 }
@@ -254,7 +255,7 @@ type WorkspaceStatus struct {
 	ContainerID    string                   `json:"container_id,omitempty"`
 	ContainerState string                   `json:"container_state"`
 	Uptime         string                   `json:"uptime,omitempty"`
-	Metrics        *status.WorkspaceMetrics `json:"metrics,omitempty"`
+	// Metrics        *status.WorkspaceMetrics `json:"metrics,omitempty"` // TODO: status tracker integration
 	LastError      string                   `json:"last_error,omitempty"`
 }
 

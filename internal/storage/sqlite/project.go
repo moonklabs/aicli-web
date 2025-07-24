@@ -301,7 +301,18 @@ func (p *projectStorage) GetByPath(ctx context.Context, path string) (*models.Pr
 
 // marshalConfig ProjectConfig를 JSON으로 직렬화
 func (p *projectStorage) marshalConfig(config models.ProjectConfig) (string, error) {
-	if (models.ProjectConfig{}) == config {
+	// 빈 설정인지 확인
+	if config.ClaudeAPIKey == "" && 
+		config.EncryptedAPIKey == "" && 
+		len(config.Environment) == 0 && 
+		len(config.BuildCommands) == 0 && 
+		len(config.TestCommands) == 0 &&
+		config.ClaudeOptions.Model == "" &&
+		config.ClaudeOptions.MaxTokens == 0 &&
+		config.ClaudeOptions.Temperature == 0 &&
+		config.ClaudeOptions.SystemPrompt == "" &&
+		len(config.ClaudeOptions.ExcludePaths) == 0 &&
+		len(config.ClaudeOptions.IncludePaths) == 0 {
 		return "{}", nil
 	}
 	

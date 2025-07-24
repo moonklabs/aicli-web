@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
-	"github.com/aicli/aicli-web/internal/models"
 )
 
 // RBACEventType RBAC 이벤트 타입

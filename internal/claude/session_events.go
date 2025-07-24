@@ -265,7 +265,10 @@ type SessionEventLogger struct {
 // NewSessionEventLogger는 새로운 이벤트 로거를 생성합니다
 func NewSessionEventLogger(logger func(format string, args ...interface{})) *SessionEventLogger {
 	if logger == nil {
-		logger = fmt.Printf
+		// fmt.Printf를 래핑하여 적절한 시그니처로 변환
+		logger = func(format string, args ...interface{}) {
+			fmt.Printf(format, args...)
+		}
 	}
 	return &SessionEventLogger{logger: logger}
 }

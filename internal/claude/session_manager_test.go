@@ -9,18 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockProcessManager는 테스트용 프로세스 매니저입니다
-type MockProcessManager struct {
+// MockSessionProcessManager는 테스트용 세션 프로세스 매니저입니다
+type MockSessionProcessManager struct {
 	processes map[string]*Process
 }
 
-func NewMockProcessManager() *MockProcessManager {
-	return &MockProcessManager{
+func NewMockSessionProcessManager() *MockSessionProcessManager {
+	return &MockSessionProcessManager{
 		processes: make(map[string]*Process),
 	}
 }
 
-func (m *MockProcessManager) CreateProcess(ctx context.Context, config ProcessConfig) (*Process, error) {
+func (m *MockSessionProcessManager) CreateProcess(ctx context.Context, config ProcessConfig) (*Process, error) {
 	process := &Process{
 		ID:        "test-process-" + time.Now().Format("150405"),
 		Config:    config,
@@ -32,7 +32,7 @@ func (m *MockProcessManager) CreateProcess(ctx context.Context, config ProcessCo
 	return process, nil
 }
 
-func (m *MockProcessManager) GetProcess(id string) (*Process, error) {
+func (m *MockSessionProcessManager) GetProcess(id string) (*Process, error) {
 	process, exists := m.processes[id]
 	if !exists {
 		return nil, ErrProcessNotFound
@@ -40,7 +40,7 @@ func (m *MockProcessManager) GetProcess(id string) (*Process, error) {
 	return process, nil
 }
 
-func (m *MockProcessManager) TerminateProcess(id string) error {
+func (m *MockSessionProcessManager) TerminateProcess(id string) error {
 	process, exists := m.processes[id]
 	if !exists {
 		return ErrProcessNotFound
@@ -49,7 +49,7 @@ func (m *MockProcessManager) TerminateProcess(id string) error {
 	return nil
 }
 
-func (m *MockProcessManager) ListProcesses() ([]*Process, error) {
+func (m *MockSessionProcessManager) ListProcesses() ([]*Process, error) {
 	processes := make([]*Process, 0, len(m.processes))
 	for _, p := range m.processes {
 		processes = append(processes, p)
@@ -57,7 +57,7 @@ func (m *MockProcessManager) ListProcesses() ([]*Process, error) {
 	return processes, nil
 }
 
-func (m *MockProcessManager) GetProcessHealth(id string) (*ProcessHealth, error) {
+func (m *MockSessionProcessManager) GetProcessHealth(id string) (*ProcessHealth, error) {
 	return &ProcessHealth{
 		ProcessID:    id,
 		Healthy:      true,
@@ -145,7 +145,7 @@ func TestSessionConfig_Validate(t *testing.T) {
 
 func TestSessionManager_CreateSession(t *testing.T) {
 	ctx := context.Background()
-	pm := NewMockProcessManager()
+	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
 
 	config := SessionConfig{
@@ -173,7 +173,7 @@ func TestSessionManager_CreateSession(t *testing.T) {
 
 func TestSessionManager_UpdateSession(t *testing.T) {
 	ctx := context.Background()
-	pm := NewMockProcessManager()
+	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
 
 	// 세션 생성
@@ -213,7 +213,7 @@ func TestSessionManager_UpdateSession(t *testing.T) {
 
 func TestSessionManager_CloseSession(t *testing.T) {
 	ctx := context.Background()
-	pm := NewMockProcessManager()
+	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
 
 	// 세션 생성
@@ -237,7 +237,7 @@ func TestSessionManager_CloseSession(t *testing.T) {
 
 func TestSessionManager_ListSessions(t *testing.T) {
 	ctx := context.Background()
-	pm := NewMockProcessManager()
+	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
 
 	// 여러 세션 생성
@@ -315,7 +315,7 @@ func TestSessionStateMachine(t *testing.T) {
 
 func TestSessionPool(t *testing.T) {
 	ctx := context.Background()
-	pm := NewMockProcessManager()
+	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
 	
 	poolConfig := SessionPoolConfig{

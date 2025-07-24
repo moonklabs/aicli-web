@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/storage/memory"
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSessionService_Create(t *testing.T) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 
@@ -20,7 +20,7 @@ func TestSessionService_Create(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -29,8 +29,7 @@ func TestSessionService_Create(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project)
 	require.NoError(t, err)
@@ -52,7 +51,7 @@ func TestSessionService_Create(t *testing.T) {
 }
 
 func TestSessionService_UpdateStatus(t *testing.T) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 
@@ -60,7 +59,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -69,8 +68,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project)
 	require.NoError(t, err)
@@ -149,7 +147,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 		CleanupInterval: 1 * time.Minute,
 	}
 
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, config)
 	defer sessionService.Stop()
@@ -158,7 +156,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -167,8 +165,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project)
 	require.NoError(t, err)
@@ -207,7 +204,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 }
 
 func TestSessionService_UpdateActivity(t *testing.T) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 
@@ -215,7 +212,7 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -224,8 +221,7 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project)
 	require.NoError(t, err)
@@ -262,7 +258,7 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 }
 
 func TestSessionService_List(t *testing.T) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 
@@ -270,7 +266,7 @@ func TestSessionService_List(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -279,8 +275,7 @@ func TestSessionService_List(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Project 1",
 		Path:        "/test/path1",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project1)
 	require.NoError(t, err)
@@ -289,8 +284,7 @@ func TestSessionService_List(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Project 2",
 		Path:        "/test/path2",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project2)
 	require.NoError(t, err)
@@ -323,8 +317,8 @@ func TestSessionService_List(t *testing.T) {
 		Limit: 10,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, 5, result.Total)
-	assert.Len(t, result.Items, 5)
+	assert.Equal(t, 5, result.Meta.Total)
+	assert.Len(t, result.Data.([]*models.Session), 5)
 
 	// 프로젝트별 필터링
 	result, err = sessionService.List(context.Background(), &models.SessionFilter{
@@ -334,7 +328,7 @@ func TestSessionService_List(t *testing.T) {
 		Limit: 10,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, 3, result.Total)
+	assert.Equal(t, 3, result.Meta.Total)
 
 	// 활성 세션만 필터링
 	active := true
@@ -345,11 +339,11 @@ func TestSessionService_List(t *testing.T) {
 		Limit: 10,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, 3, result.Total)
+	assert.Equal(t, 3, result.Meta.Total)
 }
 
 func TestSessionService_UpdateStats(t *testing.T) {
-	storage := memory.New()
+	storage := storage.NewMemoryAdapter()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
 
@@ -357,7 +351,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 	workspace := &models.Workspace{
 		Name:     "Test Workspace",
 		OwnerID:  "user-123",
-		Settings: map[string]interface{}{},
+		ProjectPath: "/test/workspace",
 	}
 	err := storage.Workspace().Create(context.Background(), workspace)
 	require.NoError(t, err)
@@ -366,8 +360,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
 	}
 	err = storage.Project().Create(context.Background(), project)
 	require.NoError(t, err)

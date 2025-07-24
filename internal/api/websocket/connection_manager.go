@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/gorilla/websocket"
 )
 
 // ConnectionManager는 WebSocket 연결 생명주기를 관리합니다
@@ -223,7 +223,7 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 	
 	// 사용자별 연결 수 제한 확인
 	cm.userMutex.RLock()
-	userConns := cm.userConnections[userInfo.UserID]
+	userConns := cm.userConnections[userInfo.ID]
 	userConnCount := len(userConns)
 	cm.userMutex.RUnlock()
 	
@@ -241,10 +241,10 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 	
 	// 사용자별 연결 등록
 	cm.userMutex.Lock()
-	if cm.userConnections[userInfo.UserID] == nil {
-		cm.userConnections[userInfo.UserID] = make(map[string]*ManagedConnection)
+	if cm.userConnections[userInfo.ID] == nil {
+		cm.userConnections[userInfo.ID] = make(map[string]*ManagedConnection)
 	}
-	cm.userConnections[userInfo.UserID][managed.ID] = managed
+	cm.userConnections[userInfo.ID][managed.ID] = managed
 	cm.userMutex.Unlock()
 	
 	// 통계 업데이트
@@ -255,7 +255,7 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 	cm.publishEvent(ConnectionEvent{
 		Type:         "connection_registered",
 		ConnectionID: managed.ID,
-		UserID:       userInfo.UserID,
+		UserID:       userInfo.ID,
 		Timestamp:    time.Now(),
 		Data: map[string]interface{}{
 			"remote_addr": conn.RemoteAddr().String(),
@@ -527,7 +527,7 @@ func (cm *ConnectionManager) Shutdown() {
 func (cm *ConnectionManager) createManagedConnection(conn *websocket.Conn, userInfo *auth.UserInfo) *ManagedConnection {
 	clientConn := &ClientConnection{
 		ID:          fmt.Sprintf("conn_%d", time.Now().UnixNano()),
-		UserID:      userInfo.UserID,
+		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		Conn:        conn,
 		Permission:  PermissionRead, // 기본 권한

@@ -45,6 +45,8 @@ type HealthChecker interface {
 	GetHealthStatus() HealthStatus
 	// RegisterHealthHandler 헬스 핸들러 등록
 	RegisterHealthHandler(handler HealthHandler)
+	// GetOverallHealth 풀 기반 전체 헬스 상태 반환 (PoolHealthChecker만 구현)
+	GetOverallHealth() interface{}
 }
 
 // HealthHandler 헬스 상태 변경 핸들러
@@ -224,4 +226,9 @@ func PingHealthCheck(pingCmd string) HealthCheckFunc {
 		// 현재는 기본 헬스체크 사용
 		return process.HealthCheck()
 	}
+}
+
+func (hc *healthChecker) GetOverallHealth() interface{} {
+	// PoolHealthChecker가 아닌 경우 지원하지 않음
+	return nil // 또는 panic("not implemented")
 }

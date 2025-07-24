@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"sync"

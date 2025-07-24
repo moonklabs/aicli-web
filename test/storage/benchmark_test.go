@@ -1,4 +1,4 @@
-package storage
+package storage_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/boltdb"
 	"github.com/aicli/aicli-web/internal/storage/cache"
 	"github.com/aicli/aicli-web/internal/storage/memory"
