@@ -159,7 +159,7 @@ func (m *MockContainerManager) CleanupWorkspace(ctx context.Context, workspaceID
 	return nil
 }
 
-func (m *MockContainerManager) ListContainers(ctx context.Context) ([]*docker.WorkspaceContainer, error) {
+func (m *MockContainerManager) ListContainers(ctx context.Context, labels map[string]string) ([]*docker.WorkspaceContainer, error) {
 	var allContainers []*docker.WorkspaceContainer
 	for _, containers := range m.containers {
 		for _, container := range containers {
