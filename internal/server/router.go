@@ -110,8 +110,8 @@ func (s *Server) setupRoutes() {
 			workspaces.DELETE("/:id", workspaceController.DeleteWorkspace)
 			
 			// 워크스페이스 내 프로젝트 엔드포인트
-			workspaces.POST("/:workspace_id/projects", projectController.CreateProject)
-			workspaces.GET("/:workspace_id/projects", projectController.ListProjects)
+			workspaces.POST("/:id/projects", projectController.CreateProject)
+			workspaces.GET("/:id/projects", projectController.ListProjects)
 		}
 		
 		// 프로젝트 관련 엔드포인트 (인증 필요)

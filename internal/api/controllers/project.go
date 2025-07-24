@@ -32,7 +32,7 @@ func NewProjectController(storage storage.Storage) *ProjectController {
 // @Tags projects
 // @Accept json
 // @Produce json
-// @Param workspace_id path string true "워크스페이스 ID"
+// @Param id path string true "워크스페이스 ID"
 // @Param body body models.Project true "프로젝트 생성 요청"
 // @Security BearerAuth
 // @Success 201 {object} models.SuccessResponse "생성된 프로젝트"
@@ -40,7 +40,7 @@ func NewProjectController(storage storage.Storage) *ProjectController {
 // @Failure 401 {object} models.ErrorResponse "인증 실패"
 // @Failure 404 {object} models.ErrorResponse "워크스페이스를 찾을 수 없음"
 // @Failure 409 {object} models.ErrorResponse "이미 존재하는 프로젝트"
-// @Router /workspaces/{workspace_id}/projects [post]
+// @Router /workspaces/{id}/projects [post]
 func (pc *ProjectController) CreateProject(c *gin.Context) {
 	// 사용자 정보 가져오기
 	claims, exists := c.Get("claims")
@@ -51,7 +51,7 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 	userClaims := claims.(*auth.Claims)
 	
 	// 워크스페이스 ID 가져오기
-	workspaceID := c.Param("workspace_id")
+	workspaceID := c.Param("id")
 	if workspaceID == "" {
 		middleware.ValidationError(c, "워크스페이스 ID가 필요합니다", nil)
 		return
@@ -119,7 +119,7 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 // @Tags projects
 // @Accept json
 // @Produce json
-// @Param workspace_id path string true "워크스페이스 ID"
+// @Param id path string true "워크스페이스 ID"
 // @Param page query int false "페이지 번호" default(1)
 // @Param limit query int false "페이지당 항목 수" default(10)
 // @Param sort query string false "정렬 기준 (name, created_at, updated_at)" default("created_at")
@@ -128,7 +128,7 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 // @Success 200 {object} models.PaginationResponse "프로젝트 목록"
 // @Failure 401 {object} models.ErrorResponse "인증 실패"
 // @Failure 404 {object} models.ErrorResponse "워크스페이스를 찾을 수 없음"
-// @Router /workspaces/{workspace_id}/projects [get]
+// @Router /workspaces/{id}/projects [get]
 func (pc *ProjectController) ListProjects(c *gin.Context) {
 	// 사용자 정보 가져오기
 	claims, exists := c.Get("claims")
@@ -139,7 +139,7 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 	userClaims := claims.(*auth.Claims)
 	
 	// 워크스페이스 ID 가져오기
-	workspaceID := c.Param("workspace_id")
+	workspaceID := c.Param("id")
 	if workspaceID == "" {
 		middleware.ValidationError(c, "워크스페이스 ID가 필요합니다", nil)
 		return
