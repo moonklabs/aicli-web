@@ -19,6 +19,7 @@ import {
 
 import App from './App.vue'
 import router from './router'
+import { registerPermissionDirectives } from './directives/permission'
 
 const app = createApp(App)
 
@@ -28,6 +29,9 @@ app.use(pinia)
 
 // 라우터 설정
 app.use(router)
+
+// 권한 디렉티브 등록
+registerPermissionDirectives(app)
 
 // Naive UI 전역 컴포넌트 등록
 app.component('NConfigProvider', NConfigProvider)

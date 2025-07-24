@@ -202,6 +202,88 @@ export interface TaskInfo {
   completedAt?: string
 }
 
+// RBAC 관련 타입
+export interface Role {
+  id: string
+  name: string
+  description: string
+  parentId?: string
+  level: number
+  isSystem: boolean
+  isActive: boolean
+  permissions?: Permission[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Permission {
+  id: string
+  name: string
+  description: string
+  resourceType: ResourceType
+  action: ActionType
+  effect: PermissionEffect
+  conditions?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type ResourceType = 'workspace' | 'project' | 'session' | 'task' | 'user' | 'system'
+export type ActionType = 'create' | 'read' | 'update' | 'delete' | 'execute' | 'manage'
+export type PermissionEffect = 'allow' | 'deny'
+
+export interface UserRole {
+  userId: string
+  roleId: string
+  assignedBy: string
+  resourceId?: string
+  expiresAt?: string
+  isActive: boolean
+  role?: Role
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PermissionCheck {
+  userID: string
+  resourceType: ResourceType
+  resourceID: string
+  action: ActionType
+  attributes?: Record<string, string>
+}
+
+export interface PermissionCheckResponse {
+  allowed: boolean
+  decision: {
+    resourceType: ResourceType
+    resourceId: string
+    action: ActionType
+    effect: PermissionEffect
+    source: string
+    reason: string
+    conditions?: string
+  }
+  evaluation: string[]
+}
+
+export interface UserPermissions {
+  userId: string
+  directRoles: string[]
+  inheritedRoles: string[]
+  groupRoles: string[]
+  finalPermissions: Record<string, {
+    resourceType: ResourceType
+    resourceId: string
+    action: ActionType
+    effect: PermissionEffect
+    source: string
+    reason: string
+    conditions?: string
+  }>
+  computedAt: string
+}
+
 // WebSocket 메시지 타입
 export interface WebSocketMessage {
   type: string
