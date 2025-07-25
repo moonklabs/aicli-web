@@ -25,9 +25,9 @@
           >Welcome, <b>{{ user.name }}</b
           >!</span
         >
-        <my-button size="small" @click="$emit('logout')" label="Log out" v-if="user" />
-        <my-button size="small" @click="$emit('login')" label="Log in" v-if="!user" />
-        <my-button
+        <MyButton size="small" @click="$emit('logout')" label="Log out" v-if="user" />
+        <MyButton size="small" @click="$emit('login')" label="Log in" v-if="!user" />
+        <MyButton
           primary
           size="small"
           @click="$emit('createAccount')"
@@ -40,14 +40,14 @@
 </template>
 
 <script lang="ts" setup>
-import MyButton from './Button.vue';
-import './header.css';
+import MyButton from './Button.vue'
+import './header.css'
 
-defineProps<{ user: { name: string } | null }>();
+defineProps<{ user: { name: string } | null }>()
 
 defineEmits<{
   (event: 'createAccount'): void;
   (event: 'login'): void;
   (event: 'logout'): void;
-}>();
+}>()
 </script>

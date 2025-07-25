@@ -215,6 +215,270 @@ export interface AnimationProps {
   delay?: number;
 }
 
+// 데이터 테이블 고급 필터 타입
+export interface TableFilter {
+  key: string;
+  value: any;
+  operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' | 'in' | 'notIn';
+  type?: 'text' | 'number' | 'date' | 'select' | 'boolean';
+}
+
+// 데이터 테이블 정렬 타입
+export interface TableSorter {
+  key: string;
+  order: 'asc' | 'desc';
+  sorter?: 'default' | 'alphanumeric' | 'numeric' | 'date' | ((a: any, b: any) => number);
+}
+
+// 가상 스크롤링 설정
+export interface VirtualScrollConfig {
+  enabled?: boolean;
+  itemHeight?: number | 'auto';
+  overscan?: number;
+  scrollContainer?: string | HTMLElement;
+}
+
+// 데이터 테이블 페이지네이션 설정
+export interface TablePagination {
+  page: number;
+  pageSize: number;
+  total: number;
+  showSizeChanger?: boolean;
+  pageSizes?: number[];
+  showQuickJumper?: boolean;
+  position?: 'top' | 'bottom' | 'both';
+}
+
+// 확장된 데이터 테이블 컬럼 타입
+export interface AdvancedTableColumn extends TableColumn {
+  resizable?: boolean;
+  hideable?: boolean;
+  pinnable?: boolean;
+  groupable?: boolean;
+  searchable?: boolean;
+  filter?: {
+    type: 'text' | 'number' | 'date' | 'select' | 'multiSelect' | 'dateRange';
+    options?: Array<{ label: string; value: any }>;
+    placeholder?: string;
+    multiple?: boolean;
+  };
+  sort?: {
+    compare?: (a: any, b: any) => number;
+    multiple?: boolean;
+  };
+  export?: {
+    exclude?: boolean;
+    formatter?: (value: any) => string;
+  };
+}
+
+// 고급 데이터 테이블 속성
+export interface AdvancedDataTableProps extends Omit<DataTableProps, 'columns'> {
+  columns?: AdvancedTableColumn[];
+  virtualScroll?: VirtualScrollConfig;
+  filters?: TableFilter[];
+  sorters?: TableSorter[];
+  selection?: {
+    type?: 'checkbox' | 'radio' | 'none';
+    selectedKeys?: Array<string | number>;
+    onSelectionChange?: (keys: Array<string | number>) => void;
+  };
+  export?: {
+    enabled?: boolean;
+    formats?: Array<'csv' | 'excel' | 'json'>;
+    filename?: string;
+  };
+  grouping?: {
+    enabled?: boolean;
+    groupBy?: string[];
+    expanded?: string[];
+  };
+  responsive?: {
+    enabled?: boolean;
+    breakpoints?: Record<string, number>;
+    hideColumns?: Record<string, string[]>;
+  };
+  performance?: {
+    debounceMs?: number;
+    throttleMs?: number;
+    lazyLoading?: boolean;
+  };
+  onRowClick?: (row: any, index: number, event: Event) => void;
+  onRowDoubleClick?: (row: any, index: number, event: Event) => void;
+  onCellClick?: (cell: any, row: any, column: AdvancedTableColumn, event: Event) => void;
+}
+
+// 차트 데이터 포인트 타입
+export interface ChartDataPoint {
+  x?: any;
+  y?: any;
+  label?: string;
+  value?: number;
+  color?: string;
+  [key: string]: any;
+}
+
+// 차트 데이터셋 타입
+export interface ChartDataset {
+  label: string;
+  data: ChartDataPoint[] | number[];
+  backgroundColor?: string | string[];
+  borderColor?: string | string[];
+  borderWidth?: number;
+  tension?: number;
+  fill?: boolean;
+  pointRadius?: number;
+  pointHoverRadius?: number;
+  [key: string]: any;
+}
+
+// 차트 데이터 구조
+export interface ChartData {
+  labels?: string[];
+  datasets: ChartDataset[];
+}
+
+// 차트 기본 속성
+export interface BaseChartProps extends BaseComponentProps {
+  data: ChartData;
+  options?: any;
+  plugins?: any[];
+  width?: number;
+  height?: number;
+  responsive?: boolean;
+  maintainAspectRatio?: boolean;
+  redraw?: boolean;
+  fallbackContent?: string;
+  onChartCreate?: (chart: any) => void;
+  onChartUpdate?: (chart: any) => void;
+  onChartDestroy?: (chart: any) => void;
+  onClick?: (event: Event, elements: any[]) => void;
+  onHover?: (event: Event, elements: any[]) => void;
+}
+
+// 라인 차트 속성
+export interface LineChartProps extends BaseChartProps {
+  stepped?: boolean | 'before' | 'after' | 'middle';
+  spanGaps?: boolean | number;
+  showLine?: boolean;
+  tension?: number;
+}
+
+// 바 차트 속성
+export interface BarChartProps extends BaseChartProps {
+  indexAxis?: 'x' | 'y';
+  skipNull?: boolean;
+  grouped?: boolean;
+  barPercentage?: number;
+  categoryPercentage?: number;
+}
+
+// 파이/도넛 차트 속성
+export interface PieChartProps extends BaseChartProps {
+  cutout?: number | string;
+  circumference?: number;
+  rotation?: number;
+  animations?: {
+    animateRotate?: boolean;
+    animateScale?: boolean;
+  };
+}
+
+// 스캐터 차트 속성
+export interface ScatterChartProps extends BaseChartProps {
+  showLine?: boolean;
+  pointRadius?: number;
+  pointHoverRadius?: number;
+}
+
+// 차트 테마 설정
+export interface ChartTheme {
+  colors: {
+    primary: string[];
+    secondary: string[];
+    accent: string[];
+    neutral: string[];
+  };
+  fonts: {
+    family: string;
+    size: number;
+    weight: string | number;
+  };
+  grid: {
+    color: string;
+    lineWidth: number;
+  };
+  tooltip: {
+    backgroundColor: string;
+    titleColor: string;
+    bodyColor: string;
+    borderColor: string;
+  };
+}
+
+// 실시간 차트 업데이트 설정
+export interface RealTimeChartConfig {
+  enabled?: boolean;
+  interval?: number;
+  maxDataPoints?: number;
+  animationDuration?: number;
+  onDataUpdate?: (newData: any) => void;
+}
+
+// 차트 내보내기 설정
+export interface ChartExportConfig {
+  enabled?: boolean;
+  formats?: Array<'png' | 'jpg' | 'svg' | 'pdf'>;
+  quality?: number;
+  backgroundColor?: string;
+  filename?: string;
+}
+
+// 차트 줌/팬 설정
+export interface ChartZoomConfig {
+  enabled?: boolean;
+  mode?: 'x' | 'y' | 'xy';
+  rangeMin?: {
+    x?: any;
+    y?: any;
+  };
+  rangeMax?: {
+    x?: any;
+    y?: any;
+  };
+  speed?: number;
+  threshold?: number;
+  onZoomComplete?: (context: any) => void;
+  onPanComplete?: (context: any) => void;
+}
+
+// 차트-테이블 연동 설정
+export interface ChartTableIntegration {
+  enabled?: boolean;
+  syncSelection?: boolean;
+  syncFiltering?: boolean;
+  highlightOnHover?: boolean;
+  onSelectionSync?: (selection: any) => void;
+  onFilterSync?: (filters: TableFilter[]) => void;
+}
+
+// 고급 차트 위젯 속성
+export interface AdvancedChartProps extends BaseChartProps {
+  theme?: ChartTheme;
+  realTime?: RealTimeChartConfig;
+  export?: ChartExportConfig;
+  zoom?: ChartZoomConfig;
+  tableIntegration?: ChartTableIntegration;
+  accessibility?: {
+    enabled?: boolean;
+    description?: string;
+    summary?: string;
+  };
+  loading?: boolean;
+  error?: Error | null;
+  onError?: (error: Error) => void;
+}
+
 // 기본 컴포넌트 속성 (모든 컴포넌트가 상속)
 export interface BaseComponentProps extends AccessibilityProps, KeyboardEventProps, FocusProps {
   id?: string;

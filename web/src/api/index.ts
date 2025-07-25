@@ -30,19 +30,19 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   retryDelay: 1000,
   exponentialBackoff: true,
   retryCondition: (error: AxiosError) => {
-    return !error.response || 
-           error.response.status >= 500 || 
+    return !error.response ||
+           error.response.status >= 500 ||
            error.response.status === 408 || // Request Timeout
            error.response.status === 429 || // Too Many Requests
            error.code === 'ECONNABORTED' || // Timeout
            error.code === 'NETWORK_ERROR'
-  }
+  },
 }
 
 const DEFAULT_CACHE_CONFIG: CacheConfig = {
   enabled: true,
   maxAge: 5 * 60 * 1000, // 5분
-  excludeHeaders: ['authorization', 'cookie']
+  excludeHeaders: ['authorization', 'cookie'],
 }
 
 // 전역 상태
@@ -75,7 +75,7 @@ const generateRequestKey = (config: AxiosRequestConfig): string => {
 }
 
 const shouldCache = (config: AxiosRequestConfig): boolean => {
-  return globalCacheConfig.enabled && 
+  return globalCacheConfig.enabled &&
          config.method?.toLowerCase() === 'get' &&
          !config.headers?.Authorization?.includes('Bearer')
 }
@@ -95,7 +95,7 @@ const setCachedResponse = (cacheKey: string, data: any, maxAge: number = globalC
   requestCache.set(cacheKey, {
     data,
     timestamp: Date.now(),
-    maxAge
+    maxAge,
   })
 }
 
@@ -141,7 +141,7 @@ api.interceptors.request.use(
     // 요청 중복 제거 (GET 요청만)
     if (config.method?.toLowerCase() === 'get') {
       const requestKey = generateRequestKey(config)
-      
+
       if (pendingRequests.has(requestKey)) {
         console.log('🔄 Deduplicating request:', config.url)
         return pendingRequests.get(requestKey)
@@ -152,7 +152,7 @@ api.interceptors.request.use(
     if (shouldCache(config)) {
       const cacheKey = generateCacheKey(config)
       const cachedResponse = getCachedResponse(cacheKey)
-      
+
       if (cachedResponse) {
         console.log('💾 Using cached response:', config.url)
         return Promise.resolve({
@@ -161,7 +161,7 @@ api.interceptors.request.use(
           statusText: 'OK',
           headers: {},
           config,
-          fromCache: true
+          fromCache: true,
         })
       }
     }
@@ -236,24 +236,24 @@ api.interceptors.response.use(
     // 재시도 로직 (401 에러 제외하고 먼저 처리)
     if (config && error.response?.status !== 401) {
       const retryCount = config.metadata?.retryCount || 0
-      const shouldRetry = globalRetryConfig.retryCondition ? 
-        globalRetryConfig.retryCondition(error) : 
+      const shouldRetry = globalRetryConfig.retryCondition ?
+        globalRetryConfig.retryCondition(error) :
         DEFAULT_RETRY_CONFIG.retryCondition!(error)
-      
+
       if (shouldRetry && retryCount < globalRetryConfig.maxRetries) {
         const delay = calculateRetryDelay(
-          retryCount + 1, 
-          globalRetryConfig.retryDelay, 
-          globalRetryConfig.exponentialBackoff
+          retryCount + 1,
+          globalRetryConfig.retryDelay,
+          globalRetryConfig.exponentialBackoff,
         )
-        
+
         console.log(`🔄 Retrying request (${retryCount + 1}/${globalRetryConfig.maxRetries}) after ${delay}ms:`, config.url)
-        
+
         await sleep(delay)
-        
+
         // 재시도 횟수 증가
         config.metadata.retryCount = retryCount + 1
-        
+
         return api.request(config)
       }
     }
@@ -317,24 +317,24 @@ api.interceptors.response.use(
 
 // API 래퍼 함수들 (고도화된 버전)
 export const apiGet = <T = any>(
-  url: string, 
-  config?: AxiosRequestConfig & { cache?: Partial<CacheConfig> }
+  url: string,
+  config?: AxiosRequestConfig & { cache?: Partial<CacheConfig> },
 ): Promise<AxiosResponse<ApiResponse<T>>> => {
   const requestKey = generateRequestKey({ method: 'GET', url, ...config })
-  
+
   // 중복 요청 방지
   if (pendingRequests.has(requestKey)) {
     return pendingRequests.get(requestKey) as Promise<AxiosResponse<ApiResponse<T>>>
   }
-  
+
   const request = api.get(url, config)
   pendingRequests.set(requestKey, request)
-  
+
   // 요청 완료 후 pending에서 제거
   request.finally(() => {
     pendingRequests.delete(requestKey)
   })
-  
+
   return request
 }
 
@@ -390,11 +390,11 @@ export const configureApiClient = (config: ApiClientConfig): void => {
   if (config.retry) {
     globalRetryConfig = { ...globalRetryConfig, ...config.retry }
   }
-  
+
   if (config.cache) {
     globalCacheConfig = { ...globalCacheConfig, ...config.cache }
   }
-  
+
   if (config.timeout) {
     api.defaults.timeout = config.timeout
   }
@@ -406,7 +406,7 @@ export const clearApiCache = (): void => {
   console.log('🗑️ API cache cleared')
 }
 
-export const removeFromCache = (url: string, method: string = 'GET', params?: any): void => {
+export const removeFromCache = (url: string, method = 'GET', params?: any): void => {
   const cacheKey = generateCacheKey({ method, url, params })
   requestCache.delete(cacheKey)
 }
@@ -415,33 +415,33 @@ export const getCacheSize = (): number => {
   return requestCache.size
 }
 
-export const getCacheStats = (): { 
-  size: number; 
-  entries: Array<{ key: string; age: number; maxAge: number }> 
+export const getCacheStats = (): {
+  size: number;
+  entries: Array<{ key: string; age: number; maxAge: number }>
 } => {
   const now = Date.now()
   const entries = Array.from(requestCache.entries()).map(([key, value]) => ({
     key,
     age: now - value.timestamp,
-    maxAge: value.maxAge
+    maxAge: value.maxAge,
   }))
-  
+
   return {
     size: requestCache.size,
-    entries
+    entries,
   }
 }
 
 // 네트워크 상태 관련
-export const getNetworkStatus = (): { 
-  isOnline: boolean; 
+export const getNetworkStatus = (): {
+  isOnline: boolean;
   pendingRequests: number;
   cachedResponses: number;
 } => {
   return {
     isOnline,
     pendingRequests: pendingRequests.size,
-    cachedResponses: requestCache.size
+    cachedResponses: requestCache.size,
   }
 }
 

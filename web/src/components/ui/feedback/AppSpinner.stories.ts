@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/vue3';
-import AppSpinner from './AppSpinner.vue';
+import type { Meta, StoryObj } from '@storybook/vue3'
+import AppSpinner from './AppSpinner.vue'
 
 const meta: Meta<typeof AppSpinner> = {
   title: 'UI/Feedback/AppSpinner',
@@ -8,55 +8,55 @@ const meta: Meta<typeof AppSpinner> = {
     layout: 'centered',
     docs: {
       description: {
-        component: '로딩 상태를 나타내는 스피너 컴포넌트입니다. 다양한 크기와 색상 변형을 지원하며, 설명 텍스트와 오버레이 모드를 제공합니다.'
-      }
-    }
+        component: '로딩 상태를 나타내는 스피너 컴포넌트입니다. 다양한 크기와 색상 변형을 지원하며, 설명 텍스트와 오버레이 모드를 제공합니다.',
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
     size: {
       control: { type: 'select' },
       options: ['small', 'medium', 'large'],
-      description: '스피너의 크기'
+      description: '스피너의 크기',
     },
     variant: {
       control: { type: 'select' },
       options: ['default', 'primary', 'secondary', 'success', 'warning', 'error', 'info'],
-      description: '스피너의 색상 변형'
+      description: '스피너의 색상 변형',
     },
     description: {
       control: { type: 'text' },
-      description: '스피너 하단에 표시될 설명 텍스트'
+      description: '스피너 하단에 표시될 설명 텍스트',
     },
     center: {
       control: { type: 'boolean' },
-      description: '스피너를 중앙에 배치할지 여부'
+      description: '스피너를 중앙에 배치할지 여부',
     },
     overlay: {
       control: { type: 'boolean' },
-      description: '전체 화면 오버레이로 표시할지 여부'
+      description: '전체 화면 오버레이로 표시할지 여부',
     },
     color: {
       control: { type: 'color' },
-      description: '커스텀 색상 (CSS 색상 값)'
+      description: '커스텀 색상 (CSS 색상 값)',
     },
     strokeWidth: {
       control: { type: 'number', min: 1, max: 10, step: 1 },
-      description: '스피너 선의 두께'
-    }
-  }
-};
+      description: '스피너 선의 두께',
+    },
+  },
+}
 
-export default meta;
+export default meta
 type Story = StoryObj<typeof meta>;
 
 // 기본 스토리
 export const Default: Story = {
   args: {
     size: 'medium',
-    variant: 'primary'
-  }
-};
+    variant: 'primary',
+  },
+}
 
 // 크기 변형
 export const Sizes: Story = {
@@ -77,9 +77,9 @@ export const Sizes: Story = {
           <span class="text-sm text-gray-600">Large</span>
         </div>
       </div>
-    `
-  })
-};
+    `,
+  }),
+}
 
 // 색상 변형
 export const Variants: Story = {
@@ -116,18 +116,18 @@ export const Variants: Story = {
           <span class="text-sm text-gray-600">Info</span>
         </div>
       </div>
-    `
-  })
-};
+    `,
+  }),
+}
 
 // 설명 텍스트 포함
 export const WithDescription: Story = {
   args: {
     size: 'medium',
     variant: 'primary',
-    description: '데이터를 불러오는 중...'
-  }
-};
+    description: '데이터를 불러오는 중...',
+  },
+}
 
 // 중앙 정렬
 export const Centered: Story = {
@@ -135,17 +135,17 @@ export const Centered: Story = {
     size: 'large',
     variant: 'primary',
     description: '페이지를 로딩 중입니다',
-    center: true
+    center: true,
   },
   parameters: {
-    layout: 'fullscreen'
+    layout: 'fullscreen',
   },
   decorators: [
     () => ({
-      template: '<div style="height: 300px; border: 1px dashed #ccc;"><story /></div>'
-    })
-  ]
-};
+      template: '<div style="height: 300px; border: 1px dashed #ccc;"><story /></div>',
+    }),
+  ],
+}
 
 // 오버레이 모드
 export const Overlay: Story = {
@@ -153,10 +153,10 @@ export const Overlay: Story = {
     size: 'large',
     variant: 'primary',
     description: '처리 중입니다...',
-    overlay: true
+    overlay: true,
   },
   parameters: {
-    layout: 'fullscreen'
+    layout: 'fullscreen',
   },
   decorators: [
     () => ({
@@ -172,19 +172,19 @@ export const Overlay: Story = {
           </div>
           <story />
         </div>
-      `
-    })
-  ]
-};
+      `,
+    }),
+  ],
+}
 
 // 커스텀 색상
 export const CustomColor: Story = {
   args: {
     size: 'medium',
     color: '#ff6b6b',
-    description: '커스텀 색상 스피너'
-  }
-};
+    description: '커스텀 색상 스피너',
+  },
+}
 
 // 다양한 선 두께
 export const StrokeWidths: Story = {
@@ -209,9 +209,9 @@ export const StrokeWidths: Story = {
           <span class="text-sm text-gray-600">Stroke: 8</span>
         </div>
       </div>
-    `
-  })
-};
+    `,
+  }),
+}
 
 // 실제 사용 예제
 export const InButton: Story = {
@@ -234,9 +234,9 @@ export const InButton: Story = {
           저장 중
         </button>
       </div>
-    `
-  })
-};
+    `,
+  }),
+}
 
 // 카드 내부 사용 예제
 export const InCard: Story = {
@@ -254,23 +254,23 @@ export const InCard: Story = {
           />
         </div>
       </div>
-    `
-  })
-};
+    `,
+  }),
+}
 
 // 다크 모드 테스트
 export const DarkMode: Story = {
   args: {
     size: 'medium',
     variant: 'primary',
-    description: '다크 모드에서의 스피너'
+    description: '다크 모드에서의 스피너',
   },
   parameters: {
-    backgrounds: { default: 'dark' }
+    backgrounds: { default: 'dark' },
   },
   decorators: [
     () => ({
-      template: '<div data-theme="dark" class="p-8"><story /></div>'
-    })
-  ]
-};
+      template: '<div data-theme="dark" class="p-8"><story /></div>',
+    }),
+  ],
+}

@@ -1,4 +1,4 @@
-import { ref, computed, nextTick } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type { AxiosError } from 'axios'
 
 export interface NotificationAction {
@@ -46,10 +46,10 @@ export function useErrorNotification() {
   // 알림 추가
   const addNotification = (
     message: string,
-    options: NotificationOptions = {}
+    options: NotificationOptions = {},
   ): string => {
     const id = `notification-${++notificationId.value}`
-    
+
     const notification: ErrorNotification = {
       id,
       type: options.type || 'error',
@@ -62,7 +62,7 @@ export function useErrorNotification() {
       isRetrying: false,
       retryCount: 0,
       maxRetries: options.maxRetries || 3,
-      timestamp: new Date()
+      timestamp: new Date(),
     }
 
     // 재시도 가능한 경우 재시도 액션 추가
@@ -70,7 +70,7 @@ export function useErrorNotification() {
       notification.actions.unshift({
         label: '재시도',
         primary: true,
-        dismiss: false
+        dismiss: false,
       })
     }
 
@@ -100,7 +100,7 @@ export function useErrorNotification() {
 
     const timer = setInterval(() => {
       progress -= decrement
-      
+
       const currentNotification = notifications.value.find(n => n.id === id)
       if (currentNotification) {
         currentNotification.hideProgress = Math.max(0, progress)
@@ -145,25 +145,25 @@ export function useErrorNotification() {
 
     try {
       await handler()
-      
+
       // 성공 시 성공 알림으로 변경
       notification.type = 'success'
       notification.message = '문제가 해결되었습니다'
       notification.actions = []
       notification.autoHide = true
       notification.autoHideDelay = 3000
-      
+
       clearInterval(progressInterval)
       notification.retryProgress = 100
-      
+
       setTimeout(() => {
         removeNotification(id)
       }, 3000)
-      
+
     } catch (error) {
       clearInterval(progressInterval)
       notification.retryProgress = 0
-      
+
       // 최대 재시도 횟수 도달 시
       if (notification.retryCount >= notification.maxRetries) {
         notification.message = '재시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.'
@@ -220,14 +220,14 @@ export function useErrorNotification() {
       }
 
       details = `HTTP ${status}: ${error.response.statusText}\nURL: ${error.config?.url}`
-      
+
     } else if (error.request) {
       // 요청은 보냈지만 응답이 없는 경우
       message = '네트워크 연결을 확인해주세요.'
       type = 'network'
       retryable = true
       details = 'No response received from server'
-      
+
     } else {
       // 요청 설정 중 오류
       details = error.message
@@ -246,9 +246,9 @@ export function useErrorNotification() {
         {
           label: '새로고침',
           handler: () => window.location.reload(),
-          dismiss: true
-        }
-      ]
+          dismiss: true,
+        },
+      ],
     })
   }
 
@@ -258,7 +258,7 @@ export function useErrorNotification() {
       return addNotification('네트워크 연결이 복구되었습니다.', {
         type: 'success',
         autoHide: true,
-        autoHideDelay: 3000
+        autoHideDelay: 3000,
       })
     } else {
       return addNotification('네트워크 연결이 끊어졌습니다.', {
@@ -277,9 +277,9 @@ export function useErrorNotification() {
               }
             },
             primary: true,
-            dismiss: false
-          }
-        ]
+            dismiss: false,
+          },
+        ],
       })
     }
   }
@@ -289,7 +289,7 @@ export function useErrorNotification() {
     return addNotification(message, {
       type: 'success',
       autoHide: true,
-      autoHideDelay
+      autoHideDelay,
     })
   }
 
@@ -297,7 +297,7 @@ export function useErrorNotification() {
   const showWarning = (message: string, autoHide = true): string => {
     return addNotification(message, {
       type: 'warning',
-      autoHide
+      autoHide,
     })
   }
 
@@ -305,7 +305,7 @@ export function useErrorNotification() {
   const showInfo = (message: string, autoHide = true): string => {
     return addNotification(message, {
       type: 'info',
-      autoHide
+      autoHide,
     })
   }
 
@@ -314,17 +314,17 @@ export function useErrorNotification() {
     return addNotification(message, {
       type: 'error',
       retryable,
-      autoHide: !retryable
+      autoHide: !retryable,
     })
   }
 
   // 계산된 속성들
   const hasNotifications = computed(() => notifications.value.length > 0)
-  const errorCount = computed(() => 
-    notifications.value.filter(n => n.type === 'error').length
+  const errorCount = computed(() =>
+    notifications.value.filter(n => n.type === 'error').length,
   )
-  const warningCount = computed(() => 
-    notifications.value.filter(n => n.type === 'warning').length
+  const warningCount = computed(() =>
+    notifications.value.filter(n => n.type === 'warning').length,
   )
 
   return {
@@ -348,7 +348,7 @@ export function useErrorNotification() {
     showSuccess,
     showWarning,
     showInfo,
-    showError
+    showError,
   }
 }
 

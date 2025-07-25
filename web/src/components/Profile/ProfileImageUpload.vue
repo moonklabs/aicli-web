@@ -16,9 +16,9 @@
             </n-icon>
           </template>
         </n-avatar>
-        
+
         <!-- 업로드 오버레이 -->
-        <div 
+        <div
           v-if="!uploading"
           class="upload-overlay"
           @click="triggerFileInput"
@@ -31,7 +31,7 @@
           </n-icon>
           <span>변경</span>
         </div>
-        
+
         <!-- 업로드 중 오버레이 -->
         <div v-else class="uploading-overlay">
           <n-spin size="medium" stroke="white" />
@@ -62,7 +62,7 @@
           </template>
           이미지 업로드
         </n-button>
-        
+
         <n-button
           v-if="currentImage"
           type="error"
@@ -106,7 +106,7 @@
             style="max-width: 100%; max-height: 400px;"
           />
         </div>
-        
+
         <div class="crop-controls">
           <n-space vertical>
             <div class="aspect-ratio-controls">
@@ -116,7 +116,7 @@
                 <n-radio value="free">자유</n-radio>
               </n-radio-group>
             </div>
-            
+
             <div class="crop-preview-section">
               <span class="control-label">미리보기:</span>
               <div class="preview-container">
@@ -157,13 +157,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { nextTick, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
-  PersonSharp as Person,
   CameraSharp as Camera,
   CloudUploadSharp as CloudUpload,
-  TrashSharp as Trash
+  PersonSharp as Person,
+  TrashSharp as Trash,
 } from '@vicons/ionicons5'
 
 // Props
@@ -173,7 +173,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  uploading: false
+  uploading: false,
 })
 
 // Emits
@@ -239,11 +239,11 @@ const triggerFileInput = () => {
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (file && validateFile(file)) {
     processFile(file)
   }
-  
+
   // 입력 초기화
   target.value = ''
 }
@@ -252,7 +252,7 @@ const handleFileSelect = (event: Event) => {
 const handleFileDrop = (event: DragEvent) => {
   const files = event.dataTransfer?.files
   const file = files?.[0]
-  
+
   if (file && validateFile(file)) {
     processFile(file)
   }
@@ -261,13 +261,13 @@ const handleFileDrop = (event: DragEvent) => {
 // 파일 처리
 const processFile = (file: File) => {
   selectedFile.value = file
-  
+
   // 파일을 데이터 URL로 변환
   const reader = new FileReader()
   reader.onload = (e) => {
     cropImageSrc.value = e.target?.result as string
     showCropModal.value = true
-    
+
     // 다음 틱에서 크롭 초기화
     nextTick(() => {
       initializeCrop()
@@ -288,12 +288,12 @@ const initializeCrop = () => {
 const updateCropPreview = () => {
   const canvas = previewCanvasRef.value
   const img = cropImageRef.value
-  
+
   if (!canvas || !img) return
-  
+
   const ctx = canvas.getContext('2d')
   if (!ctx) return
-  
+
   // 기본 미리보기 구현
   ctx.clearRect(0, 0, 80, 80)
   ctx.drawImage(img, 0, 0, 80, 80)
@@ -302,7 +302,7 @@ const updateCropPreview = () => {
 // 크롭 확인
 const confirmCrop = async () => {
   if (!selectedFile.value) return
-  
+
   try {
     // 여기서 실제 크롭 데이터를 가져와야 함
     // 현재는 기본 크롭 데이터 사용
@@ -310,9 +310,9 @@ const confirmCrop = async () => {
       x: 0,
       y: 0,
       width: 100,
-      height: 100
+      height: 100,
     }
-    
+
     emit('upload', selectedFile.value, cropData)
     showCropModal.value = false
     selectedFile.value = null
@@ -496,10 +496,10 @@ const handleDelete = () => {
     .action-buttons {
       .n-space {
         width: 100%;
-        
+
         :deep(.n-space-item) {
           flex: 1;
-          
+
           .n-button {
             width: 100%;
           }

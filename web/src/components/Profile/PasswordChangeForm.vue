@@ -33,14 +33,14 @@
           :disabled="loading"
           @input="checkPasswordStrength"
         />
-        
+
         <!-- 비밀번호 강도 표시 -->
         <template #feedback>
           <div v-if="passwordStrength && form.newPassword" class="password-strength">
             <div class="strength-meter">
               <div class="strength-label">비밀번호 강도:</div>
               <div class="strength-bar">
-                <div 
+                <div
                   class="strength-fill"
                   :class="strengthClass"
                   :style="{ width: `${(passwordStrength.score + 1) * 20}%` }"
@@ -50,7 +50,7 @@
                 {{ strengthText }}
               </span>
             </div>
-            
+
             <!-- 경고 및 제안 -->
             <div v-if="passwordStrength.feedback.warning" class="strength-warning">
               <n-icon size="14" color="#f0a020">
@@ -58,7 +58,7 @@
               </n-icon>
               {{ passwordStrength.feedback.warning }}
             </div>
-            
+
             <div v-if="passwordStrength.feedback.suggestions.length > 0" class="strength-suggestions">
               <div class="suggestions-title">개선 제안:</div>
               <ul>
@@ -116,12 +116,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
+  TimeSharp as Clock,
   KeySharp as Key,
   WarningSharp as Warning,
-  TimeSharp as Clock
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 import type { PasswordStrength } from '@/types/api'
@@ -133,7 +133,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -157,7 +157,7 @@ const formRef = ref()
 const form = reactive({
   currentPassword: '',
   newPassword: '',
-  confirmPassword: ''
+  confirmPassword: '',
 })
 
 // 폼 검증 규칙
@@ -165,18 +165,18 @@ const rules = {
   currentPassword: {
     required: true,
     message: '현재 비밀번호를 입력해주세요',
-    trigger: ['blur', 'input']
+    trigger: ['blur', 'input'],
   },
   newPassword: [
     {
       required: true,
       message: '새 비밀번호를 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       min: 8,
       message: '비밀번호는 최소 8자 이상이어야 합니다',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       validator: (rule: any, value: string) => {
@@ -185,14 +185,14 @@ const rules = {
         }
         return true
       },
-      trigger: ['blur', 'input']
-    }
+      trigger: ['blur', 'input'],
+    },
   ],
   confirmPassword: [
     {
       required: true,
       message: '비밀번호 확인을 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       validator: (rule: any, value: string) => {
@@ -201,9 +201,9 @@ const rules = {
         }
         return true
       },
-      trigger: ['blur', 'input']
-    }
-  ]
+      trigger: ['blur', 'input'],
+    },
+  ],
 }
 
 // 계산된 속성
@@ -216,7 +216,7 @@ const isFormValid = computed(() => {
 
 const strengthClass = computed(() => {
   if (!passwordStrength.value) return 'strength-weak'
-  
+
   const score = passwordStrength.value.score
   if (score >= 4) return 'strength-very-strong'
   if (score >= 3) return 'strength-strong'
@@ -227,7 +227,7 @@ const strengthClass = computed(() => {
 
 const strengthText = computed(() => {
   if (!passwordStrength.value) return ''
-  
+
   const score = passwordStrength.value.score
   const texts = ['매우 약함', '약함', '보통', '강함', '매우 강함']
   return texts[score] || '알 수 없음'
@@ -239,13 +239,13 @@ const checkPasswordStrength = () => {
   if (strengthCheckTimeout.value) {
     clearTimeout(strengthCheckTimeout.value)
   }
-  
+
   // 비밀번호가 너무 짧으면 체크하지 않음
   if (form.newPassword.length < 4) {
     passwordStrength.value = null
     return
   }
-  
+
   // 디바운스로 API 호출 최적화
   strengthCheckTimeout.value = setTimeout(async () => {
     try {
@@ -257,12 +257,12 @@ const checkPasswordStrength = () => {
         score: 0,
         feedback: {
           warning: '비밀번호 강도를 확인할 수 없습니다',
-          suggestions: []
+          suggestions: [],
         },
         crackTime: {
           offlineSlowHashing: '알 수 없음',
-          onlineThrottling: '알 수 없음'
-        }
+          onlineThrottling: '알 수 없음',
+        },
       }
     }
   }, 500)
@@ -271,24 +271,24 @@ const checkPasswordStrength = () => {
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
-    
+
     loading.value = true
-    
+
     await profileApi.changePassword({
       currentPassword: form.currentPassword,
       newPassword: form.newPassword,
-      confirmPassword: form.confirmPassword
+      confirmPassword: form.confirmPassword,
     })
-    
+
     // 폼 초기화
     form.currentPassword = ''
     form.newPassword = ''
     form.confirmPassword = ''
     passwordStrength.value = null
-    
+
     message.success('비밀번호가 성공적으로 변경되었습니다')
     emit('success')
-    
+
   } catch (error: any) {
     console.error('비밀번호 변경 실패:', error)
     message.error(error.message || '비밀번호 변경에 실패했습니다')
@@ -303,7 +303,7 @@ const formatLastChange = (dateString: string) => {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
+
   if (diffDays === 0) {
     return '오늘'
   } else if (diffDays === 1) {
@@ -494,7 +494,7 @@ watch(() => form.newPassword, (newVal, oldVal) => {
       .n-space {
         :deep(.n-space-item) {
           flex: 1;
-          
+
           .n-button {
             width: 100%;
           }

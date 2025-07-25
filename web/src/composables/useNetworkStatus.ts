@@ -1,5 +1,5 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { getNetworkStatus, cancelAllPendingRequests } from '@/api'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { cancelAllPendingRequests, getNetworkStatus } from '@/api'
 
 export interface NetworkStatus {
   isOnline: boolean
@@ -24,14 +24,14 @@ export function useNetworkStatus() {
 
   // 연결 정보 감지
   const updateConnectionInfo = () => {
-    const connection = (navigator as any).connection || 
-                     (navigator as any).mozConnection || 
+    const connection = (navigator as any).connection ||
+                     (navigator as any).mozConnection ||
                      (navigator as any).webkitConnection
 
     if (connection) {
       downlink.value = connection.downlink
       effectiveType.value = connection.effectiveType
-      isSlowConnection.value = connection.effectiveType === 'slow-2g' || 
+      isSlowConnection.value = connection.effectiveType === 'slow-2g' ||
                               connection.effectiveType === '2g' ||
                               (connection.downlink && connection.downlink < 0.5)
     }
@@ -47,9 +47,9 @@ export function useNetworkStatus() {
     isOnline.value = true
     lastOnlineTime.value = new Date()
     updateConnectionInfo()
-    
+
     console.log('🌐 네트워크 연결됨')
-    
+
     // 필요시 대기 중인 요청들을 다시 시도할 수 있음
     // (현재는 API 클라이언트에서 자동 처리됨)
   }
@@ -58,9 +58,9 @@ export function useNetworkStatus() {
   const handleOffline = () => {
     isOnline.value = false
     lastOfflineTime.value = new Date()
-    
+
     console.log('🔌 네트워크 연결 끊어짐')
-    
+
     // 선택적으로 대기 중인 요청들 취소
     // cancelAllPendingRequests()
   }
@@ -68,7 +68,7 @@ export function useNetworkStatus() {
   // 연결 정보 변경 핸들러
   const handleConnectionChange = () => {
     updateConnectionInfo()
-    
+
     if (isSlowConnection.value) {
       console.warn('🐌 느린 네트워크 연결 감지됨')
     }
@@ -88,35 +88,35 @@ export function useNetworkStatus() {
   }> => {
     try {
       const startTime = performance.now()
-      
+
       // 작은 이미지를 다운로드하여 네트워크 품질 측정
       const testUrl = `${import.meta.env.VITE_API_BASE_URL}/health?t=${Date.now()}`
-      
+
       const response = await fetch(testUrl, {
         method: 'HEAD',
-        cache: 'no-cache'
+        cache: 'no-cache',
       })
-      
+
       const endTime = performance.now()
       const latency = endTime - startTime
-      
+
       // 간단한 다운로드 속도 측정 (정확하지 않음)
-      const downloadSpeed = response.headers.get('content-length') ? 
+      const downloadSpeed = response.headers.get('content-length') ?
         parseInt(response.headers.get('content-length')!) / (latency / 1000) / 1024 : 0
-      
+
       const isGoodConnection = latency < 500 && downloadSpeed > 100 // 500ms 미만, 100KB/s 이상
-      
+
       return {
         latency,
         downloadSpeed,
-        isGoodConnection
+        isGoodConnection,
       }
     } catch (error) {
       console.error('Network quality test failed:', error)
       return {
         latency: Infinity,
         downloadSpeed: 0,
-        isGoodConnection: false
+        isGoodConnection: false,
       }
     }
   }
@@ -147,16 +147,16 @@ export function useNetworkStatus() {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/health`, {
         method: 'HEAD',
         cache: 'no-cache',
-        signal: AbortSignal.timeout(5000) // 5초 타임아웃
+        signal: AbortSignal.timeout(5000), // 5초 타임아웃
       })
-      
+
       if (response.ok) {
         isOnline.value = true
         lastOnlineTime.value = new Date()
         updateConnectionInfo()
         return true
       }
-      
+
       return false
     } catch (error) {
       console.error('Reconnection failed:', error)
@@ -174,8 +174,8 @@ export function useNetworkStatus() {
     window.addEventListener('offline', handleOffline)
 
     // 연결 정보 변경 감지 (지원되는 브라우저에서만)
-    const connection = (navigator as any).connection || 
-                     (navigator as any).mozConnection || 
+    const connection = (navigator as any).connection ||
+                     (navigator as any).mozConnection ||
                      (navigator as any).webkitConnection
 
     if (connection) {
@@ -188,11 +188,11 @@ export function useNetworkStatus() {
     onUnmounted(() => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
-      
+
       if (connection) {
         connection.removeEventListener('change', handleConnectionChange)
       }
-      
+
       clearInterval(interval)
     })
   })
@@ -207,7 +207,7 @@ export function useNetworkStatus() {
     cachedResponses,
     lastOnlineTime,
     lastOfflineTime,
-    
+
     // 계산된 속성
     networkStatus: computed((): NetworkStatus => ({
       isOnline: isOnline.value,
@@ -219,7 +219,7 @@ export function useNetworkStatus() {
       lastOnlineTime: lastOnlineTime.value,
       lastOfflineTime: lastOfflineTime.value,
     })),
-    
+
     // 메서드
     refreshStatus,
     testNetworkQuality,

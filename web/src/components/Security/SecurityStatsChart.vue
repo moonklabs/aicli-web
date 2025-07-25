@@ -1,15 +1,15 @@
 <template>
   <div class="security-stats-chart">
-    <div 
-      ref="chartContainer" 
+    <div
+      ref="chartContainer"
       class="chart-container"
       :style="{ height: chartHeight + 'px' }"
     />
     <div v-if="loading" class="chart-loading">
-      <n-spin size="medium" />
+      <NSpin size="medium" />
     </div>
     <div v-if="error" class="chart-error">
-      <n-result
+      <NResult
         status="error"
         title="차트 로딩 실패"
         :description="error"
@@ -20,21 +20,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { NSpin, NResult } from 'naive-ui'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { NResult, NSpin } from 'naive-ui'
 import * as echarts from 'echarts/core'
 import {
-  LineChart,
   BarChart,
+  LineChart,
   PieChart,
-  ScatterChart
+  ScatterChart,
 } from 'echarts/charts'
 import {
-  TitleComponent,
-  TooltipComponent,
+  DataZoomComponent,
   GridComponent,
   LegendComponent,
-  DataZoomComponent
+  TitleComponent,
+  TooltipComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import type { SecurityStats } from '@/types/api'
@@ -50,7 +50,7 @@ echarts.use([
   GridComponent,
   LegendComponent,
   DataZoomComponent,
-  CanvasRenderer
+  CanvasRenderer,
 ])
 
 interface Props {
@@ -62,7 +62,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   height: 300,
-  loading: false
+  loading: false,
 })
 
 // 상태 관리
@@ -79,24 +79,24 @@ const initChart = async () => {
 
   try {
     error.value = ''
-    
+
     if (chartInstance.value) {
       chartInstance.value.dispose()
     }
 
     chartInstance.value = echarts.init(chartContainer.value)
-    
+
     const option = getChartOption()
     if (option) {
       chartInstance.value.setOption(option)
     }
-    
+
     // 반응형 처리
     const resizeObserver = new ResizeObserver(() => {
       chartInstance.value?.resize()
     })
     resizeObserver.observe(chartContainer.value)
-    
+
   } catch (err) {
     error.value = '차트 초기화에 실패했습니다'
     console.error('Chart initialization error:', err)
@@ -122,17 +122,17 @@ const getChartOption = () => {
 
 const getLoginTrendsOption = () => {
   const stats = props.stats!
-  
+
   // 가상 데이터 생성 (실제로는 API에서 받아와야 함)
   const dates = []
   const successData = []
   const failureData = []
-  
+
   for (let i = 29; i >= 0; i--) {
     const date = new Date()
     date.setDate(date.getDate() - i)
     dates.push(date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }))
-    
+
     // 가상 데이터
     successData.push(Math.floor(Math.random() * 50) + 10)
     failureData.push(Math.floor(Math.random() * 10))
@@ -143,34 +143,34 @@ const getLoginTrendsOption = () => {
       text: '로그인 추세 (최근 30일)',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
-      }
+        fontWeight: 'normal',
+      },
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'cross'
-      }
+        type: 'cross',
+      },
     },
     legend: {
       data: ['성공', '실패'],
-      bottom: 0
+      bottom: 0,
     },
     grid: {
       left: '3%',
       right: '4%',
       bottom: '15%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: dates,
       axisLabel: {
-        rotate: 45
-      }
+        rotate: 45,
+      },
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
     },
     series: [
       {
@@ -179,11 +179,11 @@ const getLoginTrendsOption = () => {
         data: successData,
         smooth: true,
         itemStyle: {
-          color: '#27ae60'
+          color: '#27ae60',
         },
         areaStyle: {
-          opacity: 0.3
-        }
+          opacity: 0.3,
+        },
       },
       {
         name: '실패',
@@ -191,34 +191,34 @@ const getLoginTrendsOption = () => {
         data: failureData,
         smooth: true,
         itemStyle: {
-          color: '#e74c3c'
+          color: '#e74c3c',
         },
         areaStyle: {
-          opacity: 0.3
-        }
-      }
-    ]
+          opacity: 0.3,
+        },
+      },
+    ],
   }
 }
 
 const getRiskDistributionOption = () => {
   const stats = props.stats!
-  
+
   return {
     title: {
       text: '위험도 분포',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
-      }
+        fontWeight: 'normal',
+      },
     },
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: '{a} <br/>{b}: {c} ({d}%)',
     },
     legend: {
       bottom: 0,
-      data: ['안전 (0-39)', '낮음 (40-59)', '보통 (60-79)', '높음 (80-100)']
+      data: ['안전 (0-39)', '낮음 (40-59)', '보통 (60-79)', '높음 (80-100)'],
     },
     series: [
       {
@@ -227,68 +227,68 @@ const getRiskDistributionOption = () => {
         radius: ['40%', '70%'],
         center: ['50%', '45%'],
         data: [
-          { 
-            value: stats.totalLogins - stats.suspiciousAttempts, 
+          {
+            value: stats.totalLogins - stats.suspiciousAttempts,
             name: '안전 (0-39)',
-            itemStyle: { color: '#27ae60' }
+            itemStyle: { color: '#27ae60' },
           },
-          { 
-            value: Math.floor(stats.suspiciousAttempts * 0.3), 
+          {
+            value: Math.floor(stats.suspiciousAttempts * 0.3),
             name: '낮음 (40-59)',
-            itemStyle: { color: '#3498db' }
+            itemStyle: { color: '#3498db' },
           },
-          { 
-            value: Math.floor(stats.suspiciousAttempts * 0.5), 
+          {
+            value: Math.floor(stats.suspiciousAttempts * 0.5),
             name: '보통 (60-79)',
-            itemStyle: { color: '#f39c12' }
+            itemStyle: { color: '#f39c12' },
           },
-          { 
-            value: Math.floor(stats.suspiciousAttempts * 0.2), 
+          {
+            value: Math.floor(stats.suspiciousAttempts * 0.2),
             name: '높음 (80-100)',
-            itemStyle: { color: '#e74c3c' }
-          }
+            itemStyle: { color: '#e74c3c' },
+          },
         ],
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    ]
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+        },
+      },
+    ],
   }
 }
 
 const getSecurityEventsOption = () => {
   const stats = props.stats!
-  
+
   return {
     title: {
       text: '보안 이벤트 통계',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
-      }
+        fontWeight: 'normal',
+      },
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'shadow'
-      }
+        type: 'shadow',
+      },
     },
     grid: {
       left: '3%',
       right: '4%',
       bottom: '3%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
-      type: 'value'
+      type: 'value',
     },
     yAxis: {
       type: 'category',
-      data: ['성공 로그인', '실패 로그인', '의심스러운 시도', '차단된 시도']
+      data: ['성공 로그인', '실패 로그인', '의심스러운 시도', '차단된 시도'],
     },
     series: [
       {
@@ -297,49 +297,49 @@ const getSecurityEventsOption = () => {
         data: [
           {
             value: stats.successfulLogins,
-            itemStyle: { color: '#27ae60' }
+            itemStyle: { color: '#27ae60' },
           },
           {
             value: stats.failedLogins,
-            itemStyle: { color: '#e74c3c' }
+            itemStyle: { color: '#e74c3c' },
           },
           {
             value: stats.suspiciousAttempts,
-            itemStyle: { color: '#f39c12' }
+            itemStyle: { color: '#f39c12' },
           },
           {
             value: stats.blockedAttempts,
-            itemStyle: { color: '#8e44ad' }
-          }
-        ]
-      }
-    ]
+            itemStyle: { color: '#8e44ad' },
+          },
+        ],
+      },
+    ],
   }
 }
 
 const getDeviceAnalysisOption = () => {
   const stats = props.stats!
-  
+
   // 가상 디바이스 데이터
   const deviceData = [
     { name: 'Desktop', value: Math.floor(stats.uniqueDevices * 0.4) },
     { name: 'Mobile', value: Math.floor(stats.uniqueDevices * 0.45) },
-    { name: 'Tablet', value: Math.floor(stats.uniqueDevices * 0.15) }
+    { name: 'Tablet', value: Math.floor(stats.uniqueDevices * 0.15) },
   ]
-  
+
   return {
     title: {
       text: '디바이스 분석',
       textStyle: {
         fontSize: 14,
-        fontWeight: 'normal'
-      }
+        fontWeight: 'normal',
+      },
     },
     tooltip: {
-      trigger: 'item'
+      trigger: 'item',
     },
     legend: {
-      bottom: 0
+      bottom: 0,
     },
     series: [
       {
@@ -352,11 +352,11 @@ const getDeviceAnalysisOption = () => {
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    ]
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+        },
+      },
+    ],
   }
 }
 

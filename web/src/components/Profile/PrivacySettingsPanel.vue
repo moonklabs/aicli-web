@@ -19,7 +19,7 @@
               <span>프로파일 공개 설정</span>
             </n-space>
           </template>
-          
+
           <div class="privacy-section">
             <n-space vertical size="medium">
               <div class="privacy-item">
@@ -59,7 +59,7 @@
               <span>개인정보 노출 설정</span>
             </n-space>
           </template>
-          
+
           <div class="privacy-section">
             <n-space vertical size="medium">
               <div class="privacy-item">
@@ -114,7 +114,7 @@
               <span>소통 및 상호작용</span>
             </n-space>
           </template>
-          
+
           <div class="privacy-section">
             <n-space vertical size="medium">
               <div class="privacy-item">
@@ -156,7 +156,7 @@
               <span>데이터 처리 동의</span>
             </n-space>
           </template>
-          
+
           <div class="privacy-section">
             <n-space vertical size="medium">
               <div class="privacy-item">
@@ -229,7 +229,7 @@
               <span>내 데이터 관리</span>
             </n-space>
           </template>
-          
+
           <div class="privacy-section">
             <n-space vertical size="medium">
               <div class="privacy-item">
@@ -314,17 +314,17 @@
           <h4>1. 개인정보의 수집 및 이용 목적</h4>
           <p>회사는 다음의 목적을 위하여 개인정보를 처리합니다...</p>
         </div>
-        
+
         <div class="policy-section">
           <h4>2. 처리하는 개인정보 항목</h4>
           <p>회사는 다음의 개인정보 항목을 처리하고 있습니다...</p>
         </div>
-        
+
         <div class="policy-section">
           <h4>3. 개인정보의 처리 및 보유 기간</h4>
           <p>개인정보는 원칙적으로 개인정보의 수집 및 이용목적이 달성되면 지체없이 파기합니다...</p>
         </div>
-        
+
         <!-- 더 많은 내용... -->
       </div>
     </n-modal>
@@ -349,7 +349,7 @@
         </ul>
         <p>계속하려면 비밀번호를 입력하고 확인 버튼을 클릭하세요.</p>
       </div>
-      
+
       <template #action>
         <n-space justify="end">
           <n-button @click="showDeleteModal = false">취소</n-button>
@@ -366,15 +366,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import {
-  EyeSharp as Eye,
-  ShieldSharp as Shield,
   ChatbubblesSharp as ChatBubbles,
   DocumentTextSharp as Document,
-  DownloadSharp as Download
+  DownloadSharp as Download,
+  EyeSharp as Eye,
+  ShieldSharp as Shield,
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 import type { PrivacySettings, UpdatePrivacySettingsRequest } from '@/types/api'
@@ -386,7 +386,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -425,14 +425,14 @@ const localSettings = reactive<PrivacySettings>({
   dataProcessingConsent: true,
   marketingConsent: false,
   analyticsConsent: false,
-  updatedAt: ''
+  updatedAt: '',
 })
 
 // 옵션 데이터
 const profileVisibilityOptions = [
   { label: '공개', value: 'public' },
   { label: '연락처만', value: 'contacts' },
-  { label: '비공개', value: 'private' }
+  { label: '비공개', value: 'private' },
 ]
 
 // 계산된 속성
@@ -456,13 +456,13 @@ const visibilityTitle = computed(() => {
 
 const visibilityDescription = computed(() => {
   switch (localSettings.profileVisibility) {
-    case 'public': 
+    case 'public':
       return '모든 사용자가 내 프로파일과 기본 정보를 볼 수 있습니다.'
-    case 'contacts': 
+    case 'contacts':
       return '연락처에 등록된 사용자만 내 프로파일을 볼 수 있습니다.'
-    case 'private': 
+    case 'private':
       return '다른 사용자들은 내 프로파일을 볼 수 없습니다.'
-    default: 
+    default:
       return ''
   }
 })
@@ -486,9 +486,9 @@ const updateSettings = () => {
     allowFriendRequests: localSettings.allowFriendRequests,
     dataProcessingConsent: localSettings.dataProcessingConsent,
     marketingConsent: localSettings.marketingConsent,
-    analyticsConsent: localSettings.analyticsConsent
+    analyticsConsent: localSettings.analyticsConsent,
   }
-  
+
   emit('update', updateData)
 }
 
@@ -501,14 +501,14 @@ const requestDataDownload = async () => {
   try {
     // 실제 구현에서는 데이터 다운로드 요청 API 호출
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 새로운 요청 추가
     dataDownloadRequests.value.unshift({
       id: Date.now().toString(),
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     })
-    
+
     message.success('데이터 다운로드 요청이 접수되었습니다. 처리 완료 시 이메일로 알려드리겠습니다.')
   } catch (error) {
     console.error('데이터 다운로드 요청 실패:', error)
@@ -559,7 +559,7 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 

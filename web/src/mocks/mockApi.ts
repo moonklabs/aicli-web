@@ -24,7 +24,7 @@ const mockUsers = [
     roles: ['admin', 'user'],
     avatar: null,
     createdAt: '2024-01-01T00:00:00Z',
-    lastLoginAt: '2025-01-01T12:00:00Z'
+    lastLoginAt: '2025-01-01T12:00:00Z',
   },
   {
     id: '2',
@@ -33,8 +33,8 @@ const mockUsers = [
     roles: ['user'],
     avatar: null,
     createdAt: '2024-06-01T00:00:00Z',
-    lastLoginAt: '2025-01-01T10:30:00Z'
-  }
+    lastLoginAt: '2025-01-01T10:30:00Z',
+  },
 ]
 
 const mockSessions = [
@@ -47,7 +47,7 @@ const mockSessions = [
     createdAt: '2025-01-01T12:00:00Z',
     lastAccessAt: '2025-01-01T13:30:00Z',
     expiresAt: '2025-01-02T12:00:00Z',
-    isActive: true
+    isActive: true,
   },
   {
     id: 'session-2',
@@ -58,8 +58,8 @@ const mockSessions = [
     createdAt: '2025-01-01T10:30:00Z',
     lastAccessAt: '2025-01-01T13:45:00Z',
     expiresAt: '2025-01-02T10:30:00Z',
-    isActive: true
-  }
+    isActive: true,
+  },
 ]
 
 const mockLoginHistory = [
@@ -72,7 +72,7 @@ const mockLoginHistory = [
     location: 'Seoul, South Korea',
     success: true,
     riskScore: 0.1,
-    method: 'email'
+    method: 'email',
   },
   {
     id: 'login-2',
@@ -83,7 +83,7 @@ const mockLoginHistory = [
     location: 'Busan, South Korea',
     success: true,
     riskScore: 0.2,
-    method: 'google'
+    method: 'google',
   },
   {
     id: 'login-3',
@@ -95,8 +95,8 @@ const mockLoginHistory = [
     success: false,
     riskScore: 0.9,
     method: 'email',
-    failureReason: 'Invalid password'
-  }
+    failureReason: 'Invalid password',
+  },
 ]
 
 const mockSecurityEvents = [
@@ -113,8 +113,8 @@ const mockSecurityEvents = [
     metadata: {
       attempts: 5,
       location: 'Unknown',
-      riskScore: 0.9
-    }
+      riskScore: 0.9,
+    },
   },
   {
     id: 'event-2',
@@ -127,9 +127,9 @@ const mockSecurityEvents = [
     timestamp: '2024-12-30T14:20:00Z',
     resolved: true,
     metadata: {
-      method: 'user_initiated'
-    }
-  }
+      method: 'user_initiated',
+    },
+  },
 ]
 
 // Mock 규칙 정의
@@ -141,8 +141,8 @@ export const mockRules: MockRule[] = [
     response: {
       status: 200,
       data: null,
-      delay: 100
-    }
+      delay: 100,
+    },
   },
 
   // 인증 관련
@@ -151,7 +151,7 @@ export const mockRules: MockRule[] = [
     url: '/api/auth/login',
     response: (config) => {
       const { email, password } = JSON.parse(config.data || '{}')
-      
+
       if (email === 'admin@example.com' && password === 'admin123') {
         return {
           status: 200,
@@ -161,11 +161,11 @@ export const mockRules: MockRule[] = [
               user: mockUsers[0],
               token: 'mock-jwt-token-admin',
               refreshToken: 'mock-refresh-token-admin',
-              expiresIn: 3600
+              expiresIn: 3600,
             },
-            message: '로그인 성공'
+            message: '로그인 성공',
           },
-          delay: 800
+          delay: 800,
         }
       } else if (email === 'user@example.com' && password === 'user123') {
         return {
@@ -176,23 +176,23 @@ export const mockRules: MockRule[] = [
               user: mockUsers[1],
               token: 'mock-jwt-token-user',
               refreshToken: 'mock-refresh-token-user',
-              expiresIn: 3600
+              expiresIn: 3600,
             },
-            message: '로그인 성공'
+            message: '로그인 성공',
           },
-          delay: 800
+          delay: 800,
         }
       } else {
         return {
           status: 401,
           data: {
             success: false,
-            message: '이메일 또는 비밀번호가 올바르지 않습니다'
+            message: '이메일 또는 비밀번호가 올바르지 않습니다',
           },
-          delay: 1000
+          delay: 1000,
         }
       }
-    }
+    },
   },
 
   {
@@ -204,11 +204,11 @@ export const mockRules: MockRule[] = [
         success: true,
         data: {
           token: 'new-mock-jwt-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       },
-      delay: 300
-    }
+      delay: 300,
+    },
   },
 
   {
@@ -218,10 +218,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        message: '로그아웃 완료'
+        message: '로그아웃 완료',
       },
-      delay: 200
-    }
+      delay: 200,
+    },
   },
 
   // 사용자 정보
@@ -232,10 +232,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        data: mockUsers[0]
+        data: mockUsers[0],
       },
-      delay: 300
-    }
+      delay: 300,
+    },
   },
 
   {
@@ -248,11 +248,11 @@ export const mockRules: MockRule[] = [
         data: {
           success: true,
           data: { ...mockUsers[0], ...updates },
-          message: '프로필이 업데이트되었습니다'
+          message: '프로필이 업데이트되었습니다',
         },
-        delay: 500
+        delay: 500,
       }
-    }
+    },
   },
 
   // 세션 관리
@@ -263,10 +263,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        data: mockSessions
+        data: mockSessions,
       },
-      delay: 400
-    }
+      delay: 400,
+    },
   },
 
   {
@@ -276,10 +276,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        message: '세션이 종료되었습니다'
+        message: '세션이 종료되었습니다',
       },
-      delay: 300
-    }
+      delay: 300,
+    },
   },
 
   // 로그인 기록
@@ -292,7 +292,7 @@ export const mockRules: MockRule[] = [
       const limit = parseInt(params.get('limit') || '10')
       const startIndex = (page - 1) * limit
       const endIndex = startIndex + limit
-      
+
       return {
         status: 200,
         data: {
@@ -303,13 +303,13 @@ export const mockRules: MockRule[] = [
               page,
               limit,
               total: mockLoginHistory.length,
-              totalPages: Math.ceil(mockLoginHistory.length / limit)
-            }
-          }
+              totalPages: Math.ceil(mockLoginHistory.length / limit),
+            },
+          },
         },
-        delay: 600
+        delay: 600,
       }
-    }
+    },
   },
 
   // 보안 이벤트
@@ -320,10 +320,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        data: mockSecurityEvents
+        data: mockSecurityEvents,
       },
-      delay: 500
-    }
+      delay: 500,
+    },
   },
 
   {
@@ -333,10 +333,10 @@ export const mockRules: MockRule[] = [
       status: 200,
       data: {
         success: true,
-        message: '보안 이벤트가 해결로 표시되었습니다'
+        message: '보안 이벤트가 해결로 표시되었습니다',
       },
-      delay: 300
-    }
+      delay: 300,
+    },
   },
 
   // 보안 통계
@@ -352,11 +352,11 @@ export const mockRules: MockRule[] = [
           failedLogins: 12,
           suspiciousActivities: 3,
           activeSecurityEvents: 1,
-          riskScore: 0.3
-        }
+          riskScore: 0.3,
+        },
       },
-      delay: 400
-    }
+      delay: 400,
+    },
   },
 
   // OAuth 관련
@@ -368,11 +368,11 @@ export const mockRules: MockRule[] = [
       data: {
         success: true,
         data: {
-          url: 'https://accounts.google.com/oauth/authorize?mock=true'
-        }
+          url: 'https://accounts.google.com/oauth/authorize?mock=true',
+        },
       },
-      delay: 200
-    }
+      delay: 200,
+    },
   },
 
   {
@@ -386,11 +386,11 @@ export const mockRules: MockRule[] = [
           user: mockUsers[1],
           token: 'mock-google-jwt-token',
           refreshToken: 'mock-google-refresh-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       },
-      delay: 1000
-    }
+      delay: 1000,
+    },
   },
 
   // 에러 시뮬레이션 (개발/테스트용)
@@ -401,10 +401,10 @@ export const mockRules: MockRule[] = [
       status: 500,
       data: {
         success: false,
-        message: 'Internal Server Error (Mock)'
+        message: 'Internal Server Error (Mock)',
       },
-      delay: 1000
-    }
+      delay: 1000,
+    },
   },
 
   {
@@ -414,11 +414,11 @@ export const mockRules: MockRule[] = [
       status: 408,
       data: {
         success: false,
-        message: 'Request Timeout (Mock)'
+        message: 'Request Timeout (Mock)',
       },
-      delay: 5000
-    }
-  }
+      delay: 5000,
+    },
+  },
 ]
 
 // Mock API 매처
@@ -457,8 +457,8 @@ export class MockApiMatcher {
 
     for (const rule of mockRules) {
       if (this.matchRule(rule, method, url, config)) {
-        const response = typeof rule.response === 'function' 
-          ? rule.response(config) 
+        const response = typeof rule.response === 'function'
+          ? rule.response(config)
           : rule.response
 
         // 지연 시뮬레이션
@@ -468,7 +468,7 @@ export class MockApiMatcher {
 
         console.log(`🎭 Mock API matched: ${method} ${url}`, {
           status: response.status,
-          delay: response.delay
+          delay: response.delay,
         })
 
         return {
@@ -477,7 +477,7 @@ export class MockApiMatcher {
           statusText: this.getStatusText(response.status),
           headers: response.headers || {},
           config,
-          request: {}
+          request: {},
         } as AxiosResponse
       }
     }
@@ -514,7 +514,7 @@ export class MockApiMatcher {
       429: 'Too Many Requests',
       500: 'Internal Server Error',
       502: 'Bad Gateway',
-      503: 'Service Unavailable'
+      503: 'Service Unavailable',
     }
     return statusTexts[status] || 'Unknown'
   }

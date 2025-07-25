@@ -38,7 +38,7 @@ const theme: GlobalTheme | null = null // null = 라이트 테마
             <!-- 메인 앱 레이아웃 -->
             <div id="app">
               <RouterView />
-              
+
               <!-- 전역 컴포넌트들 -->
               <ErrorNotification />
               <OfflineIndicator />

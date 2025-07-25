@@ -80,7 +80,7 @@
                 <p>
                   <strong>{{ formattedPhoneNumber }}</strong>로 인증번호를 발송했습니다.
                 </p>
-                
+
                 <n-form
                   ref="codeFormRef"
                   :model="codeForm"
@@ -92,10 +92,10 @@
                       v-model:value="codeForm.code"
                       placeholder="6자리 인증번호"
                       maxlength="6"
-                      :style="{ 
-                        fontSize: '18px', 
-                        textAlign: 'center', 
-                        letterSpacing: '4px' 
+                      :style="{
+                        fontSize: '18px',
+                        textAlign: 'center',
+                        letterSpacing: '4px'
                       }"
                       :disabled="processing"
                       @keyup.enter="verifyCode"
@@ -152,7 +152,7 @@
             <template #footer>
               <div class="completion-info">
                 <p>전화번호 인증이 성공적으로 완료되었습니다.</p>
-                
+
                 <div class="verified-phone">
                   <div class="phone-info-card">
                     <n-icon size="20" color="#18a058">
@@ -214,11 +214,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onUnmounted } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
+  CheckmarkCircleSharp as CheckmarkCircle,
   TimeSharp as Timer,
-  CheckmarkCircleSharp as CheckmarkCircle
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 
@@ -229,7 +229,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  phone: ''
+  phone: '',
 })
 
 // Emits
@@ -259,11 +259,11 @@ const codeFormRef = ref()
 // 폼 데이터
 const phoneForm = reactive({
   countryCode: '+82',
-  phoneNumber: ''
+  phoneNumber: '',
 })
 
 const codeForm = reactive({
-  code: ''
+  code: '',
 })
 
 // 국가 코드 옵션
@@ -272,13 +272,13 @@ const countryCodeOptions = [
   { label: '+1 (미국)', value: '+1' },
   { label: '+81 (일본)', value: '+81' },
   { label: '+86 (중국)', value: '+86' },
-  { label: '+44 (영국)', value: '+44' }
+  { label: '+44 (영국)', value: '+44' },
 ]
 
 // 모달 표시 상태 (v-model)
 const showModal = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value)
+  set: (value) => emit('update:show', value),
 })
 
 // 폼 검증 규칙
@@ -287,14 +287,14 @@ const phoneFormRules = {
     {
       required: true,
       message: '전화번호를 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       pattern: /^[0-9-]{8,15}$/,
       message: '올바른 전화번호 형식을 입력해주세요',
-      trigger: ['blur', 'input']
-    }
-  ]
+      trigger: ['blur', 'input'],
+    },
+  ],
 }
 
 const codeFormRules = {
@@ -302,15 +302,15 @@ const codeFormRules = {
     {
       required: true,
       message: '인증번호를 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       len: 6,
       pattern: /^\d{6}$/,
       message: '6자리 숫자를 입력해주세요',
-      trigger: ['blur', 'input']
-    }
-  ]
+      trigger: ['blur', 'input'],
+    },
+  ],
 }
 
 // 계산된 속성
@@ -332,18 +332,18 @@ const isCodeFormValid = computed(() => {
 const sendVerificationCode = async () => {
   try {
     await phoneFormRef.value?.validate()
-    
+
     processing.value = true
-    
+
     const fullPhoneNumber = formattedPhoneNumber.value
     await profileApi.requestPhoneVerification(fullPhoneNumber)
-    
+
     currentStep.value = 2
     message.success('인증번호가 발송되었습니다')
-    
+
     // 타이머 시작
     startVerificationTimer()
-    
+
   } catch (error: any) {
     console.error('인증번호 발송 실패:', error)
     message.error(error.message || '인증번호 발송에 실패했습니다')
@@ -355,21 +355,21 @@ const sendVerificationCode = async () => {
 const verifyCode = async () => {
   try {
     await codeFormRef.value?.validate()
-    
+
     processing.value = true
-    
+
     const fullPhoneNumber = formattedPhoneNumber.value
     await profileApi.confirmPhoneVerification(fullPhoneNumber, codeForm.code)
-    
+
     currentStep.value = 3
     stepStatus.value = 'finish'
-    
+
     // 타이머 정리
     clearTimers()
-    
+
     message.success('전화번호 인증이 완료되었습니다')
     emit('verify', codeForm.code)
-    
+
   } catch (error: any) {
     console.error('인증 코드 확인 실패:', error)
     message.error(error.message || '인증번호가 올바르지 않습니다')
@@ -380,19 +380,19 @@ const verifyCode = async () => {
 
 const resendVerificationCode = async () => {
   if (resendCooldown.value > 0) return
-  
+
   resending.value = true
   try {
     const fullPhoneNumber = formattedPhoneNumber.value
     await profileApi.requestPhoneVerification(fullPhoneNumber)
-    
+
     message.success('인증번호를 다시 발송했습니다')
-    
+
     // 타이머 리셋
     timeLeft.value = 180
     startVerificationTimer()
     startResendCooldown()
-    
+
   } catch (error: any) {
     console.error('인증번호 재발송 실패:', error)
     message.error(error.message || '인증번호 재발송에 실패했습니다')
@@ -403,10 +403,10 @@ const resendVerificationCode = async () => {
 
 const startVerificationTimer = () => {
   clearTimeout(verificationTimer.value)
-  
+
   verificationTimer.value = setInterval(() => {
     timeLeft.value--
-    
+
     if (timeLeft.value <= 0) {
       clearInterval(verificationTimer.value)
       message.warning('인증번호가 만료되었습니다. 다시 발송해주세요.')
@@ -416,14 +416,14 @@ const startVerificationTimer = () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 30 // 30초 쿨다운
-  
+
   if (resendTimer.value) {
     clearInterval(resendTimer.value)
   }
-  
+
   resendTimer.value = setInterval(() => {
     resendCooldown.value--
-    
+
     if (resendCooldown.value <= 0) {
       clearInterval(resendTimer.value)
     }

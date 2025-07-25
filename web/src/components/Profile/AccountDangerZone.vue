@@ -19,12 +19,12 @@
               <span>계정 상태</span>
             </n-space>
           </template>
-          
+
           <div class="account-status">
             <div class="status-info">
               <n-space align="center">
-                <n-tag 
-                  :type="profile?.isActive ? 'success' : 'warning'" 
+                <n-tag
+                  :type="profile?.isActive ? 'success' : 'warning'"
                   size="medium"
                   round
                 >
@@ -35,7 +35,7 @@
                 </span>
               </n-space>
             </div>
-            
+
             <div v-if="profile?.isActive" class="account-info">
               <n-space vertical size="small">
                 <div class="info-item">
@@ -61,11 +61,11 @@
               <span>계정 비활성화</span>
             </n-space>
           </template>
-          
+
           <div class="deactivation-section">
             <div class="section-description">
               <p>계정을 일시적으로 비활성화할 수 있습니다. 비활성화된 계정은 언제든지 다시 활성화할 수 있습니다.</p>
-              
+
               <div class="effects-list">
                 <h5>비활성화 시 영향:</h5>
                 <ul>
@@ -89,7 +89,7 @@
                 </template>
                 계정 비활성화
               </n-button>
-              
+
               <n-button
                 v-else
                 type="success"
@@ -115,7 +115,7 @@
               <span>계정 삭제</span>
             </n-space>
           </template>
-          
+
           <div class="deletion-section">
             <div class="section-description">
               <n-alert type="error" :show-icon="true">
@@ -124,7 +124,7 @@
                 </template>
                 계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
               </n-alert>
-              
+
               <div class="effects-list">
                 <h5>삭제되는 데이터:</h5>
                 <ul>
@@ -181,7 +181,7 @@
               <span>데이터 백업</span>
             </n-space>
           </template>
-          
+
           <div class="backup-section">
             <div class="section-description">
               <p>계정을 삭제하기 전에 중요한 데이터를 백업받으실 수 있습니다.</p>
@@ -200,7 +200,7 @@
                   </template>
                   전체 데이터 백업
                 </n-button>
-                
+
                 <n-button
                   ghost
                   @click="showBackupOptionsModal = true"
@@ -230,7 +230,7 @@
           <template #header>계정 비활성화</template>
           <p>계정을 비활성화하시겠습니까? 언제든지 다시 로그인하여 계정을 재활성화할 수 있습니다.</p>
         </n-alert>
-        
+
         <n-form
           ref="deactivationFormRef"
           :model="deactivationForm"
@@ -244,7 +244,7 @@
               placeholder="비활성화 사유를 선택하세요"
             />
           </n-form-item>
-          
+
           <n-form-item label="비밀번호 확인" path="password">
             <n-input
               v-model:value="deactivationForm.password"
@@ -287,7 +287,7 @@
           </template>
           <p>이 작업은 되돌릴 수 없습니다. {{ deletionType === 'immediate' ? '계정과 모든 데이터가 즉시 삭제됩니다.' : '30일 후 계정과 모든 데이터가 삭제됩니다.' }}</p>
         </n-alert>
-        
+
         <n-form
           ref="deletionFormRef"
           :model="deletionForm"
@@ -301,7 +301,7 @@
               placeholder="삭제 사유를 선택하세요"
             />
           </n-form-item>
-          
+
           <n-form-item label="추가 의견 (선택)" path="feedback">
             <n-input
               v-model:value="deletionForm.feedback"
@@ -310,7 +310,7 @@
               placeholder="서비스 개선을 위한 의견을 남겨주세요"
             />
           </n-form-item>
-          
+
           <n-form-item label="확인 문구 입력" path="confirmation">
             <n-input
               v-model:value="deletionForm.confirmation"
@@ -322,7 +322,7 @@
               </n-text>
             </template>
           </n-form-item>
-          
+
           <n-form-item label="비밀번호 확인" path="password">
             <n-input
               v-model:value="deletionForm.password"
@@ -359,7 +359,7 @@
     >
       <div class="backup-options">
         <p>백업받을 데이터를 선택하세요:</p>
-        
+
         <n-checkbox-group v-model:value="selectedBackupItems">
           <n-space vertical>
             <n-checkbox value="profile" label="프로파일 정보" />
@@ -389,19 +389,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
-import { useMessage, useDialog } from 'naive-ui'
+import { computed, reactive, ref } from 'vue'
+import { useDialog, useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import {
-  PersonSharp as Person,
-  PauseCircleSharp as PauseCircle,
-  PlayCircleSharp as PlayCircle,
-  TrashSharp as Trash,
   CloudDownloadSharp as CloudDownload,
-  SettingsSharp as Settings
+  PauseCircleSharp as PauseCircle,
+  PersonSharp as Person,
+  PlayCircleSharp as PlayCircle,
+  SettingsSharp as Settings,
+  TrashSharp as Trash,
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
-import type { UserProfile, AccountDeactivationRequest, AccountDeletionRequest } from '@/types/api'
+import type { AccountDeactivationRequest, AccountDeletionRequest, UserProfile } from '@/types/api'
 
 // Props
 interface Props {
@@ -439,14 +439,14 @@ const deletionFormRef = ref()
 // 폼 데이터
 const deactivationForm = reactive({
   reason: '',
-  password: ''
+  password: '',
 })
 
 const deletionForm = reactive({
   reason: '',
   feedback: '',
   confirmation: '',
-  password: ''
+  password: '',
 })
 
 // 옵션 데이터
@@ -454,7 +454,7 @@ const deactivationReasons = [
   { label: '일시적 휴식', value: 'temporary_break' },
   { label: '개인정보 보호', value: 'privacy_concerns' },
   { label: '서비스 불만족', value: 'service_dissatisfaction' },
-  { label: '기타', value: 'other' }
+  { label: '기타', value: 'other' },
 ]
 
 const deletionReasons = [
@@ -462,7 +462,7 @@ const deletionReasons = [
   { label: '개인정보 보호 우려', value: 'privacy_concerns' },
   { label: '서비스 품질 불만족', value: 'poor_service_quality' },
   { label: '다른 서비스로 이전', value: 'switching_service' },
-  { label: '기타', value: 'other' }
+  { label: '기타', value: 'other' },
 ]
 
 // 폼 검증 규칙
@@ -470,8 +470,8 @@ const deactivationRules = {
   password: {
     required: true,
     message: '비밀번호를 입력해주세요',
-    trigger: ['blur', 'input']
-  }
+    trigger: ['blur', 'input'],
+  },
 }
 
 const deletionRules = {
@@ -479,7 +479,7 @@ const deletionRules = {
     {
       required: true,
       message: '확인 문구를 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       validator: (rule: any, value: string) => {
@@ -488,19 +488,19 @@ const deletionRules = {
         }
         return true
       },
-      trigger: ['blur', 'input']
-    }
+      trigger: ['blur', 'input'],
+    },
   ],
   password: {
     required: true,
     message: '비밀번호를 입력해주세요',
-    trigger: ['blur', 'input']
-  }
+    trigger: ['blur', 'input'],
+  },
 }
 
 // 계산된 속성
 const isDeletionFormValid = computed(() => {
-  return deletionForm.confirmation === '계정 삭제' && 
+  return deletionForm.confirmation === '계정 삭제' &&
          deletionForm.password.length > 0
 })
 
@@ -511,7 +511,7 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -519,9 +519,9 @@ const reactivateAccount = async () => {
   reactivating.value = true
   try {
     await profileApi.reactivateAccount({
-      email: props.profile?.email || ''
+      email: props.profile?.email || '',
     })
-    
+
     message.success('계정이 재활성화되었습니다')
     // 페이지 새로고침 또는 사용자 정보 다시 로드
     window.location.reload()
@@ -536,28 +536,28 @@ const reactivateAccount = async () => {
 const confirmDeactivation = async () => {
   try {
     await deactivationFormRef.value?.validate()
-    
+
     deactivating.value = true
-    
+
     const request: AccountDeactivationRequest = {
       password: deactivationForm.password,
-      reason: deactivationForm.reason
+      reason: deactivationForm.reason,
     }
-    
+
     await profileApi.deactivateAccount(request)
-    
+
     showDeactivationModal.value = false
     deactivationForm.password = ''
     deactivationForm.reason = ''
-    
+
     message.success('계정이 비활성화되었습니다')
     emit('deactivate', request)
-    
+
     // 로그아웃 처리
     setTimeout(() => {
       router.push('/login')
     }, 2000)
-    
+
   } catch (error: any) {
     console.error('계정 비활성화 실패:', error)
     message.error(error.message || '계정 비활성화에 실패했습니다')
@@ -569,32 +569,32 @@ const confirmDeactivation = async () => {
 const confirmDeletion = async () => {
   try {
     await deletionFormRef.value?.validate()
-    
+
     deleting.value = true
-    
+
     const request: AccountDeletionRequest = {
       password: deletionForm.password,
       reason: deletionForm.reason,
       feedback: deletionForm.feedback,
-      deleteImmediately: deletionType.value === 'immediate'
+      deleteImmediately: deletionType.value === 'immediate',
     }
-    
+
     await profileApi.requestAccountDeletion(request)
-    
+
     showDeletionModal.value = false
-    
-    const successMessage = deletionType.value === 'immediate' 
+
+    const successMessage = deletionType.value === 'immediate'
       ? '계정이 삭제되었습니다. 이용해 주셔서 감사합니다.'
       : '계정 삭제가 요청되었습니다. 30일 후 영구 삭제됩니다.'
-    
+
     message.success(successMessage)
     emit('delete', request)
-    
+
     // 로그아웃 처리
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-    
+
   } catch (error: any) {
     console.error('계정 삭제 실패:', error)
     message.error(error.message || '계정 삭제 요청에 실패했습니다')
@@ -622,18 +622,18 @@ const confirmSelectiveBackup = async () => {
   try {
     // 선택적 데이터 백업 요청
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     const itemNames = selectedBackupItems.value.map(item => {
       const labels: Record<string, string> = {
         profile: '프로파일 정보',
         workspaces: '워크스페이스 목록',
         projects: '프로젝트 데이터',
         settings: '개인 설정',
-        activity: '활동 기록'
+        activity: '활동 기록',
       }
       return labels[item]
     }).join(', ')
-    
+
     message.success(`선택한 데이터(${itemNames}) 백업 요청이 접수되었습니다.`)
     showBackupOptionsModal.value = false
     selectedBackupItems.value = []

@@ -1,20 +1,20 @@
-import { apiGet, apiPost, apiPut, apiDelete } from '@/api'
+import { apiDelete, apiGet, apiPost, apiPut } from '@/api'
 import type {
-  UserProfile,
-  UpdateProfileRequest,
-  ChangePasswordRequest,
-  PasswordStrength,
-  TwoFactorAuthSettings,
-  EnableTwoFactorRequest,
-  VerifyTwoFactorRequest,
-  NotificationSettings,
-  UpdateNotificationSettingsRequest,
-  PrivacySettings,
-  UpdatePrivacySettingsRequest,
-  ProfileImageUploadResponse,
-  AccountDeletionRequest,
   AccountDeactivationRequest,
-  AccountReactivationRequest
+  AccountDeletionRequest,
+  AccountReactivationRequest,
+  ChangePasswordRequest,
+  EnableTwoFactorRequest,
+  NotificationSettings,
+  PasswordStrength,
+  PrivacySettings,
+  ProfileImageUploadResponse,
+  TwoFactorAuthSettings,
+  UpdateNotificationSettingsRequest,
+  UpdatePrivacySettingsRequest,
+  UpdateProfileRequest,
+  UserProfile,
+  VerifyTwoFactorRequest,
 } from '@/types/api'
 
 export const profileApi = {
@@ -48,15 +48,15 @@ export const profileApi = {
   }): Promise<ProfileImageUploadResponse> => {
     const formData = new FormData()
     formData.append('image', file)
-    
+
     if (cropData) {
       formData.append('cropData', JSON.stringify(cropData))
     }
 
     const response = await apiPost<ProfileImageUploadResponse>('/auth/profile/image', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     })
     return response.data.data
   },
@@ -234,7 +234,7 @@ export const profileApi = {
     endDate?: string
   }) => {
     const queryParams = new URLSearchParams()
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
@@ -242,7 +242,7 @@ export const profileApi = {
         }
       })
     }
-    
+
     const response = await apiGet(`/auth/profile/activity?${queryParams.toString()}`)
     return response.data.data
   },
@@ -257,7 +257,7 @@ export const profileApi = {
     endDate?: string
   }) => {
     const queryParams = new URLSearchParams()
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
@@ -265,8 +265,8 @@ export const profileApi = {
         }
       })
     }
-    
+
     const response = await apiGet(`/auth/profile/login-history?${queryParams.toString()}`)
     return response.data.data
-  }
+  },
 }

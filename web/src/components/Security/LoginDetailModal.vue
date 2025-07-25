@@ -1,19 +1,19 @@
 <template>
   <div class="login-detail-modal">
-    <n-descriptions :column="2" bordered>
-      <n-descriptions-item label="로그인 시간">
+    <NDescriptions :column="2" bordered>
+      <NDescriptionsItem label="로그인 시간">
         {{ formatDateTime(login.createdAt) }}
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="상태">
-        <n-tag :type="getStatusType(login.status)" size="small">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="상태">
+        <NTag :type="getStatusType(login.status)" size="small">
           {{ getStatusText(login.status) }}
-        </n-tag>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="위험도 점수">
+        </NTag>
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="위험도 점수">
         <div class="risk-score">
-          <n-progress
+          <NProgress
             type="line"
             :percentage="login.riskScore"
             :color="getRiskColor(login.riskScore)"
@@ -22,83 +22,83 @@
           />
           <span class="score-text">{{ login.riskScore }}/100</span>
         </div>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="의심스러운 활동">
-        <n-tag :type="login.isSuspicious ? 'error' : 'success'" size="small">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="의심스러운 활동">
+        <NTag :type="login.isSuspicious ? 'error' : 'success'" size="small">
           {{ login.isSuspicious ? '예' : '아니오' }}
-        </n-tag>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="IP 주소">
+        </NTag>
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="IP 주소">
         <code class="ip-address">{{ login.ipAddress }}</code>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="위치">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="위치">
         <div v-if="login.location" class="location-info">
-          <n-icon :component="MapPin" size="14" style="margin-right: 4px" />
+          <NIcon :component="MapPin" size="14" style="margin-right: 4px" />
           {{ [login.location.city, login.location.country].filter(Boolean).join(', ') }}
           <span v-if="login.location.timezone" class="timezone">
             ({{ login.location.timezone }})
           </span>
         </div>
         <span v-else class="no-data">위치 정보 없음</span>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="로그인 방법">
-        <n-tag :type="getMethodType(login.loginMethod)" size="small">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="로그인 방법">
+        <NTag :type="getMethodType(login.loginMethod)" size="small">
           {{ getMethodText(login.loginMethod) }}
-        </n-tag>
+        </NTag>
         <span v-if="login.provider" class="provider-info">
           via {{ login.provider }}
         </span>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="세션 ID">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="세션 ID">
         <code class="session-id">{{ login.sessionId }}</code>
-      </n-descriptions-item>
-    </n-descriptions>
+      </NDescriptionsItem>
+    </NDescriptions>
 
     <!-- 디바이스 정보 섹션 -->
-    <n-divider>디바이스 정보</n-divider>
-    <n-descriptions :column="2" bordered>
-      <n-descriptions-item label="브라우저">
+    <NDivider>디바이스 정보</NDivider>
+    <NDescriptions :column="2" bordered>
+      <NDescriptionsItem label="브라우저">
         {{ login.deviceInfo.browser }}
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="운영체제">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="운영체제">
         {{ login.deviceInfo.os }}
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="디바이스 유형">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="디바이스 유형">
         {{ login.deviceInfo.device }}
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="User Agent" span="2">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="User Agent" span="2">
         <code class="user-agent">{{ login.userAgent }}</code>
-      </n-descriptions-item>
-    </n-descriptions>
+      </NDescriptionsItem>
+    </NDescriptions>
 
     <!-- 실패 사유 (실패한 경우에만) -->
     <div v-if="login.status === 'failure' && login.failureReason" class="failure-section">
-      <n-divider>실패 사유</n-divider>
-      <n-alert type="error" :show-icon="false">
+      <NDivider>실패 사유</NDivider>
+      <NAlert type="error" :show-icon="false">
         {{ login.failureReason }}
-      </n-alert>
+      </NAlert>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { 
-  NDescriptions, 
-  NDescriptionsItem, 
-  NTag, 
-  NProgress, 
-  NIcon, 
+import {
+  NAlert,
+  NDescriptions,
+  NDescriptionsItem,
   NDivider,
-  NAlert
+  NIcon,
+  NProgress,
+  NTag,
 } from 'naive-ui'
 import { MapPin } from '@vicons/tabler'
 import { format } from 'date-fns'
@@ -120,7 +120,7 @@ const getStatusType = (status: string) => {
   const statusMap = {
     success: 'success',
     failure: 'error',
-    blocked: 'warning'
+    blocked: 'warning',
   }
   return statusMap[status] || 'default'
 }
@@ -129,7 +129,7 @@ const getStatusText = (status: string) => {
   const statusMap = {
     success: '성공',
     failure: '실패',
-    blocked: '차단됨'
+    blocked: '차단됨',
   }
   return statusMap[status] || status
 }
@@ -139,7 +139,7 @@ const getMethodType = (method: string) => {
     password: 'default',
     oauth: 'info',
     sso: 'warning',
-    token: 'success'
+    token: 'success',
   }
   return methodMap[method] || 'default'
 }
@@ -149,7 +149,7 @@ const getMethodText = (method: string) => {
     password: '비밀번호',
     oauth: 'OAuth',
     sso: 'SSO',
-    token: '토큰'
+    token: '토큰',
   }
   return methodMap[method] || method
 }

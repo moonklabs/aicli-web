@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
-    <div 
-      v-if="isDev && isVisible" 
+    <div
+      v-if="isDev && isVisible"
       class="fixed bottom-4 left-4 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-w-sm w-full max-h-96 overflow-hidden"
     >
       <!-- 헤더 -->
@@ -11,7 +11,7 @@
           <h3 class="font-medium text-sm text-gray-900 dark:text-gray-100">API 디버거</h3>
           <div class="flex items-center gap-1">
             <!-- 네트워크 상태 표시 -->
-            <div 
+            <div
               :class="[
                 'w-2 h-2 rounded-full',
                 networkStatus.isOnline ? 'bg-green-500' : 'bg-red-500'
@@ -22,36 +22,36 @@
             </span>
           </div>
         </div>
-        
+
         <div class="flex items-center gap-1">
           <!-- 자동 스크롤 토글 -->
           <button
             @click="autoScroll = !autoScroll"
             :class="[
               'p-1 rounded text-xs transition-colors',
-              autoScroll 
-                ? 'bg-blue-500 text-white' 
+              autoScroll
+                ? 'bg-blue-500 text-white'
                 : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
             ]"
             title="자동 스크롤"
           >
             <Icon name="mdi:arrow-down" size="12" />
           </button>
-          
+
           <!-- 일시정지/재개 -->
           <button
             @click="isPaused = !isPaused"
             :class="[
               'p-1 rounded text-xs transition-colors',
-              isPaused 
-                ? 'bg-yellow-500 text-white' 
+              isPaused
+                ? 'bg-yellow-500 text-white'
                 : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
             ]"
             :title="isPaused ? '재개' : '일시정지'"
           >
             <Icon :name="isPaused ? 'mdi:play' : 'mdi:pause'" size="12" />
           </button>
-          
+
           <!-- 로그 지우기 -->
           <button
             @click="clearLogs"
@@ -60,7 +60,7 @@
           >
             <Icon name="mdi:delete" size="12" />
           </button>
-          
+
           <!-- 최소화/닫기 -->
           <button
             @click="minimize"
@@ -69,7 +69,7 @@
           >
             <Icon name="mdi:minus" size="12" />
           </button>
-          
+
           <button
             @click="isVisible = false"
             class="p-1 rounded text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white transition-colors"
@@ -96,7 +96,7 @@
             <div class="text-gray-600 dark:text-gray-400">캐시됨</div>
           </div>
         </div>
-        
+
         <!-- 필터 버튼들 -->
         <div class="flex gap-1 mt-2">
           <button
@@ -116,8 +116,8 @@
       </div>
 
       <!-- API 로그 -->
-      <div 
-        v-if="!isMinimized" 
+      <div
+        v-if="!isMinimized"
         ref="logContainer"
         class="max-h-64 overflow-y-auto p-2 space-y-1"
       >
@@ -142,18 +142,18 @@
               <span class="text-gray-500">{{ formatDuration(log.duration) }}</span>
             </div>
           </div>
-          
+
           <div v-if="log.error" class="text-red-600 dark:text-red-400 text-xs">
             {{ log.error }}
           </div>
-          
+
           <div class="text-gray-500 text-xs">
             {{ formatTime(log.timestamp) }}
             <span v-if="log.cached" class="ml-2 text-yellow-600">📋 캐시됨</span>
             <span v-if="log.retryCount > 0" class="ml-2 text-blue-600">🔄 재시도 {{ log.retryCount }}회</span>
           </div>
         </div>
-        
+
         <div v-if="filteredLogs.length === 0" class="text-center text-gray-500 py-4">
           {{ isPaused ? '일시정지됨' : '로그가 없습니다' }}
         </div>
@@ -161,12 +161,12 @@
     </div>
 
     <!-- 로그 상세 모달 -->
-    <div 
+    <div
       v-if="selectedLog && showDetails"
       class="fixed inset-0 z-60 bg-black bg-opacity-50 flex items-center justify-center p-4"
       @click="closeDetails"
     >
-      <div 
+      <div
         class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-hidden"
         @click.stop
       >
@@ -179,7 +179,7 @@
             <Icon name="mdi:close" size="16" />
           </button>
         </div>
-        
+
         <div class="p-4 overflow-y-auto max-h-80">
           <pre class="text-xs bg-gray-100 dark:bg-gray-900 p-3 rounded overflow-auto">{{ JSON.stringify(selectedLog, null, 2) }}</pre>
         </div>
@@ -199,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 
@@ -239,7 +239,7 @@ const filters = [
   { key: 'success', label: '성공', activeClass: 'bg-green-500 text-white' },
   { key: 'error', label: '오류', activeClass: 'bg-red-500 text-white' },
   { key: 'pending', label: '진행중', activeClass: 'bg-yellow-500 text-white' },
-  { key: 'cached', label: '캐시', activeClass: 'bg-blue-500 text-white' }
+  { key: 'cached', label: '캐시', activeClass: 'bg-blue-500 text-white' },
 ]
 
 // 통계 계산
@@ -247,14 +247,14 @@ const stats = computed(() => {
   const total = logs.value.length
   const pending = logs.value.filter(log => !log.status).length
   const cached = logs.value.filter(log => log.cached).length
-  
+
   return { total, pending, cached }
 })
 
 // 필터된 로그
 const filteredLogs = computed(() => {
   if (activeFilter.value === 'all') return logs.value
-  
+
   return logs.value.filter(log => {
     switch (activeFilter.value) {
       case 'success':
@@ -323,20 +323,20 @@ const formatDuration = (duration?: number): string => {
 // 로그 추가
 const addLog = (log: Omit<ApiLog, 'id' | 'timestamp'>): void => {
   if (isPaused.value) return
-  
+
   const newLog: ApiLog = {
     ...log,
     id: `log-${Date.now()}-${Math.random()}`,
-    timestamp: new Date()
+    timestamp: new Date(),
   }
-  
+
   logs.value.unshift(newLog)
-  
+
   // 최대 100개 로그만 유지
   if (logs.value.length > 100) {
     logs.value = logs.value.slice(0, 100)
   }
-  
+
   // 자동 스크롤
   if (autoScroll.value) {
     nextTick(() => {
@@ -384,63 +384,63 @@ let responseInterceptor: number | null = null
 const installInterceptors = () => {
   if (typeof window !== 'undefined' && (window as any).axios) {
     const axios = (window as any).axios
-    
+
     // 요청 인터셉터
     requestInterceptor = axios.interceptors.request.use((config: any) => {
       const logId = `req-${Date.now()}-${Math.random()}`
       config.logId = logId
-      
+
       addLog({
         method: config.method?.toUpperCase() || 'UNKNOWN',
         url: config.url || '',
         retryCount: config.metadata?.retryCount || 0,
         requestData: config.data,
-        headers: config.headers
+        headers: config.headers,
       })
-      
+
       return config
     })
-    
+
     // 응답 인터셉터
     responseInterceptor = axios.interceptors.response.use(
       (response: any) => {
         if (response.config.logId) {
-          const log = logs.value.find(l => 
-            l.url === response.config.url && 
-            l.method === response.config.method?.toUpperCase()
+          const log = logs.value.find(l =>
+            l.url === response.config.url &&
+            l.method === response.config.method?.toUpperCase(),
           )
-          
+
           if (log) {
             updateLog(log.id, {
               status: response.status,
               duration: Date.now() - log.timestamp.getTime(),
               cached: !!response.fromCache,
-              responseData: response.data
+              responseData: response.data,
             })
           }
         }
-        
+
         return response
       },
       (error: any) => {
         if (error.config?.logId) {
-          const log = logs.value.find(l => 
-            l.url === error.config.url && 
-            l.method === error.config.method?.toUpperCase()
+          const log = logs.value.find(l =>
+            l.url === error.config.url &&
+            l.method === error.config.method?.toUpperCase(),
           )
-          
+
           if (log) {
             updateLog(log.id, {
               status: error.response?.status || 0,
               duration: Date.now() - log.timestamp.getTime(),
               error: error.message,
-              responseData: error.response?.data
+              responseData: error.response?.data,
             })
           }
         }
-        
+
         return Promise.reject(error)
-      }
+      },
     )
   }
 }
@@ -458,14 +458,14 @@ onMounted(() => {
   if (isDev.value) {
     installInterceptors()
     window.addEventListener('keydown', handleKeyDown)
-    
+
     // 전역 함수로 노출
     ;(window as any).__apiDebugger = {
       show: () => { isVisible.value = true },
       hide: () => { isVisible.value = false },
       toggle: () => { isVisible.value = !isVisible.value },
       addLog,
-      clearLogs
+      clearLogs,
     }
   }
 })
@@ -474,11 +474,11 @@ onUnmounted(() => {
   if (requestInterceptor !== null && typeof window !== 'undefined' && (window as any).axios) {
     (window as any).axios.interceptors.request.eject(requestInterceptor)
   }
-  
+
   if (responseInterceptor !== null && typeof window !== 'undefined' && (window as any).axios) {
     (window as any).axios.interceptors.response.eject(responseInterceptor)
   }
-  
+
   window.removeEventListener('keydown', handleKeyDown)
 })
 

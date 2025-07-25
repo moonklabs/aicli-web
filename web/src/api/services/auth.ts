@@ -1,23 +1,23 @@
 import { apiGet, apiPost } from '@/api'
 import type {
+  AuditLog,
+  LinkOAuthRequest,
+  LogExportRequest,
+  LogExportResponse,
+  LoginHistory,
   LoginRequest,
   LoginResponse,
-  RefreshTokenRequest,
+  OAuthAccount,
   OAuthAuthUrlRequest,
   OAuthAuthUrlResponse,
   OAuthCallbackRequest,
-  OAuthAccount,
-  LinkOAuthRequest,
-  UnlinkOAuthRequest,
-  AuditLog,
-  SecurityEventFilter,
-  LoginHistory,
-  SecurityStats,
-  SuspiciousActivity,
-  LogExportRequest,
-  LogExportResponse,
-  SessionSecurityEvent,
   PaginatedResponse,
+  RefreshTokenRequest,
+  SecurityEventFilter,
+  SecurityStats,
+  SessionSecurityEvent,
+  SuspiciousActivity,
+  UnlinkOAuthRequest,
 } from '@/types/api'
 
 export const authApi = {
@@ -96,7 +96,7 @@ export const authApi = {
   },
 
   // OAuth 관련 API
-  
+
   /**
    * OAuth 인증 URL 생성
    */

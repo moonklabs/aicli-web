@@ -3,21 +3,21 @@
     <!-- 필터 및 검색 -->
     <div class="table-header">
       <div class="search-section">
-        <n-input
+        <NInput
           v-model:value="searchKeyword"
           placeholder="IP 주소 또는 위치로 검색..."
           clearable
           @update:value="handleSearch"
         >
           <template #prefix>
-            <n-icon><Search /></n-icon>
+            <NIcon><Search /></NIcon>
           </template>
-        </n-input>
+        </NInput>
       </div>
-      
+
       <div class="filter-section">
-        <n-space>
-          <n-select
+        <NSpace>
+          <NSelect
             v-model:value="statusFilter"
             placeholder="상태 필터"
             :options="statusOptions"
@@ -25,8 +25,8 @@
             style="width: 140px"
             @update:value="handleFilterChange"
           />
-          
-          <n-select
+
+          <NSelect
             v-model:value="methodFilter"
             placeholder="로그인 방법"
             :options="methodOptions"
@@ -34,32 +34,32 @@
             style="width: 140px"
             @update:value="handleFilterChange"
           />
-          
-          <n-date-picker
+
+          <NDatePicker
             v-model:value="dateRange"
             type="daterange"
             placeholder="날짜 범위"
             clearable
             @update:value="handleFilterChange"
           />
-          
-          <n-button
+
+          <NButton
             type="primary"
             ghost
             :loading="loading"
             @click="handleExport"
           >
             <template #icon>
-              <n-icon><Download /></n-icon>
+              <NIcon><Download /></NIcon>
             </template>
             내보내기
-          </n-button>
-        </n-space>
+          </NButton>
+        </NSpace>
       </div>
     </div>
 
     <!-- 데이터 테이블 -->
-    <n-data-table
+    <NDataTable
       :columns="columns"
       :data="filteredData"
       :loading="loading"
@@ -70,7 +70,7 @@
     />
 
     <!-- 로그인 상세 모달 -->
-    <n-modal
+    <NModal
       v-model:show="showDetailModal"
       preset="card"
       title="로그인 상세 정보"
@@ -80,32 +80,32 @@
         v-if="selectedLogin"
         :login="selectedLogin"
       />
-    </n-modal>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { 
-  NDataTable, 
-  NInput, 
-  NSelect, 
+import { computed, onMounted, ref, watch } from 'vue'
+import {
+  type DataTableColumns,
+  NButton,
+  NDataTable,
   NDatePicker,
-  NButton, 
-  NIcon, 
-  NSpace,
+  NIcon,
+  NInput,
   NModal,
+  NSelect,
+  NSpace,
   NTag,
   NTooltip,
   useMessage,
-  type DataTableColumns
 } from 'naive-ui'
-import { Search, Download, MapPin, AlertTriangle, Eye } from '@vicons/tabler'
+import { AlertTriangle, Download, Eye, MapPin, Search } from '@vicons/tabler'
 import { authApi } from '@/api/services/auth'
-import { formatDistanceToNow, format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import LoginDetailModal from './LoginDetailModal.vue'
-import type { LoginHistory, SecurityEventFilter, LogExportRequest } from '@/types/api'
+import type { LogExportRequest, LoginHistory, SecurityEventFilter } from '@/types/api'
 
 interface Props {
   data?: LoginHistory[]
@@ -118,7 +118,7 @@ const props = withDefaults(defineProps<Props>(), {
   data: () => [],
   loading: false,
   limit: 50,
-  showPagination: true
+  showPagination: true,
 })
 
 const emit = defineEmits<{
@@ -141,14 +141,14 @@ const showDetailModal = ref(false)
 const statusOptions = [
   { label: '성공', value: 'success' },
   { label: '실패', value: 'failure' },
-  { label: '차단됨', value: 'blocked' }
+  { label: '차단됨', value: 'blocked' },
 ]
 
 const methodOptions = [
   { label: '비밀번호', value: 'password' },
   { label: 'OAuth', value: 'oauth' },
   { label: 'SSO', value: 'sso' },
-  { label: '토큰', value: 'token' }
+  { label: '토큰', value: 'token' },
 ]
 
 // 계산된 속성
@@ -158,12 +158,12 @@ const filteredData = computed(() => {
   // 검색 필터
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(item => 
+    result = result.filter(item =>
       item.ipAddress.toLowerCase().includes(keyword) ||
       item.location?.country?.toLowerCase().includes(keyword) ||
       item.location?.city?.toLowerCase().includes(keyword) ||
       item.deviceInfo.browser.toLowerCase().includes(keyword) ||
-      item.deviceInfo.os.toLowerCase().includes(keyword)
+      item.deviceInfo.os.toLowerCase().includes(keyword),
     )
   }
 
@@ -191,7 +191,7 @@ const filteredData = computed(() => {
 
 const paginationConfig = computed(() => {
   if (!props.showPagination) return false
-  
+
   return {
     page: currentPage.value,
     pageSize: pageSize.value,
@@ -204,7 +204,7 @@ const paginationConfig = computed(() => {
     onUpdatePageSize: (size: number) => {
       pageSize.value = size
       currentPage.value = 1
-    }
+    },
   }
 })
 
@@ -218,9 +218,9 @@ const columns: DataTableColumns<LoginHistory> = [
       const date = new Date(row.createdAt)
       return h('div', { class: 'timestamp-cell' }, [
         h('div', { class: 'date' }, format(date, 'MM/dd HH:mm', { locale: ko })),
-        h('div', { class: 'relative-time' }, formatDistanceToNow(date, { addSuffix: true, locale: ko }))
+        h('div', { class: 'relative-time' }, formatDistanceToNow(date, { addSuffix: true, locale: ko })),
       ])
-    }
+    },
   },
   {
     title: '상태',
@@ -230,12 +230,12 @@ const columns: DataTableColumns<LoginHistory> = [
       const statusConfig = {
         success: { type: 'success', text: '성공' },
         failure: { type: 'error', text: '실패' },
-        blocked: { type: 'warning', text: '차단됨' }
+        blocked: { type: 'warning', text: '차단됨' },
       }
       const config = statusConfig[row.status] || { type: 'default', text: row.status }
-      
+
       return h(NTag, { type: config.type, size: 'small' }, { default: () => config.text })
-    }
+    },
   },
   {
     title: '위험도',
@@ -248,20 +248,20 @@ const columns: DataTableColumns<LoginHistory> = [
         if (score >= 40) return { type: 'info', text: '낮음', color: '#3498db' }
         return { type: 'success', text: '안전', color: '#27ae60' }
       }
-      
+
       const config = getRiskConfig(row.riskScore)
       return h('div', { class: 'risk-score-cell' }, [
-        h(NTag, { 
-          type: config.type, 
+        h(NTag, {
+          type: config.type,
           size: 'small',
-          style: { backgroundColor: config.color + '20', borderColor: config.color }
+          style: { backgroundColor: `${config.color}20`, borderColor: config.color },
         }, { default: () => `${config.text} (${row.riskScore})` }),
-        row.isSuspicious && h(NIcon, { 
-          component: AlertTriangle, 
-          style: { color: '#e74c3c', marginLeft: '4px' } 
-        })
+        row.isSuspicious && h(NIcon, {
+          component: AlertTriangle,
+          style: { color: '#e74c3c', marginLeft: '4px' },
+        }),
       ])
-    }
+    },
   },
   {
     title: 'IP 주소',
@@ -269,9 +269,9 @@ const columns: DataTableColumns<LoginHistory> = [
     width: 140,
     render: (row) => {
       return h('div', { class: 'ip-address-cell' }, [
-        h('code', { class: 'ip-address' }, row.ipAddress)
+        h('code', { class: 'ip-address' }, row.ipAddress),
       ])
-    }
+    },
   },
   {
     title: '위치',
@@ -279,13 +279,13 @@ const columns: DataTableColumns<LoginHistory> = [
     width: 150,
     render: (row) => {
       if (!row.location) return h('span', { class: 'no-data' }, '-')
-      
+
       const location = [row.location.city, row.location.country].filter(Boolean).join(', ')
       return h('div', { class: 'location-cell' }, [
         h(NIcon, { component: MapPin, size: 14, style: { marginRight: '4px' } }),
-        h('span', location || '알 수 없음')
+        h('span', location || '알 수 없음'),
       ])
-    }
+    },
   },
   {
     title: '디바이스',
@@ -294,9 +294,9 @@ const columns: DataTableColumns<LoginHistory> = [
     render: (row) => {
       return h('div', { class: 'device-cell' }, [
         h('div', { class: 'browser' }, `${row.deviceInfo.browser} / ${row.deviceInfo.os}`),
-        h('div', { class: 'device-type' }, row.deviceInfo.device)
+        h('div', { class: 'device-type' }, row.deviceInfo.device),
       ])
-    }
+    },
   },
   {
     title: '로그인 방법',
@@ -307,14 +307,14 @@ const columns: DataTableColumns<LoginHistory> = [
         password: { type: 'default', text: '비밀번호' },
         oauth: { type: 'info', text: 'OAuth' },
         sso: { type: 'warning', text: 'SSO' },
-        token: { type: 'success', text: '토큰' }
+        token: { type: 'success', text: '토큰' },
       }
       const config = methodConfig[row.loginMethod] || { type: 'default', text: row.loginMethod }
-      
-      return h(NTag, { type: config.type, size: 'small' }, { 
-        default: () => row.provider ? `${config.text} (${row.provider})` : config.text
+
+      return h(NTag, { type: config.type, size: 'small' }, {
+        default: () => row.provider ? `${config.text} (${row.provider})` : config.text,
       })
-    }
+    },
   },
   {
     title: '작업',
@@ -326,13 +326,13 @@ const columns: DataTableColumns<LoginHistory> = [
         size: 'small',
         type: 'primary',
         ghost: true,
-        onClick: () => handleViewDetails(row)
+        onClick: () => handleViewDetails(row),
       }, {
         default: () => '상세',
-        icon: () => h(NIcon, { component: Eye })
+        icon: () => h(NIcon, { component: Eye }),
       })
-    }
-  }
+    },
+  },
 ]
 
 // 메소드
@@ -364,13 +364,13 @@ const handleViewDetails = (login: LoginHistory) => {
 const handleExport = async () => {
   try {
     const filters: SecurityEventFilter = {
-      limit: 10000 // 최대 개수
+      limit: 10000, // 최대 개수
     }
-    
+
     if (statusFilter.value) {
       filters.status = [statusFilter.value]
     }
-    
+
     if (dateRange.value) {
       filters.startDate = new Date(dateRange.value[0]).toISOString()
       filters.endDate = new Date(dateRange.value[1]).toISOString()
@@ -380,11 +380,11 @@ const handleExport = async () => {
       type: 'login_history',
       format: 'csv',
       filters,
-      includeMetadata: true
+      includeMetadata: true,
     }
 
     const response = await authApi.exportSecurityLogs(exportRequest)
-    
+
     // 다운로드 링크 생성
     const link = document.createElement('a')
     link.href = response.downloadUrl
@@ -392,7 +392,7 @@ const handleExport = async () => {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     message.success(`로그인 이력 ${response.recordCount}건이 내보내기되었습니다`)
   } catch (error) {
     message.error('내보내기에 실패했습니다')
@@ -518,11 +518,11 @@ watch(searchKeyword, () => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .filter-section {
     justify-content: flex-start;
   }
-  
+
   .filter-section > * {
     flex-wrap: wrap;
   }

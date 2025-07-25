@@ -1,53 +1,53 @@
-import type { Preview } from '@storybook/vue3-vite';
-import { app } from '@storybook/vue3';
+import type { Preview } from '@storybook/vue3-vite'
+import { app } from '@storybook/vue3'
 
 // Naive UI 설정
-import { 
-  create,
-  NConfigProvider,
+import {
+  NAlert,
+  NAvatar,
+  NAvatarGroup,
+  NBadge,
+  NBreadcrumb,
   NButton,
-  NInput,
   NCard,
+  NCheckbox,
+  NConfigProvider,
   NDataTable,
+  NDatePicker,
+  NDivider,
+  NDrawer,
+  NDropdown,
+  NEmpty,
   NForm,
   NFormItem,
-  NSelect,
-  NCheckbox,
-  NRadio,
-  NSwitch,
-  NSlider,
-  NInputNumber,
-  NDatePicker,
-  NModal,
-  NDrawer,
-  NPopover,
-  NDropdown,
-  NTooltip,
-  NAlert,
-  NProgress,
-  NSkeleton,
-  NSpin,
-  NEmpty,
-  NResult,
-  NTag,
-  NBadge,
   NIcon,
-  NAvatarGroup,
-  NAvatar,
-  NSpace,
-  NDivider,
+  NInput,
+  NInputNumber,
   NLayout,
-  NLayoutHeader,
-  NLayoutSider,
   NLayoutContent,
   NLayoutFooter,
+  NLayoutHeader,
+  NLayoutSider,
   NMenu,
-  NBreadcrumb,
-  NTabs,
-  NTabPane,
+  NModal,
+  NPopover,
+  NProgress,
+  NRadio,
+  NResult,
+  NSelect,
+  NSkeleton,
+  NSlider,
+  NSpace,
+  NSpin,
+  NStep,
   NSteps,
-  NStep
-} from 'naive-ui';
+  NSwitch,
+  NTabPane,
+  NTabs,
+  NTag,
+  NTooltip,
+  create,
+} from 'naive-ui'
 
 // Naive UI 컴포넌트 등록
 const naive = create({
@@ -94,15 +94,15 @@ const naive = create({
     NTabs,
     NTabPane,
     NSteps,
-    NStep
-  ]
-});
+    NStep,
+  ],
+})
 
-app.use(naive);
+app.use(naive)
 
 // 전역 스타일 임포트
-import '../src/assets/main.css';
-import '../src/styles/main.scss';
+import '../src/assets/main.css'
+import '../src/styles/main.scss'
 
 const preview: Preview = {
   parameters: {
@@ -115,9 +115,9 @@ const preview: Preview = {
     docs: {
       extractComponentDescription: (component, { notes }) => {
         if (notes) {
-          return typeof notes === 'string' ? notes : notes.markdown || notes.text;
+          return typeof notes === 'string' ? notes : notes.markdown || notes.text
         }
-        return null;
+        return null
       },
     },
     backgrounds: {
@@ -170,6 +170,6 @@ const preview: Preview = {
       },
     },
   },
-};
+}
 
-export default preview;
+export default preview

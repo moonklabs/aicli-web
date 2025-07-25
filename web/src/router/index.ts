@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { PermissionUtils } from '@/utils/permission'
-import type { ResourceType, ActionType } from '@/types/api'
+import type { ActionType, ResourceType } from '@/types/api'
 
 // 라우트 컴포넌트들을 lazy-load로 import
 const DashboardView = () => import('@/views/DashboardView.vue')
@@ -45,8 +45,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '대시보드',
         permissions: [
-          { resource: 'system', action: 'read' }
-        ]
+          { resource: 'system', action: 'read' },
+        ],
       },
     },
     {
@@ -75,8 +75,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '워크스페이스',
         permissions: [
-          { resource: 'workspace', action: 'read' }
-        ]
+          { resource: 'workspace', action: 'read' },
+        ],
       },
     },
     {
@@ -87,8 +87,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '워크스페이스 상세',
         permissions: [
-          { resource: 'workspace', action: 'read' }
-        ]
+          { resource: 'workspace', action: 'read' },
+        ],
       },
       props: true,
     },
@@ -100,8 +100,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '터미널',
         permissions: [
-          { resource: 'session', action: 'execute' }
-        ]
+          { resource: 'session', action: 'execute' },
+        ],
       },
       props: true,
     },
@@ -114,8 +114,8 @@ const router = createRouter({
         title: 'Docker 관리',
         adminOnly: true,
         permissions: [
-          { resource: 'system', action: 'manage' }
-        ]
+          { resource: 'system', action: 'manage' },
+        ],
       },
     },
     {
@@ -126,8 +126,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '프로파일 설정',
         permissions: [
-          { resource: 'user', action: 'read' }
-        ]
+          { resource: 'user', action: 'read' },
+        ],
       },
     },
     {
@@ -138,8 +138,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '세션 관리',
         permissions: [
-          { resource: 'user', action: 'read' }
-        ]
+          { resource: 'user', action: 'read' },
+        ],
       },
     },
     {
@@ -150,8 +150,8 @@ const router = createRouter({
         requiresAuth: true,
         title: '보안 대시보드',
         permissions: [
-          { resource: 'user', action: 'read' }
-        ]
+          { resource: 'user', action: 'read' },
+        ],
       },
     },
     {
@@ -194,62 +194,62 @@ const router = createRouter({
 // 권한 체크 헬퍼 함수
 function checkRoutePermissions(route: any): { allowed: boolean; reason?: string } {
   const { meta } = route
-  
+
   // 권한 체크가 불필요한 경우 (인증이 필요없는 페이지)
   if (meta.requiresAuth === false) {
     return { allowed: true }
   }
-  
+
   // 슈퍼 관리자 권한 필요
   if (meta.superAdminOnly && !PermissionUtils.isSuperAdmin()) {
-    return { 
-      allowed: false, 
-      reason: '슈퍼 관리자 권한이 필요합니다.' 
+    return {
+      allowed: false,
+      reason: '슈퍼 관리자 권한이 필요합니다.',
     }
   }
-  
+
   // 관리자 권한 필요
   if (meta.adminOnly && !PermissionUtils.isAdmin()) {
-    return { 
-      allowed: false, 
-      reason: '관리자 권한이 필요합니다.' 
+    return {
+      allowed: false,
+      reason: '관리자 권한이 필요합니다.',
     }
   }
-  
+
   // 특정 역할 필요
   if (meta.roles && meta.roles.length > 0) {
-    const hasRequiredRole = meta.roles.some((role: string) => 
-      PermissionUtils.hasRole(role)
+    const hasRequiredRole = meta.roles.some((role: string) =>
+      PermissionUtils.hasRole(role),
     )
     if (!hasRequiredRole) {
-      return { 
-        allowed: false, 
-        reason: `다음 역할 중 하나가 필요합니다: ${meta.roles.join(', ')}` 
+      return {
+        allowed: false,
+        reason: `다음 역할 중 하나가 필요합니다: ${meta.roles.join(', ')}`,
       }
     }
   }
-  
+
   // 세부 권한 체크
   if (meta.permissions && meta.permissions.length > 0) {
     for (const permission of meta.permissions) {
       const resourceId = permission.resourceId || route.params.id
       if (!PermissionUtils.hasPermission(
-        permission.resource, 
-        permission.action, 
-        resourceId
+        permission.resource,
+        permission.action,
+        resourceId,
       )) {
-        return { 
-          allowed: false, 
+        return {
+          allowed: false,
           reason: PermissionUtils.getPermissionErrorMessage(
-            permission.resource, 
-            permission.action, 
-            resourceId
-          )
+            permission.resource,
+            permission.action,
+            resourceId,
+          ),
         }
       }
     }
   }
-  
+
   return { allowed: true }
 }
 
@@ -272,29 +272,29 @@ router.beforeEach(async (to, from, next) => {
     next({ name: 'login', query: { redirect: to.fullPath } })
     return
   }
-  
+
   if (to.name === 'login' && userStore.isAuthenticated) {
     // 이미 로그인된 상태에서 로그인 페이지 접근 시 대시보드로 리다이렉트
     next({ name: 'dashboard' })
     return
   }
-  
+
   // 권한 체크 (인증된 사용자에 대해서만)
   if (userStore.isAuthenticated && requiresAuth) {
     const permissionCheck = checkRoutePermissions(to)
-    
+
     if (!permissionCheck.allowed) {
       // 권한이 없는 경우 - 403 페이지로 리다이렉트
       console.warn(`Access denied to ${to.path}: ${permissionCheck.reason}`)
-      
+
       // 이전 페이지가 있고 forbidden 페이지가 아닌 경우 히스토리 상태 보존
       if (from.name && from.name !== 'forbidden') {
-        next({ 
-          name: 'forbidden', 
-          query: { 
+        next({
+          name: 'forbidden',
+          query: {
             from: to.fullPath,
-            reason: permissionCheck.reason 
-          }
+            reason: permissionCheck.reason,
+          },
         })
       } else {
         next({ name: 'forbidden' })
@@ -302,7 +302,7 @@ router.beforeEach(async (to, from, next) => {
       return
     }
   }
-  
+
   // 정상적인 라우팅
   next()
 })

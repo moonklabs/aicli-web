@@ -6,40 +6,40 @@
         <h1>보안 대시보드</h1>
         <p class="subtitle">계정 보안 상태를 모니터링하고 위험 요소를 관리합니다</p>
       </div>
-      
+
       <!-- 보안 상태 요약 -->
       <div class="security-overview">
-        <n-space>
-          <n-statistic
+        <NSpace>
+          <NStatistic
             v-if="securityStats"
             label="보안 위험도"
             :value="securityStats.riskScore"
             suffix="%"
             :value-style="getRiskScoreStyle(securityStats.riskScore)"
           />
-          <n-statistic
+          <NStatistic
             v-if="securityStats"
             label="총 로그인"
             :value="securityStats.totalLogins"
             :show-indicator="true"
           />
-          <n-statistic
+          <NStatistic
             v-if="securityStats && securityStats.suspiciousAttempts > 0"
             label="의심스러운 시도"
             :value="securityStats.suspiciousAttempts"
             :value-style="{ color: '#e74c3c' }"
           />
-          <n-statistic
+          <NStatistic
             v-if="securityStats"
             label="고유 디바이스"
             :value="securityStats.uniqueDevices"
           />
-        </n-space>
+        </NSpace>
       </div>
     </div>
 
     <!-- 실시간 보안 알림 배너 -->
-    <SecurityAlertBanner 
+    <SecurityAlertBanner
       v-if="hasActiveAlerts"
       :alerts="realtimeAlerts"
       @dismiss="handleDismissAlert"
@@ -47,41 +47,41 @@
 
     <!-- 메인 콘텐츠 -->
     <div class="content">
-      <n-tabs v-model:value="activeTab" type="line" animated>
+      <NTabs v-model:value="activeTab" type="line" animated>
         <!-- 보안 개요 탭 -->
-        <n-tab-pane name="overview" tab="보안 개요">
-          <n-grid :cols="24" :x-gap="16" :y-gap="16">
+        <NTabPane name="overview" tab="보안 개요">
+          <NGrid :cols="24" :x-gap="16" :y-gap="16">
             <!-- 보안 통계 차트 -->
-            <n-grid-item :span="12">
-              <n-card title="로그인 추세" embedded>
-                <SecurityStatsChart 
+            <NGridItem :span="12">
+              <NCard title="로그인 추세" embedded>
+                <SecurityStatsChart
                   :stats="securityStats"
                   chart-type="login-trends"
                 />
-              </n-card>
-            </n-grid-item>
+              </NCard>
+            </NGridItem>
 
             <!-- 위험도 분포 차트 -->
-            <n-grid-item :span="12">
-              <n-card title="위험도 분포" embedded>
-                <SecurityStatsChart 
+            <NGridItem :span="12">
+              <NCard title="위험도 분포" embedded>
+                <SecurityStatsChart
                   :stats="securityStats"
                   chart-type="risk-distribution"
                 />
-              </n-card>
-            </n-grid-item>
+              </NCard>
+            </NGridItem>
 
             <!-- 최근 보안 이벤트 -->
-            <n-grid-item :span="24">
-              <n-card title="최근 보안 이벤트" embedded>
+            <NGridItem :span="24">
+              <NCard title="최근 보안 이벤트" embedded>
                 <template #header-extra>
-                  <n-button 
-                    text 
+                  <NButton
+                    text
                     type="primary"
                     @click="$router.push('/security/events')"
                   >
                     전체 보기
-                  </n-button>
+                  </NButton>
                 </template>
                 <div class="recent-events">
                   <SecurityEventCard
@@ -91,40 +91,40 @@
                     :compact="true"
                     @view-details="handleViewEventDetails"
                   />
-                  <n-empty 
+                  <NEmpty
                     v-if="!recentSecurityEvents.length"
                     description="최근 보안 이벤트가 없습니다"
                   />
                 </div>
-              </n-card>
-            </n-grid-item>
-          </n-grid>
-        </n-tab-pane>
+              </NCard>
+            </NGridItem>
+          </NGrid>
+        </NTabPane>
 
         <!-- 로그인 이력 탭 -->
-        <n-tab-pane name="login-history" tab="로그인 이력">
+        <NTabPane name="login-history" tab="로그인 이력">
           <div class="login-history-section">
             <div class="section-header">
               <h3>최근 로그인 이력</h3>
-              <n-space>
-                <n-button 
+              <NSpace>
+                <NButton
                   @click="refreshLoginHistory"
                   :loading="loadingLoginHistory"
                 >
                   <template #icon>
-                    <n-icon><Refresh /></n-icon>
+                    <NIcon><Refresh /></NIcon>
                   </template>
                   새로고침
-                </n-button>
-                <n-button 
+                </NButton>
+                <NButton
                   type="primary"
                   @click="$router.push('/security/login-history')"
                 >
                   전체 이력 보기
-                </n-button>
-              </n-space>
+                </NButton>
+              </NSpace>
             </div>
-            
+
             <LoginHistoryTable
               :data="loginHistory"
               :loading="loadingLoginHistory"
@@ -132,26 +132,26 @@
               @refresh="refreshLoginHistory"
             />
           </div>
-        </n-tab-pane>
+        </NTabPane>
 
         <!-- 의심스러운 활동 탭 -->
-        <n-tab-pane name="suspicious" tab="의심스러운 활동">
+        <NTabPane name="suspicious" tab="의심스러운 활동">
           <div class="suspicious-activities-section">
             <div class="section-header">
               <h3>미해결 의심스러운 활동</h3>
-              <n-space>
-                <n-button 
+              <NSpace>
+                <NButton
                   @click="refreshSuspiciousActivities"
                   :loading="loadingSuspiciousActivities"
                 >
                   <template #icon>
-                    <n-icon><Refresh /></n-icon>
+                    <NIcon><Refresh /></NIcon>
                   </template>
                   새로고침
-                </n-button>
-              </n-space>
+                </NButton>
+              </NSpace>
             </div>
-            
+
             <div class="suspicious-activities-grid">
               <SecurityEventCard
                 v-for="activity in suspiciousActivities"
@@ -161,106 +161,106 @@
                 @resolve="handleResolveSuspiciousActivity"
                 @view-details="handleViewActivityDetails"
               />
-              <n-empty 
+              <NEmpty
                 v-if="!suspiciousActivities.length"
                 description="해결되지 않은 의심스러운 활동이 없습니다"
               />
             </div>
           </div>
-        </n-tab-pane>
+        </NTabPane>
 
         <!-- 보안 설정 탭 -->
-        <n-tab-pane name="settings" tab="보안 설정">
+        <NTabPane name="settings" tab="보안 설정">
           <div class="security-settings-section">
-            <n-card title="실시간 보안 알림 설정" embedded>
+            <NCard title="실시간 보안 알림 설정" embedded>
               <div class="alert-settings">
-                <n-form 
+                <NForm
                   :model="alertSettings"
                   label-placement="left"
                   label-width="auto"
                 >
-                  <n-form-item label="실시간 알림 활성화">
-                    <n-switch 
+                  <NFormItem label="실시간 알림 활성화">
+                    <NSwitch
                       v-model:value="alertSettings.enableRealTimeAlerts"
                       @update:value="handleUpdateAlertSettings"
                     />
-                  </n-form-item>
-                  
-                  <n-form-item label="의심스러운 로그인 알림">
-                    <n-switch 
+                  </NFormItem>
+
+                  <NFormItem label="의심스러운 로그인 알림">
+                    <NSwitch
                       v-model:value="alertSettings.notifyOnSuspiciousLogin"
                       :disabled="!alertSettings.enableRealTimeAlerts"
                       @update:value="handleUpdateAlertSettings"
                     />
-                  </n-form-item>
-                  
-                  <n-form-item label="새 디바이스 알림">
-                    <n-switch 
+                  </NFormItem>
+
+                  <NFormItem label="새 디바이스 알림">
+                    <NSwitch
                       v-model:value="alertSettings.notifyOnNewDevice"
                       :disabled="!alertSettings.enableRealTimeAlerts"
                       @update:value="handleUpdateAlertSettings"
                     />
-                  </n-form-item>
-                  
-                  <n-form-item label="위치 변경 알림">
-                    <n-switch 
+                  </NFormItem>
+
+                  <NFormItem label="위치 변경 알림">
+                    <NSwitch
                       v-model:value="alertSettings.notifyOnLocationChange"
                       :disabled="!alertSettings.enableRealTimeAlerts"
                       @update:value="handleUpdateAlertSettings"
                     />
-                  </n-form-item>
-                  
-                  <n-form-item label="알림 임계값">
-                    <n-select 
+                  </NFormItem>
+
+                  <NFormItem label="알림 임계값">
+                    <NSelect
                       v-model:value="alertSettings.alertThreshold"
                       :options="alertThresholdOptions"
                       :disabled="!alertSettings.enableRealTimeAlerts"
                       @update:value="handleUpdateAlertSettings"
                     />
-                  </n-form-item>
-                </n-form>
+                  </NFormItem>
+                </NForm>
               </div>
-            </n-card>
+            </NCard>
           </div>
-        </n-tab-pane>
-      </n-tabs>
+        </NTabPane>
+      </NTabs>
     </div>
 
     <!-- 이벤트 상세 모달 -->
-    <n-modal 
+    <NModal
       v-model:show="showEventDetailModal"
       preset="card"
       title="보안 이벤트 상세"
       style="width: 600px"
     >
-      <SecurityEventDetails 
+      <SecurityEventDetails
         v-if="selectedEvent"
         :event="selectedEvent"
       />
-    </n-modal>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { 
-  NCard, 
-  NTabs, 
-  NTabPane, 
-  NGrid, 
-  NGridItem,
-  NSpace, 
-  NStatistic, 
-  NButton, 
-  NIcon,
+import {
+  NButton,
+  NCard,
   NEmpty,
-  NModal,
   NForm,
   NFormItem,
+  NGrid,
+  NGridItem,
+  NIcon,
+  NModal,
+  NSelect,
+  NSpace,
+  NStatistic,
   NSwitch,
-  NSelect
+  NTabPane,
+  NTabs,
 } from 'naive-ui'
 import { Refresh } from '@vicons/tabler'
 import { authApi } from '@/api/services/auth'
@@ -269,11 +269,11 @@ import SecurityEventCard from '@/components/Security/SecurityEventCard.vue'
 import SecurityStatsChart from '@/components/Security/SecurityStatsChart.vue'
 import LoginHistoryTable from '@/components/Security/LoginHistoryTable.vue'
 import SecurityEventDetails from '@/components/Security/SecurityEventDetails.vue'
-import type { 
-  SecurityStats, 
-  SessionSecurityEvent, 
-  LoginHistory, 
-  SuspiciousActivity 
+import type {
+  LoginHistory,
+  SecurityStats,
+  SessionSecurityEvent,
+  SuspiciousActivity,
 } from '@/types/api'
 
 const router = useRouter()
@@ -304,7 +304,7 @@ const alertSettings = ref({
   notifyOnNewDevice: true,
   notifyOnLocationChange: false,
   notifyOnHighRiskActivity: true,
-  alertThreshold: 'medium' as 'low' | 'medium' | 'high' | 'critical'
+  alertThreshold: 'medium' as 'low' | 'medium' | 'high' | 'critical',
 })
 
 // 옵션
@@ -312,7 +312,7 @@ const alertThresholdOptions = [
   { label: '낮음', value: 'low' },
   { label: '보통', value: 'medium' },
   { label: '높음', value: 'high' },
-  { label: '매우 높음', value: 'critical' }
+  { label: '매우 높음', value: 'critical' },
 ]
 
 // 계산된 속성
@@ -428,7 +428,7 @@ onMounted(async () => {
     loadRecentSecurityEvents(),
     refreshLoginHistory(),
     refreshSuspiciousActivities(),
-    loadSecurityAlertSettings()
+    loadSecurityAlertSettings(),
   ])
 })
 
@@ -514,7 +514,7 @@ onUnmounted(() => {
   .security-dashboard {
     padding: 16px;
   }
-  
+
   .suspicious-activities-grid {
     grid-template-columns: 1fr;
   }

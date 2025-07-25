@@ -6,7 +6,7 @@
         <h1>프로파일 설정</h1>
         <p class="subtitle">개인 정보, 보안 설정 및 계정 정보를 관리합니다</p>
       </div>
-      
+
       <div class="actions-section">
         <n-space>
           <n-button
@@ -72,7 +72,7 @@
                       />
                     </n-form-item>
                   </n-grid-item>
-                  
+
                   <n-grid-item :span="6">
                     <n-form-item label="이름" path="firstName">
                       <n-input
@@ -82,7 +82,7 @@
                       />
                     </n-form-item>
                   </n-grid-item>
-                  
+
                   <n-grid-item :span="6">
                     <n-form-item label="성" path="lastName">
                       <n-input
@@ -309,21 +309,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
-import { useMessage, useDialog, useLoadingBar } from 'naive-ui'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { useDialog, useLoadingBar, useMessage } from 'naive-ui'
 import {
-  SaveSharp as Save,
-  RefreshSharp as Refresh,
+  AlertCircleSharp as AlertCircle,
   CheckmarkCircleSharp as CheckmarkCircle,
-  AlertCircleSharp as AlertCircle
+  RefreshSharp as Refresh,
+  SaveSharp as Save,
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 import { useUserStore } from '@/stores/user'
-import type { 
-  UserProfile, 
-  UpdateProfileRequest,
+import type {
   NotificationSettings,
-  PrivacySettings
+  PrivacySettings,
+  UpdateProfileRequest,
+  UserProfile,
 } from '@/types/api'
 
 // 컴포넌트 import (아직 구현되지 않음)
@@ -375,7 +375,7 @@ const basicForm = reactive<UpdateProfileRequest>({
   location: '',
   timezone: '',
   language: '',
-  theme: 'auto'
+  theme: 'auto',
 })
 
 // 생년월일 값 (날짜 피커용)
@@ -386,13 +386,13 @@ const basicFormRules = {
   displayName: {
     required: true,
     message: '표시 이름을 입력해주세요',
-    trigger: ['blur', 'input']
+    trigger: ['blur', 'input'],
   },
   website: {
     pattern: /^https?:\/\/.+/,
     message: '올바른 URL 형식을 입력해주세요 (http:// 또는 https://)',
-    trigger: ['blur']
-  }
+    trigger: ['blur'],
+  },
 }
 
 // 옵션 데이터
@@ -401,20 +401,20 @@ const timezoneOptions = [
   { label: 'America/New_York (GMT-5)', value: 'America/New_York' },
   { label: 'Europe/London (GMT+0)', value: 'Europe/London' },
   { label: 'Asia/Tokyo (GMT+9)', value: 'Asia/Tokyo' },
-  { label: 'Australia/Sydney (GMT+11)', value: 'Australia/Sydney' }
+  { label: 'Australia/Sydney (GMT+11)', value: 'Australia/Sydney' },
 ]
 
 const languageOptions = [
   { label: '한국어', value: 'ko' },
   { label: 'English', value: 'en' },
   { label: '日本語', value: 'ja' },
-  { label: '中文', value: 'zh' }
+  { label: '中文', value: 'zh' },
 ]
 
 // 계산된 속성
 const hasChanges = computed(() => {
   if (!originalProfile.value) return false
-  
+
   const original = originalProfile.value
   return (
     basicForm.displayName !== original.displayName ||
@@ -438,14 +438,14 @@ const loadProfileData = async () => {
     const [profileData, notificationData, privacyData] = await Promise.all([
       profileApi.getProfile(),
       profileApi.getNotificationSettings(),
-      profileApi.getPrivacySettings()
+      profileApi.getPrivacySettings(),
     ])
-    
+
     profile.value = profileData
     originalProfile.value = { ...profileData }
     notificationSettings.value = notificationData
     privacySettings.value = privacyData
-    
+
     // 폼에 데이터 설정
     Object.assign(basicForm, {
       displayName: profileData.displayName || '',
@@ -458,14 +458,14 @@ const loadProfileData = async () => {
       location: profileData.location || '',
       timezone: profileData.timezone || 'Asia/Seoul',
       language: profileData.language || 'ko',
-      theme: profileData.theme || 'auto'
+      theme: profileData.theme || 'auto',
     })
-    
+
     // 생년월일 설정
     if (profileData.birthDate) {
       birthDateValue.value = new Date(profileData.birthDate).getTime()
     }
-    
+
   } catch (error) {
     console.error('프로파일 데이터 로드 실패:', error)
     message.error('프로파일 정보를 불러오는데 실패했습니다')
@@ -476,7 +476,7 @@ const loadProfileData = async () => {
 
 const autoSave = async (section: string) => {
   if (!hasChanges.value) return
-  
+
   try {
     // 기본 정보 자동 저장
     if (section === 'basic') {
@@ -484,13 +484,13 @@ const autoSave = async (section: string) => {
       const updatedProfile = await profileApi.updateProfile(basicForm)
       profile.value = updatedProfile
       originalProfile.value = { ...updatedProfile }
-      
+
       // 사용자 스토어 업데이트
       userStore.updateUser({
         displayName: updatedProfile.displayName,
-        avatar: updatedProfile.avatar
+        avatar: updatedProfile.avatar,
       })
-      
+
       message.success('변경사항이 자동으로 저장되었습니다', { duration: 2000 })
     }
   } catch (error) {
@@ -502,20 +502,20 @@ const autoSave = async (section: string) => {
 const saveAllChanges = async () => {
   saving.value = true
   loadingBar.start()
-  
+
   try {
     await basicFormRef.value?.validate()
-    
+
     const updatedProfile = await profileApi.updateProfile(basicForm)
     profile.value = updatedProfile
     originalProfile.value = { ...updatedProfile }
-    
+
     // 사용자 스토어 업데이트
     userStore.updateUser({
       displayName: updatedProfile.displayName,
-      avatar: updatedProfile.avatar
+      avatar: updatedProfile.avatar,
     })
-    
+
     message.success('모든 변경사항이 저장되었습니다')
     loadingBar.finish()
   } catch (error) {
@@ -546,9 +546,9 @@ const discardChanges = () => {
           location: originalProfile.value.location || '',
           timezone: originalProfile.value.timezone || 'Asia/Seoul',
           language: originalProfile.value.language || 'ko',
-          theme: originalProfile.value.theme || 'auto'
+          theme: originalProfile.value.theme || 'auto',
         })
-        
+
         if (originalProfile.value.birthDate) {
           birthDateValue.value = new Date(originalProfile.value.birthDate).getTime()
         } else {
@@ -556,7 +556,7 @@ const discardChanges = () => {
         }
       }
       message.info('변경사항이 취소되었습니다')
-    }
+    },
   })
 }
 
@@ -573,16 +573,16 @@ const handleImageUpload = async (file: File, cropData?: any) => {
   uploadingImage.value = true
   try {
     const response = await profileApi.uploadProfileImage(file, cropData)
-    
+
     if (profile.value) {
       profile.value.avatar = response.imageUrl
     }
-    
+
     // 사용자 스토어 업데이트
     userStore.updateUser({
-      avatar: response.imageUrl
+      avatar: response.imageUrl,
     })
-    
+
     message.success('프로파일 이미지가 업데이트되었습니다')
   } catch (error) {
     console.error('이미지 업로드 실패:', error)
@@ -595,16 +595,16 @@ const handleImageUpload = async (file: File, cropData?: any) => {
 const handleImageDelete = async () => {
   try {
     await profileApi.deleteProfileImage()
-    
+
     if (profile.value) {
       profile.value.avatar = undefined
     }
-    
+
     // 사용자 스토어 업데이트
     userStore.updateUser({
-      avatar: undefined
+      avatar: undefined,
     })
-    
+
     message.success('프로파일 이미지가 삭제되었습니다')
   } catch (error) {
     console.error('이미지 삭제 실패:', error)
@@ -783,7 +783,7 @@ watch(activeTab, (newTab, oldTab) => {
         .n-space {
           :deep(.n-space-item) {
             flex: 1;
-            
+
             .n-button {
               width: 100%;
             }

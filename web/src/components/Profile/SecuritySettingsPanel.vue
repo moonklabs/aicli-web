@@ -30,13 +30,13 @@
         <n-card size="small">
           <template #header>
             <n-space align="center">
-              <n-icon size="20">
+              <NIcon size="20">
                 <Shield />
-              </n-icon>
+              </NIcon>
               <span>세션 및 로그인 보안</span>
             </n-space>
           </template>
-          
+
           <div class="session-security">
             <n-space vertical size="medium">
               <!-- 활성 세션 관리 -->
@@ -105,13 +105,13 @@
         <n-card size="small">
           <template #header>
             <n-space align="center">
-              <n-icon size="20">
+              <NIcon size="20">
                 <Lock />
-              </n-icon>
+              </NIcon>
               <span>계정 접근 제한</span>
             </n-space>
           </template>
-          
+
           <div class="access-restrictions">
             <n-space vertical size="medium">
               <!-- 동시 세션 제한 -->
@@ -198,13 +198,13 @@
         <n-card size="small">
           <template #header>
             <n-space align="center">
-              <n-icon size="20">
+              <NIcon size="20">
                 <Document />
-              </n-icon>
+              </NIcon>
               <span>보안 활동 로그</span>
             </n-space>
           </template>
-          
+
           <div class="activity-log">
             <n-space vertical size="medium">
               <!-- 로그인 기록 -->
@@ -287,24 +287,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, h } from 'vue'
+import { h, onMounted, reactive, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
-import { NTag, NIcon } from 'naive-ui'
+import { NIcon, NTag } from 'naive-ui'
 import {
-  ShieldSharp as Shield,
-  LockClosedSharp as Lock,
-  DocumentTextSharp as Document,
   TimeSharp as Clock,
+  PhonePortraitSharp as Device,
+  DocumentTextSharp as Document,
   LocationSharp as Location,
-  PhonePortraitSharp as Device
+  LockClosedSharp as Lock,
+  ShieldSharp as Shield,
 } from '@vicons/ionicons5'
 import { profileApi, sessionApi } from '@/api/services'
 import { useUserStore } from '@/stores/user'
-import type { 
-  UserProfile, 
+import type {
   SessionSecuritySettings,
-  TwoFactorAuthSettings
+  TwoFactorAuthSettings,
+  UserProfile,
 } from '@/types/api'
 
 // 컴포넌트 import
@@ -317,7 +317,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -352,7 +352,7 @@ const securitySettings = reactive<SessionSecuritySettings>({
   notifyOnSuspiciousActivity: true,
   autoTerminateInactiveSessions: false,
   inactivityTimeoutMinutes: 60,
-  updatedAt: ''
+  updatedAt: '',
 })
 
 // 옵션 데이터
@@ -364,7 +364,7 @@ const sessionTimeoutOptions = [
   { label: '12시간', value: 720 },
   { label: '24시간', value: 1440 },
   { label: '1주일', value: 10080 },
-  { label: '1개월', value: 43200 }
+  { label: '1개월', value: 43200 },
 ]
 
 const inactivityTimeoutOptions = [
@@ -373,7 +373,7 @@ const inactivityTimeoutOptions = [
   { label: '1시간', value: 60 },
   { label: '2시간', value: 120 },
   { label: '4시간', value: 240 },
-  { label: '8시간', value: 480 }
+  { label: '8시간', value: 480 },
 ]
 
 // 테이블 컬럼 정의
@@ -384,12 +384,12 @@ const loginHistoryColumns = [
     width: 160,
     render: (row: any) => {
       return new Date(row.timestamp).toLocaleString('ko-KR')
-    }
+    },
   },
   {
     title: 'IP 주소',
     key: 'ipAddress',
-    width: 140
+    width: 140,
   },
   {
     title: '위치',
@@ -397,7 +397,7 @@ const loginHistoryColumns = [
     width: 160,
     render: (row: any) => {
       return row.location || '알 수 없음'
-    }
+    },
   },
   {
     title: '기기',
@@ -405,7 +405,7 @@ const loginHistoryColumns = [
     width: 200,
     render: (row: any) => {
       return h(NTag, { size: 'small' }, { default: () => row.device })
-    }
+    },
   },
   {
     title: '상태',
@@ -414,8 +414,8 @@ const loginHistoryColumns = [
     render: (row: any) => {
       const type = row.status === 'success' ? 'success' : 'error'
       return h(NTag, { type, size: 'small' }, { default: () => row.status })
-    }
-  }
+    },
+  },
 ]
 
 const activityLogColumns = [
@@ -425,23 +425,23 @@ const activityLogColumns = [
     width: 160,
     render: (row: any) => {
       return new Date(row.timestamp).toLocaleString('ko-KR')
-    }
+    },
   },
   {
     title: '활동',
     key: 'activity',
-    width: 200
+    width: 200,
   },
   {
     title: '설명',
     key: 'description',
-    minWidth: 250
+    minWidth: 250,
   },
   {
     title: 'IP',
     key: 'ipAddress',
-    width: 140
-  }
+    width: 140,
+  },
 ]
 
 // 페이지네이션
@@ -454,7 +454,7 @@ const loginHistoryPagination = reactive({
   onUpdatePage: (page: number) => {
     loginHistoryPagination.page = page
     loadLoginHistory()
-  }
+  },
 })
 
 const activityLogPagination = reactive({
@@ -466,7 +466,7 @@ const activityLogPagination = reactive({
   onUpdatePage: (page: number) => {
     activityLogPagination.page = page
     loadActivityLog()
-  }
+  },
 })
 
 // 메서드
@@ -521,7 +521,7 @@ const loadLoginHistory = async () => {
   try {
     const response = await profileApi.getLoginHistory({
       page: loginHistoryPagination.page,
-      limit: loginHistoryPagination.pageSize
+      limit: loginHistoryPagination.pageSize,
     })
     loginHistory.value = response.items
     loginHistoryPagination.itemCount = response.total
@@ -538,7 +538,7 @@ const loadActivityLog = async () => {
   try {
     const response = await profileApi.getActivityLog({
       page: activityLogPagination.page,
-      limit: activityLogPagination.pageSize
+      limit: activityLogPagination.pageSize,
     })
     activityLog.value = response.items
     activityLogPagination.itemCount = response.total
@@ -575,7 +575,7 @@ const handleTwoFactorDisabled = () => {
 onMounted(async () => {
   await Promise.all([
     loadProfile(),
-    loadSecuritySettings()
+    loadSecuritySettings(),
   ])
 })
 </script>

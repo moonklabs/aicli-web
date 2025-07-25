@@ -2,8 +2,8 @@
   <Teleport to="body">
     <!-- 오프라인 배너 -->
     <Transition name="offline-banner">
-      <div 
-        v-if="!isOnline" 
+      <div
+        v-if="!isOnline"
         class="fixed top-0 left-0 right-0 z-40 bg-red-500 text-white py-2 px-4 text-center text-sm font-medium shadow-lg"
       >
         <div class="flex items-center justify-center gap-2">
@@ -23,12 +23,12 @@
 
     <!-- 오프라인 오버레이 (중요한 기능 차단시) -->
     <Transition name="offline-overlay">
-      <div 
-        v-if="showOfflineOverlay" 
+      <div
+        v-if="showOfflineOverlay"
         class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
         @click="showOfflineOverlay = false"
       >
-        <div 
+        <div
           class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 text-center"
           @click.stop
         >
@@ -122,8 +122,8 @@
 
     <!-- 네트워크 복구 알림 -->
     <Transition name="reconnected-toast">
-      <div 
-        v-if="showReconnected" 
+      <div
+        v-if="showReconnected"
         class="fixed bottom-4 right-4 z-50 bg-green-500 text-white py-3 px-4 rounded-lg shadow-lg flex items-center gap-2"
       >
         <Icon name="mdi:wifi" size="16" />
@@ -134,17 +134,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { useGlobalErrorNotification } from '@/composables/useErrorNotification'
 
-const { 
-  isOnline, 
-  lastOnlineTime, 
-  lastOfflineTime, 
+const {
+  isOnline,
+  lastOnlineTime,
+  lastOfflineTime,
   pendingRequests,
-  forceReconnect 
+  forceReconnect,
 } = useNetworkStatus()
 
 const { showSuccess } = useGlobalErrorNotification()
@@ -157,14 +157,14 @@ const wasOffline = ref(false)
 // 마지막 온라인 시간 포맷팅
 const formatLastOnlineTime = computed(() => {
   if (!lastOnlineTime.value) return '알 수 없음'
-  
+
   const now = new Date()
   const diff = now.getTime() - lastOnlineTime.value.getTime()
-  
+
   if (diff < 60000) return '방금 전'
   if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`
-  
+
   return lastOnlineTime.value.toLocaleDateString()
 })
 
@@ -197,9 +197,9 @@ watch(isOnline, (online) => {
     wasOffline.value = false
     showReconnected.value = true
     showOfflineOverlay.value = false
-    
+
     console.log('🌐 Network reconnected')
-    
+
     // 복구 알림 자동 숨김
     setTimeout(() => {
       showReconnected.value = false
@@ -226,7 +226,7 @@ onMounted(() => {
 // 컴포넌트에서 직접 호출할 수 있도록 expose
 defineExpose({
   showOfflineModal,
-  checkConnection
+  checkConnection,
 })
 </script>
 

@@ -3,15 +3,15 @@
     <div class="setup-header">
       <h4>2단계 인증 (2FA)</h4>
       <p class="setup-description">
-        계정 보안을 강화하기 위해 2단계 인증을 설정하세요. 
+        계정 보안을 강화하기 위해 2단계 인증을 설정하세요.
         Google Authenticator, Authy 등의 앱을 사용할 수 있습니다.
       </p>
     </div>
 
     <!-- 2FA 상태 표시 -->
     <div class="status-section">
-      <n-alert 
-        :type="settings?.enabled ? 'success' : 'warning'" 
+      <n-alert
+        :type="settings?.enabled ? 'success' : 'warning'"
         :show-icon="true"
       >
         <template #header>
@@ -93,7 +93,7 @@
         <div v-if="currentStep === 2" class="step-content">
           <h5>2단계: QR 코드 스캔</h5>
           <p>인증 앱으로 아래 QR 코드를 스캔하세요:</p>
-          
+
           <div class="qr-section">
             <div class="qr-code">
               <div v-if="settings?.qrCodeUrl" class="qr-image">
@@ -104,7 +104,7 @@
                 <p>QR 코드 생성 중...</p>
               </div>
             </div>
-            
+
             <div class="manual-setup">
               <n-collapse>
                 <n-collapse-item title="수동 설정 (QR 코드를 스캔할 수 없는 경우)">
@@ -146,7 +146,7 @@
         <div v-if="currentStep === 3" class="step-content">
           <h5>3단계: 인증 코드 확인</h5>
           <p>인증 앱에서 생성된 6자리 코드를 입력하세요:</p>
-          
+
           <div class="verification-form">
             <n-form
               ref="verificationFormRef"
@@ -164,7 +164,7 @@
                 />
               </n-form-item>
             </n-form>
-            
+
             <div class="verification-help">
               <n-alert type="info" :show-icon="false">
                 <p>인증 코드는 30초마다 변경됩니다. 새로운 코드를 기다려도 됩니다.</p>
@@ -199,7 +199,7 @@
           <div class="backup-codes-section">
             <h6>백업 코드</h6>
             <p>인증 앱에 접근할 수 없을 때 사용할 수 있는 일회용 백업 코드입니다. 안전한 곳에 보관하세요.</p>
-            
+
             <div class="backup-codes">
               <div class="codes-grid">
                 <div
@@ -210,7 +210,7 @@
                   {{ code }}
                 </div>
               </div>
-              
+
               <div class="codes-actions">
                 <n-space>
                   <n-button
@@ -313,7 +313,7 @@
           <template #header>경고</template>
           <p>2단계 인증을 비활성화하면 계정 보안이 크게 약해집니다.</p>
         </n-alert>
-        
+
         <n-form
           ref="disableFormRef"
           :model="disableForm"
@@ -370,7 +370,7 @@
               {{ code }}
             </div>
           </div>
-          
+
           <div class="codes-actions">
             <n-space>
               <n-button
@@ -409,15 +409,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
-  ShieldSharp as Shield,
-  KeySharp as Key,
-  PhonePortraitSharp as Smartphone,
   CopySharp as Copy,
   DownloadSharp as Download,
-  WarningSharp as Warning
+  KeySharp as Key,
+  ShieldSharp as Shield,
+  PhonePortraitSharp as Smartphone,
+  WarningSharp as Warning,
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 import { useUserStore } from '@/stores/user'
@@ -452,11 +452,11 @@ const disableFormRef = ref()
 
 // 폼 데이터
 const verificationForm = reactive({
-  token: ''
+  token: '',
 })
 
 const disableForm = reactive({
-  token: ''
+  token: '',
 })
 
 // 폼 검증 규칙
@@ -466,16 +466,16 @@ const verificationRules = {
     len: 6,
     pattern: /^\d{6}$/,
     message: '6자리 숫자를 입력해주세요',
-    trigger: ['blur', 'input']
-  }
+    trigger: ['blur', 'input'],
+  },
 }
 
 const disableRules = {
   token: {
     required: true,
     message: '인증 코드 또는 백업 코드를 입력해주세요',
-    trigger: ['blur', 'input']
-  }
+    trigger: ['blur', 'input'],
+  },
 }
 
 // 계산된 속성
@@ -531,15 +531,15 @@ const copySecret = async () => {
 const verifyToken = async () => {
   try {
     await verificationFormRef.value?.validate()
-    
+
     verifying.value = true
     settings.value = await profileApi.enableTwoFactor({
-      token: verificationForm.token
+      token: verificationForm.token,
     })
-    
+
     currentStep.value = 4
     message.success('2단계 인증이 활성화되었습니다')
-    
+
   } catch (error: any) {
     console.error('토큰 검증 실패:', error)
     message.error(error.message || '인증 코드가 올바르지 않습니다')
@@ -572,20 +572,20 @@ const regenerateBackupCodes = async () => {
 const disableTwoFactor = async () => {
   try {
     await disableFormRef.value?.validate()
-    
+
     disabling.value = true
     await profileApi.disableTwoFactor(disableForm.token)
-    
+
     settings.value = {
       enabled: false,
-      setupComplete: false
+      setupComplete: false,
     }
-    
+
     showDisableModal.value = false
     disableForm.token = ''
     message.success('2단계 인증이 비활성화되었습니다')
     emit('disabled')
-    
+
   } catch (error: any) {
     console.error('2FA 비활성화 실패:', error)
     message.error(error.message || '2FA 비활성화에 실패했습니다')
@@ -644,7 +644,7 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -933,10 +933,10 @@ onMounted(() => {
               .codes-actions {
                 .n-space {
                   width: 100%;
-                  
+
                   :deep(.n-space-item) {
                     flex: 1;
-                    
+
                     .n-button {
                       width: 100%;
                     }
@@ -949,10 +949,10 @@ onMounted(() => {
           .step-actions {
             .n-space {
               width: 100%;
-              
+
               :deep(.n-space-item) {
                 flex: 1;
-                
+
                 .n-button {
                   width: 100%;
                 }

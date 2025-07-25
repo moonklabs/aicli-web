@@ -7,7 +7,7 @@ export function createMockAdapter(defaultAdapter: AxiosAdapter): AxiosAdapter {
     // 개발 환경이고 Mock API가 활성화된 경우
     if (import.meta.env.DEV && mockApiMatcher.isActive()) {
       const mockResponse = await mockApiMatcher.matchRequest(config)
-      
+
       if (mockResponse) {
         console.log(`🎭 Mock API Response: ${config.method?.toUpperCase()} ${config.url}`, mockResponse)
         return mockResponse
@@ -24,7 +24,7 @@ export function setupMockApi(axios: any): void {
   if (import.meta.env.DEV) {
     const originalAdapter = axios.defaults.adapter
     axios.defaults.adapter = createMockAdapter(originalAdapter)
-    
+
     console.log('🎭 Mock API adapter installed')
   }
 }

@@ -19,7 +19,7 @@
               <span>이메일 알림</span>
             </n-space>
           </template>
-          
+
           <div class="notification-section">
             <n-space vertical size="medium">
               <div class="notification-item">
@@ -103,7 +103,7 @@
               </n-tag>
             </n-space>
           </template>
-          
+
           <div class="notification-section">
             <n-space vertical size="medium">
               <!-- 푸시 알림 활성화 -->
@@ -165,8 +165,8 @@
 
               <!-- 푸시 알림 권한 상태 표시 -->
               <div v-if="pushNotificationSupported" class="permission-status">
-                <n-alert 
-                  :type="permissionAlertType" 
+                <n-alert
+                  :type="permissionAlertType"
                   :show-icon="true"
                   size="small"
                 >
@@ -195,7 +195,7 @@
               <span>SMS 알림</span>
             </n-space>
           </template>
-          
+
           <div class="notification-section">
             <n-space vertical size="medium">
               <!-- SMS 알림 활성화 -->
@@ -273,7 +273,7 @@
               <span>알림 시간 설정</span>
             </n-space>
           </template>
-          
+
           <div class="notification-section">
             <n-space vertical size="medium">
               <div class="notification-item">
@@ -326,7 +326,7 @@
             <span>알림 테스트</span>
           </n-space>
         </template>
-        
+
         <div class="test-section">
           <p>설정한 알림이 정상적으로 작동하는지 테스트해볼 수 있습니다.</p>
           <n-space>
@@ -341,7 +341,7 @@
               </template>
               테스트 이메일 발송
             </n-button>
-            
+
             <n-button
               v-if="localSettings.pushNotifications.enabled"
               type="primary"
@@ -354,7 +354,7 @@
               </template>
               테스트 푸시 알림
             </n-button>
-            
+
             <n-button
               v-if="localSettings.smsNotifications.enabled && phoneVerified"
               type="primary"
@@ -375,15 +375,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import {
+  ChatbubbleSharp as ChatBubble,
+  FlaskSharp as Flask,
   MailSharp as Mail,
   NotificationsSharp as Notifications,
-  ChatbubbleSharp as ChatBubble,
   TimeSharp as Time,
-  FlaskSharp as Flask
 } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
 import { useUserStore } from '@/stores/user'
@@ -396,7 +396,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -427,20 +427,20 @@ const localSettings = reactive<NotificationSettings>({
     securityAlerts: true,
     workspaceUpdates: true,
     systemUpdates: true,
-    promotionalEmails: false
+    promotionalEmails: false,
   },
   pushNotifications: {
     enabled: false,
     securityAlerts: true,
     workspaceUpdates: false,
-    directMessages: true
+    directMessages: true,
   },
   smsNotifications: {
     enabled: false,
     securityAlerts: true,
-    criticalUpdates: true
+    criticalUpdates: true,
   },
-  updatedAt: ''
+  updatedAt: '',
 })
 
 // 계산된 속성
@@ -477,7 +477,7 @@ const checkNotificationPermission = () => {
 
 const requestNotificationPermission = async () => {
   if (!pushNotificationSupported.value) return false
-  
+
   requesting.value = true
   try {
     const permission = await Notification.requestPermission()
@@ -500,7 +500,7 @@ const handlePushNotificationToggle = async (enabled: boolean) => {
       return
     }
   }
-  
+
   handleSettingChange()
 }
 
@@ -516,9 +516,9 @@ const updateSettings = () => {
   const updateData: UpdateNotificationSettingsRequest = {
     emailNotifications: { ...localSettings.emailNotifications },
     pushNotifications: { ...localSettings.pushNotifications },
-    smsNotifications: { ...localSettings.smsNotifications }
+    smsNotifications: { ...localSettings.smsNotifications },
   }
-  
+
   emit('update', updateData)
 }
 
@@ -536,7 +536,7 @@ const handleTimeChange = () => {
   // 실제 구현에서는 시간 변경을 서버에 저장해야 함
   console.log('방해 금지 시간 변경:', {
     start: doNotDisturbStart.value,
-    end: doNotDisturbEnd.value
+    end: doNotDisturbEnd.value,
   })
 }
 
@@ -563,14 +563,14 @@ const sendTestPushNotification = async () => {
     message.error('푸시 알림 권한이 필요합니다')
     return
   }
-  
+
   sendingTestPush.value = true
   try {
     // 브라우저 푸시 알림 테스트
     new Notification('AICLI 테스트 알림', {
       body: '푸시 알림 설정이 정상적으로 작동하고 있습니다.',
       icon: '/favicon.ico',
-      badge: '/favicon.ico'
+      badge: '/favicon.ico',
     })
     message.success('테스트 푸시 알림이 발송되었습니다')
   } catch (error) {
@@ -744,7 +744,7 @@ declare global {
       .test-section {
         .n-space {
           flex-direction: column;
-          
+
           :deep(.n-space-item) {
             .n-button {
               width: 100%;

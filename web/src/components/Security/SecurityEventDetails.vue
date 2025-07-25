@@ -1,45 +1,45 @@
 <template>
   <div class="security-event-details">
-    <n-descriptions :column="2" bordered>
+    <NDescriptions :column="2" bordered>
       <!-- 기본 정보 -->
-      <n-descriptions-item label="이벤트 ID">
+      <NDescriptionsItem label="이벤트 ID">
         <code class="event-id">{{ event.id }}</code>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="발생 시간">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="발생 시간">
         {{ formatDateTime(event.createdAt) }}
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="심각도">
-        <n-tag :type="getSeverityType(event.severity)" size="small">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="심각도">
+        <NTag :type="getSeverityType(event.severity)" size="small">
           {{ getSeverityText(event.severity) }}
-        </n-tag>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="이벤트 유형">
+        </NTag>
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="이벤트 유형">
         <div class="event-type">
-          <n-icon :component="getEventIcon()" style="margin-right: 4px" />
+          <NIcon :component="getEventIcon()" style="margin-right: 4px" />
           {{ getEventTypeText() }}
         </div>
-      </n-descriptions-item>
-      
+      </NDescriptionsItem>
+
       <!-- 네트워크 정보 -->
-      <n-descriptions-item label="IP 주소">
+      <NDescriptionsItem label="IP 주소">
         <code class="ip-address">{{ event.ipAddress }}</code>
-      </n-descriptions-item>
-      
-      <n-descriptions-item label="위치" v-if="getLocationText()">
+      </NDescriptionsItem>
+
+      <NDescriptionsItem label="위치" v-if="getLocationText()">
         <div class="location-info">
-          <n-icon :component="MapPin" size="14" style="margin-right: 4px" />
+          <NIcon :component="MapPin" size="14" style="margin-right: 4px" />
           {{ getLocationText() }}
         </div>
-      </n-descriptions-item>
-      
+      </NDescriptionsItem>
+
       <!-- 의심스러운 활동 전용 필드 -->
       <template v-if="isActivityType(event)">
-        <n-descriptions-item label="위험도 점수">
+        <NDescriptionsItem label="위험도 점수">
           <div class="risk-score">
-            <n-progress
+            <NProgress
               type="line"
               :percentage="event.riskScore"
               :color="getRiskColor(event.riskScore)"
@@ -49,35 +49,35 @@
             />
             <span class="score-text">{{ event.riskScore }}/100</span>
           </div>
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="활동 유형">
-          <n-tag type="warning" size="small">
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="활동 유형">
+          <NTag type="warning" size="small">
             {{ getActivityTypeText(event.activityType) }}
-          </n-tag>
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="위험 지표" span="2" v-if="event.indicators.length > 0">
-          <n-space>
-            <n-tag 
-              v-for="indicator in event.indicators" 
+          </NTag>
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="위험 지표" span="2" v-if="event.indicators.length > 0">
+          <NSpace>
+            <NTag
+              v-for="indicator in event.indicators"
               :key="indicator"
               size="small"
               type="error"
               bordered
             >
               {{ indicator }}
-            </n-tag>
-          </n-space>
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="해결 상태">
-          <n-tag :type="event.isResolved ? 'success' : 'error'" size="small">
+            </NTag>
+          </NSpace>
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="해결 상태">
+          <NTag :type="event.isResolved ? 'success' : 'error'" size="small">
             {{ event.isResolved ? '해결됨' : '미해결' }}
-          </n-tag>
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="해결 정보" v-if="event.isResolved">
+          </NTag>
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="해결 정보" v-if="event.isResolved">
           <div class="resolution-info">
             <div>해결일시: {{ formatDateTime(event.resolvedAt) }}</div>
             <div v-if="event.resolvedBy">해결자: {{ event.resolvedBy }}</div>
@@ -85,96 +85,96 @@
               {{ event.resolution }}
             </div>
           </div>
-        </n-descriptions-item>
+        </NDescriptionsItem>
       </template>
-      
+
       <!-- 세션 보안 이벤트 전용 필드 -->
       <template v-if="isSecurityEventType(event)">
-        <n-descriptions-item label="사용자 ID">
+        <NDescriptionsItem label="사용자 ID">
           <code>{{ event.userId }}</code>
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="세션 ID" v-if="event.sessionId">
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="세션 ID" v-if="event.sessionId">
           <code>{{ event.sessionId }}</code>
-        </n-descriptions-item>
+        </NDescriptionsItem>
       </template>
-      
-      <n-descriptions-item label="User Agent" span="2">
+
+      <NDescriptionsItem label="User Agent" span="2">
         <code class="user-agent">{{ event.userAgent }}</code>
-      </n-descriptions-item>
-    </n-descriptions>
+      </NDescriptionsItem>
+    </NDescriptions>
 
     <!-- 이벤트 설명 -->
-    <n-divider>이벤트 설명</n-divider>
+    <NDivider>이벤트 설명</NDivider>
     <div class="event-description">
       <p>{{ event.description || getDefaultDescription() }}</p>
     </div>
 
     <!-- 메타데이터 -->
     <div class="metadata-section" v-if="event.metadata && Object.keys(event.metadata).length > 0">
-      <n-divider>추가 정보</n-divider>
-      <n-collapse>
-        <n-collapse-item title="메타데이터" name="metadata">
+      <NDivider>추가 정보</NDivider>
+      <NCollapse>
+        <NCollapseItem title="메타데이터" name="metadata">
           <pre class="metadata-content">{{ JSON.stringify(event.metadata, null, 2) }}</pre>
-        </n-collapse-item>
-      </n-collapse>
+        </NCollapseItem>
+      </NCollapse>
     </div>
 
     <!-- 위치 정보 상세 (있는 경우) -->
     <div class="location-section" v-if="hasDetailedLocation()">
-      <n-divider>위치 정보</n-divider>
-      <n-descriptions :column="2" bordered>
-        <n-descriptions-item label="국가" v-if="getLocation()?.country">
+      <NDivider>위치 정보</NDivider>
+      <NDescriptions :column="2" bordered>
+        <NDescriptionsItem label="국가" v-if="getLocation()?.country">
           {{ getLocation()?.country }}
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="도시" v-if="getLocation()?.city">
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="도시" v-if="getLocation()?.city">
           {{ getLocation()?.city }}
-        </n-descriptions-item>
-        
-        <n-descriptions-item label="시간대" v-if="getLocation()?.timezone">
+        </NDescriptionsItem>
+
+        <NDescriptionsItem label="시간대" v-if="getLocation()?.timezone">
           {{ getLocation()?.timezone }}
-        </n-descriptions-item>
-      </n-descriptions>
+        </NDescriptionsItem>
+      </NDescriptions>
     </div>
 
     <!-- 권장 조치 -->
     <div class="recommendations-section" v-if="getRecommendations().length > 0">
-      <n-divider>권장 조치</n-divider>
-      <n-alert type="info" style="margin-bottom: 16px">
+      <NDivider>권장 조치</NDivider>
+      <NAlert type="info" style="margin-bottom: 16px">
         <ul class="recommendations-list">
           <li v-for="recommendation in getRecommendations()" :key="recommendation">
             {{ recommendation }}
           </li>
         </ul>
-      </n-alert>
+      </NAlert>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { 
-  NDescriptions, 
-  NDescriptionsItem, 
-  NTag, 
-  NProgress, 
-  NIcon, 
-  NDivider,
-  NSpace,
+import {
+  NAlert,
   NCollapse,
   NCollapseItem,
-  NAlert
+  NDescriptions,
+  NDescriptionsItem,
+  NDivider,
+  NIcon,
+  NProgress,
+  NSpace,
+  NTag,
 } from 'naive-ui'
-import { 
-  MapPin, 
-  AlertTriangle, 
-  Shield, 
-  Lock, 
+import {
+  AlertTriangle,
   DeviceDesktop,
+  ExclamationCircle,
+  Lock,
   Login,
   Logout,
-  ExclamationCircle
+  MapPin,
+  Shield,
 } from '@vicons/tabler'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -206,7 +206,7 @@ const getSeverityType = (severity: string) => {
     low: 'success',
     medium: 'warning',
     high: 'error',
-    critical: 'error'
+    critical: 'error',
   }
   return typeMap[severity] || 'default'
 }
@@ -216,7 +216,7 @@ const getSeverityText = (severity: string) => {
     low: '낮음',
     medium: '보통',
     high: '높음',
-    critical: '매우 높음'
+    critical: '매우 높음',
   }
   return textMap[severity] || severity
 }
@@ -229,18 +229,18 @@ const getEventIcon = () => {
       brute_force: AlertTriangle,
       credential_stuffing: Lock,
       account_takeover: ExclamationCircle,
-      privilege_escalation: Shield
+      privilege_escalation: Shield,
     }
     return iconMap[props.event.activityType] || AlertTriangle
   }
-  
+
   const iconMap = {
     login: Login,
     logout: Logout,
     suspicious_activity: AlertTriangle,
     password_change: Lock,
     device_change: DeviceDesktop,
-    location_change: MapPin
+    location_change: MapPin,
   }
   return iconMap[props.event.eventType] || Shield
 }
@@ -249,14 +249,14 @@ const getEventTypeText = () => {
   if (isActivityType(props.event)) {
     return getActivityTypeText(props.event.activityType)
   }
-  
+
   const typeMap = {
     login: '로그인',
     logout: '로그아웃',
     suspicious_activity: '의심스러운 활동',
     password_change: '패스워드 변경',
     device_change: '디바이스 변경',
-    location_change: '위치 변경'
+    location_change: '위치 변경',
   }
   return typeMap[props.event.eventType] || '보안 이벤트'
 }
@@ -268,7 +268,7 @@ const getActivityTypeText = (activityType: string) => {
     brute_force: '무차별 대입 공격',
     credential_stuffing: '크리덴셜 스터핑',
     account_takeover: '계정 탈취',
-    privilege_escalation: '권한 상승'
+    privilege_escalation: '권한 상승',
   }
   return typeMap[activityType] || activityType
 }
@@ -307,10 +307,10 @@ const getDefaultDescription = () => {
 
 const getRecommendations = () => {
   const recommendations: string[] = []
-  
+
   if (isActivityType(props.event)) {
     const activity = props.event
-    
+
     switch (activity.activityType) {
       case 'unusual_location':
         recommendations.push('새로운 위치에서의 접근이 본인이 맞는지 확인하세요')
@@ -341,19 +341,19 @@ const getRecommendations = () => {
         recommendations.push('불법적인 권한 상승이라면 즉시 관리자에게 신고하세요')
         break
     }
-    
+
     if (activity.riskScore >= 80) {
       recommendations.unshift('⚠️ 위험도가 매우 높습니다. 즉시 조치가 필요합니다.')
     }
   } else {
     const event = props.event
-    
+
     if (event.severity === 'critical' || event.severity === 'high') {
       recommendations.push('이 이벤트는 심각한 보안 위험을 나타낼 수 있습니다')
       recommendations.push('추가 조사 및 모니터링이 필요합니다')
     }
   }
-  
+
   return recommendations
 }
 </script>

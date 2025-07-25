@@ -1,5 +1,5 @@
-import { ref, computed, watch, type Ref } from 'vue'
-import type { AxiosResponse, AxiosError } from 'axios'
+import { type Ref, computed, ref, watch } from 'vue'
+import type { AxiosError, AxiosResponse } from 'axios'
 
 export interface LoadingState {
   isLoading: boolean
@@ -38,7 +38,7 @@ export function useApiLoading(key?: string) {
     progress: 0,
     startTime: null,
     duration: 0,
-    retryCount: 0
+    retryCount: 0,
   })
 
   // 계산된 속성들
@@ -56,9 +56,9 @@ export function useApiLoading(key?: string) {
       progress: 0,
       startTime: Date.now(),
       duration: 0,
-      retryCount: 0
+      retryCount: 0,
     }
-    
+
     if (message) {
       loadingMessage.value = message
     }
@@ -71,7 +71,7 @@ export function useApiLoading(key?: string) {
   const updateProgress = (newProgress: number) => {
     if (loadingState.value.isLoading) {
       loadingState.value.progress = Math.max(0, Math.min(100, newProgress))
-      
+
       // 전역 상태 업데이트
       const globalState = globalLoadingStates.value.get(uniqueKey)
       if (globalState) {
@@ -83,7 +83,7 @@ export function useApiLoading(key?: string) {
   // 재시도 카운트 증가
   const incrementRetry = () => {
     loadingState.value.retryCount += 1
-    
+
     // 전역 상태 업데이트
     const globalState = globalLoadingStates.value.get(uniqueKey)
     if (globalState) {
@@ -94,11 +94,11 @@ export function useApiLoading(key?: string) {
   // 로딩 완료
   const finishLoading = (error?: string | Error | null) => {
     const endTime = Date.now()
-    
+
     loadingState.value.isLoading = false
-    loadingState.value.duration = loadingState.value.startTime ? 
+    loadingState.value.duration = loadingState.value.startTime ?
       endTime - loadingState.value.startTime : 0
-    
+
     if (error) {
       const errorStr = error instanceof Error ? error.message : error
       loadingState.value.error = errorStr
@@ -116,7 +116,7 @@ export function useApiLoading(key?: string) {
   // API 호출 래퍼
   const executeApi = async <T>(
     apiCall: () => Promise<AxiosResponse<T>>,
-    options: ApiCallOptions = {}
+    options: ApiCallOptions = {},
   ): Promise<T> => {
     const {
       loadingMessage: message,
@@ -125,7 +125,7 @@ export function useApiLoading(key?: string) {
       timeout = 30000,
       retryCount: maxRetries = 0,
       onProgress,
-      onRetry
+      onRetry,
     } = options
 
     startLoading(message)
@@ -133,7 +133,7 @@ export function useApiLoading(key?: string) {
     try {
       // 진행률 시뮬레이션 (showProgress가 true인 경우)
       let progressInterval: NodeJS.Timeout | null = null
-      
+
       if (showProgress) {
         let currentProgress = 0
         progressInterval = setInterval(() => {
@@ -160,7 +160,7 @@ export function useApiLoading(key?: string) {
           if (attempt > 0) {
             incrementRetry()
             onRetry?.(attempt)
-            
+
             // 재시도 전 대기 (exponential backoff)
             const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
             await new Promise(resolve => setTimeout(resolve, delay))
@@ -168,7 +168,7 @@ export function useApiLoading(key?: string) {
 
           const response = await Promise.race([
             apiCall(),
-            timeoutPromise
+            timeoutPromise,
           ])
 
           // 진행률 완료
@@ -186,7 +186,7 @@ export function useApiLoading(key?: string) {
         } catch (error) {
           lastError = error
           attempt++
-          
+
           if (attempt > maxRetries) {
             throw error
           }
@@ -200,7 +200,7 @@ export function useApiLoading(key?: string) {
       }
 
       let errorMsg = customErrorMessage || 'API 호출 중 오류가 발생했습니다'
-      
+
       if (error instanceof Error) {
         if (error.message.includes('timeout')) {
           errorMsg = '요청 시간이 초과되었습니다'
@@ -224,11 +224,11 @@ export function useApiLoading(key?: string) {
       progress: 0,
       startTime: null,
       duration: 0,
-      retryCount: 0
+      retryCount: 0,
     }
     loadingMessage.value = ''
     errorMessage.value = ''
-    
+
     // 전역 상태에서도 제거
     globalLoadingStates.value.delete(uniqueKey)
   }
@@ -236,7 +236,7 @@ export function useApiLoading(key?: string) {
   // 여러 API 호출 병렬 처리
   const executeParallel = async <T>(
     apiCalls: Array<() => Promise<AxiosResponse<T>>>,
-    options: ApiCallOptions = {}
+    options: ApiCallOptions = {},
   ): Promise<T[]> => {
     startLoading(options.loadingMessage || '병렬 API 호출 중...')
 
@@ -289,7 +289,7 @@ export function useApiLoading(key?: string) {
     reset,
 
     // 원시 상태 (필요한 경우)
-    loadingState: computed(() => loadingState.value)
+    loadingState: computed(() => loadingState.value),
   }
 }
 
@@ -299,13 +299,13 @@ export function useGlobalLoading() {
     globalLoadingCount,
     globalLoadingStates: computed(() => globalLoadingStates.value),
     isGlobalLoading: computed(() => globalLoadingCount.value > 0),
-    
+
     clearAllLoading: () => {
       globalLoadingStates.value.clear()
     },
-    
+
     getLoadingByKey: (key: string) => {
       return globalLoadingStates.value.get(key)
-    }
+    },
   }
 }

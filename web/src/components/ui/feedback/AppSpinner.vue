@@ -41,7 +41,7 @@
           />
         </svg>
       </div>
-      
+
       <div
         v-if="description"
         class="app-spinner__description"
@@ -54,8 +54,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type CSSProperties } from 'vue';
-import type { Size, ColorVariant } from '@/types/ui';
+import { type CSSProperties, computed } from 'vue'
+import type { ColorVariant, Size } from '@/types/ui'
 
 interface Props {
   size?: Size;
@@ -72,27 +72,27 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'primary',
   center: false,
   overlay: false,
-  strokeWidth: 3
-});
+  strokeWidth: 3,
+})
 
 // 크기별 설정
 const sizeConfig = {
   small: { size: 24, textSize: 'text-sm' },
   medium: { size: 32, textSize: 'text-base' },
-  large: { size: 48, textSize: 'text-lg' }
-};
+  large: { size: 48, textSize: 'text-lg' },
+}
 
-const currentSizeConfig = computed(() => sizeConfig[props.size]);
+const currentSizeConfig = computed(() => sizeConfig[props.size])
 
-const svgSize = computed(() => currentSizeConfig.value.size);
+const svgSize = computed(() => currentSizeConfig.value.size)
 
 const sizeClasses = computed(() => ({
   'app-spinner--small': props.size === 'small',
   'app-spinner--medium': props.size === 'medium',
-  'app-spinner--large': props.size === 'large'
-}));
+  'app-spinner--large': props.size === 'large',
+}))
 
-const textSizeClasses = computed(() => currentSizeConfig.value.textSize);
+const textSizeClasses = computed(() => currentSizeConfig.value.textSize)
 
 const variantClasses = computed(() => ({
   'app-spinner--default': props.variant === 'default',
@@ -101,104 +101,104 @@ const variantClasses = computed(() => ({
   'app-spinner--success': props.variant === 'success',
   'app-spinner--warning': props.variant === 'warning',
   'app-spinner--error': props.variant === 'error',
-  'app-spinner--info': props.variant === 'info'
-}));
+  'app-spinner--info': props.variant === 'info',
+}))
 
 const spinnerStyle = computed((): CSSProperties => {
-  const style: CSSProperties = {};
-  
+  const style: CSSProperties = {}
+
   if (props.color) {
-    style['--spinner-color'] = props.color;
+    style['--spinner-color'] = props.color
   }
-  
-  return style;
-});
+
+  return style
+})
 </script>
 
 <style lang="scss" scoped>
 .app-spinner {
   @apply inline-flex;
-  
+
   &--center {
     @apply flex items-center justify-center w-full h-full;
   }
-  
+
   &--overlay {
     @apply fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm;
     z-index: var(--z-overlay);
-    
+
     .app-spinner__wrapper {
       @apply flex flex-col items-center justify-center h-full;
     }
   }
-  
+
   &__wrapper {
     @apply flex flex-col items-center gap-3;
   }
-  
+
   &__circle {
     @apply relative inline-block;
   }
-  
+
   &__svg {
     @apply block;
     animation: spin 1.5s linear infinite;
   }
-  
+
   &__track {
     stroke: rgb(var(--gray-300) / 0.3);
   }
-  
+
   &__fill {
     stroke: var(--spinner-color, var(--primary-500));
     stroke-dasharray: 90, 150;
     stroke-dashoffset: 0;
     animation: stroke 1.5s ease-in-out infinite;
   }
-  
+
   &__description {
     @apply text-center font-medium;
     color: var(--text-secondary);
   }
-  
+
   // 크기별 스타일
   &--small {
     .app-spinner__wrapper {
       @apply gap-2;
     }
   }
-  
+
   &--large {
     .app-spinner__wrapper {
       @apply gap-4;
     }
   }
-  
+
   // 색상 변형
   &--primary .app-spinner__fill {
     stroke: var(--primary-500);
   }
-  
+
   &--secondary .app-spinner__fill {
     stroke: var(--gray-500);
   }
-  
+
   &--success .app-spinner__fill {
     stroke: var(--success-500);
   }
-  
+
   &--warning .app-spinner__fill {
     stroke: var(--warning-500);
   }
-  
+
   &--error .app-spinner__fill {
     stroke: var(--error-500);
   }
-  
+
   &--info .app-spinner__fill {
     stroke: var(--info-500);
   }
-  
+
   &--default .app-spinner__fill {
     stroke: var(--gray-600);
   }
@@ -234,7 +234,7 @@ const spinnerStyle = computed((): CSSProperties => {
   .app-spinner__svg {
     animation: none;
   }
-  
+
   .app-spinner__fill {
     animation: none;
     stroke-dasharray: none;

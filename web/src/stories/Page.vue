@@ -1,6 +1,6 @@
 <template>
   <article>
-    <my-header :user="user" @login="onLogin" @logout="onLogout" @create-account="onCreateAccount" />
+    <MyHeader :user="user" @login="onLogin" @logout="onLogout" @create-account="onCreateAccount" />
 
     <section class="storybook-page">
       <h2>Pages in Storybook</h2>
@@ -54,20 +54,20 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref } from 'vue'
 
-import MyHeader from './Header.vue';
-import './page.css';
+import MyHeader from './Header.vue'
+import './page.css'
 
-const user = ref<{ name: string } | null>(null);
+const user = ref<{ name: string } | null>(null)
 
 const onLogin = () => {
-  user.value = { name: 'Jane Doe' };
-};
+  user.value = { name: 'Jane Doe' }
+}
 const onLogout = () => {
-  user.value = null;
-};
+  user.value = null
+}
 const onCreateAccount = () => {
-  user.value = { name: 'Jane Doe' };
-};
+  user.value = { name: 'Jane Doe' }
+}
 </script>

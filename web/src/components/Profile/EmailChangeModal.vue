@@ -84,7 +84,7 @@
                   <strong>{{ emailForm.newEmail }}</strong>로 인증 이메일을 발송했습니다.
                 </p>
                 <p>이메일의 인증 링크를 클릭하여 이메일 변경을 완료해주세요.</p>
-                
+
                 <div class="verification-help">
                   <n-alert type="warning" :show-icon="true" size="small">
                     <template #header>이메일을 받지 못하셨나요?</template>
@@ -143,7 +143,7 @@
                     <span class="new-email">{{ emailForm.newEmail }}</span>
                   </div>
                 </div>
-                
+
                 <div class="next-steps">
                   <n-alert type="success" :show-icon="true" size="small">
                     <template #header">다음 로그인부터 새 이메일을 사용하세요</template>
@@ -188,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { ArrowForwardSharp as ArrowForward } from '@vicons/ionicons5'
 import { profileApi } from '@/api/services'
@@ -201,7 +201,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  currentEmail: ''
+  currentEmail: '',
 })
 
 // Emits
@@ -230,13 +230,13 @@ const emailFormRef = ref()
 // 폼 데이터
 const emailForm = reactive({
   newEmail: '',
-  password: ''
+  password: '',
 })
 
 // 모달 표시 상태 (v-model)
 const showModal = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value)
+  set: (value) => emit('update:show', value),
 })
 
 // 폼 검증 규칙
@@ -245,12 +245,12 @@ const emailFormRules = {
     {
       required: true,
       message: '새 이메일 주소를 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       type: 'email',
       message: '올바른 이메일 형식을 입력해주세요',
-      trigger: ['blur', 'input']
+      trigger: ['blur', 'input'],
     },
     {
       validator: (rule: any, value: string) => {
@@ -259,14 +259,14 @@ const emailFormRules = {
         }
         return true
       },
-      trigger: ['blur', 'input']
-    }
+      trigger: ['blur', 'input'],
+    },
   ],
   password: {
     required: true,
     message: '현재 비밀번호를 입력해주세요',
-    trigger: ['blur', 'input']
-  }
+    trigger: ['blur', 'input'],
+  },
 }
 
 // 계산된 속성
@@ -281,18 +281,18 @@ const isEmailFormValid = computed(() => {
 const submitEmailChange = async () => {
   try {
     await emailFormRef.value?.validate()
-    
+
     processing.value = true
-    
+
     await profileApi.requestEmailChange(emailForm.newEmail, emailForm.password)
-    
+
     currentStep.value = 2
     emit('confirm', emailForm.newEmail, emailForm.password)
     message.success('인증 이메일이 발송되었습니다')
-    
+
     // 주기적으로 인증 상태 확인 (실제 구현에서는 WebSocket 사용 권장)
     startVerificationCheck()
-    
+
   } catch (error: any) {
     console.error('이메일 변경 요청 실패:', error)
     message.error(error.message || '이메일 변경 요청에 실패했습니다')
@@ -303,15 +303,15 @@ const submitEmailChange = async () => {
 
 const resendVerificationEmail = async () => {
   if (resendCooldown.value > 0) return
-  
+
   resending.value = true
   try {
     await profileApi.requestEmailChange(emailForm.newEmail, emailForm.password)
     message.success('인증 이메일을 다시 발송했습니다')
-    
+
     // 재발송 쿨다운 시작
     startResendCooldown()
-    
+
   } catch (error: any) {
     console.error('이메일 재발송 실패:', error)
     message.error(error.message || '이메일 재발송에 실패했습니다')
@@ -325,22 +325,22 @@ const checkVerificationStatus = async () => {
   try {
     // 실제 구현에서는 인증 상태 확인 API 호출
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 임시로 50% 확률로 성공 시뮬레이션
     const isVerified = Math.random() > 0.5
-    
+
     if (isVerified) {
       currentStep.value = 3
       stepStatus.value = 'finish'
-      
+
       // 사용자 스토어 업데이트
       userStore.updateUser({ email: emailForm.newEmail })
-      
+
       message.success('이메일 인증이 완료되었습니다')
     } else {
       message.info('아직 인증이 완료되지 않았습니다. 이메일을 확인해주세요.')
     }
-    
+
   } catch (error: any) {
     console.error('인증 상태 확인 실패:', error)
     message.error('인증 상태 확인에 실패했습니다')
@@ -356,19 +356,19 @@ const startVerificationCheck = () => {
       clearInterval(checkInterval)
       return
     }
-    
+
     try {
       // 실제 구현에서는 인증 상태 확인 API 호출
       const isVerified = Math.random() > 0.9 // 낮은 확률로 자동 완료 시뮬레이션
-      
+
       if (isVerified) {
         clearInterval(checkInterval)
         currentStep.value = 3
         stepStatus.value = 'finish'
-        
+
         // 사용자 스토어 업데이트
         userStore.updateUser({ email: emailForm.newEmail })
-        
+
         message.success('이메일 인증이 완료되었습니다')
       }
     } catch (error) {
@@ -384,14 +384,14 @@ const startVerificationCheck = () => {
 
 const startResendCooldown = () => {
   resendCooldown.value = 60 // 60초 쿨다운
-  
+
   if (resendTimer.value) {
     clearInterval(resendTimer.value)
   }
-  
+
   resendTimer.value = setInterval(() => {
     resendCooldown.value--
-    
+
     if (resendCooldown.value <= 0) {
       clearInterval(resendTimer.value)
     }
@@ -406,7 +406,7 @@ const goBackToEmailForm = () => {
 const finishEmailChange = () => {
   emit('success', emailForm.newEmail)
   closeModal()
-  
+
   // 모든 기기에서 로그아웃 처리 (실제 구현에서 필요)
   message.info('보안을 위해 모든 기기에서 로그아웃됩니다. 새 이메일로 다시 로그인해주세요.')
 }
@@ -416,7 +416,7 @@ const closeModal = () => {
   if (resendTimer.value) {
     clearInterval(resendTimer.value)
   }
-  
+
   emit('update:show', false)
 }
 
@@ -426,7 +426,7 @@ const resetForm = () => {
   currentStep.value = 1
   stepStatus.value = 'process'
   resendCooldown.value = 0
-  
+
   if (resendTimer.value) {
     clearInterval(resendTimer.value)
   }

@@ -1,11 +1,11 @@
 <template>
   <div class="security-alert-banner" v-if="visibleAlerts.length > 0">
-    <transition-group 
-      name="alert-slide" 
-      tag="div" 
+    <transition-group
+      name="alert-slide"
+      tag="div"
       class="alerts-container"
     >
-      <n-alert
+      <NAlert
         v-for="alert in visibleAlerts"
         :key="alert.id"
         :type="getAlertType(alert.severity)"
@@ -15,49 +15,49 @@
         @close="handleDismiss(alert.id)"
       >
         <template #icon>
-          <n-icon :component="getAlertIcon(alert.type)" />
+          <NIcon :component="getAlertIcon(alert.type)" />
         </template>
-        
+
         <div class="alert-content">
           <div class="alert-header">
             <span class="alert-title">{{ getAlertTitle(alert) }}</span>
-            <n-tag 
+            <NTag
               :type="getSeverityTagType(alert.severity)"
               size="small"
               class="severity-tag"
             >
               {{ getSeverityText(alert.severity) }}
-            </n-tag>
+            </NTag>
             <span class="alert-time">{{ formatTime(alert.timestamp) }}</span>
           </div>
-          
+
           <div class="alert-message">
             {{ alert.message }}
           </div>
-          
+
           <div class="alert-details" v-if="alert.details">
             <div class="detail-item" v-if="alert.details.ipAddress">
-              <n-icon :component="MapPin" size="12" />
+              <NIcon :component="MapPin" size="12" />
               <span>{{ alert.details.ipAddress }}</span>
               <span v-if="alert.details.location" class="location">
                 ({{ alert.details.location }})
               </span>
             </div>
-            
+
             <div class="detail-item" v-if="alert.details.device">
-              <n-icon :component="DeviceDesktop" size="12" />
+              <NIcon :component="DeviceDesktop" size="12" />
               <span>{{ alert.details.device }}</span>
             </div>
-            
+
             <div class="detail-item" v-if="alert.details.riskScore">
-              <n-icon :component="AlertTriangle" size="12" />
+              <NIcon :component="AlertTriangle" size="12" />
               <span>위험도: {{ alert.details.riskScore }}/100</span>
             </div>
           </div>
-          
+
           <div class="alert-actions" v-if="alert.actions && alert.actions.length > 0">
-            <n-space size="small">
-              <n-button
+            <NSpace size="small">
+              <NButton
                 v-for="action in alert.actions"
                 :key="action.key"
                 :type="action.type || 'default'"
@@ -65,47 +65,47 @@
                 @click="handleAction(alert.id, action.key)"
               >
                 {{ action.label }}
-              </n-button>
-            </n-space>
+              </NButton>
+            </NSpace>
           </div>
         </div>
-      </n-alert>
+      </NAlert>
     </transition-group>
-    
+
     <!-- 더 많은 알림이 있을 때 요약 표시 -->
     <div class="more-alerts" v-if="hiddenAlertsCount > 0">
-      <n-button 
-        text 
-        type="primary" 
+      <NButton
+        text
+        type="primary"
         size="small"
         @click="showAllAlerts"
       >
         +{{ hiddenAlertsCount }}개의 추가 알림 보기
-      </n-button>
+      </NButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { 
-  NAlert, 
-  NIcon, 
-  NTag, 
-  NButton, 
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  NAlert,
+  NButton,
+  NIcon,
   NSpace,
-  useMessage 
+  NTag,
+  useMessage,
 } from 'naive-ui'
-import { 
-  AlertTriangle, 
-  Shield, 
-  Lock, 
-  MapPin, 
+import {
+  AlertTriangle,
+  CheckCircle,
   DeviceDesktop,
   ExclamationCircle,
   InfoCircle,
-  CheckCircle,
-  XCircle
+  Lock,
+  MapPin,
+  Shield,
+  XCircle,
 } from '@vicons/tabler'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -145,7 +145,7 @@ const props = withDefaults(defineProps<Props>(), {
   alerts: () => [],
   maxVisible: 3,
   autoHide: true,
-  hideDelay: 10000 // 10초
+  hideDelay: 10000, // 10초
 })
 
 const emit = defineEmits<{
@@ -177,7 +177,7 @@ const getAlertType = (severity: string) => {
     low: 'info',
     medium: 'warning',
     high: 'error',
-    critical: 'error'
+    critical: 'error',
   }
   return typeMap[severity] || 'info'
 }
@@ -190,7 +190,7 @@ const getAlertIcon = (type: string) => {
     brute_force: XCircle,
     account_lockout: Lock,
     password_breach: ExclamationCircle,
-    permission_change: Shield
+    permission_change: Shield,
   }
   return iconMap[type] || InfoCircle
 }
@@ -200,7 +200,7 @@ const getSeverityTagType = (severity: string) => {
     low: 'success',
     medium: 'warning',
     high: 'error',
-    critical: 'error'
+    critical: 'error',
   }
   return typeMap[severity] || 'default'
 }
@@ -210,14 +210,14 @@ const getSeverityText = (severity: string) => {
     low: '낮음',
     medium: '보통',
     high: '높음',
-    critical: '매우 높음'
+    critical: '매우 높음',
   }
   return textMap[severity] || severity
 }
 
 const getAlertTitle = (alert: SecurityAlert) => {
   if (alert.title) return alert.title
-  
+
   const titleMap = {
     suspicious_login: '의심스러운 로그인',
     new_device: '새 디바이스 접근',
@@ -225,7 +225,7 @@ const getAlertTitle = (alert: SecurityAlert) => {
     brute_force: '무차별 대입 공격',
     account_lockout: '계정 잠금',
     password_breach: '패스워드 유출',
-    permission_change: '권한 변경'
+    permission_change: '권한 변경',
   }
   return titleMap[alert.type] || '보안 알림'
 }
@@ -242,7 +242,7 @@ const handleDismiss = (alertId: string) => {
 
 const handleAction = (alertId: string, actionKey: string) => {
   emit('action', alertId, actionKey)
-  
+
   // 액션 실행 후 자동으로 알림 제거 (설정에 따라)
   const alert = props.alerts.find(a => a.id === alertId)
   if (alert && !alert.persistent) {
@@ -258,11 +258,11 @@ const showAllAlerts = () => {
 
 const setupAutoHide = (alert: SecurityAlert) => {
   if (!props.autoHide || alert.persistent) return
-  
+
   const timer = setTimeout(() => {
     handleDismiss(alert.id)
   }, props.hideDelay)
-  
+
   autoHideTimers.value.set(alert.id, timer)
 }
 
@@ -284,13 +284,13 @@ watch(() => props.alerts, (newAlerts, oldAlerts) => {
   // 새로운 알림에 대해 자동 숨기기 타이머 설정
   const newAlertIds = new Set(newAlerts.map(a => a.id))
   const oldAlertIds = new Set((oldAlerts || []).map(a => a.id))
-  
+
   newAlerts.forEach(alert => {
     if (!oldAlertIds.has(alert.id)) {
       setupAutoHide(alert)
     }
   })
-  
+
   // 제거된 알림의 타이머 정리
   oldAlertIds.forEach(alertId => {
     if (!newAlertIds.has(alertId)) {
@@ -423,19 +423,19 @@ onUnmounted(() => {
   .security-alert-banner {
     padding: 12px;
   }
-  
+
   .alert-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-  
+
   .severity-tag,
   .alert-time {
     margin-left: 0;
     align-self: flex-start;
   }
-  
+
   .alert-details {
     flex-direction: column;
     gap: 4px;
