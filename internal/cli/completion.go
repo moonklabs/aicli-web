@@ -6,33 +6,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addCompletionCmd는 자동완성 명령어를 추가합니다
-func addCompletionCmd() {
+// createCompletionCmd는 자동완성 명령어를 생성합니다
+func createCompletionCmd() *cobra.Command {
 	completionCmd := &cobra.Command{
 		Use:   "completion [bash|zsh|fish|powershell]",
 		Short: "쉘 자동완성 스크립트 생성",
-		Long: `특정 쉘을 위한 자동완성 스크립트를 생성합니다.
+		Long: `지정된 셸에 대한 자동완성 스크립트를 생성합니다.
 
 지원하는 쉘:
-  - bash
-  - zsh
-  - fish
-  - powershell
+  - Bash
+  - Zsh
+  - Fish
+  - PowerShell
 
-자세한 설치 방법은 각 서브커맨드의 도움말을 참조하세요.`,
+사용 예시:
+  $ aicli completion bash > /etc/bash_completion.d/aicli
+  $ source /etc/bash_completion.d/aicli
+
+자세한 사용법은 각 서브커맨드를 참조하세요.`,
 		DisableFlagsInUseLine: true,
 		ValidArgs:             []string{"bash", "zsh", "fish", "powershell"},
 		Args:                  cobra.ExactValidArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			switch args[0] {
 			case "bash":
-				cmd.Root().GenBashCompletion(os.Stdout)
+				return cmd.Root().GenBashCompletion(os.Stdout)
 			case "zsh":
-				cmd.Root().GenZshCompletion(os.Stdout)
+				return cmd.Root().GenZshCompletion(os.Stdout)
 			case "fish":
-				cmd.Root().GenFishCompletion(os.Stdout, true)
+				return cmd.Root().GenFishCompletion(os.Stdout, true)
 			case "powershell":
-				cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+				return cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+			default:
+				return cmd.Usage()
 			}
 		},
 	}
@@ -132,8 +138,13 @@ func addCompletionCmd() {
 	// 서브커맨드 추가
 	completionCmd.AddCommand(bashCmd, zshCmd, fishCmd, powershellCmd)
 	
+	return completionCmd
+}
+
+// addCompletionCmd는 자동완성 명령어를 추가합니다
+func addCompletionCmd() {
 	// root 커맨드에 completion 추가
-	rootCmd.AddCommand(completionCmd)
+	rootCmd.AddCommand(createCompletionCmd())
 }
 
 // 동적 자동완성을 위한 함수들

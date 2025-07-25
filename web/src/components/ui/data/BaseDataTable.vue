@@ -13,6 +13,8 @@
     role="table"
     :aria-label="ariaLabel"
     :aria-describedby="ariaDescribedby"
+    :aria-busy="loading"
+    :aria-rowcount="filteredAndSortedData.length"
   >
     <!-- 테이블 헤더 -->
     <div class="table-header">
@@ -23,15 +25,24 @@
           type="text"
           :placeholder="globalSearchPlaceholder"
           class="search-input"
-          @input="handleGlobalSearch"
+          @input="(e) => { globalSearchValue = e.target.value; handleGlobalSearch(e.target.value) }"
         />
       </div>
 
-      <!-- 컬럼 설정 버튼 -->
-      <div v-if="columnSettings" class="column-settings">
-        <button @click="showColumnSettings = !showColumnSettings" class="settings-btn">
-          컬럼 설정
-        </button>
+      <!-- 컬럼 설정 및 필터 버튼 -->
+      <div class="table-actions">
+        <div v-if="columnSettings" class="column-settings">
+          <button @click="showColumnSettings = !showColumnSettings" class="settings-btn">
+            컬럼 설정
+          </button>
+        </div>
+        
+        <div v-if="hasFilters" class="filter-actions">
+          <span class="filter-count">필터: {{ activeFilters.length }}개</span>
+          <button @click="clearAllTableFilters" class="clear-filters-btn">
+            모든 필터 지우기
+          </button>
+        </div>
       </div>
     </div>
 
@@ -43,7 +54,12 @@
       @scroll="handleScroll"
     >
       <!-- 테이블 헤더 -->
-      <table class="data-table" :style="{ minWidth: scrollX ? `${scrollX}px` : 'auto' }">
+      <table 
+        ref="tableElement"
+        class="data-table" 
+        :style="{ minWidth: scrollX ? `${scrollX}px` : 'auto' }"
+        @keydown="handleTableKeydown"
+      >
         <thead class="table-head" :class="{ sticky: stickyHeader }">
           <tr>
             <!-- 선택 체크박스 컬럼 -->
@@ -111,12 +127,13 @@
               :key="`filter-${column.key}`"
               class="filter-cell"
             >
-              <component
+              <BaseFilter
                 v-if="column.filter"
-                :is="getFilterComponent(column.filter.type)"
                 :column="column"
+                :type="column.filter.type"
                 :value="getFilterValue(column.key)"
-                @update:value="(value) => handleFilterChange(column.key, value)"
+                :placeholder="column.filter.placeholder"
+                @filter-change="handleFilterChange"
               />
             </th>
           </tr>
@@ -128,26 +145,30 @@
         v-if="virtualScroll?.enabled"
         ref="virtualContainer"
         class="virtual-container"
-        :style="{ height: `${virtualHeight}px` }"
+        :style="{ height: `${virtualTotalSize}px` }"
       >
         <table class="data-table" :style="{ minWidth: scrollX ? `${scrollX}px` : 'auto' }">
           <tbody ref="virtualBody" class="table-body">
             <tr
-              v-for="(item, rowIndex) in visibleItems"
-              :key="getRowKey(item, rowIndex)"
+              v-for="item in visibleItems"
+              :key="getRowKey(item, item.virtualItem?.index || 0)"
               :class="[
                 'table-row',
-                getRowClassName(item, rowIndex),
+                getRowClassName(item, item.virtualItem?.index || 0),
                 {
                   'selected': isRowSelected(item),
-                  'hover': hoveredRowIndex === rowIndex
+                  'hover': hoveredRowIndex === (item.virtualItem?.index || 0)
                 }
               ]"
-              @click="(e) => handleRowClick(item, rowIndex, e)"
-              @dblclick="(e) => handleRowDoubleClick(item, rowIndex, e)"
-              @mouseenter="hoveredRowIndex = rowIndex"
+              @click="(e) => handleRowClick(item, item.virtualItem?.index || 0, e)"
+              @dblclick="(e) => handleRowDoubleClick(item, item.virtualItem?.index || 0, e)"
+              @mouseenter="hoveredRowIndex = item.virtualItem?.index || 0"
               @mouseleave="hoveredRowIndex = -1"
-              :style="{ transform: `translateY(${(virtualStartIndex + rowIndex) * itemHeight}px)` }"
+              :style="{ 
+                transform: `translateY(${item.virtualItem?.start || 0}px)`,
+                height: `${item.virtualItem?.size || itemHeight}px`
+              }"
+              :data-index="item.virtualItem?.index"
             >
               <!-- 선택 체크박스/라디오 -->
               <td v-if="selection?.type" class="selection-col">
@@ -163,7 +184,7 @@
               <!-- 데이터 셀들 -->
               <td
                 v-for="column in visibleColumns"
-                :key="`${getRowKey(item, rowIndex)}-${column.key}`"
+                :key="`${getRowKey(item, item.virtualItem?.index || 0)}-${column.key}`"
                 :class="[
                   'table-cell',
                   `align-${column.align || 'left'}`,
@@ -180,7 +201,7 @@
                 <!-- 커스텀 셀 렌더링 -->
                 <component
                   v-if="column.render"
-                  :is="column.render(item, rowIndex)"
+                  :is="column.render(item, item.virtualItem?.index || 0)"
                 />
                 <span v-else>{{ getCellDisplayValue(item, column) }}</span>
               </td>
@@ -290,6 +311,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useVirtualizer } from '@tanstack/vue-virtual'
 import type {
   AdvancedDataTableProps,
   AdvancedTableColumn,
@@ -298,6 +320,9 @@ import type {
   TableSorter,
   VirtualScrollConfig,
 } from '@/types/ui'
+import { useTableAccessibility } from '@/composables/useTableAccessibility'
+import { usePerformanceOptimization } from '@/composables/usePerformanceOptimization'
+import { useTouchGestures } from '@/composables/useTouchGestures'
 
 // Props 정의
 interface Props extends AdvancedDataTableProps {
@@ -344,6 +369,7 @@ const emit = defineEmits<{
 const scrollContainer = ref<HTMLElement>()
 const virtualContainer = ref<HTMLElement>()
 const virtualBody = ref<HTMLElement>()
+const tableElement = ref<HTMLElement>()
 
 const globalSearchValue = ref('')
 const showColumnSettings = ref(false)
@@ -361,35 +387,120 @@ const virtualEndIndex = ref(0)
 const virtualHeight = ref(0)
 const itemHeight = computed(() => props.virtualScroll?.itemHeight || 40)
 
+// @tanstack/vue-virtual을 사용한 고성능 가상화
+const virtualizer = computed(() => {
+  if (!props.virtualScroll?.enabled || !scrollContainer.value) return null
+  
+  return useVirtualizer({
+    count: paginatedData.value.length,
+    getScrollElement: () => scrollContainer.value,
+    estimateSize: () => itemHeight.value,
+    overscan: props.virtualScroll?.overscan || 5,
+    measureElement: (element) => {
+      // 동적 높이 측정 지원
+      if (typeof props.virtualScroll?.itemHeight === 'string' && props.virtualScroll.itemHeight === 'auto') {
+        return element?.getBoundingClientRect().height ?? itemHeight.value
+      }
+      return itemHeight.value
+    },
+  })
+})
+
+// 접근성 및 성능 최적화 컴포저블
+const { 
+  announce, 
+  announceSortChange,
+  announceFilterChange,
+  announceDataChange,
+  tableAttributes,
+  getRowAttributes,
+  getCellAttributes,
+  focusCell,
+  setInitialFocus
+} = useTableAccessibility(
+  {
+    tableId: 'data-table',
+    caption: props.ariaLabel || '데이터 테이블',
+    enableKeyboardNavigation: true,
+    enableCellNavigation: true,
+    enableRowSelection: !!props.selection?.type,
+    announceChanges: true,
+    announceSelection: true,
+    announceSort: true,
+    announceFilter: true,
+  },
+  tableElement,
+  computed(() => props.data || []),
+  computed(() => props.columns || [])
+)
+
+const { 
+  debounce: debounceFilter, 
+  throttle: throttleScroll, 
+  memoize 
+} = usePerformanceOptimization({
+  debounceMs: props.performance?.debounceMs || 300,
+  throttleMs: props.performance?.throttleMs || 16,
+  enableMemoization: true
+})
+
+// 필터 상태 관리
+const {
+  filters: activeFilters,
+  addFilter,
+  removeFilter,
+  clearAllFilters,
+  getFilter,
+  hasFilters
+} = createFilterState()
+
+const { 
+  setupTouchGestures 
+} = useTouchGestures({
+  element: tableElement,
+  onSwipeLeft: () => handleHorizontalScroll('left'),
+  onSwipeRight: () => handleHorizontalScroll('right'),
+  onPinchZoom: handlePinchZoom
+})
+
 // 컬럼 관련 계산 속성
 const visibleColumns = computed(() => {
   return props.columns?.filter(col => !col.hideable || col.hideable) || []
 })
 
-// 필터링된 데이터
+// 필터링된 데이터 (메모이제이션 적용)
 const filteredData = computed(() => {
-  let result = [...(props.data || [])]
-
-  // 글로벌 검색 적용
-  if (globalSearchValue.value.trim()) {
-    const searchTerm = globalSearchValue.value.toLowerCase()
-    result = result.filter(item => {
-      return visibleColumns.value.some(column => {
-        const value = getCellDisplayValue(item, column)
-        return String(value).toLowerCase().includes(searchTerm)
-      })
-    })
-  }
-
-  // 컬럼 필터 적용
-  currentFilters.value.forEach(filter => {
-    result = result.filter(item => {
-      const cellValue = item[filter.key]
-      return applyFilter(cellValue, filter)
-    })
+  // 메모이제이션을 위한 키 생성
+  const cacheKey = JSON.stringify({
+    dataLength: props.data?.length || 0,
+    globalSearch: globalSearchValue.value,
+    filters: activeFilters.value,
+    dataHash: props.data?.slice(0, 5).map(item => Object.keys(item).length).join('') // 간단한 해시
   })
+  
+  const memoizedFilter = memoize((data: any[], search: string, filters: TableFilter[]) => {
+    let result = [...data]
 
-  return result
+    // 글로벌 검색 적용
+    if (search.trim()) {
+      const searchTerm = search.toLowerCase()
+      result = result.filter(item => {
+        return visibleColumns.value.some(column => {
+          const value = getCellDisplayValue(item, column)
+          return String(value).toLowerCase().includes(searchTerm)
+        })
+      })
+    }
+
+    // 컬럼 필터 적용
+    if (filters.length > 0) {
+      result = applyTableFilter(result, filters)
+    }
+
+    return result
+  }, () => cacheKey)
+  
+  return memoizedFilter(props.data || [], globalSearchValue.value, activeFilters.value)
 })
 
 // 정렬된 데이터
@@ -447,13 +558,22 @@ const paginatedData = computed(() => {
   return filteredAndSortedData.value.slice(start, end)
 })
 
-// 가상 스크롤 아이템들
+// 가상 스크롤 아이템들 (개선된 버전)
 const visibleItems = computed(() => {
-  if (!props.virtualScroll?.enabled) return paginatedData.value
+  if (!props.virtualScroll?.enabled || !virtualizer.value) {
+    return paginatedData.value
+  }
 
-  const start = virtualStartIndex.value
-  const end = virtualEndIndex.value
-  return paginatedData.value.slice(start, end)
+  const items = virtualizer.value.getVirtualItems()
+  return items.map(virtualItem => ({
+    ...paginatedData.value[virtualItem.index],
+    virtualItem
+  }))
+})
+
+// 가상 스크롤 총 높이
+const virtualTotalSize = computed(() => {
+  return virtualizer.value?.getTotalSize() ?? 0
 })
 
 // 선택 상태 계산
@@ -523,37 +643,43 @@ const isRowSelected = (item: any): boolean => {
 }
 
 const getFilterValue = (key: string): any => {
-  const filter = currentFilters.value.find(f => f.key === key)
+  const filter = getFilter(key)
   return filter?.value
 }
 
-const getFilterComponent = (type: string) => {
-  // 필터 컴포넌트 맵핑 (나중에 구현)
-  return 'input' // 임시
-}
-
 // 이벤트 핸들러들
-const handleGlobalSearch = () => {
-  // 디바운스 처리는 나중에 추가
-}
+const handleGlobalSearch = debounceFilter((value: string) => {
+  // 글로벌 검색 결과 개수를 접근성 도구에 알림
+  const resultCount = filteredData.value.length
+  announce(`검색 결과: ${resultCount}개 항목이 발견되었습니다.`)
+})
 
-const handleScroll = (event: Event) => {
+const handleScroll = throttleScroll((event: Event) => {
   if (!props.virtualScroll?.enabled) return
 
   updateVirtualScrollRange()
-}
+  
+  // 스크롤 위치를 접근성 도구에 알림 (필요시)
+  const target = event.target as HTMLElement
+  if (target && Math.abs(target.scrollTop - target.scrollHeight + target.clientHeight) < 10) {
+    announce('테이블 끝에 도달했습니다.')
+  }
+})
 
 const handleHeaderClick = (column: AdvancedTableColumn) => {
   if (!column.sortable) return
 
   const existingSorter = currentSorters.value.find(s => s.key === column.key)
+  let newOrder: 'asc' | 'desc' | null = null
 
   if (existingSorter) {
     if (existingSorter.order === 'asc') {
       existingSorter.order = 'desc'
+      newOrder = 'desc'
     } else {
       // 정렬 제거
       currentSorters.value = currentSorters.value.filter(s => s.key !== column.key)
+      newOrder = null
     }
   } else {
     // 새 정렬 추가 (멀티 정렬이 아니면 기존 정렬 제거)
@@ -565,8 +691,12 @@ const handleHeaderClick = (column: AdvancedTableColumn) => {
       order: 'asc',
       sorter: column.sort?.compare || 'default',
     })
+    newOrder = 'asc'
   }
 
+  // 접근성 안내
+  announceSortChange(column.title, newOrder)
+  
   emit('update:sorter', currentSorters.value[0] || null)
 }
 
@@ -577,31 +707,40 @@ const handleHeaderKeydown = (event: KeyboardEvent, column: AdvancedTableColumn) 
   }
 }
 
-const handleFilterChange = (key: string, value: any) => {
-  const existingIndex = currentFilters.value.findIndex(f => f.key === key)
+// 테이블 전체 키보드 이벤트 핸들러
+const handleTableKeydown = (event: KeyboardEvent) => {
+  // useTableAccessibility에서 처리하는 키보드 네비게이션
+  // 이 함수는 컴포저블 내부에서 자동으로 처리됨
+}
 
-  if (value === null || value === undefined || value === '') {
-    // 필터 제거
-    if (existingIndex >= 0) {
-      currentFilters.value.splice(existingIndex, 1)
-    }
-  } else {
-    // 필터 추가/수정
-    const filter: TableFilter = {
-      key,
-      value,
-      operator: 'contains',
-      type: 'text',
-    }
-
-    if (existingIndex >= 0) {
-      currentFilters.value[existingIndex] = filter
-    } else {
-      currentFilters.value.push(filter)
-    }
+const handleFilterChange = (filter: TableFilter) => {
+  const column = props.columns?.find(col => col.key === filter.key)
+  addFilter(filter)
+  
+  // 접근성 안내
+  if (column) {
+    announceFilterChange(column.title, filter.value !== null)
   }
+  
+  emit('update:filters', activeFilters.value)
+  
+  // 필터 변경 시 첫 페이지로 이동
+  if (currentPage.value > 1) {
+    currentPage.value = 1
+    emit('update:page', 1)
+  }
+}
 
-  emit('update:filters', currentFilters.value)
+// 필터 초기화
+const clearAllTableFilters = () => {
+  clearAllFilters()
+  emit('update:filters', [])
+  
+  // 필터 초기화 시 첫 페이지로 이동
+  if (currentPage.value > 1) {
+    currentPage.value = 1
+    emit('update:page', 1)
+  }
 }
 
 const handleSelectAll = (event: Event) => {
@@ -667,38 +806,6 @@ const goToPage = (page: number) => {
 }
 
 // 유틸리티 함수들
-const applyFilter = (value: any, filter: TableFilter): boolean => {
-  if (value === null || value === undefined) return false
-
-  const filterValue = filter.value
-  const stringValue = String(value).toLowerCase()
-  const stringFilterValue = String(filterValue).toLowerCase()
-
-  switch (filter.operator) {
-    case 'equals':
-      return value === filterValue
-    case 'contains':
-      return stringValue.includes(stringFilterValue)
-    case 'startsWith':
-      return stringValue.startsWith(stringFilterValue)
-    case 'endsWith':
-      return stringValue.endsWith(stringFilterValue)
-    case 'gt':
-      return Number(value) > Number(filterValue)
-    case 'gte':
-      return Number(value) >= Number(filterValue)
-    case 'lt':
-      return Number(value) < Number(filterValue)
-    case 'lte':
-      return Number(value) <= Number(filterValue)
-    case 'in':
-      return Array.isArray(filterValue) && filterValue.includes(value)
-    case 'notIn':
-      return Array.isArray(filterValue) && !filterValue.includes(value)
-    default:
-      return true
-  }
-}
 
 const defaultCompare = (a: any, b: any, type: string): number => {
   if (a === b) return 0
@@ -718,22 +825,30 @@ const defaultCompare = (a: any, b: any, type: string): number => {
 }
 
 const updateVirtualScrollRange = () => {
-  if (!props.virtualScroll?.enabled || !scrollContainer.value) return
+  // @tanstack/vue-virtual이 자동으로 처리하므로 더 이상 필요하지 않음
+  // 하지만 레거시 호환성을 위해 유지
+  if (!props.virtualScroll?.enabled) return
+  
+  // 가상화 라이브러리가 자동으로 처리
+  virtualizer.value?.measure()
+}
 
-  const scrollTop = scrollContainer.value.scrollTop
-  const containerHeight = scrollContainer.value.clientHeight
-  const totalItems = paginatedData.value.length
-  const overscan = props.virtualScroll.overscan || 5
+// 새로운 성능 최적화 함수들
+const handleHorizontalScroll = (direction: 'left' | 'right') => {
+  if (!scrollContainer.value) return
+  
+  const scrollAmount = 200
+  const currentScroll = scrollContainer.value.scrollLeft
+  const newScroll = direction === 'left' 
+    ? Math.max(0, currentScroll - scrollAmount)
+    : currentScroll + scrollAmount
+    
+  scrollContainer.value.scrollTo({ left: newScroll, behavior: 'smooth' })
+}
 
-  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight.value) - overscan)
-  const endIndex = Math.min(
-    totalItems,
-    Math.ceil((scrollTop + containerHeight) / itemHeight.value) + overscan,
-  )
-
-  virtualStartIndex.value = startIndex
-  virtualEndIndex.value = endIndex
-  virtualHeight.value = totalItems * itemHeight.value
+const handlePinchZoom = (scale: number) => {
+  // 모바일 핀치 줌 처리 (나중에 구현)
+  console.log('Pinch zoom:', scale)
 }
 
 // 라이프사이클
@@ -741,16 +856,38 @@ onMounted(() => {
   if (props.virtualScroll?.enabled) {
     updateVirtualScrollRange()
   }
+  
+  // 접근성 초기 포커스 설정
+  nextTick(() => {
+    setInitialFocus()
+  })
+  
+  // 터치 제스처 설정 (모바일 지원)
+  setupTouchGestures()
+  
+  // 성능 모니터링
+  if (process.env.NODE_ENV === 'development') {
+    console.log('BaseDataTable mounted with', {
+      dataLength: props.data?.length || 0,
+      virtualScrollEnabled: props.virtualScroll?.enabled,
+      columnsCount: props.columns?.length || 0
+    })
+  }
 })
 
 // 반응형 업데이트
 watch(
   () => props.data,
-  () => {
+  (newData, oldData) => {
     if (props.virtualScroll?.enabled) {
       nextTick(() => {
         updateVirtualScrollRange()
       })
+    }
+    
+    // 데이터 변경 시 접근성 안내
+    if (newData && oldData && newData.length !== oldData.length) {
+      announceDataChange(newData.length)
     }
   },
   { deep: true },
@@ -841,6 +978,12 @@ watch(
   }
 }
 
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .column-settings {
   .settings-btn {
     padding: 0.5rem 1rem;
@@ -851,6 +994,35 @@ watch(
 
     &:hover {
       background: #f3f4f6;
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .filter-count {
+    font-size: 0.875rem;
+    color: #6b7280;
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    border-radius: 4px;
+  }
+
+  .clear-filters-btn {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #dc2626;
+    border-radius: 4px;
+    background: white;
+    color: #dc2626;
+    cursor: pointer;
+    font-size: 0.875rem;
+
+    &:hover {
+      background: #dc2626;
+      color: white;
     }
   }
 }

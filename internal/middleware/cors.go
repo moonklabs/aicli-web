@@ -34,8 +34,10 @@ func CORS() gin.HandlerFunc {
 				}
 			}
 		default:
-			// 기본값: localhost만 허용
-			if origin == "http://localhost:3000" || origin == "http://localhost:8080" {
+			// 기본값: localhost만 허용, Origin이 없으면 "*"
+			if origin == "" {
+				c.Header("Access-Control-Allow-Origin", "*")
+			} else if origin == "http://localhost:3000" || origin == "http://localhost:8080" {
 				c.Header("Access-Control-Allow-Origin", origin)
 			}
 		}

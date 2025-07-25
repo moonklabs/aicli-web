@@ -45,6 +45,6 @@ func BenchmarkVersionInfoString(b *testing.B) {
 	b.ReportAllocs()
 	
 	for i := 0; i < b.N; i++ {
-		_ = info.Version + " " + info.Commit + " " + info.BuildDate
+		_ = info.Version + " " + info.GitCommit + " " + info.BuildTime
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/drumcap/aicli-web/internal/testutil"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 

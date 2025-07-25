@@ -83,8 +83,15 @@ func (s *Server) setupRoutes() {
 		{
 			debug.GET("/routes", func(c *gin.Context) {
 				routes := s.router.Routes()
+				routeInfo := make([]gin.H, len(routes))
+				for i, route := range routes {
+					routeInfo[i] = gin.H{
+						"method": route.Method,
+						"path":   route.Path,
+					}
+				}
 				c.JSON(http.StatusOK, gin.H{
-					"routes": routes,
+					"routes": routeInfo,
 					"count":  len(routes),
 				})
 			})
