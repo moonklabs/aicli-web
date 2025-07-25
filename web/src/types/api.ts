@@ -395,3 +395,284 @@ export interface SessionUpdateMessage extends WebSocketMessage {
     data: UserSession | SessionSecurityEvent
   }
 }
+
+// 사용자 프로파일 관련 타입
+export interface UserProfile {
+  id: string
+  username: string
+  email: string
+  displayName?: string
+  firstName?: string
+  lastName?: string
+  avatar?: string
+  bio?: string
+  phone?: string
+  birthDate?: string
+  website?: string
+  location?: string
+  timezone?: string
+  language?: string
+  theme?: 'light' | 'dark' | 'auto'
+  isActive: boolean
+  isEmailVerified: boolean
+  isPhoneVerified: boolean
+  twoFactorEnabled: boolean
+  lastPasswordChange?: string
+  createdAt: string
+  updatedAt: string
+  lastLoginAt?: string
+}
+
+export interface UpdateProfileRequest {
+  displayName?: string
+  firstName?: string
+  lastName?: string
+  bio?: string
+  phone?: string
+  birthDate?: string
+  website?: string
+  location?: string
+  timezone?: string
+  language?: string
+  theme?: 'light' | 'dark' | 'auto'
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface PasswordStrength {
+  score: number // 0-4
+  feedback: {
+    warning: string
+    suggestions: string[]
+  }
+  crackTime: {
+    offlineSlowHashing: string
+    onlineThrottling: string
+  }
+}
+
+export interface TwoFactorAuthSettings {
+  enabled: boolean
+  secret?: string
+  qrCodeUrl?: string
+  backupCodes?: string[]
+  setupComplete: boolean
+  lastUsed?: string
+}
+
+export interface EnableTwoFactorRequest {
+  token: string
+}
+
+export interface VerifyTwoFactorRequest {
+  token: string
+}
+
+export interface NotificationSettings {
+  userId: string
+  emailNotifications: {
+    loginNotifications: boolean
+    securityAlerts: boolean
+    workspaceUpdates: boolean
+    systemUpdates: boolean
+    promotionalEmails: boolean
+  }
+  pushNotifications: {
+    enabled: boolean
+    securityAlerts: boolean
+    workspaceUpdates: boolean
+    directMessages: boolean
+  }
+  smsNotifications: {
+    enabled: boolean
+    securityAlerts: boolean
+    criticalUpdates: boolean
+  }
+  updatedAt: string
+}
+
+export interface UpdateNotificationSettingsRequest {
+  emailNotifications?: Partial<NotificationSettings['emailNotifications']>
+  pushNotifications?: Partial<NotificationSettings['pushNotifications']>
+  smsNotifications?: Partial<NotificationSettings['smsNotifications']>
+}
+
+export interface PrivacySettings {
+  userId: string
+  profileVisibility: 'public' | 'private' | 'contacts'
+  showEmail: boolean
+  showPhone: boolean
+  showOnlineStatus: boolean
+  allowDirectMessages: boolean
+  allowFriendRequests: boolean
+  dataProcessingConsent: boolean
+  marketingConsent: boolean
+  analyticsConsent: boolean
+  updatedAt: string
+}
+
+export interface UpdatePrivacySettingsRequest {
+  profileVisibility?: 'public' | 'private' | 'contacts'
+  showEmail?: boolean
+  showPhone?: boolean
+  showOnlineStatus?: boolean
+  allowDirectMessages?: boolean
+  allowFriendRequests?: boolean
+  dataProcessingConsent?: boolean
+  marketingConsent?: boolean
+  analyticsConsent?: boolean
+}
+
+export interface ProfileImageUploadRequest {
+  file: File
+  cropData?: {
+    x: number
+    y: number
+    width: number
+    height: number
+    rotate?: number
+    scaleX?: number
+    scaleY?: number
+  }
+}
+
+export interface ProfileImageUploadResponse {
+  imageUrl: string
+  thumbnailUrl: string
+  originalUrl: string
+}
+
+export interface AccountDeletionRequest {
+  password: string
+  reason?: string
+  feedback?: string
+  deleteImmediately?: boolean
+}
+
+export interface AccountDeactivationRequest {
+  password: string
+  reason?: string
+}
+
+export interface AccountReactivationRequest {
+  email: string
+}
+
+// 보안 모니터링 및 감사 로그 관련 타입
+export interface AuditLog {
+  id: string
+  userId: string
+  sessionId?: string
+  action: string
+  resourceType: string
+  resourceId?: string
+  ipAddress: string
+  userAgent: string
+  location?: {
+    country?: string
+    city?: string
+    timezone?: string
+  }
+  metadata: Record<string, any>
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  status: 'success' | 'failure' | 'blocked'
+  createdAt: string
+}
+
+export interface SecurityEventFilter {
+  userId?: string
+  eventType?: string[]
+  severity?: string[]
+  startDate?: string
+  endDate?: string
+  ipAddress?: string
+  status?: string[]
+  limit?: number
+  offset?: number
+}
+
+export interface LoginHistory {
+  id: string
+  userId: string
+  sessionId: string
+  ipAddress: string
+  userAgent: string
+  location?: {
+    country?: string
+    city?: string
+    timezone?: string
+  }
+  deviceInfo: {
+    browser: string
+    os: string
+    device: string
+  }
+  loginMethod: 'password' | 'oauth' | 'sso' | 'token'
+  provider?: string // OAuth provider if applicable
+  status: 'success' | 'failure' | 'blocked'
+  failureReason?: string
+  isSuspicious: boolean
+  riskScore: number // 0-100
+  createdAt: string
+}
+
+export interface SecurityStats {
+  totalLogins: number
+  successfulLogins: number
+  failedLogins: number
+  suspiciousAttempts: number
+  blockedAttempts: number
+  uniqueDevices: number
+  uniqueLocations: number
+  riskScore: number // 0-100, overall risk score
+  lastActivity: string
+  periodStart: string
+  periodEnd: string
+  trends: {
+    loginsChange: number // percentage change
+    suspiciousChange: number
+    riskScoreChange: number
+  }
+}
+
+export interface SuspiciousActivity {
+  id: string
+  userId: string
+  activityType: 'unusual_location' | 'unusual_device' | 'brute_force' | 'credential_stuffing' | 'account_takeover' | 'privilege_escalation'
+  description: string
+  riskScore: number // 0-100
+  indicators: string[]
+  metadata: Record<string, any>
+  ipAddress: string
+  userAgent: string
+  location?: {
+    country?: string
+    city?: string
+    timezone?: string
+  }
+  isResolved: boolean
+  resolvedBy?: string
+  resolvedAt?: string
+  resolution?: string
+  createdAt: string
+}
+
+export interface LogExportRequest {
+  type: 'audit' | 'security' | 'login_history' | 'suspicious_activity'
+  format: 'csv' | 'json' | 'xlsx'
+  filters?: SecurityEventFilter
+  fields?: string[]
+  includeMetadata?: boolean
+}
+
+export interface LogExportResponse {
+  downloadUrl: string
+  filename: string
+  size: number
+  recordCount: number
+  expiresAt: string
+}

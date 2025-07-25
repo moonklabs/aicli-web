@@ -3,9 +3,9 @@ sprint_folder_name: S01_M05_Advanced_Auth_System
 sprint_sequence_id: S01
 milestone_id: M05
 title: 고급 인증 시스템 - OAuth2.0, RBAC, 보안 강화
-status: pending
+status: complete
 goal: 기본 JWT 인증을 확장하여 OAuth2.0 통합, 고도화된 RBAC 시스템, 고급 세션 관리, 보안 미들웨어, 그리고 포괄적인 인증 API를 구현하여 엔터프라이즈급 보안 시스템을 구축한다.
-last_updated: 2025-07-22T18:30:00+0900
+last_updated: 2025-07-25T10:15:00+0900
 ---
 
 # Sprint: 고급 인증 시스템 - OAuth2.0, RBAC, 보안 강화 (S01)

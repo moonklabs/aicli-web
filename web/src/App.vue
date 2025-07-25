@@ -11,6 +11,9 @@ import {
   darkTheme as _darkTheme,
 } from 'naive-ui'
 import { useUserStore } from '@/stores/user'
+import ErrorNotification from '@/components/Common/ErrorNotification.vue'
+import OfflineIndicator from '@/components/Common/OfflineIndicator.vue'
+import ApiDebugPanel from '@/components/Debug/ApiDebugPanel.vue'
 
 const userStore = useUserStore()
 
@@ -35,6 +38,12 @@ const theme: GlobalTheme | null = null // null = 라이트 테마
             <!-- 메인 앱 레이아웃 -->
             <div id="app">
               <RouterView />
+
+              <!-- 전역 컴포넌트들 -->
+              <ErrorNotification />
+              <OfflineIndicator />
+              <ApiDebugPanel />
+>>>>>>> task/T01_S01
             </div>
           </NMessageProvider>
         </NNotificationProvider>

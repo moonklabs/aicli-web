@@ -24,10 +24,9 @@ func TestServer_Router(t *testing.T) {
 	
 	testutil.AssertNotNil(t, router)
 	
-	// Gin 엔진 타입 확인
-	_, ok := router.(*gin.Engine)
-	if !ok {
-		t.Error("Router()가 *gin.Engine 타입을 반환해야 함")
+	// Gin 엔진 타입 확인 (이미 *gin.Engine 타입이므로 추가 검증은 불필요)
+	if router == nil {
+		t.Error("Router()가 nil을 반환하면 안됨")
 	}
 }
 

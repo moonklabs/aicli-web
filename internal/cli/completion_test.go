@@ -10,8 +10,7 @@ import (
 )
 
 func TestCompletionCommand(t *testing.T) {
-	// 루트 명령어 초기화
-	_ = &cobra.Command{Use: "aicli"}
+	// completion 명령어 초기화
 	addCompletionCmd()
 
 	tests := []struct {

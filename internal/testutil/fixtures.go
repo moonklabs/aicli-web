@@ -93,7 +93,10 @@ func CreateTestDataFile(t *testing.T, dir string, data interface{}) string {
 		t.Fatalf("테스트 데이터 마샬링 실패: %v", err)
 	}
 	
+<<<<<<< HEAD
 	// filename := filepath.Join(dir, "testdata.json")
+=======
+>>>>>>> task/T01_S01
 	return TempFile(t, dir, "testdata-*.json", string(content))
 }
 

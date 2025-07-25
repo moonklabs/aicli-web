@@ -1,13 +1,22 @@
 import { apiGet, apiPost } from '@/api'
 import type {
+  AuditLog,
+  LinkOAuthRequest,
+  LogExportRequest,
+  LogExportResponse,
+  LoginHistory,
   LoginRequest,
   LoginResponse,
-  RefreshTokenRequest,
+  OAuthAccount,
   OAuthAuthUrlRequest,
   OAuthAuthUrlResponse,
   OAuthCallbackRequest,
-  OAuthAccount,
-  LinkOAuthRequest,
+  PaginatedResponse,
+  RefreshTokenRequest,
+  SecurityEventFilter,
+  SecurityStats,
+  SessionSecurityEvent,
+  SuspiciousActivity,
   UnlinkOAuthRequest,
 } from '@/types/api'
 
@@ -87,7 +96,7 @@ export const authApi = {
   },
 
   // OAuth 관련 API
-  
+
   /**
    * OAuth 인증 URL 생성
    */
@@ -140,5 +149,133 @@ export const authApi = {
   getOAuthProviders: async () => {
     const response = await apiGet('/auth/oauth/providers')
     return response.data.data
+  },
+
+  // 보안 모니터링 및 감사 로그 관련 API
+
+  /**
+   * 감사 로그 조회
+   */
+  getAuditLogs: async (filters?: SecurityEventFilter): Promise<PaginatedResponse<AuditLog>> => {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+    const response = await apiGet<PaginatedResponse<AuditLog>>(`/auth/audit/logs?${params.toString()}`)
+    return response.data.data
+  },
+
+  /**
+   * 로그인 이력 조회
+   */
+  getLoginHistory: async (filters?: SecurityEventFilter): Promise<PaginatedResponse<LoginHistory>> => {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+    const response = await apiGet<PaginatedResponse<LoginHistory>>(`/auth/security/login-history?${params.toString()}`)
+    return response.data.data
+  },
+
+  /**
+   * 보안 이벤트 조회
+   */
+  getSecurityEvents: async (filters?: SecurityEventFilter): Promise<PaginatedResponse<SessionSecurityEvent>> => {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+    const response = await apiGet<PaginatedResponse<SessionSecurityEvent>>(`/auth/security/events?${params.toString()}`)
+    return response.data.data
+  },
+
+  /**
+   * 의심스러운 활동 조회
+   */
+  getSuspiciousActivities: async (filters?: SecurityEventFilter): Promise<PaginatedResponse<SuspiciousActivity>> => {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(key, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+    const response = await apiGet<PaginatedResponse<SuspiciousActivity>>(`/auth/security/suspicious-activities?${params.toString()}`)
+    return response.data.data
+  },
+
+  /**
+   * 보안 통계 조회
+   */
+  getSecurityStats: async (period?: string): Promise<SecurityStats> => {
+    const params = period ? `?period=${period}` : ''
+    const response = await apiGet<SecurityStats>(`/auth/security/stats${params}`)
+    return response.data.data
+  },
+
+  /**
+   * 의심스러운 활동 해결 처리
+   */
+  resolveSuspiciousActivity: async (activityId: string, resolution: string): Promise<void> => {
+    await apiPost(`/auth/security/suspicious-activities/${activityId}/resolve`, { resolution })
+  },
+
+  /**
+   * 보안 로그 내보내기 요청
+   */
+  exportSecurityLogs: async (request: LogExportRequest): Promise<LogExportResponse> => {
+    const response = await apiPost<LogExportResponse>('/auth/security/export', request)
+    return response.data.data
+  },
+
+  /**
+   * 실시간 보안 알림 설정 조회
+   */
+  getSecurityAlertSettings: async () => {
+    const response = await apiGet('/auth/security/alert-settings')
+    return response.data.data
+  },
+
+  /**
+   * 실시간 보안 알림 설정 업데이트
+   */
+  updateSecurityAlertSettings: async (settings: {
+    enableRealTimeAlerts?: boolean
+    notifyOnSuspiciousLogin?: boolean
+    notifyOnNewDevice?: boolean
+    notifyOnLocationChange?: boolean
+    notifyOnHighRiskActivity?: boolean
+    alertThreshold?: 'low' | 'medium' | 'high' | 'critical'
+  }): Promise<void> => {
+    await apiPost('/auth/security/alert-settings', settings)
   },
 }
