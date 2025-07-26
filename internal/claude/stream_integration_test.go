@@ -45,7 +45,7 @@ func TestStreamHandler_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	// 1. 메시지 전송
-	msg := &Message{
+	msg := &StreamMessage{
 		Type:    "query",
 		Content: "Hello, Claude! How are you?",
 		Meta:    map[string]interface{}{"source": "test"},
@@ -152,7 +152,7 @@ func TestStreamHandler_MultipleMessages(t *testing.T) {
 	defer handler.Close()
 
 	// 여러 메시지 전송
-	messages := []*Message{
+	messages := []*StreamMessage{
 		{Type: "query", Content: "First question"},
 		{Type: "query", Content: "Second question"},
 		{Type: "command", Content: "Execute task"},

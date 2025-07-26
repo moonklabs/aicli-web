@@ -16,48 +16,48 @@ func TestErrorClassifier_ClassifyError(t *testing.T) {
 	tests := []struct {
 		name           string
 		error          error
-		expectedType   ErrorType
+		expectedType   RecoveryErrorType
 		expectedAction RecoveryAction
 	}{
 		{
 			name:           "connection refused error",
 			error:          errors.New("connection refused"),
-			expectedType:   ErrorTypeTransient,
+			expectedType:   RecoveryErrorTypeTransient,
 			expectedAction: ActionRetry,
 		},
 		{
 			name:           "timeout error",
 			error:          errors.New("request timeout"),
-			expectedType:   ErrorTypeTransient,
+			expectedType:   RecoveryErrorTypeTransient,
 			expectedAction: ActionRetry,
 		},
 		{
 			name:           "permission denied error",
 			error:          errors.New("permission denied"),
-			expectedType:   ErrorTypePermanent,
+			expectedType:   RecoveryErrorTypePermanent,
 			expectedAction: ActionFail,
 		},
 		{
 			name:           "process exited error",
 			error:          errors.New("process exited with code 1"),
-			expectedType:   ErrorTypeProcess,
+			expectedType:   RecoveryErrorTypeProcess,
 			expectedAction: ActionRestart,
 		},
 		{
 			name:           "out of memory error",
 			error:          errors.New("out of memory"),
-			expectedType:   ErrorTypeResource,
+			expectedType:   RecoveryErrorTypeResource,
 			expectedAction: ActionCircuitBreak,
 		},
 		{
 			name:           "unknown error",
 			error:          errors.New("some unknown error"),
-			expectedType:   ErrorTypeUnknown,
+			expectedType:   RecoveryErrorTypeUnknown,
 			expectedAction: ActionIgnore,
 		},
 	}
 
-	classifier := NewErrorClassifier()
+	classifier := NewRecoveryErrorClassifier()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -303,13 +303,13 @@ func TestRecoveryStats(t *testing.T) {
 	stats := NewRecoveryStats()
 
 	// 에러 증가
-	stats.IncrementError(ErrorTypeTransient)
-	stats.IncrementError(ErrorTypeProcess)
-	stats.IncrementError(ErrorTypeTransient)
+	stats.IncrementError(RecoveryErrorTypeTransient)
+	stats.IncrementError(RecoveryErrorTypeProcess)
+	stats.IncrementError(RecoveryErrorTypeTransient)
 
 	assert.Equal(t, int64(3), stats.TotalErrors)
-	assert.Equal(t, int64(2), stats.ErrorsByType[ErrorTypeTransient])
-	assert.Equal(t, int64(1), stats.ErrorsByType[ErrorTypeProcess])
+	assert.Equal(t, int64(2), stats.ErrorsByType[RecoveryErrorTypeTransient])
+	assert.Equal(t, int64(1), stats.ErrorsByType[RecoveryErrorTypeProcess])
 
 	// 액션 증가
 	stats.IncrementAction(ActionRetry)

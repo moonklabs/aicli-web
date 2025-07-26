@@ -2,7 +2,6 @@ package claude
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -22,18 +21,18 @@ type mockHandler struct {
 	failAfter int
 	delay     time.Duration
 	mu        sync.Mutex
-	messages  []Message
+	messages  []StreamMessage
 }
 
 func newMockHandler(name string, priority int) *mockHandler {
 	return &mockHandler{
 		name:     name,
 		priority: priority,
-		messages: make([]Message, 0),
+		messages: make([]StreamMessage, 0),
 	}
 }
 
-func (h *mockHandler) Handle(ctx context.Context, msg Message) error {
+func (h *mockHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	atomic.AddInt32(&h.handled, 1)
 	
 	h.mu.Lock()
@@ -63,10 +62,10 @@ func (h *mockHandler) GetHandledCount() int32 {
 	return atomic.LoadInt32(&h.handled)
 }
 
-func (h *mockHandler) GetMessages() []Message {
+func (h *mockHandler) GetMessages() []StreamMessage {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	result := make([]Message, len(h.messages))
+	result := make([]StreamMessage, len(h.messages))
 	copy(result, h.messages)
 	return result
 }
@@ -86,7 +85,7 @@ func TestMessageRouter(t *testing.T) {
 		require.NoError(t, err)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Hello, World!",
 			ID:      "test-123",
@@ -114,7 +113,7 @@ func TestMessageRouter(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Priority test",
 			ID:      "priority-123",
@@ -139,7 +138,7 @@ func TestMessageRouter(t *testing.T) {
 		router.SetDefaultHandler(defaultHandler)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    "unknown_type",
 			Content: "Unknown message",
 			ID:      "unknown-123",
@@ -167,7 +166,7 @@ func TestMessageRouter(t *testing.T) {
 
 		start := time.Now()
 		for i := 0; i < numMessages; i++ {
-			msg := Message{
+			msg := StreamMessage{
 				Type:    string(MessageTypeText),
 				Content: fmt.Sprintf("Async message %d", i),
 				ID:      fmt.Sprintf("async-%d", i),
@@ -188,11 +187,11 @@ func TestMessageRouter(t *testing.T) {
 	t.Run("Error Handling", func(t *testing.T) {
 		var errorCalled bool
 		var capturedError error
-		var capturedMessage Message
+		var capturedMessage StreamMessage
 
 		config := RouterConfig{
 			AsyncMode: false,
-			ErrorHandler: func(err error, msg Message) {
+			ErrorHandler: func(err error, msg StreamMessage) {
 				errorCalled = true
 				capturedError = err
 				capturedMessage = msg
@@ -205,7 +204,7 @@ func TestMessageRouter(t *testing.T) {
 		router.RegisterHandler(MessageTypeError, handler)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeError),
 			Content: "Error message",
 			ID:      "error-123",
@@ -235,7 +234,7 @@ func TestMessageRouter(t *testing.T) {
 		assert.NoError(t, err)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "After unregister",
 			ID:      "unregister-123",
@@ -260,7 +259,7 @@ func TestMessageRouter(t *testing.T) {
 		router.RegisterHandler(MessageTypeText, handler)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Timeout test",
 			ID:      "timeout-123",
@@ -297,7 +296,7 @@ func TestMessageRouter(t *testing.T) {
 			go func(id int) {
 				defer wg.Done()
 				for j := 0; j < messagesPerGoroutine; j++ {
-					msg := Message{
+					msg := StreamMessage{
 						Type:    string(MessageTypeText),
 						Content: fmt.Sprintf("Concurrent %d-%d", id, j),
 						ID:      fmt.Sprintf("concurrent-%d-%d", id, j),
@@ -332,7 +331,7 @@ func TestMessageRouter(t *testing.T) {
 
 		// 성공 메시지
 		for i := 0; i < 5; i++ {
-			msg := Message{
+			msg := StreamMessage{
 				Type:    string(MessageTypeText),
 				Content: fmt.Sprintf("Success %d", i),
 				ID:      fmt.Sprintf("success-%d", i),
@@ -342,7 +341,7 @@ func TestMessageRouter(t *testing.T) {
 
 		// 에러 메시지
 		for i := 0; i < 3; i++ {
-			msg := Message{
+			msg := StreamMessage{
 				Type:    string(MessageTypeError),
 				Content: fmt.Sprintf("Error %d", i),
 				ID:      fmt.Sprintf("error-%d", i),
@@ -439,7 +438,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Test text message",
 			ID:      "text-123",
@@ -463,7 +462,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeToolUse),
 			Content: "Tool execution",
 			ID:      "tool-123",
@@ -493,7 +492,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeError),
 			Content: "Something went wrong",
 			ID:      "error-123",
@@ -520,7 +519,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeSystem),
 			Content: "System event",
 			ID:      "system-123",
@@ -546,7 +545,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeProgress),
 			Content: "Processing files",
 			ID:      "progress-123",
@@ -573,7 +572,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeComplete),
 			Content: "Task completed successfully",
 			ID:      "complete-123",
@@ -591,7 +590,6 @@ func TestMessageTypeHandlers(t *testing.T) {
 	})
 
 	t.Run("ChainHandler", func(t *testing.T) {
-		var order []string
 		
 		handler1 := newMockHandler("first", 100)
 		handler1.delay = 10 * time.Millisecond
@@ -601,7 +599,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 		chainHandler := NewChainHandler("chain", 200, []MessageHandler{handler1, handler2}, logger)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Chain test",
 			ID:      "chain-123",
@@ -628,7 +626,7 @@ func BenchmarkMessageRouter(b *testing.B) {
 		router.RegisterHandler(MessageTypeText, handler)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Benchmark message",
 			ID:      "bench-123",
@@ -652,7 +650,7 @@ func BenchmarkMessageRouter(b *testing.B) {
 		router.RegisterHandler(MessageTypeText, handler)
 
 		ctx := context.Background()
-		msg := Message{
+		msg := StreamMessage{
 			Type:    string(MessageTypeText),
 			Content: "Benchmark message",
 			ID:      "bench-123",

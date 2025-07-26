@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"strings"
 	"testing"
 	"time"
@@ -75,7 +74,7 @@ func TestStreamHandler_SendMessage(t *testing.T) {
 	defer handler.Close()
 
 	// 메시지 전송
-	msg := &Message{
+	msg := &StreamMessage{
 		Type:    "test",
 		Content: "Hello, Claude!",
 		ID:      "test-123",
@@ -176,7 +175,7 @@ func TestStreamHandler_Events(t *testing.T) {
 	defer handler.Close()
 
 	// 메시지 전송
-	msg := &Message{
+	msg := &StreamMessage{
 		Type:    "test",
 		Content: "Hello!",
 		ID:      "test-123",
@@ -220,7 +219,7 @@ func TestStreamHandler_Stats(t *testing.T) {
 	assert.Equal(t, int64(0), stats["messages_received"].(int64))
 
 	// 메시지 전송 후 통계
-	msg := &Message{Type: "test", Content: "Hello!"}
+	msg := &StreamMessage{Type: "test", Content: "Hello!"}
 	err = handler.SendMessage(msg)
 	require.NoError(t, err)
 

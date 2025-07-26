@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -305,7 +304,7 @@ type benchmarkHandler struct {
 	delay    time.Duration
 }
 
-func (h *benchmarkHandler) Handle(ctx context.Context, msg Message) error {
+func (h *benchmarkHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	if h.delay > 0 {
 		time.Sleep(h.delay)
 	}
@@ -320,11 +319,11 @@ func (h *benchmarkHandler) Name() string {
 	return h.name
 }
 
-func generateTestMessages(count int, types []MessageType) []Message {
-	messages := make([]Message, count)
+func generateTestMessages(count int, types []MessageType) []StreamMessage {
+	messages := make([]StreamMessage, count)
 	for i := 0; i < count; i++ {
 		msgType := types[i%len(types)]
-		messages[i] = Message{
+		messages[i] = StreamMessage{
 			Type:    string(msgType),
 			Content: fmt.Sprintf("Test message %d", i),
 			ID:      fmt.Sprintf("msg-%d", i),
