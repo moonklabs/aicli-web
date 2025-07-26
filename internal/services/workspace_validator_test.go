@@ -49,7 +49,7 @@ func TestWorkspaceValidator_ValidateCreate(t *testing.T) {
 		{
 			name: "너무 긴 이름",
 			req: &models.CreateWorkspaceRequest{
-				Name:        "a" + strings.Repeat("b", 99), // 100자 초과
+				Name:        "a" + strings.Repeat("b", 100), // 101자
 				ProjectPath: "/tmp/test",
 			},
 			wantErr: true,
@@ -291,7 +291,7 @@ func TestWorkspaceValidator_validateName(t *testing.T) {
 		},
 		{
 			name:    "너무 긴 이름",
-			input:   "a" + strings.Repeat("b", 99), // 100자 초과
+			input:   "a" + strings.Repeat("b", 100), // 101자
 			wantErr: true,
 			errCode: ErrCodeInvalidName,
 		},

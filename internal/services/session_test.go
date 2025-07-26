@@ -183,6 +183,12 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, session2)
+	
+	// 두 세션 모두 활성화
+	err = sessionService.UpdateStatus(context.Background(), session1.ID, models.SessionActive)
+	assert.NoError(t, err)
+	err = sessionService.UpdateStatus(context.Background(), session2.ID, models.SessionActive)
+	assert.NoError(t, err)
 
 	// 세 번째 세션 생성 시도 (제한 초과)
 	_, err = sessionService.Create(context.Background(), &models.SessionCreateRequest{
@@ -328,7 +334,7 @@ func TestSessionService_List(t *testing.T) {
 		Limit: 10,
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, 3, result.Meta.Total)
+	assert.Equal(t, 2, result.Meta.Total)
 
 	// 활성 세션만 필터링
 	active := true

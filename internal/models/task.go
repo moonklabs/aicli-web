@@ -41,7 +41,7 @@ type Task struct {
 
 // TaskCreateRequest 태스크 생성 요청
 type TaskCreateRequest struct {
-	SessionID string            `json:"session_id" binding:"required" validate:"required,uuid"`
+	SessionID string            `json:"session_id,omitempty" validate:"omitempty,uuid"`
 	Command   string            `json:"command" binding:"required,min=1,max=10000" validate:"required,min=1,max=10000"`
 	Metadata  map[string]string `json:"metadata,omitempty" validate:"-"`
 }

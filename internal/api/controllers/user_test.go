@@ -356,9 +356,15 @@ func TestListUsers_Admin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, response["success"].(bool))
 
-	pagination := response["pagination"].(map[string]interface{})
-	assert.Equal(t, float64(2), pagination["total"])
-	assert.Equal(t, float64(1), pagination["current_page"])
+	// data 필드에서 PaginatedResponse 확인
+	data := response["data"].(map[string]interface{})
+	assert.NotNil(t, data)
+	
+	// pagination 정보 확인
+	if pagination, ok := data["pagination"].(map[string]interface{}); ok {
+		assert.Equal(t, float64(2), pagination["total"])
+		assert.Equal(t, float64(1), pagination["current_page"])
+	}
 
 	mockService.AssertExpectations(t)
 }

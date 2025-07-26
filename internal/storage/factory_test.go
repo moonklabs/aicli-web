@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/aicli/aicli-web/internal/storage/memory"
 )
 
 // TestDefaultStorageConfig 기본 스토리지 설정 테스트
@@ -35,7 +36,7 @@ func TestValidateStorageConfig(t *testing.T) {
 	}{
 		{
 			name:   "유효한 메모리 설정",
-			config: storage.StorageConfig{Type: storage.StorageTypeMemory, MaxConns: 5, Timeout: time.Second},
+			config: storage.StorageConfig{Type: storage.StorageTypeMemory, MaxConns: 5, Timeout: time.Second, RetryInterval: time.Second},
 			wantErr: false,
 		},
 		{
@@ -161,19 +162,11 @@ func TestDefaultStorageFactoryCreateMemory(t *testing.T) {
 		RetryInterval: time.Second,
 	}
 	
+	// 메모리 스토리지는 factory에서 직접 생성하지 않음
 	storage, err := factory.Create(config)
-	require.NoError(t, err)
-	assert.NotNil(t, storage)
-	
-	// 스토리지 인터페이스 확인
-	assert.NotNil(t, storage.Workspace())
-	assert.NotNil(t, storage.Project())
-	assert.NotNil(t, storage.Session())
-	assert.NotNil(t, storage.Task())
-	
-	// 정상적으로 닫히는지 확인
-	err = storage.Close()
-	assert.NoError(t, err)
+	require.Error(t, err)
+	assert.Nil(t, storage)
+	assert.Contains(t, err.Error(), "storage.NewMemory()를 사용하세요")
 }
 
 // TestDefaultStorageFactoryCreateSQLite SQLite 스토리지 생성 테스트 (아직 미구현)
@@ -237,32 +230,18 @@ func TestDefaultStorageFactoryHealthCheck(t *testing.T) {
 	})
 	
 	t.Run("정상 스토리지", func(t *testing.T) {
-		config := storage.StorageConfig{
-			Type:     storage.StorageTypeMemory,
-			MaxConns: 5,
-			Timeout:  time.Second * 10,
-			RetryInterval: time.Second,
-		}
+		// 메모리 스토리지 직접 생성
+		memStorage := memory.New()
+		defer memStorage.Close()
 		
-		storage, err := factory.Create(config)
-		require.NoError(t, err)
-		defer storage.Close()
-		
-		err = factory.HealthCheck(context.Background(), storage)
+		err := factory.HealthCheck(context.Background(), memStorage)
 		assert.NoError(t, err)
 	})
 	
 	t.Run("타임아웃 컨텍스트", func(t *testing.T) {
-		config := storage.StorageConfig{
-			Type:     storage.StorageTypeMemory,
-			MaxConns: 5,
-			Timeout:  time.Second * 10,
-			RetryInterval: time.Second,
-		}
-		
-		storage, err := factory.Create(config)
-		require.NoError(t, err)
-		defer storage.Close()
+		// 메모리 스토리지 직접 생성
+		memStorage := memory.New()
+		defer memStorage.Close()
 		
 		ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
 		defer cancel()
@@ -270,8 +249,9 @@ func TestDefaultStorageFactoryHealthCheck(t *testing.T) {
 		// 매우 짧은 타임아웃으로 인해 컨텍스트가 취소될 가능성이 높음
 		time.Sleep(time.Millisecond) // 타임아웃 발생을 위한 대기
 		
-		err = factory.HealthCheck(ctx, storage)
+		err := factory.HealthCheck(ctx, memStorage)
 		// 타임아웃이나 정상 완료 모두 허용 (컨텍스트 타이밍에 따라 다름)
+		// context deadline exceeded 오류가 발생할 수 있음
 	})
 }
 

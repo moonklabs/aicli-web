@@ -101,10 +101,8 @@ func (s *SessionService) Create(ctx context.Context, req *models.SessionCreateRe
 		return nil, fmt.Errorf("세션 생성 실패: %w", err)
 	}
 	
-	// 활성 세션 추가
-	s.mu.Lock()
-	s.activeSessions[session.ID] = session
-	s.mu.Unlock()
+	// pending 상태에서는 활성 세션에 추가하지 않음
+	// UpdateStatus에서 Active로 변경할 때 추가됨
 	
 	s.logger.Info("세션 생성됨",
 		zap.String("session_id", session.ID),
@@ -160,6 +158,10 @@ func (s *SessionService) UpdateStatus(ctx context.Context, id string, status mod
 			session.StartedAt = &now
 		}
 		session.UpdateActivity()
+		// 활성 세션에 추가
+		s.mu.Lock()
+		s.activeSessions[session.ID] = session
+		s.mu.Unlock()
 	case models.SessionEnded, models.SessionError:
 		now := time.Now()
 		session.EndedAt = &now
@@ -234,11 +236,20 @@ func (s *SessionService) GetActiveSessions() []*models.Session {
 
 // checkConcurrentLimit 동시 세션 수 제한 확인
 func (s *SessionService) checkConcurrentLimit() error {
-	s.mu.RLock()
-	activeCount := len(s.activeSessions)
-	s.mu.RUnlock()
+	// 활성 상태인 세션 수를 저장소에서 직접 조회
+	filter := &models.SessionFilter{
+		Active: &[]bool{true}[0], // 활성 세션만 필터링
+	}
 	
-	if activeCount >= s.maxConcurrent {
+	result, err := s.storage.Session().List(context.Background(), filter, &models.PagingRequest{
+		Page:  1,
+		Limit: 1, // 카운트만 필요
+	})
+	if err != nil {
+		return fmt.Errorf("활성 세션 조회 실패: %w", err)
+	}
+	
+	if result.Meta.Total >= s.maxConcurrent {
 		return fmt.Errorf("최대 동시 세션 수(%d) 초과", s.maxConcurrent)
 	}
 	

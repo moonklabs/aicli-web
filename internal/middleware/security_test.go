@@ -99,8 +99,12 @@ func TestAdvancedRateLimit(t *testing.T) {
 func TestCSRFProtection(t *testing.T) {
 	config := DefaultCSRFConfig()
 	config.Logger = zap.NewNop()
+	config.Redis = nil // Redis 없이 쿠키 기반으로만 동작
+	config.SecureCookie = false // 테스트 환경에서는 HTTP 허용
+	config.TrustedOrigins = []string{"http://localhost"} // 테스트 Origin 추가
 
-	middleware := CSRF(config)
+	protection := NewCSRFProtection(config)
+	middleware := protection.Handler()
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -108,7 +112,7 @@ func TestCSRFProtection(t *testing.T) {
 	
 	// GET 요청은 토큰 생성
 	r.GET("/form", func(c *gin.Context) {
-		token := c.GetHeader("X-CSRF-Token")
+		token := protection.GetToken(c)
 		c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 	})
 	
@@ -163,6 +167,7 @@ func TestCSRFProtection(t *testing.T) {
 		// POST 요청에 토큰 포함
 		postReq := httptest.NewRequest("POST", "/submit", strings.NewReader("data=test"))
 		postReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		postReq.Header.Set("Origin", "http://localhost") // Origin 헤더 추가
 		postReq.Header.Set("X-CSRF-Token", csrfCookie.Value)
 		postReq.AddCookie(csrfCookie)
 		postW := httptest.NewRecorder()
