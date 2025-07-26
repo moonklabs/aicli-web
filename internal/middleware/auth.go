@@ -251,8 +251,14 @@ func GetOAuthProvider(c *gin.Context) (string, bool) {
 
 // RBAC 관련 미들웨어들
 
+// RBACManagerInterface RBAC 매니저 인터페이스
+type RBACManagerInterface interface {
+	CheckPermission(ctx context.Context, req *models.CheckPermissionRequest) (*models.CheckPermissionResponse, error)
+	ComputeUserPermissionMatrix(ctx context.Context, userID string) (*models.UserPermissionMatrix, error)
+}
+
 // RequirePermission RBAC 기반 권한 확인 미들웨어
-func RequirePermission(rbacManager *auth.RBACManager, resourceType models.ResourceType, action models.ActionType) gin.HandlerFunc {
+func RequirePermission(rbacManager RBACManagerInterface, resourceType models.ResourceType, action models.ActionType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 사용자 ID 추출
 		userID, exists := GetUserID(c)
@@ -327,7 +333,7 @@ func RequirePermission(rbacManager *auth.RBACManager, resourceType models.Resour
 }
 
 // RequireResourceOwnership 리소스 소유권 확인 미들웨어
-func RequireResourceOwnership(rbacManager *auth.RBACManager, resourceType models.ResourceType) gin.HandlerFunc {
+func RequireResourceOwnership(rbacManager RBACManagerInterface, resourceType models.ResourceType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := GetUserID(c)
 		if !exists {
@@ -403,7 +409,7 @@ func RequireResourceOwnership(rbacManager *auth.RBACManager, resourceType models
 }
 
 // RequireAnyPermission 여러 권한 중 하나라도 만족하면 통과하는 미들웨어
-func RequireAnyPermission(rbacManager *auth.RBACManager, permissions ...PermissionRequirement) gin.HandlerFunc {
+func RequireAnyPermission(rbacManager RBACManagerInterface, permissions ...PermissionRequirement) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := GetUserID(c)
 		if !exists {
@@ -465,7 +471,7 @@ func RequireAnyPermission(rbacManager *auth.RBACManager, permissions ...Permissi
 }
 
 // RequireRoleAdvanced RBAC 기반 고급 역할 확인 미들웨어
-func RequireRoleAdvanced(rbacManager *auth.RBACManager, roleNames ...string) gin.HandlerFunc {
+func RequireRoleAdvanced(rbacManager RBACManagerInterface, roleNames ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := GetUserID(c)
 		if !exists {

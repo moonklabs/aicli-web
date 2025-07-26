@@ -58,29 +58,33 @@ func (ml *MemoryLimiter) Allow(key string) bool {
 	
 	if !exists {
 		// 새로운 키에 대한 limiter 생성
-		limiter := rate.NewLimiter(
-			rate.Every(time.Duration(60/ml.config.Rate)*time.Second),
-			ml.config.Burst,
-		)
+		// Rate limit을 분당 요청 수로 설정
+		ratePerSecond := rate.Limit(float64(ml.config.Rate) / float64(ml.config.Window))
+		limiter := rate.NewLimiter(ratePerSecond, ml.config.Burst)
+		
+		// 첫 번째 요청은 허용하고 토큰 감소
+		allowed := limiter.Allow()
+		tokens := ml.config.Burst
+		if allowed {
+			tokens = ml.config.Burst - 1
+		}
 		
 		entry = &rateLimiterEntry{
 			limiter:  limiter,
 			lastUsed: now,
 			resetAt:  now.Add(time.Duration(ml.config.Window) * time.Second),
 			config:   ml.config,
-			tokens:   ml.config.Burst - 1, // 한 개 소모
+			tokens:   tokens,
 		}
 		
 		ml.limiters[key] = entry
-		return true
+		return allowed
 	}
 	
 	// 시간 윈도우가 지났으면 리셋
 	if now.After(entry.resetAt) {
-		entry.limiter = rate.NewLimiter(
-			rate.Every(time.Duration(60/ml.config.Rate)*time.Second),
-			ml.config.Burst,
-		)
+		ratePerSecond := rate.Limit(float64(ml.config.Rate) / float64(ml.config.Window))
+		entry.limiter = rate.NewLimiter(ratePerSecond, ml.config.Burst)
 		entry.resetAt = now.Add(time.Duration(ml.config.Window) * time.Second)
 		entry.tokens = ml.config.Burst
 	}
@@ -88,14 +92,12 @@ func (ml *MemoryLimiter) Allow(key string) bool {
 	entry.lastUsed = now
 	
 	// 토큰 사용 가능 여부 확인
-	if entry.limiter.Allow() {
-		if entry.tokens > 0 {
-			entry.tokens--
-		}
-		return true
+	allowed := entry.limiter.Allow()
+	if allowed && entry.tokens > 0 {
+		entry.tokens--
 	}
 	
-	return false
+	return allowed
 }
 
 // Reset은 주어진 키의 rate limit을 리셋합니다.
@@ -113,7 +115,7 @@ func (ml *MemoryLimiter) Remaining(key string) int {
 	
 	entry, exists := ml.limiters[key]
 	if !exists {
-		return ml.config.Burst
+		return ml.config.Burst // 아직 사용하지 않은 키는 전체 버스트 반환
 	}
 	
 	// 시간이 지났으면 전체 토큰으로 계산
@@ -121,7 +123,12 @@ func (ml *MemoryLimiter) Remaining(key string) int {
 		return ml.config.Burst
 	}
 	
-	return entry.tokens
+	// 토큰이 0보다 크면 현재 토큰 수 반환
+	if entry.tokens >= 0 {
+		return entry.tokens
+	}
+	
+	return 0
 }
 
 // Limit은 제한된 요청 수를 반환합니다.

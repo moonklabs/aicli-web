@@ -21,6 +21,9 @@ type RateLimiter interface {
 	// ResetTime은 리셋 시간을 반환합니다.
 	ResetTime(key string) time.Time
 	
+	// GetStats는 현재 limiter 통계를 반환합니다.
+	GetStats() map[string]interface{}
+	
 	// Close는 limiter 리소스를 정리합니다.
 	Close() error
 }
