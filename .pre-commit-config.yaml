@@ -94,7 +94,8 @@ repos:
   - id: commit-msg-format
     name: Commit Message Format
     description: 커밋 메시지 형식 검증
-    entry: bash -c '
+    entry: |
+      bash -c '
       if ! head -1 "$1" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,100}$"; then
         echo "❌ 커밋 메시지가 규칙을 따르지 않습니다!"
         echo ""
@@ -120,8 +121,7 @@ repos:
         echo "  docs: README에 설치 가이드 추가"
         echo ""
         exit 1
-      fi
-    '
+      fi'
     language: system
     stages: [commit-msg]
     always_run: true
