@@ -287,7 +287,8 @@ func TestListPolicies(t *testing.T) {
 	assert.True(t, response["success"].(bool))
 
 	data := response["data"].(map[string]interface{})
-	assert.Equal(t, float64(2), data["total"])
+	pagination := data["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
 
 	mockService.AssertExpectations(t)
 }

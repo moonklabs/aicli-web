@@ -59,8 +59,11 @@ func TestCreateProject(t *testing.T) {
 	err := workspaceController.storage.Workspace().Create(context.Background(), workspace)
 	assert.NoError(t, err)
 	
+	// 테스트 디렉토리 생성
+	testDir := t.TempDir() // Go 1.15+ 에서 제공하는 임시 디렉토리
+	
 	// 라우트 설정
-	router.POST("/workspaces/:workspace_id/projects", func(c *gin.Context) {
+	router.POST("/workspaces/:id/projects", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
 			UserID:   userID,
 			UserName: "testuser",
@@ -70,13 +73,13 @@ func TestCreateProject(t *testing.T) {
 	})
 	
 	// 요청 데이터
-	project := models.Project{
+	createReq := models.CreateProjectRequest{
 		Name:        "test-project",
-		Path:        "/tmp/test-project",
+		Path:        testDir,
 		Description: "Test project",
 		Language:    "go",
 	}
-	body, _ := json.Marshal(project)
+	body, _ := json.Marshal(createReq)
 	
 	// 요청 생성
 	req, _ := http.NewRequest("POST", "/workspaces/"+workspace.ID+"/projects", bytes.NewBuffer(body))
@@ -86,6 +89,12 @@ func TestCreateProject(t *testing.T) {
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
+	
+	// 에러 응답 확인
+	if w.Code != http.StatusCreated {
+		t.Logf("Response status: %d", w.Code)
+		t.Logf("Response body: %s", w.Body.String())
+	}
 	
 	// 검증
 	assert.Equal(t, http.StatusCreated, w.Code)
@@ -114,16 +123,20 @@ func TestListProjects(t *testing.T) {
 	err := workspaceController.storage.Workspace().Create(context.Background(), workspace)
 	assert.NoError(t, err)
 	
+	// 테스트 디렉토리 생성
+	testDir1 := t.TempDir()
+	testDir2 := t.TempDir()
+	
 	// 프로젝트 생성
 	project1 := &models.Project{
 		WorkspaceID: workspace.ID,
 		Name:        "project-1",
-		Path:        "/tmp/project-1",
+		Path:        testDir1,
 	}
 	project2 := &models.Project{
 		WorkspaceID: workspace.ID,
 		Name:        "project-2",
-		Path:        "/tmp/project-2",
+		Path:        testDir2,
 	}
 	err = projectController.storage.Project().Create(context.Background(), project1)
 	assert.NoError(t, err)
@@ -131,7 +144,7 @@ func TestListProjects(t *testing.T) {
 	assert.NoError(t, err)
 	
 	// 라우트 설정
-	router.GET("/workspaces/:workspace_id/projects", func(c *gin.Context) {
+	router.GET("/workspaces/:id/projects", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
 			UserID:   userID,
 			UserName: "testuser",

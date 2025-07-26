@@ -186,11 +186,11 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 	
 	session, err := c.sessionService.GetByID(ctx, id)
 	if err != nil {
-		if err.Error() == "세션을 찾을 수 없습니다" {
+		if err.Error() == "not found" {
 			ctx.JSON(http.StatusNotFound, models.ErrorResponse{
 				Error: models.ErrorDetail{
 					Code:    "SESSION_NOT_FOUND",
-					Message: err.Error(),
+					Message: "세션을 찾을 수 없습니다",
 				},
 			})
 			return
@@ -238,11 +238,11 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 	
 	err := c.sessionService.Terminate(ctx, id)
 	if err != nil {
-		if err.Error() == "세션을 찾을 수 없습니다" {
+		if err.Error() == "not found" {
 			ctx.JSON(http.StatusNotFound, models.ErrorResponse{
 				Error: models.ErrorDetail{
 					Code:    "SESSION_NOT_FOUND",
-					Message: err.Error(),
+					Message: "세션을 찾을 수 없습니다",
 				},
 			})
 			return

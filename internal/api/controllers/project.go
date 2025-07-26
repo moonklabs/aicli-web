@@ -74,14 +74,23 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 	}
 	
 	// 요청 데이터 파싱
-	var project models.Project
-	if err := c.ShouldBindJSON(&project); err != nil {
+	var req models.CreateProjectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
 	
-	// 워크스페이스 ID 설정
-	project.WorkspaceID = workspaceID
+	// 프로젝트 모델 생성
+	project := models.Project{
+		WorkspaceID: workspaceID,
+		Name:        req.Name,
+		Path:        req.Path,
+		Description: req.Description,
+		GitURL:      req.GitURL,
+		GitBranch:   req.GitBranch,
+		Language:    req.Language,
+		Status:      models.ProjectStatusActive,
+	}
 	
 	// 프로젝트 경로 유효성 검사
 	if err := utils.IsValidProjectPath(project.Path); err != nil {
@@ -319,18 +328,39 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 	}
 	
 	// 요청 데이터 파싱
-	var updates map[string]interface{}
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	var req models.UpdateProjectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
 	
 	// 프로젝트 경로 유효성 검사 (변경되는 경우)
-	if projectPath, ok := updates["path"].(string); ok {
-		if err := utils.IsValidProjectPath(projectPath); err != nil {
+	if req.Path != nil {
+		if err := utils.IsValidProjectPath(*req.Path); err != nil {
 			middleware.ValidationError(c, "프로젝트 경로가 유효하지 않습니다", err.Error())
 			return
 		}
+	}
+	
+	// map[string]interface{}로 변환
+	updates := make(map[string]interface{})
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Path != nil {
+		updates["path"] = *req.Path
+	}
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+	if req.GitURL != nil {
+		updates["git_url"] = *req.GitURL
+	}
+	if req.GitBranch != nil {
+		updates["git_branch"] = *req.GitBranch
+	}
+	if req.Language != nil {
+		updates["language"] = *req.Language
 	}
 	
 	// 프로젝트 업데이트

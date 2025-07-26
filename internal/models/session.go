@@ -87,7 +87,7 @@ type SessionFilter struct {
 
 // SessionCreateRequest 세션 생성 요청
 type SessionCreateRequest struct {
-	ProjectID   string            `json:"project_id" binding:"required" validate:"required,uuid"`
+	ProjectID   string            `json:"project_id" validate:"required,uuid"`
 	Metadata    map[string]string `json:"metadata" validate:"-"`
 	MaxIdleTime *time.Duration    `json:"max_idle_time" validate:"omitempty,min=0"`
 	MaxLifetime *time.Duration    `json:"max_lifetime" validate:"omitempty,min=0"`

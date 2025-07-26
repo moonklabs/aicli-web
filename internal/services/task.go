@@ -86,6 +86,11 @@ func (ts *TaskService) Stop() {
 
 // Create 새 태스크 생성
 func (ts *TaskService) Create(ctx context.Context, req *models.TaskCreateRequest) (*models.Task, error) {
+	// 빈 명령어 검증
+	if strings.TrimSpace(req.Command) == "" {
+		return nil, fmt.Errorf("명령어가 비어있습니다")
+	}
+	
 	// 세션 존재 확인
 	session, err := ts.sessionService.GetByID(ctx, req.SessionID)
 	if err != nil {
@@ -147,14 +152,8 @@ func (ts *TaskService) List(ctx context.Context, filter *models.TaskFilter, pagi
 		return nil, fmt.Errorf("태스크 목록 조회 실패: %w", err)
 	}
 	
-	// 응답 변환
-	responses := make([]*models.TaskResponse, len(tasks))
-	for i, task := range tasks {
-		responses[i] = task.ToResponse()
-	}
-	
 	return &models.PagingResponse{
-		Data: responses,
+		Data: tasks,
 		Meta: models.NewPaginationMeta(paging.Page, paging.Limit, total),
 	}, nil
 }
