@@ -91,17 +91,25 @@ func (rm *RBACManager) CheckPermission(ctx context.Context, req *models.CheckPer
 	// 2. 권한 키 생성
 	permKey := rm.buildPermissionKey(req.ResourceType, req.ResourceID, req.Action)
 	
-	// 3. 권한 결정 조회
+	// 3. 권한 결정 조회 (특정 리소스 ID 먼저 확인)
 	decision, exists := matrix.FinalPermissions[permKey]
 	if !exists {
-		// 기본적으로 거부
-		decision = models.PermissionDecision{
-			ResourceType: req.ResourceType,
-			ResourceID:   req.ResourceID,
-			Action:       req.Action,
-			Effect:       models.PermissionDeny,
-			Source:       "default",
-			Reason:       "권한이 명시적으로 부여되지 않음",
+		// 와일드카드 권한 확인
+		wildcardKey := rm.buildPermissionKey(req.ResourceType, "*", req.Action)
+		decision, exists = matrix.FinalPermissions[wildcardKey]
+		if !exists {
+			// 기본적으로 거부
+			decision = models.PermissionDecision{
+				ResourceType: req.ResourceType,
+				ResourceID:   req.ResourceID,
+				Action:       req.Action,
+				Effect:       models.PermissionDeny,
+				Source:       "default",
+				Reason:       "권한이 명시적으로 부여되지 않음",
+			}
+		} else {
+			// 와일드카드 권한을 사용할 때 리소스 ID 업데이트
+			decision.ResourceID = req.ResourceID
 		}
 	}
 	
