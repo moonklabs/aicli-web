@@ -27,20 +27,25 @@ func setupSessionTest() (*gin.Engine, *services.SessionService, *models.Project)
 	
 	// 테스트용 워크스페이스와 프로젝트 생성
 	workspace := &models.Workspace{
-		BaseModel: models.BaseModel{ID: "ws-123"},
-		Name:      "Test Workspace",
-		OwnerID:   "user-123",
-		Settings:  map[string]interface{}{},
+		ID:      "ws-123",
+		Name:    "Test Workspace",
+		OwnerID: "user-123",
+		ProjectPath: "/test/workspace",
+		Status:  models.WorkspaceStatusActive,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	_ = storage.Workspace().Create(nil, workspace)
 	
 	project := &models.Project{
-		BaseModel:   models.BaseModel{ID: "proj-123"},
+		ID:          "proj-123",
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
 		Path:        "/test/path",
-		Status:      models.ProjectActive,
-		Settings:    map[string]interface{}{},
+		Status:      models.ProjectStatusActive,
+		Config:      models.ProjectConfig{},
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	_ = storage.Project().Create(nil, project)
 	
@@ -182,10 +187,10 @@ func TestSessionController_List(t *testing.T) {
 			assert.Equal(t, tt.wantStatus, w.Code)
 			
 			if tt.wantStatus == http.StatusOK {
-				var resp models.PagingResponse[*models.SessionResponse]
+				var resp models.PaginatedResponse[*models.SessionResponse]
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
 				require.NoError(t, err)
-				assert.Len(t, resp.Items, tt.wantCount)
+				assert.Len(t, resp.Data, tt.wantCount)
 			}
 		})
 	}

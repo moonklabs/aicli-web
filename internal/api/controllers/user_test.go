@@ -89,9 +89,9 @@ func (m *MockUserService) GetUserStats(ctx context.Context) (*models.UserStats, 
 	return args.Get(0).(*models.UserStats), args.Error(1)
 }
 
-func (m *MockUserService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.User], error) {
+func (m *MockUserService) ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.UserResponse], error) {
 	args := m.Called(ctx, filter)
-	return args.Get(0).(*models.PaginatedResponse[models.User]), args.Error(1)
+	return args.Get(0).(*models.PaginatedResponse[models.UserResponse]), args.Error(1)
 }
 
 func (m *MockUserService) CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.UserResponse, error) {
@@ -320,15 +320,19 @@ func TestListUsers_Admin(t *testing.T) {
 	controller, mockService := setupUserController()
 
 	// 테스트 데이터
-	expectedUsers := &models.PaginatedResponse{
+	expectedUsers := &models.PaginatedResponse[models.UserResponse]{
 		Data: []models.UserResponse{
 			{ID: "user1", Username: "user1", Email: "user1@example.com"},
 			{ID: "user2", Username: "user2", Email: "user2@example.com"},
 		},
-		Total:      2,
-		Page:       1,
-		Limit:      10,
-		TotalPages: 1,
+		Pagination: models.PaginationMeta{
+			Total:       2,
+			CurrentPage: 1,
+			PerPage:     10,
+			TotalPages:  1,
+			HasNext:     false,
+			HasPrev:     false,
+		},
 	}
 
 	// Mock 설정
@@ -352,9 +356,9 @@ func TestListUsers_Admin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, response["success"].(bool))
 
-	data := response["data"].(map[string]interface{})
-	assert.Equal(t, float64(2), data["total"])
-	assert.Equal(t, float64(1), data["page"])
+	pagination := response["pagination"].(map[string]interface{})
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["current_page"])
 
 	mockService.AssertExpectations(t)
 }
