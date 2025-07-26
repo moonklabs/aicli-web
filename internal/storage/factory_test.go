@@ -40,7 +40,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "유효한 SQLite 설정",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeSQLite, 
 				DataSource: "/tmp/test.db", 
 				MaxConns: 5, 
@@ -63,7 +63,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "SQLite 데이터 소스 누락",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeSQLite, 
 				MaxConns: 5, 
 				Timeout: time.Second,
@@ -74,7 +74,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "잘못된 최대 연결 수",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeMemory, 
 				MaxConns: 0, 
 				Timeout: time.Second,
@@ -85,7 +85,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "유휴 연결 수 초과",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeMemory, 
 				MaxConns: 5, 
 				MaxIdleConns: 10, 
@@ -97,7 +97,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "잘못된 타임아웃",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeMemory, 
 				MaxConns: 5, 
 				Timeout: 0,
@@ -108,7 +108,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "잘못된 재시도 횟수",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeMemory, 
 				MaxConns: 5, 
 				Timeout: time.Second, 
@@ -120,7 +120,7 @@ func TestValidateStorageConfig(t *testing.T) {
 		},
 		{
 			name: "잘못된 재시도 간격",
-			config: StorageConfig{
+			config: storage.StorageConfig{
 				Type: storage.StorageTypeMemory, 
 				MaxConns: 5, 
 				Timeout: time.Second, 
@@ -180,7 +180,7 @@ func TestDefaultStorageFactoryCreateMemory(t *testing.T) {
 func TestDefaultStorageFactoryCreateSQLite(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:       StorageTypeSQLite,
+		Type:       storage.StorageTypeSQLite,
 		DataSource: "/tmp/test.db",
 		MaxConns:   5,
 		Timeout:    time.Second * 10,

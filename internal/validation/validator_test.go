@@ -454,6 +454,7 @@ func (m *mockFieldLevel) ExtractType(field reflect.Value) (reflect.Value, reflec
 	return reflect.Value{}, reflect.Invalid, false 
 }
 func (m *mockFieldLevel) GetStructFieldOK() (reflect.Value, reflect.Kind, bool) { return reflect.Value{}, reflect.Invalid, false }
+func (m *mockFieldLevel) GetStructFieldOK2() (reflect.Value, reflect.Kind, bool, bool) { return reflect.Value{}, reflect.Invalid, false, false }
 func (m *mockFieldLevel) GetStructFieldOKAdvanced(val interface{}, namespace string) (interface{}, string, bool) { return nil, "", false }
 
 func TestTranslateValidatorError(t *testing.T) {

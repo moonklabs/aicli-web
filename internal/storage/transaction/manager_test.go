@@ -88,8 +88,8 @@ func (m *MockTransactionalStorage) WithTx(ctx context.Context, fn func(tx storag
 
 // TestTransactionManager 트랜잭션 매니저 테스트
 func TestTransactionManager(t *testing.T) {
-	storage := memory.New()
-	mockStorage := &MockTransactionalStorage{Storage: storage}
+	memStore := memory.New()
+	mockStorage := &MockTransactionalStorage{Storage: memStore}
 	logger := log.New(os.Stdout, "[TEST] ", log.LstdFlags)
 	
 	t.Run("매니저 생성", func(t *testing.T) {
@@ -160,7 +160,7 @@ func TestTransactionManager(t *testing.T) {
 	t.Run("RunInTxWithResult", func(t *testing.T) {
 		manager := NewManager(mockStorage, logger)
 		
-		result, err := manager.RunInTxWithResult(context.Background(), func(ctx context.Context) (int, error) {
+		result, err := manager.RunInTxWithResult(context.Background(), func(ctx context.Context) (interface{}, error) {
 			return 42, nil
 		})
 		
@@ -270,8 +270,8 @@ func TestTransactionManagerRetry(t *testing.T) {
 
 // TestTransactionManagerConcurrency 동시성 테스트
 func TestTransactionManagerConcurrency(t *testing.T) {
-	storage := memory.New()
-	mockStorage := &MockTransactionalStorage{Storage: storage}
+	memStore := memory.New()
+	mockStorage := &MockTransactionalStorage{Storage: memStore}
 	manager := NewManager(mockStorage, log.New(os.Stdout, "[TEST] ", log.LstdFlags))
 	
 	t.Run("동시 트랜잭션 실행", func(t *testing.T) {
@@ -308,8 +308,8 @@ func TestTransactionManagerConcurrency(t *testing.T) {
 
 // TestTransactionManagerStats 통계 테스트
 func TestTransactionManagerStats(t *testing.T) {
-	storage := memory.New()
-	mockStorage := &MockTransactionalStorage{Storage: storage}
+	memStore := memory.New()
+	mockStorage := &MockTransactionalStorage{Storage: memStore}
 	manager := NewManager(mockStorage, log.New(os.Stdout, "[TEST] ", log.LstdFlags))
 	
 	t.Run("통계 수집", func(t *testing.T) {
@@ -375,8 +375,8 @@ func TestTransactionOptions(t *testing.T) {
 
 // BenchmarkTransactionManager 벤치마크 테스트
 func BenchmarkTransactionManager(b *testing.B) {
-	storage := memory.New()
-	mockStorage := &MockTransactionalStorage{Storage: storage}
+	memStore := memory.New()
+	mockStorage := &MockTransactionalStorage{Storage: memStore}
 	manager := NewManager(mockStorage, nil)
 	
 	b.Run("트랜잭션 시작/커밋", func(b *testing.B) {

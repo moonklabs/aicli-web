@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/websocket"
 )
 
@@ -42,34 +43,39 @@ func (m *MockClaudeWrapper) Execute(sessionID, prompt string) (interface{}, erro
 	return args.Get(0), args.Error(1)
 }
 
+func (m *MockClaudeWrapper) ListSessions(filter claude.SessionFilter) ([]*claude.Session, error) {
+	args := m.Called(filter)
+	return args.Get(0).([]*claude.Session), args.Error(1)
+}
+
 // MockSessionRepository는 테스트용 세션 저장소 mock입니다.
 type MockSessionRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionRepository) Create(session *claude.Session) error {
-	args := m.Called(session)
+func (m *MockSessionRepository) Create(ctx context.Context, session *models.Session) error {
+	args := m.Called(ctx, session)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) GetByID(id string) (*claude.Session, error) {
-	args := m.Called(id)
-	return args.Get(0).(*claude.Session), args.Error(1)
+func (m *MockSessionRepository) GetByID(ctx context.Context, id string) (*models.Session, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) Update(session *claude.Session) error {
-	args := m.Called(session)
+func (m *MockSessionRepository) Update(ctx context.Context, id string, update *models.SessionUpdate) (*models.Session, error) {
+	args := m.Called(ctx, id, update)
+	return args.Get(0).(*models.Session), args.Error(1)
+}
+
+func (m *MockSessionRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) Delete(id string) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
-func (m *MockSessionRepository) FindByWorkspace(workspaceID string) ([]*claude.Session, error) {
-	args := m.Called(workspaceID)
-	return args.Get(0).([]*claude.Session), args.Error(1)
+func (m *MockSessionRepository) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
+	args := m.Called(ctx, filter, paging)
+	return args.Get(0).(*models.PaginationResponse), args.Error(1)
 }
 
 func TestClaudeHandler_Execute(t *testing.T) {
@@ -97,9 +103,10 @@ func TestClaudeHandler_Execute(t *testing.T) {
 				session := &claude.Session{
 					ID:          "session-1",
 					WorkspaceID: "workspace-1",
-					Status:      "idle",
-					CreatedAt:   time.Now(),
-					UpdatedAt:   time.Now(),
+					UserID:      "user-1",
+					State:       claude.SessionState{Status: "idle"},
+					Created:     time.Now(),
+					LastActive:  time.Now(),
 				}
 				wrapper.On("CreateSession", mock.AnythingOfType("*claude.SessionConfig")).Return(session, nil)
 				
@@ -192,16 +199,18 @@ func TestClaudeHandler_ListSessions(t *testing.T) {
 					{
 						ID:          "session-1",
 						WorkspaceID: "workspace-1",
-						Status:      "idle",
-						CreatedAt:   time.Now(),
-						UpdatedAt:   time.Now(),
+						UserID:      "user-1",
+						State:       claude.SessionState{Status: "idle"},
+						Created:     time.Now(),
+						LastActive:  time.Now(),
 					},
 					{
 						ID:          "session-2",
 						WorkspaceID: "workspace-1",
-						Status:      "running",
-						CreatedAt:   time.Now(),
-						UpdatedAt:   time.Now(),
+						UserID:      "user-1",
+						State:       claude.SessionState{Status: "running"},
+						Created:     time.Now(),
+						LastActive:  time.Now(),
 					},
 				}
 				repo.On("FindByWorkspace", "workspace-1").Return(sessions, nil)
@@ -281,9 +290,10 @@ func TestClaudeHandler_GetSession(t *testing.T) {
 				session := &claude.Session{
 					ID:          "session-1",
 					WorkspaceID: "workspace-1",
-					Status:      "idle",
-					CreatedAt:   time.Now(),
-					UpdatedAt:   time.Now(),
+					UserID:      "user-1",
+					State:       claude.SessionState{Status: "idle"},
+					Created:     time.Now(),
+					LastActive:  time.Now(),
 				}
 				wrapper.On("GetSession", "session-1").Return(session, nil)
 			},
@@ -439,7 +449,10 @@ func TestClaudeHandler_executeAsync(t *testing.T) {
 	session := &claude.Session{
 		ID:          "session-1",
 		WorkspaceID: "workspace-1",
-		Status:      "idle",
+		UserID:      "user-1",
+		State:       claude.SessionState{Status: "idle"},
+		Created:     time.Now(),
+		LastActive:  time.Now(),
 	}
 
 	req := ExecuteRequest{

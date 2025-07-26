@@ -131,8 +131,13 @@ func (m *MockContainerManager) ListWorkspaceContainers(ctx context.Context, work
 	if containers, exists := m.containers[workspaceID]; exists {
 		result := make([]*docker.WorkspaceContainer, len(containers))
 		for i, container := range containers {
-			var wc docker.WorkspaceContainer = container
-			result[i] = &wc
+			result[i] = &docker.WorkspaceContainer{
+				ID:          container.GetID(),
+				Name:        container.GetName(),
+				WorkspaceID: container.GetWorkspaceID(),
+				State:       docker.ContainerState(container.GetState()),
+				Created:     container.GetCreatedAt(),
+			}
 		}
 		return result, nil
 	}
@@ -163,8 +168,13 @@ func (m *MockContainerManager) ListContainers(ctx context.Context, labels map[st
 	var allContainers []*docker.WorkspaceContainer
 	for _, containers := range m.containers {
 		for _, container := range containers {
-			var wc docker.WorkspaceContainer = container
-			allContainers = append(allContainers, &wc)
+			allContainers = append(allContainers, &docker.WorkspaceContainer{
+				ID:          container.GetID(),
+				Name:        container.GetName(),
+				WorkspaceID: container.GetWorkspaceID(),
+				State:       docker.ContainerState(container.GetState()),
+				Created:     container.GetCreatedAt(),
+			})
 		}
 	}
 	return allContainers, nil

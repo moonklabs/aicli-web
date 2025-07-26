@@ -70,7 +70,6 @@ func testWorkspaceOperations(t *testing.T, s storage.Storage) {
 		ActiveTasks: 0,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
 	}
 	
 	// Create 테스트
@@ -97,7 +96,6 @@ func testWorkspaceOperations(t *testing.T, s storage.Storage) {
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Workspace Name", updated.Name)
 	assert.Equal(t, 5, updated.ActiveTasks)
-	assert.Equal(t, int64(2), updated.Version) // 버전 증가 확인
 	
 	// GetByOwnerID 테스트
 	pagination := &models.PaginationRequest{
@@ -144,7 +142,6 @@ func testProjectOperations(t *testing.T, s storage.Storage) {
 		OwnerID:     "user-002",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
 	}
 	require.NoError(t, ws.Create(ctx, workspace))
 	
@@ -157,18 +154,17 @@ func testProjectOperations(t *testing.T, s storage.Storage) {
 		Language:    "go",
 		Status:      models.ProjectStatusActive,
 		Config: models.ProjectConfig{
-			AutoSave:     true,
-			BuildCommand: "go build",
-			TestCommand:  "go test",
+			BuildCommands: []string{"go build"},
+			TestCommands:  []string{"go test"},
 		},
-		GitInfo: models.GitInfo{
-			Branch:     "main",
-			CommitHash: "abc123",
-			Remote:     "origin",
+		GitInfo: &models.GitInfo{
+			CurrentBranch: "main",
+			RemoteURL:     "https://github.com/test/repo.git",
+			IsClean:       true,
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Version:   1,
+		// Version:   1,
 	}
 	
 	// Create 테스트
@@ -242,7 +238,7 @@ func testSessionOperations(t *testing.T, s storage.Storage) {
 		OwnerID:     "user-003",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	require.NoError(t, ws.Create(ctx, workspace))
 	
@@ -255,7 +251,7 @@ func testSessionOperations(t *testing.T, s storage.Storage) {
 		Status:      models.ProjectStatusActive,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	require.NoError(t, ps.Create(ctx, project))
 	
@@ -275,7 +271,7 @@ func testSessionOperations(t *testing.T, s storage.Storage) {
 		},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Version:   1,
+		// Version:   1,
 	}
 	
 	// Create 테스트
@@ -345,7 +341,7 @@ func testTaskOperations(t *testing.T, s storage.Storage) {
 		OwnerID:     "user-004",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	require.NoError(t, ws.Create(ctx, workspace))
 	
@@ -358,7 +354,7 @@ func testTaskOperations(t *testing.T, s storage.Storage) {
 		Status:      models.ProjectStatusActive,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	require.NoError(t, ps.Create(ctx, project))
 	
@@ -372,7 +368,7 @@ func testTaskOperations(t *testing.T, s storage.Storage) {
 		LastActive:   time.Now(),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-		Version:      1,
+		// Version:      1,
 	}
 	require.NoError(t, ss.Create(ctx, session))
 	
@@ -389,7 +385,7 @@ func testTaskOperations(t *testing.T, s storage.Storage) {
 		Error:     "",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		Version:   1,
+		// Version:   1,
 	}
 	
 	// Create 테스트
@@ -468,7 +464,7 @@ func testTransactionOperations(t *testing.T, s storage.Storage) {
 		OwnerID:     "user-tx-001",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	
 	// 성공적인 트랜잭션 테스트
@@ -495,7 +491,7 @@ func testTransactionOperations(t *testing.T, s storage.Storage) {
 		OwnerID:     "user-tx-002",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Version:     1,
+		// Version:     1,
 	}
 	
 	tx2, err := transactionalStorage.BeginTx(ctx)
@@ -539,7 +535,7 @@ func testConcurrentOperations(t *testing.T, s storage.Storage) {
 					OwnerID:     fmt.Sprintf("user-concurrent-%d", workerID),
 					CreatedAt:   time.Now(),
 					UpdatedAt:   time.Now(),
-					Version:     1,
+					// Version:     1,
 				}
 				
 				// Create

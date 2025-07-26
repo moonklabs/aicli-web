@@ -6,7 +6,6 @@ import (
 	"time"
 	
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/memory"
@@ -17,36 +16,40 @@ func TestDefaultTransactionOptions(t *testing.T) {
 	opts := storage.DefaultTransactionOptions()
 	
 	assert.False(t, opts.ReadOnly)
-	assert.Empty(t, opts.IsolationLevel)
-	assert.Nil(t, opts.Timeout)
+	assert.Equal(t, storage.IsolationLevelReadCommitted, opts.IsolationLevel)
+	assert.Equal(t, 30*time.Second, opts.Timeout)
+	assert.Equal(t, 3, opts.RetryCount)
+	assert.Equal(t, 100*time.Millisecond, opts.RetryDelay)
+	assert.False(t, opts.EnableSavepoint)
+	assert.NotNil(t, opts.Context)
 }
 
 // TestTxContextKey 트랜잭션 컨텍스트 키 테스트
 func TestTxContextKey(t *testing.T) {
 	ctx := context.Background()
-	storage := memory.New()
-	baseTx := NewBaseTx(ctx, storage)
+	memStore := memory.New()
+	baseTx := storage.NewBaseTx(ctx, memStore)
 	
 	// 컨텍스트에 트랜잭션 추가
-	ctxWithTx := WithTxContext(ctx, baseTx)
+	ctxWithTx := storage.WithTxContext(ctx, baseTx)
 	
 	// 컨텍스트에서 트랜잭션 추출
-	extractedTx, ok := GetTxFromContext(ctxWithTx)
+	extractedTx, ok := storage.GetTxFromContext(ctxWithTx)
 	assert.True(t, ok)
 	assert.Equal(t, baseTx, extractedTx)
 	
 	// 트랜잭션이 없는 컨텍스트
-	_, ok = GetTxFromContext(ctx)
+	_, ok = storage.GetTxFromContext(ctx)
 	assert.False(t, ok)
 }
 
 // TestBaseTx 기본 트랜잭션 테스트
 func TestBaseTx(t *testing.T) {
 	ctx := context.Background()
-	storage := memory.New()
+	store := memory.New()
 	
 	t.Run("기본 트랜잭션 생성", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		assert.NotNil(t, tx)
 		assert.Equal(t, ctx, tx.Context())
@@ -58,13 +61,11 @@ func TestBaseTx(t *testing.T) {
 	})
 	
 	t.Run("트랜잭션 커밋", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		err := tx.Commit()
 		assert.NoError(t, err)
 		assert.True(t, tx.IsClosed())
-		assert.True(t, tx.committed)
-		assert.False(t, tx.rolledBack)
 		
 		// 이미 커밋된 트랜잭션을 다시 커밋하면 에러
 		err = tx.Commit()
@@ -73,13 +74,11 @@ func TestBaseTx(t *testing.T) {
 	})
 	
 	t.Run("트랜잭션 롤백", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		err := tx.Rollback()
 		assert.NoError(t, err)
 		assert.True(t, tx.IsClosed())
-		assert.False(t, tx.committed)
-		assert.True(t, tx.rolledBack)
 		
 		// 이미 롤백된 트랜잭션을 다시 롤백하면 에러
 		err = tx.Rollback()
@@ -88,7 +87,7 @@ func TestBaseTx(t *testing.T) {
 	})
 	
 	t.Run("이미 커밋된 트랜잭션 롤백", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		err := tx.Commit()
 		assert.NoError(t, err)
@@ -150,19 +149,19 @@ func (m *MockTransactionalStorage) WithTx(ctx context.Context, fn func(tx storag
 
 // TestTxManager 트랜잭션 매니저 테스트
 func TestTxManager(t *testing.T) {
-	storage := memory.New()
-	mockStorage := &MockTransactionalStorage{Storage: storage}
+	store := memory.New()
+	mockStorage := &MockTransactionalStorage{Storage: store}
 	
 	t.Run("트랜잭션 매니저 생성", func(t *testing.T) {
-		tm := NewTxManager(mockStorage)
+		tm := storage.NewTxManager(mockStorage)
 		assert.NotNil(t, tm)
 	})
 	
 	t.Run("성공적인 트랜잭션", func(t *testing.T) {
-		tm := NewTxManager(mockStorage)
+		tm := storage.NewTxManager(mockStorage)
 		
 		executed := false
-		err := tm.WithTransaction(context.Background(), func(tx Transaction) error {
+		err := tm.WithTransaction(context.Background(), func(tx storage.Transaction) error {
 			executed = true
 			assert.NotNil(t, tx)
 			assert.False(t, tx.IsClosed())
@@ -175,11 +174,11 @@ func TestTxManager(t *testing.T) {
 	})
 	
 	t.Run("실패한 트랜잭션", func(t *testing.T) {
-		mockStorage := &MockTransactionalStorage{Storage: storage}
-		tm := NewTxManager(mockStorage)
+		mockStorage := &MockTransactionalStorage{Storage: store}
+		tm := storage.NewTxManager(mockStorage)
 		
 		testErr := assert.AnError
-		err := tm.WithTransaction(context.Background(), func(tx Transaction) error {
+		err := tm.WithTransaction(context.Background(), func(tx storage.Transaction) error {
 			return testErr
 		})
 		
@@ -189,21 +188,21 @@ func TestTxManager(t *testing.T) {
 	})
 	
 	t.Run("여러 작업 실행", func(t *testing.T) {
-		mockStorage := &MockTransactionalStorage{Storage: storage}
-		tm := NewTxManager(mockStorage)
+		mockStorage := &MockTransactionalStorage{Storage: store}
+		tm := storage.NewTxManager(mockStorage)
 		
 		executed1, executed2, executed3 := false, false, false
 		
 		err := tm.ExecuteInTx(context.Background(),
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed1 = true
 				return nil
 			},
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed2 = true
 				return nil
 			},
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed3 = true
 				return nil
 			},
@@ -217,22 +216,22 @@ func TestTxManager(t *testing.T) {
 	})
 	
 	t.Run("여러 작업 중 실패", func(t *testing.T) {
-		mockStorage := &MockTransactionalStorage{Storage: storage}
-		tm := NewTxManager(mockStorage)
+		mockStorage := &MockTransactionalStorage{Storage: store}
+		tm := storage.NewTxManager(mockStorage)
 		
 		executed1, executed2, executed3 := false, false, false
 		testErr := assert.AnError
 		
 		err := tm.ExecuteInTx(context.Background(),
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed1 = true
 				return nil
 			},
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed2 = true
 				return testErr
 			},
-			func(tx Transaction) error {
+			func(tx storage.Transaction) error {
 				executed3 = true
 				return nil
 			},
@@ -249,13 +248,13 @@ func TestTxManager(t *testing.T) {
 
 // TestRunInTx 트랜잭션 유틸리티 함수 테스트
 func TestRunInTx(t *testing.T) {
-	storage := memory.New()
+	store := memory.New()
 	
 	t.Run("성공적인 실행", func(t *testing.T) {
-		mockStorage := &MockTransactionalStorage{Storage: storage}
+		mockStorage := &MockTransactionalStorage{Storage: store}
 		
 		executed := false
-		err := RunInTx(context.Background(), mockStorage, func(tx Transaction) error {
+		err := storage.RunInTx(context.Background(), mockStorage, func(tx storage.Transaction) error {
 			executed = true
 			return nil
 		})
@@ -266,10 +265,10 @@ func TestRunInTx(t *testing.T) {
 	})
 	
 	t.Run("실패한 실행", func(t *testing.T) {
-		mockStorage := &MockTransactionalStorage{Storage: storage}
+		mockStorage := &MockTransactionalStorage{Storage: store}
 		testErr := assert.AnError
 		
-		err := RunInTx(context.Background(), mockStorage, func(tx Transaction) error {
+		err := storage.RunInTx(context.Background(), mockStorage, func(tx storage.Transaction) error {
 			return testErr
 		})
 		
@@ -280,12 +279,12 @@ func TestRunInTx(t *testing.T) {
 	
 	t.Run("트랜잭션 시작 실패", func(t *testing.T) {
 		mockStorage := &MockTransactionalStorage{
-			Storage:      storage,
+			Storage:      store,
 			beginTxError: assert.AnError,
 		}
 		
 		executed := false
-		err := RunInTx(context.Background(), mockStorage, func(tx Transaction) error {
+		err := storage.RunInTx(context.Background(), mockStorage, func(tx storage.Transaction) error {
 			executed = true
 			return nil
 		})
@@ -300,10 +299,10 @@ func TestRunInTx(t *testing.T) {
 // TestTransactionLifecycle 트랜잭션 생명주기 테스트
 func TestTransactionLifecycle(t *testing.T) {
 	ctx := context.Background()
-	storage := memory.New()
+	store := memory.New()
 	
 	t.Run("정상적인 커밋 플로우", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		// 초기 상태 확인
 		assert.False(t, tx.IsClosed())
@@ -320,7 +319,7 @@ func TestTransactionLifecycle(t *testing.T) {
 	})
 	
 	t.Run("정상적인 롤백 플로우", func(t *testing.T) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		
 		// 초기 상태 확인
 		assert.False(t, tx.IsClosed())
@@ -333,7 +332,7 @@ func TestTransactionLifecycle(t *testing.T) {
 	
 	t.Run("컨텍스트 취소", func(t *testing.T) {
 		cancelCtx, cancel := context.WithCancel(ctx)
-		tx := NewBaseTx(cancelCtx, storage)
+		tx := storage.NewBaseTx(cancelCtx, store)
 		
 		cancel() // 컨텍스트 취소
 		
@@ -351,7 +350,7 @@ func TestTransactionLifecycle(t *testing.T) {
 		timeoutCtx, cancel := context.WithTimeout(ctx, time.Millisecond)
 		defer cancel()
 		
-		tx := NewBaseTx(timeoutCtx, storage)
+		tx := storage.NewBaseTx(timeoutCtx, store)
 		
 		time.Sleep(time.Millisecond * 2) // 타임아웃 발생
 		
@@ -367,19 +366,19 @@ func TestTransactionLifecycle(t *testing.T) {
 // BenchmarkBaseTxOperations 기본 트랜잭션 작업 벤치마크
 func BenchmarkBaseTxOperations(b *testing.B) {
 	ctx := context.Background()
-	storage := memory.New()
+	store := memory.New()
 	
 	b.Run("트랜잭션 생성", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			tx := NewBaseTx(ctx, storage)
+			tx := storage.NewBaseTx(ctx, store)
 			tx.Commit()
 		}
 	})
 	
 	b.Run("트랜잭션 커밋", func(b *testing.B) {
-		txs := make([]*BaseTx, b.N)
+		txs := make([]*storage.BaseTx, b.N)
 		for i := 0; i < b.N; i++ {
-			txs[i] = NewBaseTx(ctx, storage)
+			txs[i] = storage.NewBaseTx(ctx, store)
 		}
 		
 		b.ResetTimer()
@@ -389,13 +388,13 @@ func BenchmarkBaseTxOperations(b *testing.B) {
 	})
 	
 	b.Run("컨텍스트 조작", func(b *testing.B) {
-		tx := NewBaseTx(ctx, storage)
+		tx := storage.NewBaseTx(ctx, store)
 		defer tx.Commit()
 		
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ctxWithTx := WithTxContext(ctx, tx)
-			_, ok := GetTxFromContext(ctxWithTx)
+			ctxWithTx := storage.WithTxContext(ctx, tx)
+			_, ok := storage.GetTxFromContext(ctxWithTx)
 			if !ok {
 				b.Fatal("트랜잭션을 찾을 수 없습니다")
 			}
