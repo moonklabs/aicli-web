@@ -125,12 +125,18 @@ func FormatDuration(d time.Duration) string {
 		return fmt.Sprintf("%.0fs", d.Seconds())
 	}
 	if d < time.Hour {
-		return fmt.Sprintf("%.0fm%.0fs", d.Minutes(), d.Seconds()-60*d.Minutes())
+		mins := int(d.Minutes())
+		secs := int(d.Seconds()) - mins*60
+		return fmt.Sprintf("%dm%ds", mins, secs)
 	}
 	if d < 24*time.Hour {
-		return fmt.Sprintf("%.0fh%.0fm", d.Hours(), d.Minutes()-60*d.Hours())
+		hours := int(d.Hours())
+		mins := int(d.Minutes()) - hours*60
+		return fmt.Sprintf("%dh%dm", hours, mins)
 	}
-	return fmt.Sprintf("%.0fd%.0fh", d.Hours()/24, d.Hours()-24*(d.Hours()/24))
+	days := int(d.Hours() / 24)
+	hours := int(d.Hours()) - days*24
+	return fmt.Sprintf("%dd%dh", days, hours)
 }
 
 // MergeLabels 여러 레이블 맵을 병합합니다.

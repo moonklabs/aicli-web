@@ -126,6 +126,15 @@ func (v *Validator) checkSecurity(path string) error {
 	
 	// 시스템 루트 디렉토리 마운트 방지
 	for _, sysPath := range systemPaths {
+		// 루트 디렉토리("/")는 특별히 처리
+		if sysPath == "/" {
+			if absPath == "/" {
+				return fmt.Errorf("cannot mount root directory")
+			}
+			continue
+		}
+		
+		// 다른 시스템 디렉토리 확인
 		if strings.HasPrefix(strings.ToLower(absPath), strings.ToLower(sysPath)) {
 			return fmt.Errorf("cannot mount system directory: %s", absPath)
 		}

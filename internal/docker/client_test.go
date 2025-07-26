@@ -140,6 +140,7 @@ func TestClient_GenerateName(t *testing.T) {
 		config: &Config{
 			NetworkName: "aicli-network",
 		},
+		labelPrefix: "aicli",
 	}
 
 	workspaceID := "ws-12345"
@@ -151,7 +152,7 @@ func TestClient_GenerateName(t *testing.T) {
 
 	// 컨테이너 이름 생성
 	containerName := client.GenerateContainerName(workspaceID)
-	expected = "workspace_ws-12345"
+	expected = "aicli-workspace-ws-12345"
 	assert.Equal(t, expected, containerName)
 
 	// 네트워크 이름 생성

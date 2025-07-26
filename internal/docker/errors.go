@@ -78,10 +78,15 @@ func ClassifyError(err error) *DockerError {
 
 	errStr := err.Error()
 
+	// 타임아웃 에러를 먼저 체크
+	if strings.Contains(errStr, "timeout") ||
+		strings.Contains(errStr, "context deadline exceeded") {
+		return NewDockerError(ErrorTypeTimeout, "TIMEOUT", "Operation timed out", err)
+	}
+	
 	// 연결 관련 에러
 	if strings.Contains(errStr, "connection refused") ||
-		strings.Contains(errStr, "no such host") ||
-		strings.Contains(errStr, "timeout") {
+		strings.Contains(errStr, "no such host") {
 		return NewDockerError(ErrorTypeConnection, "CONNECTION_FAILED", "Failed to connect to Docker daemon", err)
 	}
 
@@ -109,11 +114,6 @@ func ClassifyError(err error) *DockerError {
 		return NewDockerError(ErrorTypePermission, "PERMISSION_DENIED", "Permission denied", err)
 	}
 
-	// 타임아웃 에러
-	if strings.Contains(errStr, "timeout") ||
-		strings.Contains(errStr, "context deadline exceeded") {
-		return NewDockerError(ErrorTypeTimeout, "TIMEOUT", "Operation timed out", err)
-	}
 
 	// 기타 에러
 	return NewDockerError(ErrorTypeUnknown, "UNKNOWN", "Unknown Docker error", err)
