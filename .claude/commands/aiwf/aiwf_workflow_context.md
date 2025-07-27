@@ -41,7 +41,7 @@
 - ✓ Milestone 목표와 정렬된 작업만 수행
 - ✓ 모든 Sprint 완료 시 Milestone 완료
 
-#### Sprint 규칙
+#### Sprint 규칙  
 - ✓ 순차적 진행 (S01 → S02 → S03)
 - ✓ 이전 Sprint 80% 완료 시 다음 Sprint 준비
 - ✓ Sprint 100% 완료 시 자동 전환
@@ -72,7 +72,7 @@
 
 ### 프로젝트 위치
 - **Milestone**: M01 - 기본 인증 시스템 (2/3 Sprints 완료)
-- **Sprint**: S02 - 핵심 기능 개발 (1/3 Tasks 완료)
+- **Sprint**: S02 - 핵심 기능 개발 (1/3 Tasks 완료)  
 - **Focus**: T03 - 사용자 인증 API 구현 (45% 진행)
 
 ### 진행 상황

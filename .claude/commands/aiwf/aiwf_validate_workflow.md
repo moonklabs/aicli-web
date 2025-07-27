@@ -35,8 +35,8 @@
 ```javascript
 // Sprint가 완료인데 Task가 미완료인 경우
 if (sprint.status === 'completed') {
-  const incompleteTasks = tasks.filter(t =>
-    t.sprint === sprint.id &&
+  const incompleteTasks = tasks.filter(t => 
+    t.sprint === sprint.id && 
     t.status !== 'completed'
   );
   if (incompleteTasks.length > 0) {
@@ -54,8 +54,8 @@ if (sprint.status === 'completed') {
 ```javascript
 // Milestone이 활성인데 Sprint가 없는 경우
 if (milestone.status === 'active') {
-  const activeSprints = sprints.filter(s =>
-    s.milestone === milestone.id &&
+  const activeSprints = sprints.filter(s => 
+    s.milestone === milestone.id && 
     s.status === 'active'
   );
   if (activeSprints.length === 0) {
@@ -77,8 +77,8 @@ const sprintOrder = ['S01', 'S02', 'S03'];
 for (let i = 1; i < sprintOrder.length; i++) {
   const current = findSprint(sprintOrder[i]);
   const previous = findSprint(sprintOrder[i-1]);
-
-  if (current.status === 'active' &&
+  
+  if (current.status === 'active' && 
       previous.status !== 'completed') {
     errors.push({
       type: 'SPRINT_ORDER_VIOLATION',
@@ -99,7 +99,7 @@ tasks.forEach(task => {
       const dep = findTask(depId);
       return dep.status !== 'completed';
     });
-
+    
     if (unmetDeps.length > 0) {
       errors.push({
         type: 'DEPENDENCY_VIOLATION',

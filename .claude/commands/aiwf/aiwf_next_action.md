@@ -23,7 +23,7 @@ const currentContext = loadWorkflowContext();
 // 2. 현재 위치 파악
 const position = {
   milestone: "M01",
-  sprint: "S02",
+  sprint: "S02", 
   activeTasks: ["T03_S02_M01"],
   phase: "implementation"
 };
@@ -36,13 +36,13 @@ const position = {
 ```javascript
 for (const task of pendingTasks) {
   const canExecute = checkExecutability(task);
-
+  
   // 실행 가능성 체크리스트
   canExecute.sameSpring = (task.sprint === currentSprint);
   canExecute.dependenciesMet = checkDependencies(task);
   canExecute.resourcesAvailable = checkResources(task);
   canExecute.noBlockers = !hasBlockers(task);
-
+  
   if (canExecute.all()) {
     executableTasks.push(task);
   }

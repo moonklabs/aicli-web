@@ -4,6 +4,27 @@
 이 모드는 오버엔지니어링을 방지하고 요구사항에 집중하는 지능적 자율 실행을 수행합니다.
 사용자 상호작용 없이 실행되지만, 중요한 단계에서는 체크포인트와 복구 기능을 제공합니다.
 
+## 📑 목차 (Table of Contents)
+
+### 🎯 핵심 섹션
+- [모드 선택](#모드-선택) - 실행 모드 결정
+- [초기화 및 상태 확인](#초기화-및-상태-확인) - YOLO 세션 시작
+- [워크플로우 기반 지능적 작업 찾기](#워크플로우-기반-지능적-작업-찾기) - 태스크 선택 알고리즘
+- [워크플로우 기반 지능적 태스크 실행](#워크플로우-기반-지능적-태스크-실행) - 태스크 수행
+- [워크플로우 기반 스마트 커밋 및 체크포인트 관리](#워크플로우-기반-스마트-커밋-및-체크포인트-관리) - 진행 상황 저장
+
+### 🚀 고급 기능
+- [독립 스프린트 생성 및 실행](#독립-스프린트-생성-및-실행-new) - 빠른 스프린트 모드
+- [마일스톤 변경 감지 및 처리](#마일스톤-변경-감지-및-처리) - 적응적 계획 조정
+- [워크플로우 기반 적응적 스프린트 관리](#워크플로우-기반-적응적-스프린트-관리) - 80% 규칙
+- [ADR 자동 관리](#📋-adr-architecture-decision-record-자동-관리) - 아키텍처 결정 추적
+
+### 🔄 실행 루프
+- [연속 실행 루프](#연속-실행-루프) - 메인 실행 사이클
+- [프로젝트 리뷰 실행](#프로젝트-리뷰-실행) - 품질 검증
+- [계속 확인](#계속-확인) - 다음 작업 결정
+- [요약 생성](#요약-생성) - 세션 종료 및 보고
+
 **핵심 원칙 (YOLO 중심):**
 - **요구사항 우선**: 명시된 요구사항만 구현 (requirement_first)
 - **간단한 해결책**: 복잡한 솔루션보다 단순한 솔루션 선호 (simple_solution)
@@ -63,7 +84,7 @@
      echo "🔧 YOLO 설정 파일 생성 중..."
      cp src/config/yolo-config-template.yaml .aiwf/yolo-config.yaml
    fi
-
+   
    # 설정 파일 내용 확인
    cat .aiwf/yolo-config.yaml | grep "engineering_level\|focus_rules" -A 5
    ```
@@ -72,7 +93,7 @@
    ```bash
    # 체크포인트 디렉토리 확인 및 생성
    mkdir -p .aiwf/checkpoints
-
+   
    # 이전 세션이 있는지 확인
    if [[ -f ".aiwf/yolo-state.json" ]]; then
      echo "📊 이전 YOLO 세션 발견. 복구할까요? (y/n)"
@@ -178,7 +199,7 @@ import('./src/utils/checkpoint-manager.js').then(({ CheckpointManager }) => {
 # 독립 스프린트 전용 오버엔지니어링 가드 설정
 echo "🛡️ 오버엔지니어링 방지 가드 활성화 중..."
 echo "  - 요구사항 우선 모드: ON"
-echo "  - 간단한 해결책 선호: ON"
+echo "  - 간단한 해결책 선호: ON"  
 echo "  - 골드 플레이팅 방지: ON"
 echo "  - 트랙 유지 강제: ON"
 ```
@@ -189,6 +210,8 @@ echo "  - 트랙 유지 강제: ON"
 - 독립 스프린트 모드에서는 해당 스프린트 태스크만 실행
 
 ## 마일스톤 변경 감지 및 처리
+
+[🔝 목차로 돌아가기](#📑-목차-table-of-contents)
 
 **마일스톤 변경이 감지된 경우:**
 
@@ -236,7 +259,7 @@ aiwf state next
 - 워크플로우 규칙 기반 전환 조건 확인
 
 **인수에 `milestone-all`이 있는 경우:**
-- **적응적 마일스톤 관리** 모드
+- **적응적 마일스톤 관리** 모드  
 - 마일스톤별 워크플로우 규칙 적용
 - 전환 시점에서 자동 리뷰 및 승인 프로세스
 
@@ -264,7 +287,7 @@ NEXT_ACTIONS=$(aiwf state next --format=json)
 **자동 선택 로직:**
 ```
 FOR each recommended_action in NEXT_ACTIONS:
-  IF action.priority != 'blocked' AND
+  IF action.priority != 'blocked' AND 
      action.task_id not in ATTEMPTED_TASKS AND
      action.score >= MINIMUM_SCORE:
     SELECT action.task_id
@@ -294,7 +317,7 @@ aiwf state validate | grep "SPRINT_PREPARATION"
    - 완료된 작업들의 실제 구현 결과 분석
    - 변경된 아키텍처나 설계 결정사항 파악
    - 예상과 다른 구현 결과 식별
-   - **의존성 체인 재분석**:
+   - **의존성 체인 재분석**: 
      ```bash
      aiwf state validate --focus=dependencies
      ```
@@ -396,7 +419,7 @@ aiwf state show --focus={task_id} --check-dependencies
   ```bash
   # AI 컨텍스트 동기화
   aiwf state focus {task_id}
-
+  
   # 작업 시작 타임스탬프 기록
   aiwf state update --start-work={task_id}
   ```
@@ -411,7 +434,7 @@ aiwf state show --focus={task_id} --check-dependencies
 node -e "
 import('./src/utils/checkpoint-manager.js').then(({ CheckpointManager }) => {
   const manager = new CheckpointManager('.');
-  manager.startTask('${task_id}', {
+  manager.startTask('${task_id}', { 
     engineering_level: '$(grep engineering_level .aiwf/yolo-config.yaml | cut -d: -f2 | xargs)',
     focus_rules: ['requirement_first', 'simple_solution', 'no_gold_plating']
   });
@@ -431,7 +454,7 @@ import('./src/utils/engineering-guard.js').then(({ getEngineeringGuard }) => {
 
 **스마트 태스크 실행 (YOLO 최적화)**:
 - **서브에이전트로 스마트 시작**: @.claude/commands/aiwf/aiwf_smart_start.md {task_id} 사용
-- **오버엔지니어링 방지 규칙 적용**:
+- **오버엔지니어링 방지 규칙 적용**: 
   - 파일 크기 300줄 이하 유지
   - 함수 크기 50줄 이하 유지
   - 중첩 깊이 4레벨 이하 유지
@@ -444,7 +467,7 @@ import('./src/utils/engineering-guard.js').then(({ getEngineeringGuard }) => {
 # 1분마다 복잡도 체크 (백그라운드)
 while task_in_progress; do
   sleep 60
-
+  
   # 오버엔지니어링 가드 실시간 체크
   node -e "
   import('./src/utils/engineering-guard.js').then(({ quickCheck }) => {
@@ -456,7 +479,7 @@ while task_in_progress; do
     });
   });
   "
-
+  
   # 상태 업데이트
   aiwf state update --silent
   check_blocking_conflicts
@@ -474,7 +497,7 @@ import('./src/utils/engineering-guard.js').then(({ getEngineeringGuard }) => {
   const guard = getEngineeringGuard('.aiwf/yolo-config.yaml');
   guard.checkProject('.').then(report => {
     console.log('📊 최종 복잡도 상태:', report.summary);
-
+    
     if (report.summary.high_severity > 0) {
       console.log('🚨 오버엔지니어링 발견!');
       report.recommendations.forEach(rec => console.log('  💡', rec));
@@ -507,16 +530,16 @@ import('./src/utils/checkpoint-manager.js').then(({ CheckpointManager }) => {
   ```bash
   # 워크플로우 일관성 재확인
   aiwf state validate --post-task={task_id}
-
+  
   # 다음 태스크들 차단 해제 확인
   aiwf state next --check-unblocked
   ```
 
 **지능적 오류 처리**:
-- **치명적 오류 감지**:
+- **치명적 오류 감지**: 
   - AI 의사결정으로 수정 가능성 평가
   - 자동 수정 시도 vs 수동 개입 요청 결정
-- **비치명적 오류**:
+- **비치명적 오류**: 
   - 워크플로우 진행에 미치는 영향 평가
   - 후속 태스크에 대한 리스크 계산
 - **학습 반영**: 오류 패턴을 향후 우선순위 계산에 반영
@@ -608,14 +631,14 @@ aiwf state validate --focus=sprint-completion
   ```bash
   # 전체 상태 업데이트
   aiwf state update
-
+  
   # 다음 스프린트 준비 상태 확인
   aiwf state next --mode=sprint-transition
-
+  
   # 차단 해제된 태스크 식별
   aiwf state next --check-unblocked
   ```
-
+  
 - **워크플로우 승인 기반 전체 스프린트 커밋**:
   ```bash
   # 스프린트 레벨 상태 일관성 확인
@@ -624,7 +647,7 @@ aiwf state validate --focus=sprint-completion
     git add -A
     git commit -m "✅ Sprint completed with workflow validation"
     git push
-
+    
     # 스프린트 완료 태그 생성 (워크플로우 메타데이터 포함)
     SPRINT_TAG="sprint-$(date +%Y%m%d-%H%M%S)-workflow-validated"
     git tag -a "$SPRINT_TAG" -m "Sprint completed: $(aiwf state show | grep current_sprint)"
@@ -636,7 +659,7 @@ aiwf state validate --focus=sprint-completion
 
 **적응적 다음 스프린트 전환:**
 - **사용자 알림**: 스프린트 완료 및 워크플로우 기반 다음 단계 알림
-- **지능적 다음 스프린트 준비**:
+- **지능적 다음 스프린트 준비**: 
   ```bash
   # 워크플로우 규칙 기반 자동 결정
   if [[ $(aiwf state next --check=auto-sprint-generation) == "approved" ]]; then
@@ -657,10 +680,10 @@ aiwf state validate --focus=sprint-completion
   ```bash
   # 전체 상태 업데이트
   aiwf state update
-
+  
   # 마일스톤 레벨 워크플로우 검증
   aiwf state validate --level=milestone
-
+  
   # 다음 마일스톤 전환 조건 확인
   aiwf state next --mode=milestone-transition
   ```
@@ -674,7 +697,7 @@ aiwf state validate --focus=sprint-completion
     git add -A
     git commit -m "🎯 Milestone completed with full workflow validation"
     git push
-
+    
     # 마일스톤 완료 태그 생성
     MILESTONE_TAG="milestone-$(date +%Y%m%d-%H%M%S)-completed"
     git tag -a "$MILESTONE_TAG" -m "Milestone completed: $(aiwf state show | grep current_milestone)"
@@ -683,10 +706,10 @@ aiwf state validate --focus=sprint-completion
   ```
 
 **적응적 리뷰 및 전환:**
-- **워크플로우 기반 리뷰 요청**:
+- **워크플로우 기반 리뷰 요청**: 
   - AI 의사결정 엔진으로 리뷰 필요성 판단
   - 자동 승인 vs 수동 리뷰 결정
-- **지능적 사용자 알림**:
+- **지능적 사용자 알림**: 
   - 마일스톤 완료 성과 요약 (워크플로우 메트릭 포함)
   - 다음 마일스톤 전환 계획 자동 생성
 
@@ -708,7 +731,49 @@ aiwf state validate --focus=sprint-completion
 - 차단 해제된 후속 작업 목록 자동 생성
 - 의존성 변경사항 및 영향 범위 자동 문서화
 
+**📋 ADR (Architecture Decision Record) 자동 관리:**
+```bash
+# 아키텍처 변경사항 감지 및 ADR 업데이트
+echo "🏗️ 아키텍처 변경사항 검사 중..."
+
+# 주요 변경사항 검사 (패키지, 설정, 구조 등)
+ARCH_CHANGES=$(git diff HEAD~1 --name-only | grep -E "(package\.json|\.env|config/|src/.*\.config\.|docker|infrastructure/)" | wc -l)
+
+if [ $ARCH_CHANGES -gt 0 ]; then
+  echo "🔍 아키텍처 관련 변경 감지 ($ARCH_CHANGES 파일)"
+  
+  # 관련 ADR 찾기
+  RELATED_ADRS=$(find .aiwf/05_ARCHITECTURAL_DECISIONS/ -name "ADR*.md" -exec grep -l "$(git log -1 --pretty=%s)" {} \;)
+  
+  if [ -n "$RELATED_ADRS" ]; then
+    echo "📝 관련 ADR 업데이트 중..."
+    for adr in $RELATED_ADRS; do
+      # ADR에 구현 경험 추가
+      echo -e "\n### Implementation Update ($(date +%Y-%m-%d))" >> "$adr"
+      echo "- 태스크: $(git log -1 --pretty=%s)" >> "$adr"
+      echo "- 변경 파일: $(git diff HEAD~1 --name-only | tr '\n' ', ')" >> "$adr"
+      echo "- 구현 노트: YOLO 모드에서 자동 적용됨" >> "$adr"
+      
+      echo "✅ ADR 업데이트: $(basename $adr)"
+    done
+  else
+    # 새로운 ADR 필요성 검사
+    MAJOR_CHANGES=$(git diff HEAD~1 --name-only | grep -E "(package\.json|docker|infrastructure/)" | wc -l)
+    if [ $MAJOR_CHANGES -gt 0 ]; then
+      echo "⚠️ 중요한 아키텍처 변경 감지 - ADR 생성 고려 필요"
+      echo "📋 변경된 파일들:"
+      git diff HEAD~1 --name-only | grep -E "(package\.json|docker|infrastructure/)"
+      
+      # 체크포인트에 ADR 생성 권고 기록
+      echo "$(date): ADR 생성 권고 - $(git log -1 --pretty=%s)" >> .aiwf/checkpoints/adr-recommendations.log
+    fi
+  fi
+fi
+```
+
 ### 연속 실행 루프
+
+[🔝 목차로 돌아가기](#📑-목차-table-of-contents)
 
 **⚡ YOLO 모드: 완료까지 중단 없음**
 
@@ -876,12 +941,12 @@ import('./src/utils/engineering-guard.js').then(({ getEngineeringGuard }) => {
     console.log('  높은 심각도:', report.summary.high_severity);
     console.log('  중간 심각도:', report.summary.medium_severity);
     console.log('  경고사항:', report.summary.warnings);
-
+    
     if (report.recommendations.length > 0) {
       console.log('💡 권장사항:');
       report.recommendations.forEach(rec => console.log('  -', rec));
     }
-
+    
     console.log(report.passed ? '✅ 프로젝트 복잡도 기준 통과' : '⚠️ 일부 복잡도 이슈 발견');
   });
 });

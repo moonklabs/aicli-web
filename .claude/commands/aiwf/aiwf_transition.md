@@ -90,7 +90,7 @@ const transitionAnalysis = {
 3. **Task 생성 필요성 판단**
    - 기존 Task 있음: 검토 및 조정
    - Task 없음: 생성 프로세스 시작
-
+   
 4. **리소스 할당**
    - 담당자 배정
    - 우선순위 설정
