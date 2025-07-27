@@ -1,0 +1,163 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-07-27T13:15:00+0900",
+  "last_updated_by": "aiwf-state-update",
+  "project_info": {
+    "name": "AICode Manager (aicli-web)",
+    "description": "Claude CLI를 웹 플랫폼으로 관리하는 로컬 우선 시스템",
+    "version": "0.1.0",
+    "stage": "Pre-Alpha",
+    "current_milestone": "M05_Advanced_Auth_System",
+    "current_sprint": "S03_M05_Auth_Finalization",
+    "project_phase": "implementation"
+  },
+  "current_focus": {
+    "active_tasks": [
+      {
+        "id": "TX01_S01_Go_Project_Init",
+        "title": "Go Project Initialization",
+        "sprint": "S01_M01_Project_Init",
+        "status": "IN_PROGRESS"
+      },
+      {
+        "id": "TX04_S01_CLI_Integration",
+        "title": "CLI Integration with Claude Commands",
+        "sprint": "S01_M03_Process_Foundation",
+        "status": "IN_PROGRESS"
+      }
+    ],
+    "last_worked_task": "S03_M05_Auth_Finalization",
+    "session_notes": "M05 마일스톤을 위한 마지막 스프린트(S03) 생성 완료. E2E 테스트 및 문서화 작업 준비."
+  },
+  "metrics": {
+    "total_tasks": 98,
+    "completed_tasks": 58,
+    "in_progress_tasks": 2,
+    "pending_tasks": 1,
+    "other_status_tasks": 37,
+    "completion_rate": 59.2,
+    "sprints": {
+      "total": 14,
+      "completed": 4,
+      "in_progress": 7,
+      "not_started": 3
+    }
+  },
+  "sprint_summary": {
+    "completed_sprints": [
+      "S01_M02_CLI_Structure",
+      "S02_M01_Dev_Tools",
+      "S03_M01_CI_Setup",
+      "S01_M06_Agent_Backend"
+    ],
+    "active_sprints": [
+      {
+        "id": "S01_M01_Project_Init",
+        "completion": 85.7,
+        "tasks_completed": 6,
+        "tasks_total": 7
+      },
+      {
+        "id": "S01_M03_Process_Foundation",
+        "completion": 71.4,
+        "tasks_completed": 5,
+        "tasks_total": 7
+      },
+      {
+        "id": "S01_M05_Advanced_Auth_System",
+        "completion": 86.7,
+        "tasks_completed": 13,
+        "tasks_total": 15
+      },
+      {
+        "id": "S02_M02_API_Foundation",
+        "completion": 25.0,
+        "tasks_completed": 2,
+        "tasks_total": 8
+      },
+      {
+        "id": "S02_M05_Frontend_Auth_Integration",
+        "completion": 36.4,
+        "tasks_completed": 4,
+        "tasks_total": 11
+      },
+      {
+        "id": "S03_M02_Data_Model",
+        "completion": 62.5,
+        "tasks_completed": 5,
+        "tasks_total": 8
+      },
+      {
+        "id": "S03_M05_Auth_Finalization",
+        "completion": 0,
+        "tasks_completed": 0,
+        "tasks_total": 0,
+        "status": "planned"
+      }
+    ],
+    "not_started_sprints": [
+      "S01_M04_Workspace_Foundation",
+      "S01_M06_Frontend_Foundation",
+      "S02_M03_Advanced_Integration"
+    ]
+  },
+  "next_actions": [
+    {
+      "priority": "HIGH",
+      "action": "S03_M05_Auth_Finalization 스프린트 태스크 생성",
+      "description": "E2E 테스트 작성 및 문서화 태스크를 정의하여 M05 마일스톤 완료",
+      "estimated_time": "2-3 days",
+      "dependencies": []
+    },
+    {
+      "priority": "HIGH",
+      "action": "진행 중인 태스크 완료",
+      "description": "TX01_S01_Go_Project_Init와 TX04_S01_CLI_Integration 태스크 완료 확인",
+      "estimated_time": "1-2 hours",
+      "dependencies": []
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "S01_M04_Workspace_Foundation 재검토",
+      "description": "Docker 통합 워크스페이스 관리 스프린트 활성화 여부 결정",
+      "estimated_time": "3-4 weeks",
+      "dependencies": ["M05 완료"]
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "프론트엔드 스프린트 통합",
+      "description": "S01_M06_Frontend_Foundation과 S02_M05_Frontend_Auth_Integration 병합 검토",
+      "estimated_time": "1 day",
+      "dependencies": []
+    },
+    {
+      "priority": "LOW",
+      "action": "태스크 상태 정리",
+      "description": "DONE, OPEN, CLOSED 등 비표준 상태를 표준 상태로 마이그레이션",
+      "estimated_time": "2-3 hours",
+      "dependencies": []
+    }
+  ],
+  "task_distribution": {
+    "by_priority": {
+      "high": 7,
+      "medium": 55,
+      "low": 18,
+      "unspecified": 18
+    },
+    "by_milestone": {
+      "M01": 18,
+      "M02": 19,
+      "M03": 13,
+      "M04": 8,
+      "M05": 26,
+      "M06": 6,
+      "unspecified": 8
+    }
+  },
+  "quality_metrics": {
+    "test_coverage": "Not measured",
+    "documentation_completeness": "Partial",
+    "code_review_completion": "Not tracked"
+  }
+}
