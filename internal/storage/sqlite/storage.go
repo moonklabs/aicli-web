@@ -31,6 +31,7 @@ type Storage struct {
 	project   *projectStorage
 	session   *sessionStorage
 	task      *taskStorage
+	agent     *agentStorage
 	rbac      *memory.RBACStorage // 임시로 메모리 RBAC 사용
 
 	// 최적화 도구들
@@ -111,6 +112,7 @@ func New(config Config) (*Storage, error) {
 	storage.project = newProjectStorage(storage)
 	storage.session = newSessionStorage(storage)
 	storage.task = newTaskStorage(storage)
+	storage.agent = newAgentStorage(storage)
 	storage.rbac = memory.NewRBACStorage() // 임시로 메모리 RBAC 사용
 
 	// 최적화 도구들 초기화
@@ -149,6 +151,11 @@ func (s *Storage) Session() storage.SessionStorage {
 // Task 태스크 스토리지 반환
 func (s *Storage) Task() storage.TaskStorage {
 	return s.task
+}
+
+// Agent 에이전트 스토리지 반환
+func (s *Storage) Agent() storage.AgentStorage {
+	return s.agent
 }
 
 // RBAC RBAC 스토리지 반환

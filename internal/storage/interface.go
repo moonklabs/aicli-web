@@ -105,6 +105,42 @@ type TaskStorage interface {
 	GetActiveCount(ctx context.Context, sessionID string) (int64, error)
 }
 
+// AgentStorage 에이전트 스토리지 인터페이스
+type AgentStorage interface {
+	// Create 새 에이전트 생성
+	Create(ctx context.Context, agent *models.Agent) error
+
+	// GetByID ID로 에이전트 조회
+	GetByID(ctx context.Context, id string) (*models.Agent, error)
+
+	// GetByProjectID 프로젝트 ID로 에이전트 목록 조회
+	GetByProjectID(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
+
+	// Update 에이전트 업데이트
+	Update(ctx context.Context, id string, updates map[string]interface{}) error
+
+	// Delete 에이전트 삭제 (soft delete)
+	Delete(ctx context.Context, id string) error
+
+	// ExistsByName 프로젝트 내 이름으로 존재 여부 확인
+	ExistsByName(ctx context.Context, projectID, name string) (bool, error)
+
+	// GetByStatus 상태별 에이전트 목록 조회
+	GetByStatus(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
+
+	// GetActiveCount 활성 에이전트 수 조회
+	GetActiveCount(ctx context.Context, projectID string) (int64, error)
+
+	// UpdateStatus 에이전트 상태 업데이트
+	UpdateStatus(ctx context.Context, id string, status models.AgentStatus, errorMessage string) error
+
+	// UpdateActivity 마지막 활동 시간 업데이트
+	UpdateActivity(ctx context.Context, id string) error
+
+	// GetByContainerID 컨테이너 ID로 에이전트 조회
+	GetByContainerID(ctx context.Context, containerID string) (*models.Agent, error)
+}
+
 // RBACStorage는 rbac.go에서 정의됨
 
 // Storage 전체 스토리지 인터페이스
@@ -120,6 +156,9 @@ type Storage interface {
 
 	// Task 태스크 스토리지 반환
 	Task() TaskStorage
+
+	// Agent 에이전트 스토리지 반환
+	Agent() AgentStorage
 
 	// RBAC RBAC 스토리지 반환
 	RBAC() RBACStorage

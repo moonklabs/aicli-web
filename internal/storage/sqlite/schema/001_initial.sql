@@ -81,6 +81,27 @@ CREATE TABLE IF NOT EXISTS tasks (
     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
 );
 
+-- Agent 테이블
+CREATE TABLE IF NOT EXISTS agents (
+    id CHAR(36) PRIMARY KEY,
+    project_id CHAR(36) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('claude', 'gemini', 'custom')),
+    status VARCHAR(20) NOT NULL DEFAULT 'created' CHECK (status IN ('created', 'starting', 'running', 'stopping', 'stopped', 'error', 'terminated')),
+    worktree_id VARCHAR(100),
+    container_id VARCHAR(100),
+    session_id VARCHAR(100),
+    config TEXT, -- JSON 데이터
+    description VARCHAR(500),
+    last_activity DATETIME,
+    error_message TEXT,
+    version INTEGER NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
 -- 트리거: updated_at 자동 업데이트
 CREATE TRIGGER IF NOT EXISTS update_workspaces_updated_at 
 AFTER UPDATE ON workspaces
@@ -104,4 +125,10 @@ CREATE TRIGGER IF NOT EXISTS update_tasks_updated_at
 AFTER UPDATE ON tasks
 BEGIN
     UPDATE tasks SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_agents_updated_at 
+AFTER UPDATE ON agents
+BEGIN
+    UPDATE agents SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
 END;

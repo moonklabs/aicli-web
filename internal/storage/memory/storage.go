@@ -10,6 +10,7 @@ type Storage struct {
 	project   *ProjectStorage
 	session   *SessionStorage
 	task      *taskStorage
+	agent     *AgentStorage
 	rbac      *RBACStorage
 }
 
@@ -23,6 +24,7 @@ func New() *Storage {
 		project:   NewProjectStorage(),
 		session:   NewSessionStorage(),
 		task:      newTaskStorage(),
+		agent:     NewAgentStorage(),
 		rbac:      NewRBACStorage(),
 	}
 }
@@ -45,6 +47,11 @@ func (s *Storage) Session() storage.SessionStorage {
 // Task 태스크 스토리지 반환
 func (s *Storage) Task() storage.TaskStorage {
 	return s.task
+}
+
+// Agent 에이전트 스토리지 반환
+func (s *Storage) Agent() storage.AgentStorage {
+	return s.agent
 }
 
 // RBAC RBAC 스토리지 반환
