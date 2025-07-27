@@ -6,7 +6,7 @@
 - **버전**: 0.1.0 (Pre-Alpha)
 - **프레임워크**: AIWF v1.0
 - **생성일**: 2025-01-20
-- **최종 수정일**: 2025-07-27T13:25:00+0900
+- **최종 수정일**: 2025-07-27T15:30:00+0900
 
 ## 기술 스택
 - **언어**: Go 1.21+
@@ -218,6 +218,32 @@ aicli-web/
     - 프론트엔드-백엔드 통합 테스트 커버리지 80% 이상
     - CI/CD 파이프라인에 E2E 테스트 통합
 
+### 스프린트 로드맵 (M06)
+- **S01_M06_Agent_Backend** (PLANNING) - 멀티 에이전트 플랫폼 백엔드 기반 구축
+  - 에이전트 데이터 모델 및 생명주기 관리, Git worktree 통합, Docker 컨테이너 관리, RESTful API 구현
+  - 태스크 상세화 완료: 8개 태스크 (High: 2개, Medium: 5개, Low: 1개)
+  - 핵심 태스크: Agent 모델, Git worktree 관리자, Docker 통합, 에이전트 API 엔드포인트
+  - 완료된 태스크: 1/8 (T01_S01_Agent_Model_Implementation 시작)
+  - 진행률: 0/8 태스크 완료 (0%)
+- **S02_M06_PTY_Streaming** (PLANNED) - 실시간 PTY 터미널 스트리밍 시스템
+  - PTY 세션 관리, WebSocket 스트리밍, 터미널 스냅샷 캡처, Docker PTY 통합
+  - 태스크 상세화 완료: 9개 태스크 (High: 3개, Medium: 5개, Low: 1개)
+  - 핵심 태스크: PTY 세션 관리자, WebSocket 스트리밍, Docker PTY 통합, ANSI 파서
+  - 완료된 태스크: 0/9
+  - 진행률: 0/9 태스크 완료 (0%)
+- **S01_M06_Frontend_Foundation** (PLANNING) - Vue.js 기반 프론트엔드 환경 구축
+  - Vue 3 + TypeScript + Vite 환경, 실시간 터미널 인터페이스, 워크스페이스 관리 UI 기본 구조
+  - 태스크 상세화 완료: 3개 태스크 (High: 2개, Medium: 1개)
+  - 핵심 태스크: 프론트엔드 기술스택 결정, 실시간 터미널 인터페이스, 워크스페이스 관리 UI
+  - 완료된 태스크: 3/3 (기본 구조 완성)
+  - 진행률: 3/3 태스크 완료 (100%)
+- **S01_M06_UI_UX_Performance_Optimization** (ACTIVE) - UI/UX 고도화 및 성능 최적화
+  - 고급 UI 컴포넌트 시스템, 성능 최적화, PWA 기능, 모바일 반응형 디자인 구현
+  - 태스크 상세화 완료: 9개 태스크 (High: 4개, Medium: 5개)
+  - 핵심 태스크: 고급 UI 컴포넌트, 데이터 테이블/차트, 성능 최적화, PWA, 모바일 반응형
+  - 완료된 태스크: 2/9 (고급 UI 컴포넌트, 데이터 테이블 시작)
+  - 진행률: 2/9 태스크 완료 (22%)
+
 ### 일반 태스크
 
 ### 개발 환경 및 빌드 최적화
@@ -239,9 +265,15 @@ aicli-web/
    - 프론트엔드 통합: ✅ 완료
    - E2E 테스트 및 문서화: ⏳ 계획됨
 
+## 현재 마일스톤
+1. **M06: Multi Agent Platform** (4-5주) - 🚧 진행 중 (planning/active)
+   - 웹 브라우저에서 여러 AI 에이전트 동시 실행/관리 플랫폼
+   - PTY 기반 실제 터미널 환경 및 tmux 스타일 세션 영속성
+   - 실시간 터미널 스냅샷 미리보기 및 모바일 반응형 UI
+   - 높은 스프린트: S02까지 계획됨
+
 ## 예정된 마일스톤
-1. **M06: Multi Agent Platform** (4-5주) - 📋 계획됨
-2. **M07: 배포 및 최적화** (3주) - 📋 계획됨
+1. **M07: 배포 및 최적화** (3주) - 📋 계획됨
 
 ## 핵심 기능
 1. **Claude CLI 래핑**: 프로세스 격리 및 생명주기 관리
@@ -287,10 +319,22 @@ aicli-web/
 1. S03_M05_Auth_Finalization 태스크 생성 및 실행
 2. E2E 테스트 스위트 작성
 3. 포괄적인 인증 시스템 문서화
-4. M06 Multi Agent Platform 계획 수립
-5. 프론트엔드 통합 완성
+4. **M06 Multi Agent Platform 진행**:
+   - S01_M06_Agent_Backend 태스크 실행 (1/8 완료)
+   - S02_M06_PTY_Streaming 태스크 계획 및 실행
+   - S01_M06_UI_UX_Performance_Optimization 지속 진행 (2/9 완료)
+5. 멀티 에이전트 플랫폼 핵심 기능 구현
 
 ## 업데이트 로그
+- 2025-07-27 15:30: M06 마일스톤 스프린트 로드맵 추가 및 상태 업데이트
+  - M06 마일스톤을 "예정된 마일스톤"에서 "현재 마일스톤"으로 변경
+  - 스프린트 로드맵 (M06) 섹션 추가: 4개 스프린트 상세 정보 포함
+    * S01_M06_Agent_Backend (PLANNING) - 8개 태스크, 멀티 에이전트 백엔드 기반
+    * S02_M06_PTY_Streaming (PLANNED) - 9개 태스크, 실시간 PTY 터미널 스트리밍
+    * S01_M06_Frontend_Foundation (PLANNING) - 3개 태스크, Vue.js 프론트엔드 환경
+    * S01_M06_UI_UX_Performance_Optimization (ACTIVE) - 9개 태스크, UI/UX 고도화
+  - 다음 단계에 M06 진행 상황 반영 및 구체적인 액션 아이템 추가
+  - 최고 스프린트 시퀀스: S02까지 계획됨 (highest_sprint_in_milestone 반영)
 - 2025-07-22 17:45: T08_S01_M04_통합_테스트_및_검증 태스크 실제 완료 - 모든 컴파일 오류 수정 및 테스트 실행 성공
   - 모든 테스트 파일 컴파일 오류 수정: Description 필드 제거, UserID → OwnerID 변경, 중복 import 제거
   - 기본 통합 테스트: 6/6 테스트 통과 (100%) - workspace_basic_test.go
