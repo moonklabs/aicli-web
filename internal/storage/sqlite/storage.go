@@ -3,16 +3,21 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
-	
+
 	_ "github.com/mattn/go-sqlite3" // SQLite 드라이버
 	"go.uber.org/zap"
-	
+
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/memory"
 )
+
+//go:embed schema/*.sql
+var schemaFiles embed.FS
 
 // Storage SQLite 기반 스토리지 구현
 type Storage struct {
@@ -20,14 +25,14 @@ type Storage struct {
 	stmtCache map[string]*sql.Stmt
 	mu        sync.RWMutex
 	logger    *zap.Logger
-	
+
 	// 스토리지 구현체들
 	workspace *workspaceStorage
 	project   *projectStorage
 	session   *sessionStorage
 	task      *taskStorage
 	rbac      *memory.RBACStorage // 임시로 메모리 RBAC 사용
-	
+
 	// 최적화 도구들
 	indexManager *IndexManager
 }
@@ -52,12 +57,12 @@ func DefaultConfig() Config {
 		ConnMaxLifetime: time.Hour,
 		ConnMaxIdleTime: time.Minute * 10,
 		PragmaOptions: map[string]string{
-			"journal_mode":    "WAL",     // Write-Ahead Logging 모드
-			"foreign_keys":    "ON",      // 외래키 제약조건 활성화
-			"synchronous":     "NORMAL",  // 동기화 모드
-			"cache_size":      "-64000",  // 64MB 캐시
-			"temp_store":      "MEMORY",  // 임시 저장소를 메모리로
-			"mmap_size":       "67108864", // 64MB 메모리 맵 크기
+			"journal_mode": "WAL",      // Write-Ahead Logging 모드
+			"foreign_keys": "ON",       // 외래키 제약조건 활성화
+			"synchronous":  "NORMAL",   // 동기화 모드
+			"cache_size":   "-64000",   // 64MB 캐시
+			"temp_store":   "MEMORY",   // 임시 저장소를 메모리로
+			"mmap_size":    "67108864", // 64MB 메모리 맵 크기
 		},
 	}
 }
@@ -68,49 +73,54 @@ func New(config Config) (*Storage, error) {
 	if config.DataSource == "" {
 		return nil, fmt.Errorf("데이터 소스가 비어있습니다")
 	}
-	
+
 	// SQLite 연결
 	db, err := sql.Open("sqlite3", config.DataSource)
 	if err != nil {
 		return nil, fmt.Errorf("SQLite 연결 실패: %w", err)
 	}
-	
+
 	// 연결 풀 설정
 	db.SetMaxOpenConns(config.MaxOpenConns)
 	db.SetMaxIdleConns(config.MaxIdleConns)
 	db.SetConnMaxLifetime(config.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(config.ConnMaxIdleTime)
-	
+
 	// 연결 테스트
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("SQLite 연결 테스트 실패: %w", err)
 	}
-	
+
 	storage := &Storage{
 		db:        db,
 		stmtCache: make(map[string]*sql.Stmt),
 		logger:    config.Logger,
 	}
-	
+
 	if storage.logger == nil {
 		storage.logger = zap.NewNop()
 	}
-	
+
 	// PRAGMA 설정 적용
 	if err := storage.applyPragmaOptions(config.PragmaOptions); err != nil {
 		return nil, fmt.Errorf("PRAGMA 설정 적용 실패: %w", err)
 	}
-	
+
 	// 스토리지 구현체들 초기화
 	storage.workspace = newWorkspaceStorage(storage)
 	storage.project = newProjectStorage(storage)
 	storage.session = newSessionStorage(storage)
 	storage.task = newTaskStorage(storage)
 	storage.rbac = memory.NewRBACStorage() // 임시로 메모리 RBAC 사용
-	
+
 	// 최적화 도구들 초기화
 	storage.indexManager = newIndexManager(storage)
-	
+
+	// 스키마 초기화
+	if err := storage.initializeSchema(context.Background()); err != nil {
+		return nil, fmt.Errorf("스키마 초기화 실패: %w", err)
+	}
+
 	return storage, nil
 }
 
@@ -152,7 +162,7 @@ func (s *Storage) BeginTx(ctx context.Context) (storage.Transaction, error) {
 	if err != nil {
 		return nil, fmt.Errorf("트랜잭션 시작 실패: %w", err)
 	}
-	
+
 	return newTransaction(tx, s), nil
 }
 
@@ -162,7 +172,7 @@ func (s *Storage) WithTx(ctx context.Context, fn func(tx storage.Transaction) er
 	if err != nil {
 		return err
 	}
-	
+
 	defer func() {
 		if !tx.IsClosed() {
 			if err != nil {
@@ -172,7 +182,7 @@ func (s *Storage) WithTx(ctx context.Context, fn func(tx storage.Transaction) er
 			}
 		}
 	}()
-	
+
 	err = fn(tx)
 	return err
 }
@@ -182,12 +192,12 @@ func (s *Storage) Close() error {
 	// Prepared Statement 정리
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	for _, stmt := range s.stmtCache {
 		stmt.Close()
 	}
 	s.stmtCache = make(map[string]*sql.Stmt)
-	
+
 	// 데이터베이스 연결 종료
 	return s.db.Close()
 }
@@ -201,18 +211,18 @@ func (s *Storage) prepareStmt(ctx context.Context, query string) (*sql.Stmt, err
 		return stmt, nil
 	}
 	s.mu.RUnlock()
-	
+
 	// 새 statement 준비
 	stmt, err := s.db.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("statement 준비 실패: %w", err)
 	}
-	
+
 	// 캐시에 저장
 	s.mu.Lock()
 	s.stmtCache[query] = stmt
 	s.mu.Unlock()
-	
+
 	return stmt, nil
 }
 
@@ -222,12 +232,12 @@ func (s *Storage) execContext(ctx context.Context, query string, args ...interfa
 	if err != nil {
 		return nil, err
 	}
-	
+
 	result, err := stmt.ExecContext(ctx, args...)
 	if err != nil {
 		return nil, storage.ConvertError(err, "exec", "sqlite")
 	}
-	
+
 	return result, nil
 }
 
@@ -237,12 +247,12 @@ func (s *Storage) queryContext(ctx context.Context, query string, args ...interf
 	if err != nil {
 		return nil, err
 	}
-	
+
 	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
 		return nil, storage.ConvertError(err, "query", "sqlite")
 	}
-	
+
 	return rows, nil
 }
 
@@ -253,7 +263,7 @@ func (s *Storage) queryRowContext(ctx context.Context, query string, args ...int
 		// sql.Row는 에러를 나중에 Scan에서 처리
 		return s.db.QueryRowContext(ctx, query, args...)
 	}
-	
+
 	return stmt.QueryRowContext(ctx, args...)
 }
 
@@ -278,11 +288,11 @@ func (s *Storage) Health(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("건강성 확인 실패: %w", err)
 	}
-	
+
 	if result != 1 {
 		return fmt.Errorf("건강성 확인 결과 불일치: %d", result)
 	}
-	
+
 	return nil
 }
 
@@ -300,7 +310,7 @@ func (s *Storage) getDB() *sql.DB {
 func (s *Storage) clearStmtCache() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	for _, stmt := range s.stmtCache {
 		stmt.Close()
 	}
@@ -315,19 +325,19 @@ func (s *Storage) IndexManager() *IndexManager {
 // OptimizeIndexes 모든 테이블의 인덱스 최적화
 func (s *Storage) OptimizeIndexes(ctx context.Context) error {
 	tables := []string{"workspaces", "projects", "sessions", "tasks"}
-	
+
 	for _, table := range tables {
 		s.logger.Info("테이블 인덱스 분석 시작", zap.String("table", table))
-		
+
 		analysis, err := s.indexManager.AnalyzeTable(ctx, table)
 		if err != nil {
-			s.logger.Error("테이블 인덱스 분석 실패", 
+			s.logger.Error("테이블 인덱스 분석 실패",
 				zap.String("table", table),
 				zap.Error(err),
 			)
 			continue
 		}
-		
+
 		// 높은 우선순위 제안만 적용
 		if len(analysis.SuggestedIndexes) > 0 {
 			err = s.indexManager.ApplyIndexSuggestions(ctx, analysis.SuggestedIndexes, []string{"high"})
@@ -339,7 +349,7 @@ func (s *Storage) OptimizeIndexes(ctx context.Context) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -347,11 +357,11 @@ func (s *Storage) OptimizeIndexes(ctx context.Context) error {
 func (s *Storage) GetIndexAnalysis(ctx context.Context) (map[string]*IndexAnalysis, error) {
 	tables := []string{"workspaces", "projects", "sessions", "tasks"}
 	results := make(map[string]*IndexAnalysis)
-	
+
 	for _, table := range tables {
 		analysis, err := s.indexManager.AnalyzeTable(ctx, table)
 		if err != nil {
-			s.logger.Error("테이블 인덱스 분석 실패", 
+			s.logger.Error("테이블 인덱스 분석 실패",
 				zap.String("table", table),
 				zap.Error(err),
 			)
@@ -359,6 +369,127 @@ func (s *Storage) GetIndexAnalysis(ctx context.Context) (map[string]*IndexAnalys
 		}
 		results[table] = analysis
 	}
-	
+
 	return results, nil
+}
+
+// initializeSchema 스키마 초기화
+func (s *Storage) initializeSchema(ctx context.Context) error {
+	// 스키마 파일들을 순서대로 실행
+	schemaPaths := []string{
+		"schema/001_initial.sql",
+		"schema/indexes.sql",
+	}
+
+	for _, schemaPath := range schemaPaths {
+		s.logger.Info("스키마 파일 실행 중", zap.String("file", schemaPath))
+
+		content, err := schemaFiles.ReadFile(schemaPath)
+		if err != nil {
+			return fmt.Errorf("스키마 파일 읽기 실패 %s: %w", schemaPath, err)
+		}
+
+		// SQL 문들을 실행 (트리거를 고려한 파싱)
+		sqlContent := string(content)
+		if err := s.executeSQLContent(ctx, sqlContent); err != nil {
+			return fmt.Errorf("스키마 파일 실행 실패 %s: %w", schemaPath, err)
+		}
+	}
+
+	s.logger.Info("스키마 초기화 완료")
+	return nil
+}
+
+// executeSQLContent SQL 컨텐츠를 트리거를 고려하여 실행
+func (s *Storage) executeSQLContent(ctx context.Context, content string) error {
+	// 주석 제거
+	lines := strings.Split(content, "\n")
+	var cleanedLines []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "--") {
+			cleanedLines = append(cleanedLines, line)
+		}
+	}
+
+	sqlContent := strings.Join(cleanedLines, "\n")
+
+	// SQL 문들을 파싱 (트리거의 BEGIN...END 블록 고려)
+	statements := s.parseSQLStatements(sqlContent)
+
+	for _, stmt := range statements {
+		stmt = strings.TrimSpace(stmt)
+		if stmt == "" {
+			continue
+		}
+
+		_, err := s.db.ExecContext(ctx, stmt)
+		if err != nil {
+			return fmt.Errorf("SQL 실행 실패 (%s...): %w", stmt[:min(50, len(stmt))], err)
+		}
+	}
+
+	return nil
+}
+
+// parseSQLStatements SQL 문들을 트리거를 고려하여 파싱
+func (s *Storage) parseSQLStatements(content string) []string {
+	var statements []string
+	var currentStmt strings.Builder
+	var inTrigger bool
+	var triggerDepth int
+
+	// 세미콜론으로 분리하되, BEGIN...END 블록 내부는 제외
+	parts := strings.Split(content, ";")
+
+	for i, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		currentStmt.WriteString(part)
+
+		// 트리거 감지
+		partUpper := strings.ToUpper(part)
+		if strings.Contains(partUpper, "CREATE TRIGGER") {
+			inTrigger = true
+		}
+
+		if inTrigger {
+			// BEGIN 카운트
+			triggerDepth += strings.Count(partUpper, "BEGIN")
+			// END 카운트
+			triggerDepth -= strings.Count(partUpper, "END")
+
+			// 트리거가 완료되었는지 확인
+			if triggerDepth <= 0 {
+				inTrigger = false
+				triggerDepth = 0
+				statements = append(statements, currentStmt.String())
+				currentStmt.Reset()
+			} else if i < len(parts)-1 {
+				currentStmt.WriteString(";")
+			}
+		} else {
+			// 일반 SQL 문
+			statements = append(statements, currentStmt.String())
+			currentStmt.Reset()
+		}
+	}
+
+	// 마지막 문이 남아있으면 추가
+	if currentStmt.Len() > 0 {
+		statements = append(statements, currentStmt.String())
+	}
+
+	return statements
+}
+
+// min 최솟값 반환 (Go 1.21 이전 버전 지원)
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
