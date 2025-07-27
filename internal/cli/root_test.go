@@ -20,7 +20,7 @@ func TestExecute(t *testing.T) {
 
 	// 테스트용 rootCmd 설정
 	rootCmd = newTestRootCmd()
-	
+
 	// Execute 함수 테스트
 	err := Execute()
 	testutil.AssertNil(t, err)
@@ -28,7 +28,7 @@ func TestExecute(t *testing.T) {
 
 func TestRootCmd_Flags(t *testing.T) {
 	cmd := newTestRootCmd()
-	
+
 	// 전역 플래그 검증
 	flags := []struct {
 		name      string
@@ -59,7 +59,7 @@ func TestRootCmd_Flags(t *testing.T) {
 	for _, flag := range flags {
 		f := cmd.PersistentFlags().Lookup(flag.name)
 		testutil.AssertNotNil(t, f)
-		
+
 		if flag.shorthand != "" {
 			testutil.AssertEqual(t, flag.shorthand, f.Shorthand)
 		}
@@ -75,7 +75,7 @@ func TestRootCmd_Flags(t *testing.T) {
 func TestInitConfig(t *testing.T) {
 	// 테스트용 임시 디렉토리 생성
 	tmpDir := testutil.TempDir(t, "aicli-config-test")
-	
+
 	// 테스트 설정 파일 생성
 	configContent := `
 verbose: true
@@ -88,10 +88,10 @@ api:
 	testutil.TempFile(t, tmpDir, ".aicli.yaml", configContent)
 
 	tests := []struct {
-		name     string
-		setup    func()
-		cleanup  func()
-		check    func(t *testing.T)
+		name    string
+		setup   func()
+		cleanup func()
+		check   func(t *testing.T)
 	}{
 		{
 			name: "지정된 설정 파일 사용",
@@ -105,7 +105,7 @@ api:
 			},
 			check: func(t *testing.T) {
 				initConfig()
-				
+
 				// 설정이 제대로 로드되었는지 확인
 				testutil.AssertEqual(t, true, viper.GetBool("verbose"))
 				testutil.AssertEqual(t, "json", viper.GetString("output"))
@@ -126,7 +126,7 @@ api:
 			},
 			check: func(t *testing.T) {
 				initConfig()
-				
+
 				// 환경 변수 접두사 확인
 				testutil.AssertEqual(t, "AICLI", viper.GetEnvPrefix())
 			},
@@ -145,7 +145,7 @@ api:
 			},
 			check: func(t *testing.T) {
 				initConfig()
-				
+
 				// 환경 변수가 설정 파일보다 우선순위가 높은지 확인
 				testutil.AssertEqual(t, "yaml", viper.GetString("output"))
 			},
@@ -157,11 +157,11 @@ api:
 			if tt.setup != nil {
 				tt.setup()
 			}
-			
+
 			if tt.check != nil {
 				tt.check(t)
 			}
-			
+
 			if tt.cleanup != nil {
 				tt.cleanup()
 			}
@@ -175,14 +175,14 @@ func TestRootCmd_Version(t *testing.T) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	cmd.SetErr(buf)
-	
+
 	// --version 플래그 실행
 	cmd.SetArgs([]string{"--version"})
 	err := cmd.Execute()
-	
+
 	testutil.AssertNil(t, err)
 	output := buf.String()
-	
+
 	// 버전 정보가 출력되는지 확인
 	if len(output) == 0 {
 		t.Error("버전 정보가 출력되지 않음")
@@ -194,14 +194,14 @@ func TestRootCmd_Help(t *testing.T) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	cmd.SetErr(buf)
-	
+
 	// --help 플래그 실행
 	cmd.SetArgs([]string{"--help"})
 	err := cmd.Execute()
-	
+
 	testutil.AssertNil(t, err)
 	output := buf.String()
-	
+
 	// 도움말에 필요한 정보가 포함되어 있는지 확인
 	testutil.AssertContains(t, output, "aicli")
 	testutil.AssertContains(t, output, "AI-powered code management CLI")
@@ -216,11 +216,11 @@ func newTestRootCmd() *cobra.Command {
 		Short:   "AI-powered code management CLI",
 		Version: "test",
 	}
-	
+
 	// 플래그 추가
 	cmd.PersistentFlags().String("config", "", "config file")
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
 	cmd.PersistentFlags().StringP("output", "o", "table", "output format")
-	
+
 	return cmd
 }

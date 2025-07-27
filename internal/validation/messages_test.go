@@ -237,8 +237,8 @@ func TestTranslateValidationErrors(t *testing.T) {
 	assert.Equal(t, "이름 필드는 필수입니다", result.Errors[0].Message)
 
 	// 두 번째 에러 확인
-	assert.Equal(t, "email", result.Errors[1].Field)
-	assert.Equal(t, "email 필드는 유효한 이메일 주소여야 합니다", result.Errors[1].Message)
+	assert.Equal(t, "이메일", result.Errors[1].Field)
+	assert.Equal(t, "이메일 필드는 유효한 이메일 주소여야 합니다", result.Errors[1].Message)
 }
 
 func TestGetLanguageFromContext(t *testing.T) {
@@ -342,7 +342,7 @@ func TestTranslateBusinessError(t *testing.T) {
 			expected: BusinessValidationError{
 				Code:    "UNKNOWN_ERROR",
 				Message: "Original message", // 원본 메시지 유지
-				Field:   "이름",              // 필드명은 번역
+				Field:   "이름",               // 필드명은 번역
 			},
 		},
 	}

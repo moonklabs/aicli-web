@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aicli/aicli-web/internal/models"
 	mountpkg "github.com/aicli/aicli-web/internal/docker/mount"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 func TestMountManager_Integration(t *testing.T) {
@@ -20,7 +20,7 @@ func TestMountManager_Integration(t *testing.T) {
 
 	mountManager := NewMountManager()
 	tempDir := t.TempDir()
-	
+
 	// 테스트 파일 구조 생성
 	setupTestDirectory(t, tempDir)
 
@@ -99,7 +99,7 @@ func TestMountManager_Integration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Len(t, mounts, 2) // workspace + additional
-		
+
 		// 첫 번째 마운트 (workspace)
 		assert.Equal(t, "/workspace", mounts[0].Target)
 		assert.False(t, mounts[0].ReadOnly)
@@ -126,7 +126,7 @@ func TestContainerManager_WithMounts(t *testing.T) {
 
 	containerManager := factory.GetContainerManager()
 	mountManager := factory.GetMountManager()
-	
+
 	ctx := context.Background()
 
 	// Docker daemon 연결 확인
@@ -158,20 +158,20 @@ func TestContainerManager_WithMounts(t *testing.T) {
 		// 참고: 실제 컨테이너 생성은 Docker daemon이 필요하므로 모의 테스트로 구현
 		// 실제 환경에서는 다음과 같이 사용됨:
 		/*
-		container, err := containerManager.CreateWorkspaceContainerWithMounts(
-			ctx, workspace, req, mountManager, nil,
-		)
-		require.NoError(t, err)
-		defer containerManager.RemoveContainer(ctx, container.ID, true)
+			container, err := containerManager.CreateWorkspaceContainerWithMounts(
+				ctx, workspace, req, mountManager, nil,
+			)
+			require.NoError(t, err)
+			defer containerManager.RemoveContainer(ctx, container.ID, true)
 
-		assert.NotEmpty(t, container.ID)
-		assert.Equal(t, workspace.ID, container.WorkspaceID)
-		assert.NotEmpty(t, container.Mounts)
+			assert.NotEmpty(t, container.ID)
+			assert.Equal(t, workspace.ID, container.WorkspaceID)
+			assert.NotEmpty(t, container.Mounts)
 
-		// 마운트 상태 확인
-		mountStatuses, err := containerManager.GetContainerMountStatus(ctx, container.ID, mountManager)
-		require.NoError(t, err)
-		assert.NotEmpty(t, mountStatuses)
+			// 마운트 상태 확인
+			mountStatuses, err := containerManager.GetContainerMountStatus(ctx, container.ID, mountManager)
+			require.NoError(t, err)
+			assert.NotEmpty(t, mountStatuses)
 		*/
 
 		// 모의 테스트: 마운트 구성만 검증
@@ -211,7 +211,7 @@ func TestMountManager_ErrorScenarios(t *testing.T) {
 
 	t.Run("dangerous container target path", func(t *testing.T) {
 		tempDir := t.TempDir()
-		
+
 		req := &mountpkg.CreateMountRequest{
 			SourcePath: tempDir,
 			TargetPath: "/etc", // 컨테이너 내 민감한 경로
@@ -275,7 +275,7 @@ func TestMountManager_FileWatcher(t *testing.T) {
 		// 두 개의 watcher 시작
 		err1 := mountManager.StartFileWatcher(ctx, tempDir, nil, func([]string) {})
 		err2 := mountManager.StartFileWatcher(ctx, tempDir2, nil, func([]string) {})
-		
+
 		require.NoError(t, err1)
 		require.NoError(t, err2)
 
@@ -311,7 +311,7 @@ func setupTestDirectory(t *testing.T, baseDir string) {
 		fullPath := filepath.Join(baseDir, filePath)
 		err := os.MkdirAll(filepath.Dir(fullPath), 0755)
 		require.NoError(t, err)
-		
+
 		err = os.WriteFile(fullPath, []byte(content), 0644)
 		require.NoError(t, err)
 	}

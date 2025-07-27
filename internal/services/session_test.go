@@ -18,8 +18,8 @@ func TestSessionService_Create(t *testing.T) {
 
 	// 먼저 워크스페이스와 프로젝트 생성
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -57,8 +57,8 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -131,7 +131,7 @@ func TestSessionService_UpdateStatus(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				
+
 				// 업데이트된 상태 확인
 				updatedSession, err := sessionService.GetByID(context.Background(), session.ID)
 				require.NoError(t, err)
@@ -154,8 +154,8 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -183,7 +183,7 @@ func TestSessionService_ConcurrentLimit(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, session2)
-	
+
 	// 두 세션 모두 활성화
 	err = sessionService.UpdateStatus(context.Background(), session1.ID, models.SessionActive)
 	assert.NoError(t, err)
@@ -216,8 +216,8 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -258,8 +258,8 @@ func TestSessionService_UpdateActivity(t *testing.T) {
 	// 업데이트 확인
 	updatedSession, err := sessionService.GetByID(context.Background(), session.ID)
 	require.NoError(t, err)
-	
-	assert.Equal(t, models.SessionActive, updatedSession.Status) // Idle에서 Active로 변경됨
+
+	assert.Equal(t, models.SessionActive, updatedSession.Status)   // Idle에서 Active로 변경됨
 	assert.True(t, updatedSession.LastActive.After(oldLastActive)) // LastActive 시간 업데이트됨
 }
 
@@ -270,8 +270,8 @@ func TestSessionService_List(t *testing.T) {
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -302,18 +302,18 @@ func TestSessionService_List(t *testing.T) {
 		if i%2 == 0 {
 			projectID = project2.ID
 		}
-		
+
 		session, err := sessionService.Create(context.Background(), &models.SessionCreateRequest{
 			ProjectID: projectID,
 		})
 		require.NoError(t, err)
-		
+
 		// 일부 세션을 활성화
 		if i < 3 {
 			err = sessionService.UpdateStatus(context.Background(), session.ID, models.SessionActive)
 			require.NoError(t, err)
 		}
-		
+
 		sessions = append(sessions, session)
 	}
 
@@ -355,8 +355,8 @@ func TestSessionService_UpdateStats(t *testing.T) {
 
 	// 테스트 데이터 준비
 	workspace := &models.Workspace{
-		Name:     "Test Workspace",
-		OwnerID:  "user-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
 	}
 	err := store.Workspace().Create(context.Background(), workspace)
@@ -383,7 +383,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 	// 업데이트 확인
 	updatedSession, err := sessionService.GetByID(context.Background(), session.ID)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, int64(5), updatedSession.CommandCount)
 	assert.Equal(t, int64(1024), updatedSession.BytesIn)
 	assert.Equal(t, int64(2048), updatedSession.BytesOut)
@@ -396,7 +396,7 @@ func TestSessionService_UpdateStats(t *testing.T) {
 	// 누적 확인
 	updatedSession, err = sessionService.GetByID(context.Background(), session.ID)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, int64(8), updatedSession.CommandCount)
 	assert.Equal(t, int64(1536), updatedSession.BytesIn)
 	assert.Equal(t, int64(3072), updatedSession.BytesOut)

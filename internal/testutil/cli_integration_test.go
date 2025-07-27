@@ -21,7 +21,7 @@ func TestCLI_IntegrationWorkflow(t *testing.T) {
 
 	// 모의 CLI 애플리케이션 생성
 	app := createMockCLIApp(t)
-	
+
 	// 테스트 시나리오: 워크스페이스 초기화 -> 설정 -> 작업 실행
 	t.Run("전체 워크플로우", func(t *testing.T) {
 		runner := NewCLITestRunner()
@@ -67,7 +67,7 @@ func TestCLI_IntegrationWorkflow(t *testing.T) {
 // 에러 처리 통합 테스트
 func TestCLI_ErrorHandlingIntegration(t *testing.T) {
 	app := createMockCLIApp(t)
-	
+
 	testCases := []CLITestCase{
 		{
 			Name:      "존재하지 않는 명령어",
@@ -117,10 +117,10 @@ func TestCLI_ConfigManagementIntegration(t *testing.T) {
 
 	// 설정 값 추가
 	configTests := map[string]string{
-		"claude.api_key":     "test-api-key",
-		"claude.model":       "claude-3",
-		"output.format":      "json",
-		"workspace.default":  workspaceDir,
+		"claude.api_key":    "test-api-key",
+		"claude.model":      "claude-3",
+		"output.format":     "json",
+		"workspace.default": workspaceDir,
 	}
 
 	t.Run("설정 값 추가", func(t *testing.T) {
@@ -230,8 +230,8 @@ func TestCLI_OutputFormatIntegration(t *testing.T) {
 
 	// 여러 출력 형식 테스트
 	formats := []struct {
-		name string
-		flag string
+		name  string
+		flag  string
 		check func(output string) bool
 	}{
 		{
@@ -265,7 +265,7 @@ func TestCLI_OutputFormatIntegration(t *testing.T) {
 
 			err := runner.RunCommand("workspace", "list", "--output", format.flag)
 			require.NoError(t, err)
-			
+
 			output := runner.GetOutput()
 			assert.True(t, format.check(output), "출력 형식이 올바르지 않음: %s", format.name)
 		})
@@ -275,7 +275,7 @@ func TestCLI_OutputFormatIntegration(t *testing.T) {
 // 환경 변수 통합 테스트
 func TestCLI_EnvironmentVariablesIntegration(t *testing.T) {
 	app := createMockCLIApp(t)
-	
+
 	envTests := map[string]string{
 		"AICLI_CLAUDE_API_KEY": "env-api-key",
 		"AICLI_OUTPUT_FORMAT":  "json",
@@ -319,7 +319,7 @@ func TestCLI_ConcurrentOperationsIntegration(t *testing.T) {
 			// 각 고루틴에서 다른 작업 수행
 			workspaceName := fmt.Sprintf("concurrent-workspace-%d", id)
 			err := runner.RunCommand("workspace", "create", workspaceName)
-			
+
 			results <- err
 		}(i)
 	}
@@ -365,21 +365,21 @@ func TestCLI_MemoryUsageIntegration(t *testing.T) {
 	}
 
 	app := createMockCLIApp(t)
-	
+
 	// 많은 수의 워크스페이스 생성/삭제로 메모리 누수 확인
 	for i := 0; i < 100; i++ {
 		runner := NewCLITestRunner()
 		runner.SetCommand(app)
-		
+
 		workspaceName := fmt.Sprintf("memory-test-%d", i)
-		
+
 		err := runner.RunCommand("workspace", "create", workspaceName)
 		require.NoError(t, err)
-		
+
 		err = runner.RunCommand("workspace", "delete", workspaceName)
 		require.NoError(t, err)
 	}
-	
+
 	t.Log("메모리 사용량 테스트 완료")
 }
 
@@ -515,6 +515,6 @@ func createMockCLIApp(t *testing.T) *cobra.Command {
 	rootCmd.PersistentFlags().String("output", "table", "Output format (table|json|yaml)")
 
 	rootCmd.AddCommand(workspaceCmd, configCmd)
-	
+
 	return rootCmd
 }

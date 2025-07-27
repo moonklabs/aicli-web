@@ -18,13 +18,13 @@ type ActionRecord struct {
 // PoolMetrics 확장 필드
 type poolMetricsExt struct {
 	// 성능 통계 (실시간 계산)
-	throughputRPS   atomic.Value // float64
-	averageLatency  atomic.Value // time.Duration
-	errorRate       atomic.Value // float64
-	
+	throughputRPS  atomic.Value // float64
+	averageLatency atomic.Value // time.Duration
+	errorRate      atomic.Value // float64
+
 	// 액션 추적
-	actions         []ActionRecord
-	actionMutex     sync.RWMutex
+	actions     []ActionRecord
+	actionMutex sync.RWMutex
 }
 
 var metricsExtMap = sync.Map{} // *PoolMetrics -> *poolMetricsExt
@@ -34,7 +34,7 @@ func getOrCreateExt(m *PoolMetrics) *poolMetricsExt {
 	if ext, ok := metricsExtMap.Load(m); ok {
 		return ext.(*poolMetricsExt)
 	}
-	
+
 	ext := &poolMetricsExt{
 		actions: make([]ActionRecord, 0, 1000),
 	}
@@ -74,19 +74,19 @@ func (m *PoolMetrics) RecordAction(action string, success bool, duration time.Du
 	ext := getOrCreateExt(m)
 	ext.actionMutex.Lock()
 	defer ext.actionMutex.Unlock()
-	
+
 	ext.actions = append(ext.actions, ActionRecord{
 		Action:    action,
 		Timestamp: time.Now(),
 		Success:   success,
 		Duration:  duration,
 	})
-	
+
 	// 최대 1000개의 액션만 유지
 	if len(ext.actions) > 1000 {
 		ext.actions = ext.actions[1:]
 	}
-	
+
 	// 통계 업데이트
 	updateStats(ext)
 }
@@ -101,21 +101,21 @@ func updateStats(ext *poolMetricsExt) {
 			recentActions = append(recentActions, action)
 		}
 	}
-	
+
 	if len(recentActions) == 0 {
 		ext.throughputRPS.Store(0.0)
 		ext.averageLatency.Store(time.Duration(0))
 		ext.errorRate.Store(0.0)
 		return
 	}
-	
+
 	// 처리량 계산
 	duration := time.Since(recentActions[0].Timestamp)
 	if duration > 0 {
 		rps := float64(len(recentActions)) / duration.Seconds()
 		ext.throughputRPS.Store(rps)
 	}
-	
+
 	// 평균 지연시간 계산
 	var totalLatency time.Duration
 	var errorCount int
@@ -127,7 +127,7 @@ func updateStats(ext *poolMetricsExt) {
 	}
 	avgLatency := totalLatency / time.Duration(len(recentActions))
 	ext.averageLatency.Store(avgLatency)
-	
+
 	// 에러율 계산
 	errorRate := float64(errorCount) / float64(len(recentActions))
 	ext.errorRate.Store(errorRate)
@@ -136,12 +136,12 @@ func updateStats(ext *poolMetricsExt) {
 // Start는 메트릭 수집을 시작합니다
 func (m *PoolMetrics) Start(ctx context.Context) {
 	ext := getOrCreateExt(m)
-	
+
 	// 주기적으로 통계 업데이트
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ctx.Done():

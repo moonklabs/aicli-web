@@ -51,7 +51,7 @@ type EventMetrics struct {
 // NewEventBus는 새로운 이벤트 버스를 생성합니다.
 func NewEventBus(logger *logrus.Logger) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &EventBus{
 		subscribers: make(map[string][]*EventSubscription),
 		logger:      logger,
@@ -81,9 +81,9 @@ func (eb *EventBus) Subscribe(eventType string, handler EventHandler) (*EventSub
 	}
 
 	eb.subscribers[eventType] = append(eb.subscribers[eventType], subscription)
-	
+
 	eb.updateMetrics()
-	
+
 	eb.logger.WithFields(logrus.Fields{
 		"event_type":      eventType,
 		"subscription_id": subscription.ID,
@@ -154,9 +154,9 @@ func (eb *EventBus) Publish(event *StreamEvent) {
 	}
 
 	eb.logger.WithFields(logrus.Fields{
-		"event_type":   event.Type,
-		"subscribers":  len(handlers),
-		"event_id":     event.ID,
+		"event_type":  event.Type,
+		"subscribers": len(handlers),
+		"event_id":    event.ID,
 	}).Debug("Publishing event")
 
 	// 각 핸들러를 고루틴에서 실행
@@ -207,7 +207,7 @@ func (eb *EventBus) handleEvent(subscription *EventSubscription, event *StreamEv
 				"subscription_id": subscription.ID,
 				"event_type":      event.Type,
 			}).Error("Event handler panicked")
-			
+
 			eb.metrics.mutex.Lock()
 			eb.metrics.FailedDeliveries++
 			eb.metrics.mutex.Unlock()
@@ -220,7 +220,7 @@ func (eb *EventBus) handleEvent(subscription *EventSubscription, event *StreamEv
 			"subscription_id": subscription.ID,
 			"event_type":      event.Type,
 		}).Error("Event handler error")
-		
+
 		eb.metrics.mutex.Lock()
 		eb.metrics.FailedDeliveries++
 		eb.metrics.mutex.Unlock()
@@ -234,7 +234,7 @@ func (eb *EventBus) handleEvent(subscription *EventSubscription, event *StreamEv
 // callHandler는 핸들러를 호출하고 타임아웃을 적용합니다.
 func (eb *EventBus) callHandler(handler EventHandler, event *StreamEvent) error {
 	done := make(chan error, 1)
-	
+
 	go func() {
 		done <- handler(event)
 	}()
@@ -281,18 +281,18 @@ func (eb *EventBus) GetMetrics() map[string]interface{} {
 	defer eb.metrics.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"published_events":    eb.metrics.PublishedEvents,
-		"delivered_events":    eb.metrics.DeliveredEvents,
-		"failed_deliveries":   eb.metrics.FailedDeliveries,
-		"active_subscribers":  eb.metrics.ActiveSubscribers,
-		"success_rate":        eb.calculateSuccessRate(),
+		"published_events":   eb.metrics.PublishedEvents,
+		"delivered_events":   eb.metrics.DeliveredEvents,
+		"failed_deliveries":  eb.metrics.FailedDeliveries,
+		"active_subscribers": eb.metrics.ActiveSubscribers,
+		"success_rate":       eb.calculateSuccessRate(),
 	}
 }
 
 // Close는 이벤트 버스를 종료합니다.
 func (eb *EventBus) Close() error {
 	eb.cancel()
-	
+
 	eb.mutex.Lock()
 	defer eb.mutex.Unlock()
 

@@ -32,7 +32,7 @@ func TestCompletionCommand(t *testing.T) {
 			wantErr:  false,
 		},
 		{
-			name:     "fish completion", 
+			name:     "fish completion",
 			args:     []string{"completion", "fish"},
 			contains: []string{"complete -c aicli"},
 			wantErr:  false,
@@ -71,10 +71,10 @@ func TestCompletionCommand(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				output := buf.String()
-				
+
 				// 예상된 내용이 포함되어 있는지 확인
 				for _, expected := range tt.contains {
-					assert.Contains(t, output, expected, 
+					assert.Contains(t, output, expected,
 						"출력에 '%s'가 포함되어야 합니다", expected)
 				}
 			}
@@ -117,7 +117,7 @@ func TestDynamicCompletions(t *testing.T) {
 			completionFunc: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 				statuses := []string{
 					"running",
-					"completed", 
+					"completed",
 					"failed",
 					"cancelled",
 				}
@@ -159,12 +159,12 @@ func TestDynamicCompletions(t *testing.T) {
 func TestCompletionSubcommands(t *testing.T) {
 	// 루트 명령어에 completion 추가
 	addCompletionCmd()
-	
+
 	// completion 명령어 찾기
 	completionCmd, _, err := rootCmd.Find([]string{"completion"})
 	assert.NoError(t, err)
 	assert.NotNil(t, completionCmd)
-	
+
 	// 서브커맨드 확인
 	subcommands := []string{"bash", "zsh", "fish", "powershell"}
 	for _, subcmd := range subcommands {
@@ -190,7 +190,7 @@ func TestConfigKeyCompletion(t *testing.T) {
 		"logging.level",
 		"logging.format",
 	}
-	
+
 	// 프리픽스로 필터링 테스트
 	testCases := []struct {
 		prefix   string
@@ -203,7 +203,7 @@ func TestConfigKeyCompletion(t *testing.T) {
 		{"logging.", 2},
 		{"", 11},
 	}
-	
+
 	for _, tc := range testCases {
 		t.Run("prefix_"+tc.prefix, func(t *testing.T) {
 			var filtered []string

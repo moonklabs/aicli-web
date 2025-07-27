@@ -12,22 +12,22 @@ import (
 
 func TestNewGeoIPService(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		geoipDataDir string
-		expectError bool
-		description string
+		expectError  bool
+		description  string
 	}{
 		{
-			name:        "nonexistent directory",
+			name:         "nonexistent directory",
 			geoipDataDir: "/nonexistent/path",
-			expectError: true,
-			description: "should return error when GeoIP database files are not found",
+			expectError:  true,
+			description:  "should return error when GeoIP database files are not found",
 		},
 		{
-			name:        "empty directory path",
+			name:         "empty directory path",
 			geoipDataDir: "",
-			expectError: true,
-			description: "should return error when directory path is empty",
+			expectError:  true,
+			description:  "should return error when directory path is empty",
 		},
 	}
 
@@ -36,7 +36,7 @@ func TestNewGeoIPService(t *testing.T) {
 			service, err := NewGeoIPService(&GeoIPConfig{
 				DatabasePath: tt.geoipDataDir,
 			})
-			
+
 			if tt.expectError {
 				assert.Error(t, err, tt.description)
 				assert.Nil(t, service, "service should be nil when error occurs")
@@ -98,7 +98,7 @@ func TestIsLocalIP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ip := net.ParseIP(tt.ip)
 			require.NotNil(t, ip, "IP should be valid")
-			
+
 			result := service.isLocalIP(ip)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -143,7 +143,7 @@ func TestGetLocationInfoLocalIP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := service.GetLocationInfo(tt.ip)
-			
+
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -163,7 +163,7 @@ func TestGetLocationInfoInvalidIP(t *testing.T) {
 	for _, ip := range tests {
 		t.Run("invalid IP: "+ip, func(t *testing.T) {
 			result, err := service.GetLocationInfo(ip)
-			
+
 			assert.Error(t, err)
 			assert.Equal(t, ErrInvalidIPAddress, err)
 			assert.Nil(t, result)
@@ -175,30 +175,30 @@ func TestCalculateDistance(t *testing.T) {
 	service := &GeoIPService{}
 
 	tests := []struct {
-		name      string
+		name       string
 		lat1, lon1 float64
 		lat2, lon2 float64
-		expected  float64
-		tolerance float64
+		expected   float64
+		tolerance  float64
 	}{
 		{
-			name:      "same location",
-			lat1:      37.7749, lon1: -122.4194, // San Francisco
-			lat2:      37.7749, lon2: -122.4194, // San Francisco
+			name: "same location",
+			lat1: 37.7749, lon1: -122.4194, // San Francisco
+			lat2: 37.7749, lon2: -122.4194, // San Francisco
 			expected:  0.0,
 			tolerance: 0.1,
 		},
 		{
-			name:      "SF to LA approximate",
-			lat1:      37.7749, lon1: -122.4194, // San Francisco
-			lat2:      34.0522, lon2: -118.2437, // Los Angeles
+			name: "SF to LA approximate",
+			lat1: 37.7749, lon1: -122.4194, // San Francisco
+			lat2: 34.0522, lon2: -118.2437, // Los Angeles
 			expected:  559.0, // ~559km
 			tolerance: 50.0,  // 50km tolerance for approximation
 		},
 		{
-			name:      "zero coordinates",
-			lat1:      0, lon1: 0,
-			lat2:      0, lon2: 0,
+			name: "zero coordinates",
+			lat1: 0, lon1: 0,
+			lat2: 0, lon2: 0,
 			expected:  0.0,
 			tolerance: 0.1,
 		},
@@ -217,45 +217,45 @@ func TestCalculateDistance(t *testing.T) {
 
 func TestMathHelperFunctions(t *testing.T) {
 	tests := []struct {
-		name     string
-		function func() float64
-		expected float64
+		name      string
+		function  func() float64
+		expected  float64
 		tolerance float64
 	}{
 		{
-			name: "cosine(0)",
-			function: func() float64 { return math.Cos(0) },
-			expected: 1.0,
+			name:      "cosine(0)",
+			function:  func() float64 { return math.Cos(0) },
+			expected:  1.0,
 			tolerance: 0.01,
 		},
 		{
-			name: "sqrt(4)",
-			function: func() float64 { return math.Sqrt(4) },
-			expected: 2.0,
+			name:      "sqrt(4)",
+			function:  func() float64 { return math.Sqrt(4) },
+			expected:  2.0,
 			tolerance: 0.01,
 		},
 		{
-			name: "sqrt(0)",
-			function: func() float64 { return math.Sqrt(0) },
-			expected: 0.0,
+			name:      "sqrt(0)",
+			function:  func() float64 { return math.Sqrt(0) },
+			expected:  0.0,
 			tolerance: 0.01,
 		},
 		{
-			name: "sqrt negative",
-			function: func() float64 { return math.Sqrt(-1) },
-			expected: 0.0,
+			name:      "sqrt negative",
+			function:  func() float64 { return math.Sqrt(-1) },
+			expected:  0.0,
 			tolerance: 0.01,
 		},
 		{
-			name: "arcsine(0)",
-			function: func() float64 { return math.Asin(0) },
-			expected: 0.0,
+			name:      "arcsine(0)",
+			function:  func() float64 { return math.Asin(0) },
+			expected:  0.0,
 			tolerance: 0.01,
 		},
 		{
-			name: "arcsine out of range",
-			function: func() float64 { return math.Asin(2) },
-			expected: 0.0,
+			name:      "arcsine out of range",
+			function:  func() float64 { return math.Asin(2) },
+			expected:  0.0,
 			tolerance: 0.01,
 		},
 	}
@@ -270,7 +270,7 @@ func TestMathHelperFunctions(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	service := &GeoIPService{}
-	
+
 	// Close should not panic even with nil databases
 	err := service.Close()
 	assert.NoError(t, err, "Close should not return error with nil databases")
@@ -280,7 +280,7 @@ func TestClose(t *testing.T) {
 func BenchmarkCalculateDistance(b *testing.B) {
 	service := &GeoIPService{}
 	lat1, lon1 := 37.7749, -122.4194 // San Francisco
-	lat2, lon2 := 34.0522, -118.2437  // Los Angeles
+	lat2, lon2 := 34.0522, -118.2437 // Los Angeles
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

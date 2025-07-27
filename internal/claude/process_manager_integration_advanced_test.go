@@ -73,8 +73,8 @@ func TestProcessManagerIntegration_TokenAndHealthCheck(t *testing.T) {
 			Args:    []string{"-c", "echo 'API Key: '$CLAUDE_API_KEY && sleep 1"},
 			APIKey:  "sk-test-api-key",
 			ResourceLimits: &ResourceLimits{
-				MaxCPU:    0.5,                // 0.5 CPU 코어
-				MaxMemory: 256 * 1024 * 1024,  // 256MB
+				MaxCPU:    0.5,               // 0.5 CPU 코어
+				MaxMemory: 256 * 1024 * 1024, // 256MB
 				Timeout:   3 * time.Second,
 			},
 		}
@@ -113,7 +113,7 @@ func TestProcessManagerIntegration_TokenRefresh(t *testing.T) {
 	}
 
 	tokenManager := NewTokenManager("initial-token", "", refreshFunc)
-	
+
 	// 초기 토큰 설정 (곧 만료될 토큰)
 	tokenManager.SetToken("initial-token", time.Now().Add(1*time.Second))
 
@@ -174,7 +174,7 @@ func TestProcessManagerIntegration_HealthCheckRecovery(t *testing.T) {
 	`
 
 	var recoveryAttempts int
-	
+
 	// 복구 시도 추적
 	for attempt := 0; attempt < 3; attempt++ {
 		config := &ProcessConfig{
@@ -190,7 +190,7 @@ func TestProcessManagerIntegration_HealthCheckRecovery(t *testing.T) {
 		}
 
 		recoveryAttempts++
-		
+
 		// 프로세스 완료 대기
 		err = pm.Wait()
 		if err != nil {
@@ -198,7 +198,7 @@ func TestProcessManagerIntegration_HealthCheckRecovery(t *testing.T) {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
-		
+
 		break
 	}
 
@@ -216,7 +216,7 @@ func TestProcessManagerIntegration_ConcurrentProcesses(t *testing.T) {
 
 	const numProcesses = 5
 	managers := make([]ProcessManager, numProcesses)
-	
+
 	ctx := context.Background()
 	done := make(chan int, numProcesses)
 
@@ -224,7 +224,7 @@ func TestProcessManagerIntegration_ConcurrentProcesses(t *testing.T) {
 	for i := 0; i < numProcesses; i++ {
 		idx := i
 		managers[i] = NewProcessManager(logger)
-		
+
 		go func(pm ProcessManager, id int) {
 			config := &ProcessConfig{
 				Command:             "sh",
@@ -274,7 +274,7 @@ func TestProcessManagerIntegration_EnvironmentIsolation(t *testing.T) {
 	// 두 개의 다른 환경 설정
 	pm1 := NewProcessManager(logger)
 	pm2 := NewProcessManager(logger)
-	
+
 	ctx := context.Background()
 
 	// 첫 번째 프로세스: OAuth 토큰 사용
@@ -300,14 +300,14 @@ func TestProcessManagerIntegration_EnvironmentIsolation(t *testing.T) {
 	// 동시 실행
 	err1 := pm1.Start(ctx, config1)
 	require.NoError(t, err1)
-	
+
 	err2 := pm2.Start(ctx, config2)
 	require.NoError(t, err2)
 
 	// 완료 대기
 	err1 = pm1.Wait()
 	assert.NoError(t, err1)
-	
+
 	err2 = pm2.Wait()
 	assert.NoError(t, err2)
 

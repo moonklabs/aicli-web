@@ -15,7 +15,7 @@ func NewConfigCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "Manage aicli configuration",
-		Long:  `Get, set, and list configuration options for aicli.
+		Long: `Get, set, and list configuration options for aicli.
 		
 Configuration priority order:
   1. Command-line flags
@@ -61,7 +61,7 @@ func newConfigGetCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get <key>",
 		Short: "Get configuration value",
-		Long:  `Get the value of a specific configuration key.
+		Long: `Get the value of a specific configuration key.
 		
 The value shown is the final resolved value considering all sources
 in priority order (flags > env > file > default).`,
@@ -75,7 +75,7 @@ in priority order (flags > env > file > default).`,
 			// 자동완성을 위한 설정 키 목록
 			keys := []string{
 				"claude.api_key",
-				"claude.model", 
+				"claude.model",
 				"claude.temperature",
 				"claude.timeout",
 				"workspace.default_path",
@@ -105,7 +105,7 @@ in priority order (flags > env > file > default).`,
 			// 값과 소스 출력
 			source := cm.GetValueSource(key)
 			fmt.Printf("%s = %v (from %s)\n", key, value, source)
-			
+
 			return nil
 		},
 	}
@@ -116,7 +116,7 @@ func newConfigSetCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "set <key> <value>",
 		Short: "Set configuration value",
-		Long:  `Set a configuration value.
+		Long: `Set a configuration value.
 		
 The value will be saved to the configuration file and persist across sessions.
 Values set via environment variables or flags cannot be overridden.`,
@@ -135,7 +135,7 @@ Values set via environment variables or flags cannot be overridden.`,
 				keys := []string{
 					"claude.api_key",
 					"claude.model",
-					"claude.temperature", 
+					"claude.temperature",
 					"claude.timeout",
 					"workspace.default_path",
 					"workspace.auto_sync",
@@ -196,7 +196,7 @@ func newConfigListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all configuration settings",
-		Long:  `List all current configuration settings.
+		Long: `List all current configuration settings.
 		
 Shows the hierarchical structure of all settings with their current values.
 Use --source to see where each value comes from.`,
@@ -219,7 +219,7 @@ Use --source to see where each value comes from.`,
 
 			// 출력 포맷터 생성
 			formatter := output.DefaultFormatterManager()
-			
+
 			if showSource {
 				// 소스 정보와 함께 테이블 형식으로 출력
 				configs := flattenSettingsWithSource(cm, allSettings, "")
@@ -270,7 +270,7 @@ func newConfigValidateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate",
 		Short: "Validate current configuration",
-		Long:  `Validate the current configuration for correctness.
+		Long: `Validate the current configuration for correctness.
 		
 Checks that all required fields are present and all values are valid.`,
 		Example: `  # Validate configuration
@@ -389,7 +389,7 @@ func newConfigResetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reset",
 		Short: "Reset configuration to defaults",
-		Long:  `Reset all configuration to default values.
+		Long: `Reset all configuration to default values.
 		
 This will overwrite your current configuration file with defaults.
 Use --force to skip confirmation.`,
@@ -431,21 +431,21 @@ Use --force to skip confirmation.`,
 // flattenSettingsWithSource는 중첩된 설정을 평면화하고 소스 정보를 추가합니다
 func flattenSettingsWithSource(cm *config.ConfigManager, settings map[string]interface{}, prefix string) []map[string]interface{} {
 	var result []map[string]interface{}
-	
+
 	// 키를 정렬하여 일관된 출력 순서 보장
 	keys := make([]string, 0, len(settings))
 	for k := range settings {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	
+
 	for _, key := range keys {
 		value := settings[key]
 		fullKey := key
 		if prefix != "" {
 			fullKey = prefix + "." + key
 		}
-		
+
 		switch v := value.(type) {
 		case map[string]interface{}:
 			// 중첩된 맵인 경우 재귀적으로 처리
@@ -456,7 +456,7 @@ func flattenSettingsWithSource(cm *config.ConfigManager, settings map[string]int
 			if cm.IsSet(fullKey) {
 				source = "config"
 			}
-			
+
 			result = append(result, map[string]interface{}{
 				"key":    fullKey,
 				"value":  fmt.Sprintf("%v", value),
@@ -464,6 +464,6 @@ func flattenSettingsWithSource(cm *config.ConfigManager, settings map[string]int
 			})
 		}
 	}
-	
+
 	return result
 }

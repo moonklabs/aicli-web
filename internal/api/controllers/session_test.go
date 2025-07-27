@@ -19,24 +19,24 @@ import (
 
 func setupSessionTest() (*gin.Engine, *services.SessionService, *models.Project) {
 	gin.SetMode(gin.TestMode)
-	
+
 	storage := memory.New()
 	projectService := services.NewProjectService(storage)
 	sessionService := services.NewSessionService(storage, projectService, nil)
 	sessionController := NewSessionController(sessionService)
-	
+
 	// 테스트용 워크스페이스와 프로젝트 생성
 	workspace := &models.Workspace{
-		ID:      "ws-123",
-		Name:    "Test Workspace",
-		OwnerID: "user-123",
+		ID:          "ws-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
-		Status:  models.WorkspaceStatusActive,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Status:      models.WorkspaceStatusActive,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	_ = storage.Workspace().Create(nil, workspace)
-	
+
 	project := &models.Project{
 		ID:          "proj-123",
 		WorkspaceID: workspace.ID,
@@ -48,9 +48,9 @@ func setupSessionTest() (*gin.Engine, *services.SessionService, *models.Project)
 		UpdatedAt:   time.Now(),
 	}
 	_ = storage.Project().Create(nil, project)
-	
+
 	router := gin.New()
-	
+
 	// 라우트 설정
 	router.POST("/projects/:id/sessions", sessionController.Create)
 	router.GET("/sessions", sessionController.List)
@@ -58,13 +58,13 @@ func setupSessionTest() (*gin.Engine, *services.SessionService, *models.Project)
 	router.GET("/sessions/:id", sessionController.GetByID)
 	router.DELETE("/sessions/:id", sessionController.Terminate)
 	router.PUT("/sessions/:id/activity", sessionController.UpdateActivity)
-	
+
 	return router, sessionService, project
 }
 
 func TestSessionController_Create(t *testing.T) {
 	router, _, project := setupSessionTest()
-	
+
 	tests := []struct {
 		name       string
 		projectID  string
@@ -101,18 +101,18 @@ func TestSessionController_Create(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bodyBytes, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/projects/%s/sessions", tt.projectID), bytes.NewReader(bodyBytes))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusCreated {
 				var resp models.SessionResponse
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -126,7 +126,7 @@ func TestSessionController_Create(t *testing.T) {
 
 func TestSessionController_List(t *testing.T) {
 	router, sessionService, project := setupSessionTest()
-	
+
 	// 테스트 세션 생성
 	sessions := make([]*models.Session, 5)
 	for i := 0; i < 5; i++ {
@@ -134,18 +134,18 @@ func TestSessionController_List(t *testing.T) {
 			ProjectID: project.ID,
 		})
 		require.NoError(t, err)
-		
+
 		if i < 3 {
 			_ = sessionService.UpdateStatus(nil, session.ID, models.SessionActive)
 		}
 		sessions[i] = session
 	}
-	
+
 	tests := []struct {
-		name        string
-		query       string
-		wantStatus  int
-		wantCount   int
+		name       string
+		query      string
+		wantStatus int
+		wantCount  int
 	}{
 		{
 			name:       "All sessions",
@@ -178,15 +178,15 @@ func TestSessionController_List(t *testing.T) {
 			wantCount:  2,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/sessions"+tt.query, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusOK {
 				var resp models.PaginatedResponse[*models.SessionResponse]
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -199,13 +199,13 @@ func TestSessionController_List(t *testing.T) {
 
 func TestSessionController_GetByID(t *testing.T) {
 	router, sessionService, project := setupSessionTest()
-	
+
 	// 테스트 세션 생성
 	session, err := sessionService.Create(nil, &models.SessionCreateRequest{
 		ProjectID: project.ID,
 	})
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name       string
 		sessionID  string
@@ -222,15 +222,15 @@ func TestSessionController_GetByID(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", fmt.Sprintf("/sessions/%s", tt.sessionID), nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusOK {
 				var resp models.SessionResponse
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -243,17 +243,17 @@ func TestSessionController_GetByID(t *testing.T) {
 
 func TestSessionController_Terminate(t *testing.T) {
 	router, sessionService, project := setupSessionTest()
-	
+
 	// 테스트 세션 생성
 	session, err := sessionService.Create(nil, &models.SessionCreateRequest{
 		ProjectID: project.ID,
 	})
 	require.NoError(t, err)
-	
+
 	// 세션을 활성화 상태로 변경 (pending -> active는 허용됨)
 	err = sessionService.UpdateStatus(nil, session.ID, models.SessionActive)
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name       string
 		sessionID  string
@@ -270,13 +270,13 @@ func TestSessionController_Terminate(t *testing.T) {
 			wantStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("DELETE", fmt.Sprintf("/sessions/%s", tt.sessionID), nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
 		})
 	}
@@ -284,32 +284,32 @@ func TestSessionController_Terminate(t *testing.T) {
 
 func TestSessionController_UpdateActivity(t *testing.T) {
 	router, sessionService, project := setupSessionTest()
-	
+
 	// 테스트 세션 생성
 	session, err := sessionService.Create(nil, &models.SessionCreateRequest{
 		ProjectID: project.ID,
 	})
 	require.NoError(t, err)
-	
+
 	// 세션을 활성화
 	err = sessionService.UpdateStatus(nil, session.ID, models.SessionActive)
 	require.NoError(t, err)
-	
+
 	// 기존 LastActive 시간 저장
 	oldSession, err := sessionService.GetByID(nil, session.ID)
 	require.NoError(t, err)
 	oldLastActive := oldSession.LastActive
-	
+
 	// 약간 대기
 	time.Sleep(10 * time.Millisecond)
-	
+
 	// 활동 업데이트 요청
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/sessions/%s/activity", session.ID), nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusNoContent, w.Code)
-	
+
 	// 업데이트 확인
 	updatedSession, err := sessionService.GetByID(nil, session.ID)
 	require.NoError(t, err)
@@ -318,7 +318,7 @@ func TestSessionController_UpdateActivity(t *testing.T) {
 
 func TestSessionController_GetActiveSessions(t *testing.T) {
 	router, sessionService, project := setupSessionTest()
-	
+
 	// 테스트 세션 생성
 	activeSessions := make([]*models.Session, 3)
 	for i := 0; i < 3; i++ {
@@ -326,13 +326,13 @@ func TestSessionController_GetActiveSessions(t *testing.T) {
 			ProjectID: project.ID,
 		})
 		require.NoError(t, err)
-		
+
 		err = sessionService.UpdateStatus(nil, session.ID, models.SessionActive)
 		require.NoError(t, err)
-		
+
 		activeSessions[i] = session
 	}
-	
+
 	// 종료된 세션도 생성
 	endedSession, err := sessionService.Create(nil, &models.SessionCreateRequest{
 		ProjectID: project.ID,
@@ -344,19 +344,19 @@ func TestSessionController_GetActiveSessions(t *testing.T) {
 	require.NoError(t, err)
 	err = sessionService.UpdateStatus(nil, endedSession.ID, models.SessionEnded)
 	require.NoError(t, err)
-	
+
 	// 활성 세션 조회
 	req := httptest.NewRequest("GET", "/sessions/active", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var resp []*models.SessionResponse
 	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
 	assert.Len(t, resp, 3)
-	
+
 	// 모든 응답이 활성 세션인지 확인
 	for _, session := range resp {
 		assert.True(t, session.Status == models.SessionActive || session.Status == models.SessionIdle)

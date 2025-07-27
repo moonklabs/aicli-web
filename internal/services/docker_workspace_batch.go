@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
 	"github.com/google/uuid"
 )
 
@@ -20,7 +20,7 @@ type BatchOperationRequest struct {
 func (dws *DockerWorkspaceService) StartBatchOperation(ctx context.Context, req *BatchOperationRequest, ownerID string) (string, error) {
 	// 배치 ID 생성
 	batchID := uuid.New().String()
-	
+
 	// 배치 작업 생성
 	batch := &BatchJob{
 		ID:           batchID,
@@ -37,15 +37,15 @@ func (dws *DockerWorkspaceService) StartBatchOperation(ctx context.Context, req 
 		Errors:    make([]string, 0),
 		StartTime: time.Now(),
 	}
-	
+
 	// 배치 작업 등록
 	dws.batchMu.Lock()
 	dws.batchJobs[batchID] = batch
 	dws.batchMu.Unlock()
-	
+
 	// 백그라운드에서 배치 작업 실행
 	go dws.executeBatchOperation(ctx, batch, ownerID)
-	
+
 	return batchID, nil
 }
 
@@ -53,12 +53,12 @@ func (dws *DockerWorkspaceService) StartBatchOperation(ctx context.Context, req 
 func (dws *DockerWorkspaceService) GetBatchOperationStatus(ctx context.Context, batchID string) (*BatchJob, error) {
 	dws.batchMu.RLock()
 	defer dws.batchMu.RUnlock()
-	
+
 	batch, exists := dws.batchJobs[batchID]
 	if !exists {
 		return nil, fmt.Errorf("batch job not found: %s", batchID)
 	}
-	
+
 	// 복사본 반환 (동시성 보호)
 	batchCopy := *batch
 	return &batchCopy, nil
@@ -68,20 +68,20 @@ func (dws *DockerWorkspaceService) GetBatchOperationStatus(ctx context.Context, 
 func (dws *DockerWorkspaceService) CancelBatchOperation(ctx context.Context, batchID string) error {
 	dws.batchMu.Lock()
 	defer dws.batchMu.Unlock()
-	
+
 	batch, exists := dws.batchJobs[batchID]
 	if !exists {
 		return fmt.Errorf("batch job not found: %s", batchID)
 	}
-	
+
 	if batch.Status == BatchStatusCompleted || batch.Status == BatchStatusFailed {
 		return fmt.Errorf("cannot cancel completed batch job: %s", batchID)
 	}
-	
+
 	batch.Status = BatchStatusCancelled
 	now := time.Now()
 	batch.EndTime = &now
-	
+
 	return nil
 }
 
@@ -89,10 +89,10 @@ func (dws *DockerWorkspaceService) CancelBatchOperation(ctx context.Context, bat
 func (dws *DockerWorkspaceService) ListBatchOperations(ctx context.Context, limit int) ([]*BatchJob, error) {
 	dws.batchMu.RLock()
 	defer dws.batchMu.RUnlock()
-	
+
 	var jobs []*BatchJob
 	count := 0
-	
+
 	// 최신 순으로 정렬하여 반환
 	for _, batch := range dws.batchJobs {
 		if limit > 0 && count >= limit {
@@ -102,7 +102,7 @@ func (dws *DockerWorkspaceService) ListBatchOperations(ctx context.Context, limi
 		jobs = append(jobs, &batchCopy)
 		count++
 	}
-	
+
 	return jobs, nil
 }
 
@@ -110,15 +110,15 @@ func (dws *DockerWorkspaceService) ListBatchOperations(ctx context.Context, limi
 func (dws *DockerWorkspaceService) CleanupBatchOperations(ctx context.Context, olderThan time.Duration) error {
 	dws.batchMu.Lock()
 	defer dws.batchMu.Unlock()
-	
+
 	cutoff := time.Now().Add(-olderThan)
-	
+
 	for batchID, batch := range dws.batchJobs {
 		if batch.StartTime.Before(cutoff) {
 			delete(dws.batchJobs, batchID)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -126,29 +126,29 @@ func (dws *DockerWorkspaceService) CleanupBatchOperations(ctx context.Context, o
 func (dws *DockerWorkspaceService) executeBatchOperation(ctx context.Context, batch *BatchJob, ownerID string) {
 	// 상태를 진행 중으로 변경
 	dws.updateBatchStatus(batch, BatchStatusInProgress)
-	
+
 	// 동시성 제어를 위한 세마포어
 	semaphore := make(chan struct{}, 5) // 최대 5개 동시 실행
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	
+
 	for _, workspaceID := range batch.WorkspaceIDs {
 		// 취소 확인
 		if batch.Status == BatchStatusCancelled {
 			break
 		}
-		
+
 		wg.Add(1)
 		go func(wsID string) {
 			defer wg.Done()
-			
+
 			// 세마포어 획득
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
-			
+
 			// 개별 워크스페이스 작업 실행
 			err := dws.executeBatchWorkspaceOperation(ctx, batch.Operation, wsID, ownerID)
-			
+
 			// 결과 업데이트
 			mu.Lock()
 			if err != nil {
@@ -167,10 +167,10 @@ func (dws *DockerWorkspaceService) executeBatchOperation(ctx context.Context, ba
 			mu.Unlock()
 		}(workspaceID)
 	}
-	
+
 	// 모든 작업 완료 대기
 	wg.Wait()
-	
+
 	// 최종 상태 결정
 	finalStatus := BatchStatusCompleted
 	if batch.Status == BatchStatusCancelled {
@@ -178,7 +178,7 @@ func (dws *DockerWorkspaceService) executeBatchOperation(ctx context.Context, ba
 	} else if batch.Progress.Failed > 0 {
 		finalStatus = BatchStatusFailed
 	}
-	
+
 	dws.updateBatchStatus(batch, finalStatus)
 	now := time.Now()
 	batch.EndTime = &now
@@ -223,22 +223,22 @@ func (dws *DockerWorkspaceService) GetWorkspaceStatus(ctx context.Context, works
 			LastError:      err.Error(),
 		}, nil
 	}
-	
+
 	if len(containers) == 0 {
 		return &WorkspaceStatus{
 			ContainerState: "none",
 		}, nil
 	}
-	
+
 	// 첫 번째 컨테이너 상태를 기준으로 함
 	container := containers[0]
-	
+
 	status := &WorkspaceStatus{
 		ContainerID:    container.ID,
 		ContainerState: string(container.State),
 		Uptime:         dws.calculateUptime(container.Started),
 	}
-	
+
 	// 상태 추적기가 있으면 메트릭 추가
 	// TODO: status tracker integration
 	// if dws.statusTracker != nil {
@@ -246,17 +246,17 @@ func (dws *DockerWorkspaceService) GetWorkspaceStatus(ctx context.Context, works
 	// 		status.Metrics = metrics
 	// 	}
 	// }
-	
+
 	return status, nil
 }
 
 // WorkspaceStatus 워크스페이스 상태 정보
 type WorkspaceStatus struct {
-	ContainerID    string                   `json:"container_id,omitempty"`
-	ContainerState string                   `json:"container_state"`
-	Uptime         string                   `json:"uptime,omitempty"`
+	ContainerID    string `json:"container_id,omitempty"`
+	ContainerState string `json:"container_state"`
+	Uptime         string `json:"uptime,omitempty"`
 	// Metrics        *status.WorkspaceMetrics `json:"metrics,omitempty"` // TODO: status tracker integration
-	LastError      string                   `json:"last_error,omitempty"`
+	LastError string `json:"last_error,omitempty"`
 }
 
 // calculateUptime 컨테이너 시작 시간으로부터 업타임을 계산합니다
@@ -264,9 +264,9 @@ func (dws *DockerWorkspaceService) calculateUptime(startTime *time.Time) string 
 	if startTime == nil || startTime.IsZero() {
 		return ""
 	}
-	
+
 	duration := time.Since(*startTime)
-	
+
 	if duration < time.Minute {
 		return fmt.Sprintf("%.0f초", duration.Seconds())
 	} else if duration < time.Hour {

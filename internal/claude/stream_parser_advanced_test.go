@@ -36,7 +36,7 @@ JSON message with line breaks",
 		// 라인별로 파싱
 		var response *Response
 		var err error
-		
+
 		for response == nil && err == nil {
 			response, err = parser.ParseLineAdvanced()
 		}
@@ -71,7 +71,7 @@ JSON message with line breaks",
 		parser := NewJSONStreamParser(reader, logger)
 
 		responses := make([]*Response, 0)
-		
+
 		for {
 			resp, err := parser.ParseLineAdvanced()
 			if err == io.EOF {
@@ -140,7 +140,7 @@ JSON message with line breaks",
 
 		var response *Response
 		var lineCount int
-		
+
 		for response == nil {
 			resp, err := parser.ParseLineAdvanced()
 			if err == io.EOF {
@@ -182,13 +182,13 @@ This is not JSON at all
 			if err == io.EOF {
 				break
 			}
-			
+
 			if err != nil {
 				errorCount++
 				parser.RecoverFromError()
 				continue
 			}
-			
+
 			if resp != nil {
 				validResponses = append(validResponses, resp)
 			}
@@ -213,7 +213,7 @@ This is not JSON at all
 		parser := NewJSONStreamParser(reader, logger)
 
 		responses := make([]*Response, 0)
-		
+
 		for {
 			resp, err := parser.ParseLineAdvanced()
 			if err == io.EOF {
@@ -255,7 +255,7 @@ This is not JSON at all
 			if err == io.EOF {
 				break
 			}
-			
+
 			stats := parser.GetStats()
 			// 대괄호가 모두 닫혔는지 확인
 			if stats["bracket_count"].(int) == 0 && stats["partial_buffer_size"].(int) > 0 {
@@ -300,7 +300,7 @@ This is not JSON at all
 	t.Run("Concurrent Parsing", func(t *testing.T) {
 		// 동시에 여러 파서 실행
 		jsonData := `{"type":"concurrent","content":"Message","message_id":"concurrent-1"}`
-		
+
 		numParsers := 10
 		results := make(chan *Response, numParsers)
 		errors := make(chan error, numParsers)
@@ -309,7 +309,7 @@ This is not JSON at all
 			go func(id int) {
 				reader := strings.NewReader(jsonData)
 				parser := NewJSONStreamParser(reader, logger)
-				
+
 				resp, err := parser.ParseLineAdvanced()
 				if err != nil && err != io.EOF {
 					errors <- err
@@ -341,7 +341,7 @@ This is not JSON at all
 		ctx, cancel := context.WithCancel(context.Background())
 
 		responseChan, errorChan := parser.ParseStream(ctx)
-		
+
 		count := 0
 		go func() {
 			for range responseChan {
@@ -378,12 +378,12 @@ func (r *infiniteJSONReader) Read(p []byte) (n int, err error) {
 		json := fmt.Sprintf(r.template, r.counter, r.counter) + "\n"
 		r.buffer.WriteString(json)
 		r.counter++
-		
+
 		if r.delay > 0 {
 			time.Sleep(time.Duration(r.delay) * time.Millisecond)
 		}
 	}
-	
+
 	return r.buffer.Read(p)
 }
 
@@ -398,7 +398,7 @@ func BenchmarkJSONParserAdvanced(b *testing.B) {
 		parser := NewJSONStreamParser(reader, logger)
 
 		b.ResetTimer()
-		
+
 		count := 0
 		for count < b.N {
 			resp, err := parser.ParseLineAdvanced()
@@ -429,7 +429,7 @@ func BenchmarkJSONParserAdvanced(b *testing.B) {
 		parser := NewJSONStreamParser(reader, logger)
 
 		b.ResetTimer()
-		
+
 		count := 0
 		for count < b.N {
 			resp, err := parser.ParseLineAdvanced()

@@ -10,7 +10,7 @@ import (
 func SetupSwagger(router *gin.Engine) {
 	// Swagger UI 엔드포인트 설정
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	
+
 	// /docs로도 접근 가능하도록 리다이렉트
 	router.GET("/docs", func(c *gin.Context) {
 		c.Redirect(302, "/swagger/index.html")

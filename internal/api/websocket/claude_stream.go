@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
-	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/gorilla/websocket"
 )
 
 // ClaudeStreamHandler는 Claude 세션과 WebSocket 간의 실시간 스트림을 처리합니다
@@ -22,19 +22,19 @@ type ClaudeStreamHandler struct {
 	messageRouter    *MessageRouter
 	authValidator    *auth.Validator
 	upgrader         websocket.Upgrader
-	
+
 	// 설정
 	config ClaudeStreamConfig
 }
 
 // ConnectionGroup은 하나의 세션에 연결된 WebSocket 연결들을 관리합니다
 type ConnectionGroup struct {
-	SessionID     string                    `json:"session_id"`
-	Connections   map[string]*ClientConnection `json:"connections"`
-	Permissions   map[string]Permission     `json:"permissions"`
-	CreatedAt     time.Time                 `json:"created_at"`
-	LastActivity  time.Time                 `json:"last_activity"`
-	mutex         sync.RWMutex
+	SessionID    string                       `json:"session_id"`
+	Connections  map[string]*ClientConnection `json:"connections"`
+	Permissions  map[string]Permission        `json:"permissions"`
+	CreatedAt    time.Time                    `json:"created_at"`
+	LastActivity time.Time                    `json:"last_activity"`
+	mutex        sync.RWMutex
 }
 
 // ClientConnection은 개별 클라이언트 연결을 나타냅니다
@@ -47,25 +47,25 @@ type ClientConnection struct {
 	ConnectedAt time.Time       `json:"connected_at"`
 	LastSeen    time.Time       `json:"last_seen"`
 	IsActive    bool            `json:"is_active"`
-	
+
 	// 채널들
-	sendChan    chan []byte
-	closeChan   chan struct{}
-	ctx         context.Context
-	cancel      context.CancelFunc
+	sendChan  chan []byte
+	closeChan chan struct{}
+	ctx       context.Context
+	cancel    context.CancelFunc
 }
 
 // ClaudeStreamConfig는 스트림 핸들러 설정입니다
 type ClaudeStreamConfig struct {
-	MaxConnections      int           `json:"max_connections"`
-	MaxConnectionsPerUser int         `json:"max_connections_per_user"`
-	MessageBufferSize   int           `json:"message_buffer_size"`
-	PingInterval        time.Duration `json:"ping_interval"`
-	PongTimeout         time.Duration `json:"pong_timeout"`
-	ReadTimeout         time.Duration `json:"read_timeout"`
-	WriteTimeout        time.Duration `json:"write_timeout"`
-	MaxMessageSize      int64         `json:"max_message_size"`
-	EnableCompression   bool          `json:"enable_compression"`
+	MaxConnections        int           `json:"max_connections"`
+	MaxConnectionsPerUser int           `json:"max_connections_per_user"`
+	MessageBufferSize     int           `json:"message_buffer_size"`
+	PingInterval          time.Duration `json:"ping_interval"`
+	PongTimeout           time.Duration `json:"pong_timeout"`
+	ReadTimeout           time.Duration `json:"read_timeout"`
+	WriteTimeout          time.Duration `json:"write_timeout"`
+	MaxMessageSize        int64         `json:"max_message_size"`
+	EnableCompression     bool          `json:"enable_compression"`
 }
 
 // Permission은 사용자 권한을 나타냅니다
@@ -90,12 +90,12 @@ type WebSocketMessage struct {
 
 // SessionEvent는 세션 이벤트를 나타냅니다
 type SessionEvent struct {
-	Type        string    `json:"type"`
-	SessionID   string    `json:"session_id"`
-	UserID      string    `json:"user_id"`
-	UserName    string    `json:"user_name"`
-	Timestamp   time.Time `json:"timestamp"`
-	Data        interface{} `json:"data,omitempty"`
+	Type      string      `json:"type"`
+	SessionID string      `json:"session_id"`
+	UserID    string      `json:"user_id"`
+	UserName  string      `json:"user_name"`
+	Timestamp time.Time   `json:"timestamp"`
+	Data      interface{} `json:"data,omitempty"`
 }
 
 // DefaultClaudeStreamConfig는 기본 설정을 반환합니다
@@ -134,7 +134,7 @@ func NewClaudeStreamHandler(sessionManager claude.SessionManager, authValidator 
 	}
 
 	handler.messageRouter = NewMessageRouter(handler)
-	
+
 	return handler
 }
 
@@ -146,14 +146,14 @@ func (h *ClaudeStreamHandler) HandleWebSocket(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
 		return
 	}
-	
+
 	// Bearer 토큰 추출
 	tokenStr, err := auth.ExtractTokenFromHeader(token)
 	if err != nil {
 		http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
 		return
 	}
-	
+
 	userInfo, err := (*h.authValidator).ValidateToken(r.Context(), tokenStr)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -318,7 +318,7 @@ func (h *ClaudeStreamHandler) CloseConnection(sessionID string, connectionID str
 
 func (h *ClaudeStreamHandler) createClientConnection(conn *websocket.Conn, userInfo *auth.UserInfo) *ClientConnection {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &ClientConnection{
 		ID:          fmt.Sprintf("conn_%d", time.Now().UnixNano()),
 		UserID:      userInfo.ID,
@@ -472,7 +472,7 @@ func (h *ClaudeStreamHandler) removeConnectionFromSessions(clientConn *ClientCon
 		group.mutex.Lock()
 		if _, exists := group.Connections[clientConn.ID]; exists {
 			delete(group.Connections, clientConn.ID)
-			
+
 			// 세션에서 사용자 퇴장 이벤트 전송
 			h.broadcastSessionEvent(sessionID, SessionEvent{
 				Type:      "user_left",

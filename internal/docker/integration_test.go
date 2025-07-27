@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package docker
@@ -20,7 +21,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	
+
 	// 테스트용 설정
 	config := DefaultConfig()
 	config.NetworkName = "integration-test-network"
@@ -49,7 +50,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 
 	// 4. 네트워크 관리 테스트
 	networkManager := manager.Network()
-	
+
 	// 네트워크 목록 조회
 	networks, err := networkManager.ListNetworks(ctx)
 	require.NoError(t, err)
@@ -70,7 +71,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 
 	// 5. 통계 수집 테스트
 	statsCollector := manager.Stats()
-	
+
 	// 시스템 통계 조회
 	systemStats, err := statsCollector.GetSystemStats(ctx)
 	require.NoError(t, err)
@@ -85,7 +86,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 
 	// 6. 헬스체크 테스트
 	healthChecker := manager.Health()
-	
+
 	// Daemon 체크
 	err = healthChecker.CheckDaemon(ctx)
 	assert.NoError(t, err)
@@ -147,7 +148,7 @@ func TestIntegration_NetworkLifecycle(t *testing.T) {
 	// 3. 네트워크 목록에서 확인
 	networks, err := networkManager.ListNetworks(ctx)
 	require.NoError(t, err)
-	
+
 	found := false
 	for _, net := range networks {
 		if net.ID == network.ID {
@@ -222,7 +223,7 @@ func TestIntegration_HealthMonitoring(t *testing.T) {
 		if err != nil {
 			t.Logf("Health check error: %v", err)
 		}
-		
+
 		// 2번 호출되면 완료
 		if callbackCount >= 2 {
 			select {
@@ -262,7 +263,7 @@ func TestIntegration_StatsCollection(t *testing.T) {
 	systemStats, err := statsCollector.GetSystemStats(ctx)
 	require.NoError(t, err)
 	assert.NotNil(t, systemStats)
-	
+
 	// 기본적인 시스템 정보 확인
 	assert.GreaterOrEqual(t, systemStats.ContainersTotal, 0)
 	assert.GreaterOrEqual(t, systemStats.ImagesTotal, 0)
@@ -274,7 +275,7 @@ func TestIntegration_StatsCollection(t *testing.T) {
 	aggregatedStats, err := statsCollector.GetAggregatedStats(ctx)
 	require.NoError(t, err)
 	assert.NotNil(t, aggregatedStats)
-	
+
 	// 관리되는 컨테이너가 없을 수 있으므로 0 이상인지만 확인
 	assert.GreaterOrEqual(t, aggregatedStats.TotalContainers, 0)
 	assert.GreaterOrEqual(t, aggregatedStats.RunningContainers, 0)

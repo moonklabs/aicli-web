@@ -13,7 +13,7 @@ import (
 
 func TestNewIsolationManager(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	assert.NotNil(t, manager)
 	assert.NotNil(t, manager.config)
 	assert.True(t, manager.config.EnableNetworkIsolation)
@@ -26,9 +26,9 @@ func TestNewIsolationManagerWithConfig(t *testing.T) {
 		DefaultCPULimit:        2.0,
 		DefaultMemoryLimit:     1024 * 1024 * 1024,
 	}
-	
+
 	manager := NewIsolationManagerWithConfig(config)
-	
+
 	assert.NotNil(t, manager)
 	assert.Equal(t, config, manager.config)
 	assert.False(t, manager.config.EnableNetworkIsolation)
@@ -37,7 +37,7 @@ func TestNewIsolationManagerWithConfig(t *testing.T) {
 
 func TestDefaultIsolationConfig(t *testing.T) {
 	config := DefaultIsolationConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.True(t, config.EnableNetworkIsolation)
 	assert.True(t, config.EnableSeccomp)
@@ -57,9 +57,9 @@ func TestCreateWorkspaceIsolation(t *testing.T) {
 		ID:   "test-workspace-123",
 		Name: "Test Workspace",
 	}
-	
+
 	isolation, err := manager.CreateWorkspaceIsolation(workspace)
-	
+
 	require.NoError(t, err)
 	assert.NotNil(t, isolation)
 	assert.Equal(t, workspace.ID, isolation.WorkspaceID)
@@ -74,9 +74,9 @@ func TestCreateWorkspaceIsolation(t *testing.T) {
 
 func TestCreateWorkspaceIsolation_NilWorkspace(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	isolation, err := manager.CreateWorkspaceIsolation(nil)
-	
+
 	assert.Error(t, err)
 	assert.Nil(t, isolation)
 	assert.Contains(t, err.Error(), "workspace cannot be nil")
@@ -84,9 +84,9 @@ func TestCreateWorkspaceIsolation_NilWorkspace(t *testing.T) {
 
 func TestCreateResourceLimits(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	limits := manager.createResourceLimits()
-	
+
 	assert.NotNil(t, limits)
 	assert.Equal(t, int64(1024), limits.CPUShares)
 	assert.Equal(t, int64(100000), limits.CPUQuota) // 1.0 CPU * 100000
@@ -100,9 +100,9 @@ func TestCreateResourceLimits(t *testing.T) {
 
 func TestCreateSecurityOptions(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	opts := manager.createSecurityOptions()
-	
+
 	assert.NotNil(t, opts)
 	assert.True(t, opts.NoNewPrivileges)
 	assert.False(t, opts.ReadOnlyRootFS) // 워크스페이스는 쓰기 가능
@@ -116,9 +116,9 @@ func TestCreateSecurityOptions(t *testing.T) {
 
 func TestCreateMonitoringConfig(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	config := manager.createMonitoringConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.True(t, config.EnableResourceMonitoring)
 	assert.True(t, config.EnableNetworkMonitoring)
@@ -134,12 +134,12 @@ func TestApplyToContainer(t *testing.T) {
 	workspace := &models.Workspace{ID: "test-workspace", Name: "Test"}
 	isolation, err := manager.CreateWorkspaceIsolation(workspace)
 	require.NoError(t, err)
-	
+
 	config := &container.Config{}
 	hostConfig := &container.HostConfig{}
-	
+
 	err = manager.ApplyToContainer(isolation, config, hostConfig)
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, container.NetworkMode(isolation.NetworkName), hostConfig.NetworkMode)
 	assert.Equal(t, int64(1024), hostConfig.Resources.CPUShares)
@@ -154,13 +154,13 @@ func TestApplyToContainer(t *testing.T) {
 
 func TestApplyToContainer_NilParams(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	tests := []struct {
-		name         string
-		isolation    *WorkspaceIsolation
-		config       *container.Config
-		hostConfig   *container.HostConfig
-		expectError  string
+		name        string
+		isolation   *WorkspaceIsolation
+		config      *container.Config
+		hostConfig  *container.HostConfig
+		expectError string
 	}{
 		{
 			name:        "nil isolation",
@@ -184,7 +184,7 @@ func TestApplyToContainer_NilParams(t *testing.T) {
 			expectError: "host config cannot be nil",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := manager.ApplyToContainer(tt.isolation, tt.config, tt.hostConfig)
@@ -196,7 +196,7 @@ func TestApplyToContainer_NilParams(t *testing.T) {
 
 func TestValidateIsolation(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	tests := []struct {
 		name        string
 		isolation   *WorkspaceIsolation
@@ -274,11 +274,11 @@ func TestValidateIsolation(t *testing.T) {
 			expectError: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := manager.ValidateIsolation(tt.isolation)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
@@ -291,18 +291,18 @@ func TestValidateIsolation(t *testing.T) {
 
 func TestHashWorkspaceID(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	// 같은 ID는 항상 같은 해시를 생성
 	id1 := "test-workspace-123"
 	hash1a := manager.hashWorkspaceID(id1)
 	hash1b := manager.hashWorkspaceID(id1)
 	assert.Equal(t, hash1a, hash1b)
-	
+
 	// 다른 ID는 다른 해시를 생성
 	id2 := "test-workspace-456"
 	hash2 := manager.hashWorkspaceID(id2)
 	assert.NotEqual(t, hash1a, hash2)
-	
+
 	// 빈 문자열도 처리 가능
 	emptyHash := manager.hashWorkspaceID("")
 	assert.NotEqual(t, uint32(0), emptyHash)
@@ -311,15 +311,15 @@ func TestHashWorkspaceID(t *testing.T) {
 func TestUpdateConfig(t *testing.T) {
 	manager := NewIsolationManager()
 	originalConfig := manager.config
-	
+
 	newConfig := &IsolationConfig{
 		EnableNetworkIsolation: false,
 		DefaultCPULimit:        2.0,
 		DefaultMemoryLimit:     1024 * 1024 * 1024,
 	}
-	
+
 	err := manager.UpdateConfig(newConfig)
-	
+
 	require.NoError(t, err)
 	assert.NotEqual(t, originalConfig, manager.config)
 	assert.Equal(t, newConfig, manager.config)
@@ -329,18 +329,18 @@ func TestUpdateConfig(t *testing.T) {
 
 func TestUpdateConfig_Nil(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	err := manager.UpdateConfig(nil)
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "config cannot be nil")
 }
 
 func TestGetConfig(t *testing.T) {
 	manager := NewIsolationManager()
-	
+
 	config := manager.GetConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.Equal(t, manager.config, config)
 }
@@ -356,9 +356,9 @@ func TestApplyResourceLimits(t *testing.T) {
 		PidsLimit:  200,
 	}
 	hostConfig := &container.HostConfig{}
-	
+
 	err := manager.applyResourceLimits(limits, hostConfig)
-	
+
 	require.NoError(t, err)
 	assert.Equal(t, limits.CPUShares, hostConfig.Resources.CPUShares)
 	assert.Equal(t, limits.CPUQuota, hostConfig.Resources.CPUQuota)
@@ -372,9 +372,9 @@ func TestApplyResourceLimits(t *testing.T) {
 func TestApplyResourceLimits_NilLimits(t *testing.T) {
 	manager := NewIsolationManager()
 	hostConfig := &container.HostConfig{}
-	
+
 	err := manager.applyResourceLimits(nil, hostConfig)
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "resource limits cannot be nil")
 }
@@ -393,9 +393,9 @@ func TestApplySecurityOptions(t *testing.T) {
 	}
 	config := &container.Config{}
 	hostConfig := &container.HostConfig{}
-	
+
 	err := manager.applySecurityOptions(opts, config, hostConfig)
-	
+
 	require.NoError(t, err)
 	assert.True(t, hostConfig.ReadonlyRootfs)
 	assert.False(t, hostConfig.Privileged) // 기본적으로 비활성화
@@ -412,9 +412,9 @@ func TestApplySecurityOptions_NilOptions(t *testing.T) {
 	manager := NewIsolationManager()
 	config := &container.Config{}
 	hostConfig := &container.HostConfig{}
-	
+
 	err := manager.applySecurityOptions(nil, config, hostConfig)
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "security options cannot be nil")
 }
@@ -426,7 +426,7 @@ func BenchmarkCreateWorkspaceIsolation(b *testing.B) {
 		ID:   "benchmark-workspace",
 		Name: "Benchmark Workspace",
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := manager.CreateWorkspaceIsolation(workspace)
@@ -443,12 +443,12 @@ func BenchmarkApplyToContainer(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to create isolation: %v", err)
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		config := &container.Config{}
 		hostConfig := &container.HostConfig{}
-		
+
 		err := manager.ApplyToContainer(isolation, config, hostConfig)
 		if err != nil {
 			b.Fatalf("Unexpected error: %v", err)
@@ -459,7 +459,7 @@ func BenchmarkApplyToContainer(b *testing.B) {
 func BenchmarkHashWorkspaceID(b *testing.B) {
 	manager := NewIsolationManager()
 	workspaceID := "test-workspace-for-benchmark-123456789"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		manager.hashWorkspaceID(workspaceID)

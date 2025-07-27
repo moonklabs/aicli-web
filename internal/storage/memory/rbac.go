@@ -4,18 +4,18 @@ import (
 	"context"
 	"sync"
 	"time"
-	
+
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // RBACStorage 메모리 기반 RBAC 스토리지
 type RBACStorage struct {
-	mu            sync.RWMutex
-	users         map[string]*models.User
-	roles         map[string]*models.Role
-	permissions   map[string]*models.Permission
-	userRoles     map[string][]string // userID -> roleIDs
+	mu          sync.RWMutex
+	users       map[string]*models.User
+	roles       map[string]*models.Role
+	permissions map[string]*models.Permission
+	userRoles   map[string][]string // userID -> roleIDs
 }
 
 // storage.RBACStorage 인터페이스 구현 확인
@@ -24,10 +24,10 @@ var _ storage.RBACStorage = (*RBACStorage)(nil)
 // NewRBACStorage 새 RBAC 스토리지 생성
 func NewRBACStorage() *RBACStorage {
 	return &RBACStorage{
-		users:         make(map[string]*models.User),
-		roles:         make(map[string]*models.Role),
-		permissions:   make(map[string]*models.Permission),
-		userRoles:     make(map[string][]string),
+		users:       make(map[string]*models.User),
+		roles:       make(map[string]*models.Role),
+		permissions: make(map[string]*models.Permission),
+		userRoles:   make(map[string][]string),
 	}
 }
 
@@ -35,7 +35,7 @@ func NewRBACStorage() *RBACStorage {
 func (r *RBACStorage) CreateUser(ctx context.Context, user *models.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	r.users[user.ID] = user
 	return nil
 }
@@ -44,7 +44,7 @@ func (r *RBACStorage) CreateUser(ctx context.Context, user *models.User) error {
 func (r *RBACStorage) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	user, exists := r.users[id]
 	if !exists {
 		return nil, ErrNotFound
@@ -56,7 +56,7 @@ func (r *RBACStorage) GetUserByID(ctx context.Context, id string) (*models.User,
 func (r *RBACStorage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	for _, user := range r.users {
 		if user.Email == email {
 			return user, nil
@@ -69,11 +69,11 @@ func (r *RBACStorage) GetUserByEmail(ctx context.Context, email string) (*models
 func (r *RBACStorage) UpdateUser(ctx context.Context, id string, updates map[string]interface{}) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	if _, exists := r.users[id]; !exists {
 		return ErrNotFound
 	}
-	
+
 	// 간단한 구현 - 실제로는 updates를 적용해야 함
 	return nil
 }
@@ -82,7 +82,7 @@ func (r *RBACStorage) UpdateUser(ctx context.Context, id string, updates map[str
 func (r *RBACStorage) DeleteUser(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	delete(r.users, id)
 	delete(r.userRoles, id)
 	return nil
@@ -92,7 +92,7 @@ func (r *RBACStorage) DeleteUser(ctx context.Context, id string) error {
 func (r *RBACStorage) CreateRole(ctx context.Context, role *models.Role) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	r.roles[role.ID] = role
 	return nil
 }
@@ -101,7 +101,7 @@ func (r *RBACStorage) CreateRole(ctx context.Context, role *models.Role) error {
 func (r *RBACStorage) GetRoleByID(ctx context.Context, id string) (*models.Role, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	role, exists := r.roles[id]
 	if !exists {
 		return nil, ErrNotFound
@@ -113,7 +113,7 @@ func (r *RBACStorage) GetRoleByID(ctx context.Context, id string) (*models.Role,
 func (r *RBACStorage) GetRoleByName(ctx context.Context, name string) (*models.Role, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	for _, role := range r.roles {
 		if role.Name == name {
 			return role, nil
@@ -126,7 +126,7 @@ func (r *RBACStorage) GetRoleByName(ctx context.Context, name string) (*models.R
 func (r *RBACStorage) listAllRoles(ctx context.Context) ([]*models.Role, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	roles := make([]*models.Role, 0, len(r.roles))
 	for _, role := range r.roles {
 		roles = append(roles, role)
@@ -138,11 +138,11 @@ func (r *RBACStorage) listAllRoles(ctx context.Context) ([]*models.Role, error) 
 func (r *RBACStorage) updateRoleByID(ctx context.Context, id string, updates map[string]interface{}) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	if _, exists := r.roles[id]; !exists {
 		return ErrNotFound
 	}
-	
+
 	// 간단한 구현
 	return nil
 }
@@ -151,7 +151,7 @@ func (r *RBACStorage) updateRoleByID(ctx context.Context, id string, updates map
 func (r *RBACStorage) DeleteRole(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	delete(r.roles, id)
 	return nil
 }
@@ -160,7 +160,7 @@ func (r *RBACStorage) DeleteRole(ctx context.Context, id string) error {
 func (r *RBACStorage) CreatePermission(ctx context.Context, permission *models.Permission) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	r.permissions[permission.ID] = permission
 	return nil
 }
@@ -169,7 +169,7 @@ func (r *RBACStorage) CreatePermission(ctx context.Context, permission *models.P
 func (r *RBACStorage) GetPermissionByID(ctx context.Context, id string) (*models.Permission, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	permission, exists := r.permissions[id]
 	if !exists {
 		return nil, ErrNotFound
@@ -181,7 +181,7 @@ func (r *RBACStorage) GetPermissionByID(ctx context.Context, id string) (*models
 func (r *RBACStorage) listAllPermissions(ctx context.Context) ([]*models.Permission, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	permissions := make([]*models.Permission, 0, len(r.permissions))
 	for _, permission := range r.permissions {
 		permissions = append(permissions, permission)
@@ -193,7 +193,7 @@ func (r *RBACStorage) listAllPermissions(ctx context.Context) ([]*models.Permiss
 func (r *RBACStorage) DeletePermission(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	delete(r.permissions, id)
 	return nil
 }
@@ -202,18 +202,18 @@ func (r *RBACStorage) DeletePermission(ctx context.Context, id string) error {
 func (r *RBACStorage) AssignRole(ctx context.Context, userID, roleID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	if r.userRoles[userID] == nil {
 		r.userRoles[userID] = []string{}
 	}
-	
+
 	// 중복 체크
 	for _, rid := range r.userRoles[userID] {
 		if rid == roleID {
 			return nil
 		}
 	}
-	
+
 	r.userRoles[userID] = append(r.userRoles[userID], roleID)
 	return nil
 }
@@ -222,7 +222,7 @@ func (r *RBACStorage) AssignRole(ctx context.Context, userID, roleID string) err
 func (r *RBACStorage) RemoveRole(ctx context.Context, userID, roleID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	
+
 	roles := r.userRoles[userID]
 	for i, rid := range roles {
 		if rid == roleID {
@@ -237,12 +237,12 @@ func (r *RBACStorage) RemoveRole(ctx context.Context, userID, roleID string) err
 func (r *RBACStorage) getUserRolesAsPointers(ctx context.Context, userID string) ([]*models.Role, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	roleIDs, exists := r.userRoles[userID]
 	if !exists {
 		return []*models.Role{}, nil
 	}
-	
+
 	roles := make([]*models.Role, 0, len(roleIDs))
 	for _, roleID := range roleIDs {
 		if role, exists := r.roles[roleID]; exists {
@@ -256,12 +256,12 @@ func (r *RBACStorage) getUserRolesAsPointers(ctx context.Context, userID string)
 func (r *RBACStorage) getRolePermissionsAsPermissions(ctx context.Context, roleID string) ([]*models.Permission, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	role, exists := r.roles[roleID]
 	if !exists {
 		return nil, ErrNotFound
 	}
-	
+
 	// 간단한 구하 - Role.Permissions 필드 사용
 	permissions := make([]*models.Permission, 0, len(role.Permissions))
 	for i := range role.Permissions {
@@ -274,9 +274,9 @@ func (r *RBACStorage) getRolePermissionsAsPermissions(ctx context.Context, roleI
 func (r *RBACStorage) GetUserPermissions(ctx context.Context, userID string) ([]*models.Permission, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	permMap := make(map[string]*models.Permission)
-	
+
 	// 사용자의 모든 역할에서 권한 수집
 	if roleIDs, exists := r.userRoles[userID]; exists {
 		for _, roleID := range roleIDs {
@@ -289,7 +289,7 @@ func (r *RBACStorage) GetUserPermissions(ctx context.Context, userID string) ([]
 			}
 		}
 	}
-	
+
 	// 맵을 슬라이스로 변환
 	permissions := make([]*models.Permission, 0, len(permMap))
 	for _, perm := range permMap {
@@ -304,11 +304,11 @@ func (r *RBACStorage) HasPermission(ctx context.Context, userID, resource, actio
 	if err != nil {
 		return false, err
 	}
-	
+
 	// ResourceType을 문자열로 변환하여 비교하고, ActionType으로 변환하여 비교
 	resourceType := models.ResourceType(resource)
 	actionType := models.ActionType(action)
-	
+
 	for _, perm := range permissions {
 		if perm.ResourceType == resourceType && perm.Action == actionType {
 			return true, nil

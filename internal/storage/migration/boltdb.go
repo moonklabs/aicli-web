@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 	"time"
-	
+
 	"go.etcd.io/bbolt"
 )
 
@@ -19,10 +19,10 @@ const (
 // BoltDBMigration BoltDB 전용 마이그레이션 인터페이스
 type BoltDBMigration interface {
 	Migration
-	
+
 	// UpBolt BoltDB 업그레이드 마이그레이션
 	UpBolt(ctx context.Context, tx *bbolt.Tx) error
-	
+
 	// DownBolt BoltDB 다운그레이드 마이그레이션
 	DownBolt(ctx context.Context, tx *bbolt.Tx) error
 }
@@ -40,7 +40,7 @@ func NewBoltDBFuncMigration(
 	upFunc, downFunc func(ctx context.Context, tx *bbolt.Tx) error,
 ) *BoltDBFuncMigration {
 	canRollback := downFunc != nil
-	
+
 	return &BoltDBFuncMigration{
 		BaseMigration: NewBaseMigration(version, description, canRollback),
 		upFunc:        upFunc,
@@ -113,63 +113,63 @@ func (t *BoltDBTracker) EnsureTable(ctx context.Context) error {
 // GetApplied 적용된 마이그레이션 목록 반환
 func (t *BoltDBTracker) GetApplied(ctx context.Context) ([]MigrationRecord, error) {
 	var records []MigrationRecord
-	
+
 	err := t.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(t.bucketName))
 		if bucket == nil {
 			return nil // 버킷이 없으면 빈 목록 반환
 		}
-		
+
 		return bucket.ForEach(func(k, v []byte) error {
 			var record MigrationRecord
 			if err := json.Unmarshal(v, &record); err != nil {
 				return fmt.Errorf("마이그레이션 레코드 파싱 실패 (%s): %w", string(k), err)
 			}
-			
+
 			if record.Status == MigrationStatusCompleted && record.Direction == DirectionUp {
 				records = append(records, record)
 			}
-			
+
 			return nil
 		})
 	})
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("적용된 마이그레이션 조회 실패: %w", err)
 	}
-	
+
 	// 버전별로 정렬
 	sort.Slice(records, func(i, j int) bool {
 		return CompareVersions(records[i].Version, records[j].Version) < 0
 	})
-	
+
 	return records, nil
 }
 
 // IsApplied 특정 버전이 적용되었는지 확인
 func (t *BoltDBTracker) IsApplied(ctx context.Context, version string) (bool, error) {
 	var applied bool
-	
+
 	err := t.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(t.bucketName))
 		if bucket == nil {
 			return nil
 		}
-		
+
 		data := bucket.Get([]byte(version))
 		if data == nil {
 			return nil
 		}
-		
+
 		var record MigrationRecord
 		if err := json.Unmarshal(data, &record); err != nil {
 			return fmt.Errorf("마이그레이션 레코드 파싱 실패: %w", err)
 		}
-		
+
 		applied = record.Status == MigrationStatusCompleted && record.Direction == DirectionUp
 		return nil
 	})
-	
+
 	return applied, err
 }
 
@@ -199,11 +199,11 @@ func (t *BoltDBTracker) RemoveRecord(ctx context.Context, version string) error 
 		if bucket == nil {
 			return fmt.Errorf("마이그레이션 버킷을 찾을 수 없습니다")
 		}
-		
+
 		if bucket.Get([]byte(version)) == nil {
 			return fmt.Errorf("제거할 마이그레이션 기록을 찾을 수 없습니다: %s", version)
 		}
-		
+
 		return bucket.Delete([]byte(version))
 	})
 }
@@ -211,7 +211,7 @@ func (t *BoltDBTracker) RemoveRecord(ctx context.Context, version string) error 
 // recordMigration 마이그레이션 기록 저장
 func (t *BoltDBTracker) recordMigration(ctx context.Context, version string, direction Direction, status MigrationStatus, duration time.Duration, errorMsg string) error {
 	now := time.Now().UTC()
-	
+
 	record := MigrationRecord{
 		Version:   version,
 		Direction: direction,
@@ -220,22 +220,22 @@ func (t *BoltDBTracker) recordMigration(ctx context.Context, version string, dir
 		Duration:  duration,
 		Error:     errorMsg,
 	}
-	
+
 	if status == MigrationStatusCompleted {
 		record.CompletedAt = &now
 	}
-	
+
 	data, err := json.Marshal(record)
 	if err != nil {
 		return fmt.Errorf("마이그레이션 레코드 직렬화 실패: %w", err)
 	}
-	
+
 	return t.db.Update(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(t.bucketName))
 		if bucket == nil {
 			return fmt.Errorf("마이그레이션 버킷을 찾을 수 없습니다")
 		}
-		
+
 		return bucket.Put([]byte(version), data)
 	})
 }
@@ -257,7 +257,7 @@ func NewBoltDBMigrationSource() *BoltDBMigrationSource {
 func (s *BoltDBMigrationSource) Add(migration BoltDBMigration) {
 	version := migration.Version()
 	s.migrations[version] = migration
-	
+
 	// 버전 목록 재생성 및 정렬
 	s.versions = make([]string, 0, len(s.migrations))
 	for v := range s.migrations {
@@ -300,7 +300,7 @@ type BoltDBMigrator struct {
 // NewBoltDBMigrator 새 BoltDB 마이그레이션 실행기 생성
 func NewBoltDBMigrator(db *bbolt.DB, source *BoltDBMigrationSource, options MigrationOptions) *BoltDBMigrator {
 	tracker := NewBoltDBTracker(db)
-	
+
 	return &BoltDBMigrator{
 		db:      db,
 		source:  source,
@@ -312,26 +312,26 @@ func NewBoltDBMigrator(db *bbolt.DB, source *BoltDBMigrationSource, options Migr
 // Current 현재 스키마 버전 반환
 func (m *BoltDBMigrator) Current() (string, error) {
 	ctx := context.Background()
-	
+
 	if err := m.tracker.EnsureTable(ctx); err != nil {
 		return "", err
 	}
-	
+
 	applied, err := m.tracker.GetApplied(ctx)
 	if err != nil {
 		return "", err
 	}
-	
+
 	if len(applied) == 0 {
 		return "", nil
 	}
-	
+
 	// 가장 높은 버전 반환
 	versions := make([]string, len(applied))
 	for i, record := range applied {
 		versions[i] = record.Version
 	}
-	
+
 	sort.Strings(versions)
 	return versions[len(versions)-1], nil
 }
@@ -341,32 +341,32 @@ func (m *BoltDBMigrator) Migrate(ctx context.Context, target string) error {
 	if err := m.tracker.EnsureTable(ctx); err != nil {
 		return err
 	}
-	
+
 	current, err := m.Current()
 	if err != nil {
 		return err
 	}
-	
+
 	if current == target {
 		return nil
 	}
-	
+
 	migrations, err := m.source.Load()
 	if err != nil {
 		return fmt.Errorf("마이그레이션 로드 실패: %w", err)
 	}
-	
+
 	toExecute, direction, err := m.planMigrations(migrations, current, target)
 	if err != nil {
 		return err
 	}
-	
+
 	for _, migration := range toExecute {
 		if err := m.executeSingleMigration(ctx, migration, direction); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -376,11 +376,11 @@ func (m *BoltDBMigrator) MigrateUp(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if len(versions) == 0 {
 		return nil
 	}
-	
+
 	sort.Strings(versions)
 	latestVersion := versions[len(versions)-1]
 	return m.Migrate(ctx, latestVersion)
@@ -391,37 +391,37 @@ func (m *BoltDBMigrator) Rollback(ctx context.Context, steps int) error {
 	if steps <= 0 {
 		return fmt.Errorf("롤백 단계는 양수여야 합니다")
 	}
-	
+
 	applied, err := m.tracker.GetApplied(ctx)
 	if err != nil {
 		return err
 	}
-	
+
 	if len(applied) == 0 {
 		return fmt.Errorf("롤백할 마이그레이션이 없습니다")
 	}
-	
+
 	// 역순으로 정렬
 	sort.Slice(applied, func(i, j int) bool {
 		return CompareVersions(applied[i].Version, applied[j].Version) > 0
 	})
-	
+
 	if steps > len(applied) {
 		steps = len(applied)
 	}
-	
+
 	for i := 0; i < steps; i++ {
 		record := applied[i]
 		migration, err := m.source.Get(record.Version)
 		if err != nil {
 			return fmt.Errorf("마이그레이션 %s 로드 실패: %w", record.Version, err)
 		}
-		
+
 		if err := m.executeSingleMigration(ctx, migration, DirectionDown); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -431,55 +431,55 @@ func (m *BoltDBMigrator) RollbackTo(ctx context.Context, target string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	var toRollback []MigrationRecord
 	for _, record := range applied {
 		if CompareVersions(record.Version, target) > 0 {
 			toRollback = append(toRollback, record)
 		}
 	}
-	
+
 	sort.Slice(toRollback, func(i, j int) bool {
 		return CompareVersions(toRollback[i].Version, toRollback[j].Version) > 0
 	})
-	
+
 	for _, record := range toRollback {
 		migration, err := m.source.Get(record.Version)
 		if err != nil {
 			return fmt.Errorf("마이그레이션 %s 로드 실패: %w", record.Version, err)
 		}
-		
+
 		if err := m.executeSingleMigration(ctx, migration, DirectionDown); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
 // List 모든 마이그레이션 목록 반환
 func (m *BoltDBMigrator) List() ([]MigrationInfo, error) {
 	ctx := context.Background()
-	
+
 	if err := m.tracker.EnsureTable(ctx); err != nil {
 		return nil, err
 	}
-	
+
 	migrations, err := m.source.Load()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	applied, err := m.tracker.GetApplied(ctx)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	appliedMap := make(map[string]MigrationRecord)
 	for _, record := range applied {
 		appliedMap[record.Version] = record
 	}
-	
+
 	var infos []MigrationInfo
 	for _, migration := range migrations {
 		info := MigrationInfo{
@@ -488,17 +488,17 @@ func (m *BoltDBMigrator) List() ([]MigrationInfo, error) {
 			Status:      MigrationStatusPending,
 			CanRollback: migration.CanRollback(),
 		}
-		
+
 		if record, exists := appliedMap[migration.Version()]; exists {
 			info.Status = record.Status
 			info.AppliedAt = record.CompletedAt
 			info.Duration = record.Duration
 			info.Error = record.Error
 		}
-		
+
 		infos = append(infos, info)
 	}
-	
+
 	return infos, nil
 }
 
@@ -508,9 +508,9 @@ func (m *BoltDBMigrator) Status() (*MigrationStatus, []MigrationInfo, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	var overallStatus MigrationStatus = MigrationStatusCompleted
-	
+
 	for _, info := range infos {
 		if info.Status == MigrationStatusFailed {
 			overallStatus = MigrationStatusFailed
@@ -519,7 +519,7 @@ func (m *BoltDBMigrator) Status() (*MigrationStatus, []MigrationInfo, error) {
 			overallStatus = MigrationStatusPending
 		}
 	}
-	
+
 	return &overallStatus, infos, nil
 }
 
@@ -529,21 +529,21 @@ func (m *BoltDBMigrator) Validate() error {
 	if err != nil {
 		return err
 	}
-	
+
 	versions := make(map[string]bool)
 	for _, migration := range migrations {
 		version := migration.Version()
-		
+
 		if err := ValidateVersion(version); err != nil {
 			return fmt.Errorf("마이그레이션 %s: %w", version, err)
 		}
-		
+
 		if versions[version] {
 			return fmt.Errorf("중복된 마이그레이션 버전: %s", version)
 		}
 		versions[version] = true
 	}
-	
+
 	return nil
 }
 
@@ -559,18 +559,18 @@ func (m *BoltDBMigrator) Close() error {
 func (m *BoltDBMigrator) planMigrations(migrations []Migration, current, target string) ([]Migration, Direction, error) {
 	migrationMap := make(map[string]Migration)
 	versions := make([]string, len(migrations))
-	
+
 	for i, migration := range migrations {
 		version := migration.Version()
 		migrationMap[version] = migration
 		versions[i] = version
 	}
-	
+
 	sort.Strings(versions)
-	
+
 	currentIdx := -1
 	targetIdx := -1
-	
+
 	for i, version := range versions {
 		if version == current {
 			currentIdx = i
@@ -579,14 +579,14 @@ func (m *BoltDBMigrator) planMigrations(migrations []Migration, current, target 
 			targetIdx = i
 		}
 	}
-	
+
 	if targetIdx == -1 {
 		return nil, "", fmt.Errorf("목표 버전을 찾을 수 없습니다: %s", target)
 	}
-	
+
 	var toExecute []Migration
 	var direction Direction
-	
+
 	if currentIdx < targetIdx {
 		direction = DirectionUp
 		for i := currentIdx + 1; i <= targetIdx; i++ {
@@ -602,24 +602,24 @@ func (m *BoltDBMigrator) planMigrations(migrations []Migration, current, target 
 			toExecute = append(toExecute, migration)
 		}
 	}
-	
+
 	return toExecute, direction, nil
 }
 
 // executeSingleMigration 단일 마이그레이션 실행
 func (m *BoltDBMigrator) executeSingleMigration(ctx context.Context, migration Migration, direction Direction) error {
 	version := migration.Version()
-	
+
 	if m.options.DryRun {
-		fmt.Printf("DRY RUN: %s 마이그레이션 %s (%s)\n", 
+		fmt.Printf("DRY RUN: %s 마이그레이션 %s (%s)\n",
 			strings.ToUpper(string(direction)), version, migration.Description())
 		return nil
 	}
-	
+
 	startTime := time.Now()
-	
+
 	var err error
-	
+
 	// BoltDB 트랜잭션에서 마이그레이션 실행
 	if direction == DirectionUp {
 		err = m.db.Update(func(tx *bbolt.Tx) error {
@@ -630,29 +630,29 @@ func (m *BoltDBMigrator) executeSingleMigration(ctx context.Context, migration M
 			return migration.Down(ctx, tx)
 		})
 	}
-	
+
 	if err != nil {
 		m.tracker.RecordFailed(ctx, version, direction, err)
 		return NewMigrationError(version, direction, err, false)
 	}
-	
+
 	duration := time.Since(startTime)
-	
+
 	// 기록 저장
 	if direction == DirectionUp {
 		err = m.tracker.RecordUp(ctx, version, duration)
 	} else {
 		err = m.tracker.RemoveRecord(ctx, version)
 	}
-	
+
 	if err != nil {
 		return fmt.Errorf("마이그레이션 기록 저장 실패: %w", err)
 	}
-	
+
 	if m.options.Verbose {
-		fmt.Printf("✅ %s 마이그레이션 %s 완료 (%v)\n", 
+		fmt.Printf("✅ %s 마이그레이션 %s 완료 (%v)\n",
 			strings.ToUpper(string(direction)), version, duration)
 	}
-	
+
 	return nil
 }

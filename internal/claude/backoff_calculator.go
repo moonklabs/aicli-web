@@ -11,13 +11,13 @@ import (
 type BackoffCalculator interface {
 	// 백오프 지연 시간 계산
 	Calculate(attempt int, baseDelay, maxDelay time.Duration, strategy BackoffType, err error) time.Duration
-	
+
 	// 부하에 따른 지연 시간 조정
 	AdjustForLoad(delay time.Duration, load float64) time.Duration
-	
+
 	// 에러 유형에 따른 지연 시간 조정
 	AdjustForErrorType(delay time.Duration, errorType ErrorType) time.Duration
-	
+
 	// Jitter 적용
 	ApplyJitter(delay time.Duration, jitterType JitterType, factor float64) time.Duration
 }
@@ -37,14 +37,14 @@ const (
 type SmartBackoffCalculator struct {
 	// 에러 유형별 가중치
 	errorWeights map[ErrorType]float64
-	
+
 	// 시스템 부하 인식
 	loadAware bool
-	
+
 	// 최근 지연 시간 추적
 	recentDelays []time.Duration
 	maxSamples   int
-	
+
 	// 적응형 계수
 	adaptiveFactors map[BackoffType]float64
 }
@@ -55,15 +55,15 @@ func NewSmartBackoffCalculator() *SmartBackoffCalculator {
 		errorWeights: map[ErrorType]float64{
 			NetworkError:    1.0,
 			ProcessError:    1.5,
-			AuthError:      0.5, // 빠른 실패
-			ResourceError:  2.0, // 긴 대기
-			TimeoutError:   1.2,
+			AuthError:       0.5, // 빠른 실패
+			ResourceError:   2.0, // 긴 대기
+			TimeoutError:    1.2,
 			ValidationError: 0.3, // 매우 빠른 실패
-			InternalError:  1.3,
-			ConfigError:    0.8,
+			InternalError:   1.3,
+			ConfigError:     0.8,
 			DependencyError: 1.4,
-			QuotaError:     3.0, // 매우 긴 대기
-			UnknownError:   1.0,
+			QuotaError:      3.0, // 매우 긴 대기
+			UnknownError:    1.0,
 		},
 		loadAware:    true,
 		recentDelays: make([]time.Duration, 0, 100),
@@ -80,17 +80,17 @@ func NewSmartBackoffCalculator() *SmartBackoffCalculator {
 
 // Calculate는 백오프 지연 시간을 계산합니다
 func (c *SmartBackoffCalculator) Calculate(
-	attempt int, 
-	baseDelay, maxDelay time.Duration, 
-	strategy BackoffType, 
+	attempt int,
+	baseDelay, maxDelay time.Duration,
+	strategy BackoffType,
 	err error,
 ) time.Duration {
 	if attempt <= 0 {
 		return 0
 	}
-	
+
 	var delay time.Duration
-	
+
 	switch strategy {
 	case LinearBackoffType:
 		delay = c.calculateLinearBackoff(attempt, baseDelay)
@@ -105,22 +105,22 @@ func (c *SmartBackoffCalculator) Calculate(
 	default:
 		delay = c.calculateExponentialBackoff(attempt, baseDelay)
 	}
-	
+
 	// 최대 지연 시간 제한
 	if delay > maxDelay {
 		delay = maxDelay
 	}
-	
+
 	// 에러 유형에 따른 조정
 	if err != nil {
 		// 에러 분류가 필요한 경우, 여기서는 간단한 휴리스틱 사용
 		errorType := c.classifyErrorSimple(err)
 		delay = c.AdjustForErrorType(delay, errorType)
 	}
-	
+
 	// 최근 지연 시간 기록
 	c.recordDelay(delay)
-	
+
 	return delay
 }
 
@@ -129,11 +129,11 @@ func (c *SmartBackoffCalculator) AdjustForLoad(delay time.Duration, load float64
 	if !c.loadAware || load <= 0 {
 		return delay
 	}
-	
+
 	// 부하가 높을수록 지연 시간 증가
 	// load: 0.0 (부하 없음) ~ 1.0 (최대 부하)
 	var adjustmentFactor float64
-	
+
 	switch {
 	case load < 0.3:
 		adjustmentFactor = 0.8 // 부하가 낮으면 지연 감소
@@ -144,7 +144,7 @@ func (c *SmartBackoffCalculator) AdjustForLoad(delay time.Duration, load float64
 	default:
 		adjustmentFactor = 2.0 // 매우 높은 부하
 	}
-	
+
 	return time.Duration(float64(delay) * adjustmentFactor)
 }
 
@@ -154,20 +154,20 @@ func (c *SmartBackoffCalculator) AdjustForErrorType(delay time.Duration, errorTy
 	if !exists {
 		weight = 1.0
 	}
-	
+
 	return time.Duration(float64(delay) * weight)
 }
 
 // ApplyJitter는 지터를 적용합니다
 func (c *SmartBackoffCalculator) ApplyJitter(
-	delay time.Duration, 
-	jitterType JitterType, 
+	delay time.Duration,
+	jitterType JitterType,
 	factor float64,
 ) time.Duration {
 	if jitterType == NoJitter || factor <= 0 {
 		return delay
 	}
-	
+
 	switch jitterType {
 	case FullJitter:
 		return c.applyFullJitter(delay, factor)
@@ -191,24 +191,24 @@ func (c *SmartBackoffCalculator) calculateLinearBackoff(attempt int, baseDelay t
 func (c *SmartBackoffCalculator) calculateExponentialBackoff(attempt int, baseDelay time.Duration) time.Duration {
 	// 2^(attempt-1) * baseDelay
 	multiplier := math.Pow(2, float64(attempt-1))
-	
+
 	// 오버플로우 방지
 	if multiplier > 1000 {
 		multiplier = 1000
 	}
-	
+
 	return time.Duration(float64(baseDelay) * multiplier)
 }
 
 func (c *SmartBackoffCalculator) calculateAdaptiveBackoff(attempt int, baseDelay time.Duration) time.Duration {
 	// 최근 지연 시간의 평균을 기반으로 조정
 	avgDelay := c.getAverageRecentDelay()
-	
+
 	if avgDelay == 0 {
 		// 데이터가 없으면 지수 백오프 사용
 		return c.calculateExponentialBackoff(attempt, baseDelay)
 	}
-	
+
 	// 평균 지연 시간과 시도 횟수를 고려한 적응형 계산
 	adaptiveFactor := 1.0 + float64(attempt)*0.2
 	if avgDelay > baseDelay {
@@ -218,34 +218,34 @@ func (c *SmartBackoffCalculator) calculateAdaptiveBackoff(attempt int, baseDelay
 		// 평균이 기본값보다 작으면 더 적극적으로
 		adaptiveFactor *= 0.8
 	}
-	
+
 	return time.Duration(float64(baseDelay) * adaptiveFactor)
 }
 
 func (c *SmartBackoffCalculator) calculateDecorrelatedJitterBackoff(attempt int, baseDelay time.Duration) time.Duration {
 	// AWS의 decorrelated jitter 알고리즘
 	// delay = random(baseDelay, prevDelay * 3)
-	
+
 	if attempt == 1 {
 		return baseDelay
 	}
-	
+
 	// 이전 지연 시간 추정 (간단한 지수 백오프 사용)
 	prevDelay := c.calculateExponentialBackoff(attempt-1, baseDelay)
-	
+
 	// baseDelay와 prevDelay*3 사이의 랜덤 값
 	minDelay := baseDelay
 	maxDelay := time.Duration(float64(prevDelay) * 3)
-	
+
 	if maxDelay < minDelay {
 		maxDelay = minDelay
 	}
-	
+
 	range_ := maxDelay - minDelay
 	if range_ <= 0 {
 		return minDelay
 	}
-	
+
 	randomDelay := time.Duration(rand.Int63n(int64(range_)))
 	return minDelay + randomDelay
 }
@@ -256,7 +256,7 @@ func (c *SmartBackoffCalculator) applyFullJitter(delay time.Duration, factor flo
 	if maxJitter <= 0 {
 		return delay
 	}
-	
+
 	jitter := time.Duration(rand.Int63n(int64(maxJitter)))
 	return delay + jitter
 }
@@ -265,11 +265,11 @@ func (c *SmartBackoffCalculator) applyEqualJitter(delay time.Duration, factor fl
 	// delay/2 + random(0, delay*factor/2)
 	halfDelay := delay / 2
 	maxJitter := time.Duration(float64(delay) * factor / 2)
-	
+
 	if maxJitter <= 0 {
 		return halfDelay
 	}
-	
+
 	jitter := time.Duration(rand.Int63n(int64(maxJitter)))
 	return halfDelay + jitter
 }
@@ -278,7 +278,7 @@ func (c *SmartBackoffCalculator) applyDecorrelatedJitter(delay time.Duration, fa
 	// AWS decorrelated jitter와 유사하지만 더 단순화
 	baseJitter := time.Duration(float64(delay) * factor * 0.5)
 	randomJitter := time.Duration(rand.Int63n(int64(baseJitter) + 1))
-	
+
 	// ±randomJitter
 	if rand.Float64() < 0.5 {
 		return delay - randomJitter
@@ -290,11 +290,11 @@ func (c *SmartBackoffCalculator) applyExponentialJitter(delay time.Duration, fac
 	// 지수적으로 증가하는 지터
 	exponentialFactor := math.Pow(2, factor) - 1
 	maxJitter := time.Duration(float64(delay) * exponentialFactor)
-	
+
 	if maxJitter <= 0 {
 		return delay
 	}
-	
+
 	jitter := time.Duration(rand.Int63n(int64(maxJitter)))
 	return delay + jitter
 }
@@ -302,7 +302,7 @@ func (c *SmartBackoffCalculator) applyExponentialJitter(delay time.Duration, fac
 func (c *SmartBackoffCalculator) classifyErrorSimple(err error) ErrorType {
 	// 간단한 에러 분류 (실제로는 ErrorClassifier 사용)
 	errorMsg := err.Error()
-	
+
 	if containsAny(errorMsg, []string{"network", "connection", "tcp", "dns"}) {
 		return NetworkError
 	}
@@ -321,13 +321,13 @@ func (c *SmartBackoffCalculator) classifyErrorSimple(err error) ErrorType {
 	if containsAny(errorMsg, []string{"quota", "limit"}) {
 		return QuotaError
 	}
-	
+
 	return UnknownError
 }
 
 func (c *SmartBackoffCalculator) recordDelay(delay time.Duration) {
 	c.recentDelays = append(c.recentDelays, delay)
-	
+
 	// 최대 샘플 수 제한
 	if len(c.recentDelays) > c.maxSamples {
 		c.recentDelays = c.recentDelays[1:]
@@ -338,12 +338,12 @@ func (c *SmartBackoffCalculator) getAverageRecentDelay() time.Duration {
 	if len(c.recentDelays) == 0 {
 		return 0
 	}
-	
+
 	var total time.Duration
 	for _, delay := range c.recentDelays {
 		total += delay
 	}
-	
+
 	return total / time.Duration(len(c.recentDelays))
 }
 
@@ -399,15 +399,15 @@ func (c *CongestionControlBackoff) Calculate(success bool) time.Duration {
 		c.currentWindow = c.threshold
 		c.slowStart = true
 	}
-	
+
 	// 최소/최대 제한
-	if c.currentWindow < time.Millisecond * 100 {
+	if c.currentWindow < time.Millisecond*100 {
 		c.currentWindow = time.Millisecond * 100
 	}
-	if c.currentWindow > time.Minute * 5 {
+	if c.currentWindow > time.Minute*5 {
 		c.currentWindow = time.Minute * 5
 	}
-	
+
 	return c.currentWindow
 }
 
@@ -436,13 +436,13 @@ func NewCircuitBreakerAwareBackoff(calculator BackoffCalculator) *CircuitBreaker
 
 // Calculate는 Circuit Breaker 상태를 고려한 백오프를 계산합니다
 func (c *CircuitBreakerAwareBackoff) Calculate(
-	attempt int, 
-	baseDelay, maxDelay time.Duration, 
-	strategy BackoffType, 
+	attempt int,
+	baseDelay, maxDelay time.Duration,
+	strategy BackoffType,
 	err error,
 ) time.Duration {
 	baseBackoff := c.calculator.Calculate(attempt, baseDelay, maxDelay, strategy, err)
-	
+
 	switch c.circuitBreaker {
 	case CircuitClosedStatus:
 		return baseBackoff

@@ -5,24 +5,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/session"
+	"github.com/gin-gonic/gin"
 )
 
 // SessionSecurityMiddleware는 세션 보안 검사 미들웨어입니다.
 type SessionSecurityMiddleware struct {
-	sessionManager   *auth.SessionManager
-	securityChecker  session.SecurityChecker
-	auditLogger      *session.AuditLogger
-	deviceGenerator  *session.DeviceFingerprintGenerator
-	
+	sessionManager  *auth.SessionManager
+	securityChecker session.SecurityChecker
+	auditLogger     *session.AuditLogger
+	deviceGenerator *session.DeviceFingerprintGenerator
+
 	// 설정
-	enableDeviceCheck    bool
-	enableLocationCheck  bool
+	enableDeviceCheck     bool
+	enableLocationCheck   bool
 	enableSuspiciousCheck bool
-	skipPaths           []string
+	skipPaths             []string
 }
 
 // NewSessionSecurityMiddleware는 새로운 세션 보안 미들웨어를 생성합니다.
@@ -32,16 +32,16 @@ func NewSessionSecurityMiddleware(
 	auditLogger *session.AuditLogger,
 ) *SessionSecurityMiddleware {
 	return &SessionSecurityMiddleware{
-		sessionManager:       sessionManager,
-		securityChecker:     securityChecker,
-		auditLogger:         auditLogger,
-		deviceGenerator:     session.NewDeviceFingerprintGeneratorWithoutGeoIP(),
-		enableDeviceCheck:   true,
-		enableLocationCheck: true,
+		sessionManager:        sessionManager,
+		securityChecker:       securityChecker,
+		auditLogger:           auditLogger,
+		deviceGenerator:       session.NewDeviceFingerprintGeneratorWithoutGeoIP(),
+		enableDeviceCheck:     true,
+		enableLocationCheck:   true,
 		enableSuspiciousCheck: true,
 		skipPaths: []string{
 			"/api/v1/auth/login",
-			"/api/v1/auth/register", 
+			"/api/v1/auth/register",
 			"/api/v1/health",
 			"/api/v1/version",
 		},
@@ -76,43 +76,43 @@ func (m *SessionSecurityMiddleware) Handler() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		
+
 		// Authorization 헤더에서 토큰 추출
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			c.Next() // 토큰이 없으면 다른 미들웨어가 처리하도록 함
 			return
 		}
-		
+
 		// 세션 ID 추출 (JWT 토큰에서 또는 별도 헤더에서)
 		sessionID := c.GetHeader("X-Session-ID")
 		if sessionID == "" {
 			// JWT에서 세션 ID를 추출할 수도 있음
 			sessionID = m.extractSessionIDFromToken(authHeader)
 		}
-		
+
 		if sessionID == "" {
 			c.Next() // 세션 ID가 없으면 건너뛰기
 			return
 		}
-		
+
 		// 세션 유효성 검사
 		sessionData, err := m.sessionManager.ValidateSession(c, sessionID)
 		if err != nil {
 			m.handleSessionError(c, sessionID, err)
 			return
 		}
-		
+
 		// 보안 검사 수행
 		if err := m.performSecurityChecks(c, sessionData); err != nil {
 			m.handleSecurityViolation(c, sessionData, err)
 			return
 		}
-		
+
 		// 컨텍스트에 세션 정보 설정
 		c.Set("session_id", sessionID)
 		c.Set("session_data", sessionData)
-		
+
 		c.Next()
 	}
 }
@@ -143,7 +143,7 @@ func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessio
 		if err := m.securityChecker.CheckDeviceFingerprint(c, sessionData.UserID, currentDevice); err != nil {
 			// 새로운 디바이스 감지 시 로그만 기록하고 계속 진행
 			if err == session.ErrDeviceNotRecognized && m.auditLogger != nil {
-				m.auditLogger.LogSecurityEvent(c, sessionData.UserID, "device_change_detected", 
+				m.auditLogger.LogSecurityEvent(c, sessionData.UserID, "device_change_detected",
 					"새로운 디바이스에서 접근 감지", map[string]interface{}{
 						"session_id": sessionData.ID,
 						"old_device": sessionData.DeviceInfo,
@@ -152,7 +152,7 @@ func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessio
 			}
 		}
 	}
-	
+
 	// 2. 위치 변경 검사
 	if m.enableLocationCheck && m.securityChecker != nil {
 		// 현재 위치 정보 추출 (실제로는 GeoIP 서비스 사용)
@@ -164,7 +164,7 @@ func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessio
 					if m.auditLogger != nil {
 						m.auditLogger.LogSecurityEvent(c, sessionData.UserID, "location_change_detected",
 							"비정상적인 위치 변경 감지", map[string]interface{}{
-								"session_id": sessionData.ID,
+								"session_id":   sessionData.ID,
 								"old_location": sessionData.LocationInfo,
 								"new_location": currentLocation,
 							})
@@ -173,7 +173,7 @@ func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessio
 			}
 		}
 	}
-	
+
 	// 3. 의심스러운 활동 검사
 	if m.enableSuspiciousCheck {
 		if suspicious, reason := m.securityChecker.DetectSuspiciousActivity(c, sessionData); suspicious {
@@ -181,17 +181,17 @@ func (m *SessionSecurityMiddleware) performSecurityChecks(c *gin.Context, sessio
 				m.auditLogger.LogSecurityEvent(c, sessionData.UserID, "suspicious_activity_detected",
 					reason, map[string]interface{}{
 						"session_id": sessionData.ID,
-						"reason": reason,
+						"reason":     reason,
 						"ip_address": c.ClientIP(),
 						"user_agent": c.Request.UserAgent(),
 					})
 			}
-			
+
 			// 보안 정책에 따라 세션을 차단할 수 있음
 			// 현재는 로그만 기록하고 계속 진행
 		}
 	}
-	
+
 	return nil
 }
 
@@ -206,13 +206,13 @@ func (m *SessionSecurityMiddleware) extractLocationFromRequest(req *http.Request
 func (m *SessionSecurityMiddleware) handleSessionError(c *gin.Context, sessionID string, err error) {
 	var statusCode int
 	var message string
-	
+
 	switch err {
 	case session.ErrSessionNotFound:
 		statusCode = http.StatusUnauthorized
 		message = "세션을 찾을 수 없습니다"
 	case session.ErrSessionExpired:
-		statusCode = http.StatusUnauthorized  
+		statusCode = http.StatusUnauthorized
 		message = "세션이 만료되었습니다"
 	case session.ErrSessionInactive:
 		statusCode = http.StatusUnauthorized
@@ -221,21 +221,21 @@ func (m *SessionSecurityMiddleware) handleSessionError(c *gin.Context, sessionID
 		statusCode = http.StatusInternalServerError
 		message = "세션 검증 실패"
 	}
-	
+
 	// 에러 로그 기록
 	if m.auditLogger != nil {
 		m.auditLogger.LogSecurityEvent(c, "", "session_validation_failed",
 			message, map[string]interface{}{
 				"session_id": sessionID,
-				"error": err.Error(),
+				"error":      err.Error(),
 				"ip_address": c.ClientIP(),
 				"user_agent": c.Request.UserAgent(),
 			})
 	}
-	
+
 	c.JSON(statusCode, gin.H{
-		"error": message,
-		"code": "SESSION_ERROR",
+		"error":     message,
+		"code":      "SESSION_ERROR",
 		"timestamp": time.Now(),
 	})
 	c.Abort()
@@ -246,7 +246,7 @@ func (m *SessionSecurityMiddleware) handleSecurityViolation(c *gin.Context, sess
 	var statusCode int
 	var message string
 	var code string
-	
+
 	switch err {
 	case session.ErrDeviceNotRecognized:
 		statusCode = http.StatusForbidden
@@ -265,23 +265,23 @@ func (m *SessionSecurityMiddleware) handleSecurityViolation(c *gin.Context, sess
 		message = "보안 검사 실패"
 		code = "SECURITY_VIOLATION"
 	}
-	
+
 	// 보안 위반 로그 기록
 	if m.auditLogger != nil {
 		m.auditLogger.LogSecurityEvent(c, sessionData.UserID, "security_violation",
 			message, map[string]interface{}{
-				"session_id": sessionData.ID,
+				"session_id":     sessionData.ID,
 				"violation_type": code,
-				"error": err.Error(),
-				"ip_address": c.ClientIP(),
-				"user_agent": c.Request.UserAgent(),
+				"error":          err.Error(),
+				"ip_address":     c.ClientIP(),
+				"user_agent":     c.Request.UserAgent(),
 			})
 	}
-	
+
 	c.JSON(statusCode, gin.H{
-		"error": message,
-		"code": code,
-		"timestamp": time.Now(),
+		"error":      message,
+		"code":       code,
+		"timestamp":  time.Now(),
 		"session_id": sessionData.ID,
 	})
 	c.Abort()
@@ -292,10 +292,10 @@ func DeviceTrackingMiddleware(deviceGenerator *session.DeviceFingerprintGenerato
 	return func(c *gin.Context) {
 		// 요청에서 디바이스 정보 생성
 		deviceInfo := deviceGenerator.GenerateFromRequest(c.Request)
-		
+
 		// 컨텍스트에 디바이스 정보 설정
 		c.Set("device_info", deviceInfo)
-		
+
 		c.Next()
 	}
 }

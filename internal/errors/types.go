@@ -14,37 +14,37 @@ type ErrorType int
 const (
 	// ErrorTypeUnknown은 분류되지 않은 에러를 나타냅니다.
 	ErrorTypeUnknown ErrorType = iota
-	
+
 	// ErrorTypeValidation은 입력 검증 오류를 나타냅니다.
 	ErrorTypeValidation
-	
+
 	// ErrorTypeConfig은 설정 관련 오류를 나타냅니다.
 	ErrorTypeConfig
-	
+
 	// ErrorTypeNetwork은 네트워크 연결 오류를 나타냅니다.
 	ErrorTypeNetwork
-	
+
 	// ErrorTypeFileSystem은 파일 시스템 오류를 나타냅니다.
 	ErrorTypeFileSystem
-	
+
 	// ErrorTypeProcess은 프로세스 실행 오류를 나타냅니다.
 	ErrorTypeProcess
-	
+
 	// ErrorTypeAuthentication은 인증 오류를 나타냅니다.
 	ErrorTypeAuthentication
-	
+
 	// ErrorTypePermission은 권한 오류를 나타냅니다.
 	ErrorTypePermission
-	
+
 	// ErrorTypeNotFound은 리소스 미발견 오류를 나타냅니다.
 	ErrorTypeNotFound
-	
+
 	// ErrorTypeConflict은 충돌 상황 오류를 나타냅니다.
 	ErrorTypeConflict
-	
+
 	// ErrorTypeInternal은 내부 시스템 오류를 나타냅니다.
 	ErrorTypeInternal
-	
+
 	// ErrorTypeOAuth은 OAuth 인증 관련 오류를 나타냅니다.
 	ErrorTypeOAuth
 )
@@ -113,22 +113,22 @@ func (e ErrorType) ExitCode() int {
 type CLIError struct {
 	// Type은 에러의 분류를 나타냅니다.
 	Type ErrorType
-	
+
 	// Message는 사용자에게 표시할 주요 메시지입니다.
 	Message string
-	
+
 	// Cause는 원본 에러를 나타냅니다 (체이닝용).
 	Cause error
-	
+
 	// Suggestions는 문제 해결을 위한 제안사항들입니다.
 	Suggestions []string
-	
+
 	// Context는 에러 발생 맥락에 대한 추가 정보입니다.
 	Context map[string]interface{}
-	
+
 	// ExitCode는 프로세스 종료 코드입니다.
 	ExitCode int
-	
+
 	// Debug는 디버깅용 상세 정보입니다.
 	Debug map[string]interface{}
 }
@@ -214,7 +214,7 @@ func NewInvalidValueError(field, value string, validValues []string) *CLIError {
 	err.AddContext("field", field)
 	err.AddContext("invalid_value", value)
 	err.AddContext("valid_values", validValues)
-	
+
 	if len(validValues) > 0 {
 		err.AddSuggestion(fmt.Sprintf("유효한 값 중 하나를 선택하세요: %s", strings.Join(validValues, ", ")))
 	}
@@ -421,60 +421,60 @@ func NewOAuthStateError(reason string) *CLIError {
 // 워크스페이스 관련 에러들 (services 패키지에서 이동)
 var (
 	// 일반적인 에러
-	ErrWorkspaceNotFound           = errors.New("workspace not found")
-	ErrInvalidWorkspaceName        = errors.New("invalid workspace name")
-	ErrInvalidProjectPath          = errors.New("invalid project path")
-	ErrWorkspaceExists             = errors.New("workspace already exists")
-	ErrUnauthorized                = errors.New("unauthorized access")
-	ErrInvalidRequest              = errors.New("invalid request")
-	ErrInvalidWorkspaceStatus      = errors.New("invalid workspace status")
-	ErrWorkspaceNotActive          = errors.New("workspace is not active")
-	ErrWorkspaceArchived           = errors.New("workspace is archived")
-	ErrInsufficientPermissions     = errors.New("insufficient permissions")
-	ErrOwnershipRequired           = errors.New("ownership required")
-	ErrMaxWorkspacesReached        = errors.New("maximum workspaces reached")
-	ErrResourceBusy                = errors.New("resource is busy")
-	ErrDependencyExists            = errors.New("dependency exists")
+	ErrWorkspaceNotFound       = errors.New("workspace not found")
+	ErrInvalidWorkspaceName    = errors.New("invalid workspace name")
+	ErrInvalidProjectPath      = errors.New("invalid project path")
+	ErrWorkspaceExists         = errors.New("workspace already exists")
+	ErrUnauthorized            = errors.New("unauthorized access")
+	ErrInvalidRequest          = errors.New("invalid request")
+	ErrInvalidWorkspaceStatus  = errors.New("invalid workspace status")
+	ErrWorkspaceNotActive      = errors.New("workspace is not active")
+	ErrWorkspaceArchived       = errors.New("workspace is archived")
+	ErrInsufficientPermissions = errors.New("insufficient permissions")
+	ErrOwnershipRequired       = errors.New("ownership required")
+	ErrMaxWorkspacesReached    = errors.New("maximum workspaces reached")
+	ErrResourceBusy            = errors.New("resource is busy")
+	ErrDependencyExists        = errors.New("dependency exists")
 
 	// Docker 관련 에러
-	ErrDockerNotRunning            = errors.New("docker daemon is not running")
-	ErrContainerCreationFailed     = errors.New("container creation failed")
-	ErrContainerStartFailed        = errors.New("container start failed")
-	ErrContainerStopFailed         = errors.New("container stop failed")
-	ErrContainerNotFound           = errors.New("container not found")
-	ErrMountFailed                 = errors.New("mount failed")
-	ErrNetworkCreationFailed       = errors.New("network creation failed")
-	ErrPortMappingFailed           = errors.New("port mapping failed")
+	ErrDockerNotRunning        = errors.New("docker daemon is not running")
+	ErrContainerCreationFailed = errors.New("container creation failed")
+	ErrContainerStartFailed    = errors.New("container start failed")
+	ErrContainerStopFailed     = errors.New("container stop failed")
+	ErrContainerNotFound       = errors.New("container not found")
+	ErrMountFailed             = errors.New("mount failed")
+	ErrNetworkCreationFailed   = errors.New("network creation failed")
+	ErrPortMappingFailed       = errors.New("port mapping failed")
 
 	// 배치 작업 관련 에러
-	ErrBatchOperationCanceled      = errors.New("batch operation canceled")
-	ErrBatchOperationTimeout       = errors.New("batch operation timeout")
-	ErrBatchPartialFailure         = errors.New("batch partial failure")
-	ErrMaxConcurrentOperations     = errors.New("maximum concurrent operations reached")
+	ErrBatchOperationCanceled  = errors.New("batch operation canceled")
+	ErrBatchOperationTimeout   = errors.New("batch operation timeout")
+	ErrBatchPartialFailure     = errors.New("batch partial failure")
+	ErrMaxConcurrentOperations = errors.New("maximum concurrent operations reached")
 
 	// 복구 관련 에러
-	ErrRecoveryFailed              = errors.New("recovery failed")
-	ErrMaxRecoveryAttemptsReached  = errors.New("maximum recovery attempts reached")
-	ErrRecoveryNotSupported        = errors.New("recovery not supported for this error type")
+	ErrRecoveryFailed             = errors.New("recovery failed")
+	ErrMaxRecoveryAttemptsReached = errors.New("maximum recovery attempts reached")
+	ErrRecoveryNotSupported       = errors.New("recovery not supported for this error type")
 )
 
 // 워크스페이스 에러 코드
 const (
-	ErrCodeNotFound         = "NOT_FOUND"
-	ErrCodeAlreadyExists    = "ALREADY_EXISTS"
-	ErrCodeInvalidName      = "INVALID_NAME"
-	ErrCodeInvalidPath      = "INVALID_PATH"
-	ErrCodeInvalidRequest   = "INVALID_REQUEST"
-	ErrCodeInvalidStatus    = "INVALID_STATUS"
-	ErrCodeUnauthorized     = "UNAUTHORIZED"
-	ErrCodeInsufficientPerm = "INSUFFICIENT_PERMISSIONS"
+	ErrCodeNotFound          = "NOT_FOUND"
+	ErrCodeAlreadyExists     = "ALREADY_EXISTS"
+	ErrCodeInvalidName       = "INVALID_NAME"
+	ErrCodeInvalidPath       = "INVALID_PATH"
+	ErrCodeInvalidRequest    = "INVALID_REQUEST"
+	ErrCodeInvalidStatus     = "INVALID_STATUS"
+	ErrCodeUnauthorized      = "UNAUTHORIZED"
+	ErrCodeInsufficientPerm  = "INSUFFICIENT_PERMISSIONS"
 	ErrCodeOwnershipRequired = "OWNERSHIP_REQUIRED"
-	ErrCodeNotActive        = "NOT_ACTIVE"
-	ErrCodeArchived         = "ARCHIVED"
-	ErrCodeMaxWorkspaces    = "MAX_WORKSPACES_REACHED"
-	ErrCodeResourceBusy     = "RESOURCE_BUSY"
-	ErrCodeDependencyExists = "DEPENDENCY_EXISTS"
-	ErrCodeInternal         = "INTERNAL_ERROR"
+	ErrCodeNotActive         = "NOT_ACTIVE"
+	ErrCodeArchived          = "ARCHIVED"
+	ErrCodeMaxWorkspaces     = "MAX_WORKSPACES_REACHED"
+	ErrCodeResourceBusy      = "RESOURCE_BUSY"
+	ErrCodeDependencyExists  = "DEPENDENCY_EXISTS"
+	ErrCodeInternal          = "INTERNAL_ERROR"
 )
 
 // WorkspaceError 워크스페이스 관련 구조화된 에러

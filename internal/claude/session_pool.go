@@ -32,9 +32,9 @@ type PooledSession struct {
 
 // SessionPoolConfig는 세션 풀 설정입니다
 type SessionPoolConfig struct {
-	MaxSessions int           // 최대 세션 수
-	MaxIdleTime time.Duration // 최대 유휴 시간
-	MaxLifetime time.Duration // 세션 최대 수명
+	MaxSessions     int           // 최대 세션 수
+	MaxIdleTime     time.Duration // 최대 유휴 시간
+	MaxLifetime     time.Duration // 세션 최대 수명
 	CleanupInterval time.Duration // 정리 주기
 }
 
@@ -51,7 +51,7 @@ func DefaultSessionPoolConfig() SessionPoolConfig {
 // NewSessionPool은 새로운 세션 풀을 생성합니다
 func NewSessionPool(manager SessionManager, config SessionPoolConfig) *SessionPool {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	pool := &SessionPool{
 		manager:     manager,
 		maxSessions: config.MaxSessions,
@@ -84,7 +84,7 @@ func (p *SessionPool) AcquireSession(ctx context.Context, config SessionConfig) 
 				pooledSession.inUse = true
 				pooledSession.lastUsed = time.Now()
 				pooledSession.useCount++
-				
+
 				// 상태를 Active로 변경
 				if err := p.manager.UpdateSession(pooledSession.ID, SessionUpdate{
 					State: &[]SessionState{SessionStateActive}[0],
@@ -103,14 +103,14 @@ func (p *SessionPool) AcquireSession(ctx context.Context, config SessionConfig) 
 		// 가장 오래된 유휴 세션 찾기
 		var oldestIdle *PooledSession
 		var oldestTime time.Time
-		
+
 		for _, s := range p.sessions {
 			if !s.inUse && (oldestIdle == nil || s.lastUsed.Before(oldestTime)) {
 				oldestIdle = s
 				oldestTime = s.lastUsed
 			}
 		}
-		
+
 		if oldestIdle != nil {
 			// 오래된 유휴 세션 제거
 			p.removeSessionLocked(oldestIdle.ID)
@@ -209,9 +209,9 @@ func (p *SessionPool) GetPoolStats() PoolStats {
 	defer p.mu.RUnlock()
 
 	stats := PoolStats{
-		Total:  len(p.sessions),
-		Active: 0,
-		Idle:   0,
+		Total:       len(p.sessions),
+		Active:      0,
+		Idle:        0,
 		MaxCapacity: p.maxSessions,
 	}
 
@@ -222,7 +222,7 @@ func (p *SessionPool) GetPoolStats() PoolStats {
 			stats.Idle++
 		}
 	}
-	
+
 	if stats.Total > 0 {
 		stats.Utilization = float64(stats.Active) / float64(stats.Total)
 	}
@@ -340,7 +340,7 @@ func (p *SessionPool) isCompatible(session *Session, config SessionConfig) bool 
 	if len(session.Config.AllowedTools) != len(config.AllowedTools) {
 		return false
 	}
-	
+
 	toolMap := make(map[string]bool)
 	for _, tool := range session.Config.AllowedTools {
 		toolMap[tool] = true

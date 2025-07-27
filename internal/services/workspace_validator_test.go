@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkspaceValidator_ValidateCreate(t *testing.T) {
@@ -237,10 +237,10 @@ func TestWorkspaceValidator_validateName(t *testing.T) {
 	validator := NewWorkspaceValidator()
 
 	tests := []struct {
-		name     string
-		input    string
-		wantErr  bool
-		errCode  string
+		name    string
+		input   string
+		wantErr bool
+		errCode string
 	}{
 		{
 			name:    "유효한 이름",

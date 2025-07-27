@@ -5,23 +5,23 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/session"
+	"github.com/go-redis/redis/v8"
 )
 
 // SessionManager는 고급 세션 관리자입니다.
 type SessionManager struct {
-	store          session.Store
-	monitor        session.Monitor
+	store           session.Store
+	monitor         session.Monitor
 	securityChecker session.SecurityChecker
-	limiter        *session.ConcurrentSessionLimiter
+	limiter         *session.ConcurrentSessionLimiter
 	deviceGenerator *session.DeviceFingerprintGenerator
-	
+
 	// 설정
-	defaultSessionTTL  time.Duration
+	defaultSessionTTL     time.Duration
 	maxConcurrentSessions int
-	enableSecurity     bool
+	enableSecurity        bool
 }
 
 // NewSessionManager는 새로운 세션 관리자를 생성합니다.
@@ -31,16 +31,16 @@ func NewSessionManager(redisClient redis.UniversalClient, config SessionConfig) 
 	securityChecker := session.NewRedisSecurityChecker(store, monitor)
 	limiter := session.NewConcurrentSessionLimiter(store, monitor, config.MaxConcurrentSessions)
 	deviceGenerator := session.NewDeviceFingerprintGeneratorWithoutGeoIP()
-	
+
 	return &SessionManager{
 		store:                 store,
-		monitor:              monitor,
-		securityChecker:      securityChecker,
-		limiter:             limiter,
-		deviceGenerator:     deviceGenerator,
-		defaultSessionTTL:   config.DefaultTTL,
+		monitor:               monitor,
+		securityChecker:       securityChecker,
+		limiter:               limiter,
+		deviceGenerator:       deviceGenerator,
+		defaultSessionTTL:     config.DefaultTTL,
 		maxConcurrentSessions: config.MaxConcurrentSessions,
-		enableSecurity:      config.EnableSecurity,
+		enableSecurity:        config.EnableSecurity,
 	}
 }
 
@@ -63,7 +63,7 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 				return nil, err
 			}
 		}
-		
+
 		// 동시 세션 제한 검사
 		if err := sm.limiter.CheckLimit(ctx, userID, "user"); err != nil {
 			// 제한 초과 시 전략적으로 처리
@@ -72,7 +72,7 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 			}
 		}
 	}
-	
+
 	// 세션 생성
 	sessionData := &models.AuthSession{
 		ID:           generateSessionID(),
@@ -84,12 +84,12 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 		ExpiresAt:    time.Now().Add(sm.defaultSessionTTL),
 		IsActive:     true,
 	}
-	
+
 	// 세션 저장
 	if err := sm.store.Create(ctx, sessionData); err != nil {
 		return nil, fmt.Errorf("세션 생성 실패: %w", err)
 	}
-	
+
 	// 세션 생성 이벤트 기록
 	event := &session.SessionEvent{
 		SessionID:   sessionData.ID,
@@ -102,11 +102,11 @@ func (sm *SessionManager) CreateSession(ctx context.Context, userID string, devi
 		UserAgent:   deviceInfo.UserAgent,
 		Location:    locationInfo,
 	}
-	
+
 	if sm.monitor != nil {
 		sm.monitor.RecordSessionEvent(ctx, event)
 	}
-	
+
 	return sessionData, nil
 }
 
@@ -117,18 +117,18 @@ func (sm *SessionManager) ValidateSession(ctx context.Context, sessionID string)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 세션 만료 체크
 	if time.Now().After(sessionData.ExpiresAt) {
 		sm.terminateSession(ctx, sessionData, "세션 만료")
 		return nil, session.ErrSessionExpired
 	}
-	
+
 	// 비활성 세션 체크
 	if !sessionData.IsActive {
 		return nil, session.ErrSessionInactive
 	}
-	
+
 	// 보안 검사 (활성화된 경우)
 	if sm.enableSecurity {
 		if suspicious, reason := sm.securityChecker.DetectSuspiciousActivity(ctx, sessionData); suspicious {
@@ -141,22 +141,22 @@ func (sm *SessionManager) ValidateSession(ctx context.Context, sessionID string)
 				Severity:    session.SeverityCritical,
 				Description: fmt.Sprintf("의심스러운 활동 감지: %s", reason),
 			}
-			
+
 			if sm.monitor != nil {
 				sm.monitor.RecordSuspiciousActivity(ctx, event)
 			}
-			
+
 			// 보안 정책에 따라 세션 종료 여부 결정
 			// 현재는 경고만 하고 세션 유지
 		}
 	}
-	
+
 	// 마지막 접근 시간 업데이트
 	sessionData.LastAccess = time.Now()
 	if err := sm.store.Update(ctx, sessionData); err != nil {
 		return nil, fmt.Errorf("세션 업데이트 실패: %w", err)
 	}
-	
+
 	return sessionData, nil
 }
 
@@ -167,12 +167,12 @@ func (sm *SessionManager) ExtendSession(ctx context.Context, sessionID string, d
 	if err != nil {
 		return err
 	}
-	
+
 	// 만료 시간 연장
 	if err := sm.store.ExtendSession(ctx, sessionID, duration); err != nil {
 		return fmt.Errorf("세션 연장 실패: %w", err)
 	}
-	
+
 	// 세션 연장 이벤트 기록
 	event := &session.SessionEvent{
 		SessionID:   sessionID,
@@ -185,11 +185,11 @@ func (sm *SessionManager) ExtendSession(ctx context.Context, sessionID string, d
 			"extension_duration": duration.String(),
 		},
 	}
-	
+
 	if sm.monitor != nil {
 		sm.monitor.RecordSessionEvent(ctx, event)
 	}
-	
+
 	return nil
 }
 
@@ -203,7 +203,7 @@ func (sm *SessionManager) TerminateSession(ctx context.Context, sessionID string
 		}
 		return err
 	}
-	
+
 	return sm.terminateSession(ctx, sessionData, reason)
 }
 
@@ -212,11 +212,11 @@ func (sm *SessionManager) terminateSession(ctx context.Context, sessionData *mod
 	// 세션 비활성화
 	sessionData.IsActive = false
 	sessionData.LastAccess = time.Now()
-	
+
 	if err := sm.store.Update(ctx, sessionData); err != nil {
 		return fmt.Errorf("세션 종료 처리 실패: %w", err)
 	}
-	
+
 	// 세션 종료 이벤트 기록
 	event := &session.SessionEvent{
 		SessionID:   sessionData.ID,
@@ -229,11 +229,11 @@ func (sm *SessionManager) terminateSession(ctx context.Context, sessionData *mod
 			"termination_reason": reason,
 		},
 	}
-	
+
 	if sm.monitor != nil {
 		sm.monitor.RecordSessionEvent(ctx, event)
 	}
-	
+
 	return nil
 }
 
@@ -243,18 +243,18 @@ func (sm *SessionManager) TerminateUserSessions(ctx context.Context, userID stri
 	if err != nil {
 		return fmt.Errorf("사용자 세션 조회 실패: %w", err)
 	}
-	
+
 	var errors []string
 	for _, sessionData := range sessions {
 		if err := sm.terminateSession(ctx, sessionData, reason); err != nil {
 			errors = append(errors, fmt.Sprintf("세션 %s 종료 실패: %v", sessionData.ID, err))
 		}
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("일부 세션 종료 실패: %v", errors)
 	}
-	
+
 	return nil
 }
 
@@ -268,7 +268,7 @@ func (sm *SessionManager) GetSessionStats(ctx context.Context) (*session.Session
 	if sm.monitor == nil {
 		return nil, fmt.Errorf("모니터링이 비활성화되어 있습니다")
 	}
-	
+
 	return sm.monitor.GetSessionMetrics(ctx)
 }
 

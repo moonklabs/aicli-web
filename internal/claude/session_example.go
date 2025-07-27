@@ -1,3 +1,4 @@
+//go:build example
 // +build example
 
 package claude
@@ -22,8 +23,8 @@ func SessionExample() {
 
 	// 2. 프로세스 매니저 생성
 	pmConfig := ProcessManagerConfig{
-		MaxProcesses:     10,
-		DefaultTimeout:   30 * time.Second,
+		MaxProcesses:        10,
+		DefaultTimeout:      30 * time.Second,
 		HealthCheckInterval: 10 * time.Second,
 	}
 	pm := NewProcessManager(pmConfig)
@@ -57,7 +58,7 @@ func SessionExample() {
 			"PROJECT_NAME": "example-project",
 		},
 		MaxMemory:   2 * 1024 * 1024 * 1024, // 2GB
-		MaxCPU:      0.8,                     // 80%
+		MaxCPU:      0.8,                    // 80%
 		MaxDuration: 2 * time.Hour,
 	}
 
@@ -83,7 +84,7 @@ func SessionExample() {
 
 	// 풀 통계 확인
 	stats := pool.GetPoolStats()
-	fmt.Printf("\nPool stats: Total=%d, Active=%d, Idle=%d\n", 
+	fmt.Printf("\nPool stats: Total=%d, Active=%d, Idle=%d\n",
 		stats.TotalSessions, stats.ActiveSessions, stats.IdleSessions)
 
 	// 7. 직접 세션 관리 예제
@@ -99,7 +100,7 @@ func SessionExample() {
 	err = sm.UpdateSession(directSession.ID, SessionUpdate{
 		State: &activeState,
 		Metadata: map[string]interface{}{
-			"task": "code_review",
+			"task":       "code_review",
 			"start_time": time.Now(),
 		},
 	})
@@ -131,7 +132,7 @@ func SessionExample() {
 	// 커스텀 이벤트 핸들러
 	sm.(*sessionManager).eventBus.SubscribeToType(SessionEventStateChanged, func(event SessionEvent) {
 		data := event.Data.(StateChangeData)
-		fmt.Printf("[MONITOR] Session %s state changed: %s -> %s\n", 
+		fmt.Printf("[MONITOR] Session %s state changed: %s -> %s\n",
 			event.SessionID, data.OldState, data.NewState)
 	})
 
@@ -175,7 +176,7 @@ func SessionExample() {
 // simulateSessionUsage simulates using a session
 func simulateSessionUsage(session *PooledSession) {
 	fmt.Printf("Using session %s for task execution...\n", session.ID)
-	
+
 	// 시뮬레이션: 여러 작업 수행
 	tasks := []string{
 		"Analyzing code structure",
@@ -187,22 +188,22 @@ func simulateSessionUsage(session *PooledSession) {
 	for i, task := range tasks {
 		fmt.Printf("  [%d/%d] %s...\n", i+1, len(tasks), task)
 		time.Sleep(500 * time.Millisecond)
-		
+
 		// 세션 활동 업데이트
 		session.LastActive = time.Now()
 	}
-	
+
 	fmt.Println("Task execution completed")
 }
 
 // ExampleSessionLifecycle demonstrates a typical session lifecycle
 func ExampleSessionLifecycle() {
 	ctx := context.Background()
-	
+
 	// 매니저 초기화
 	pm := NewProcessManager(ProcessManagerConfig{})
 	sm := NewSessionManager(pm, nil)
-	
+
 	// 세션 설정
 	config := SessionConfig{
 		WorkingDir:   "/workspace",
@@ -211,27 +212,27 @@ func ExampleSessionLifecycle() {
 		Temperature:  0.7,
 		AllowedTools: []string{"code_interpreter"},
 	}
-	
+
 	// 1. 세션 생성
 	session, err := sm.CreateSession(ctx, config)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Session created: %s\n", session.ID)
-	
+
 	// 2. 세션 활성화
 	activeState := SessionStateActive
 	sm.UpdateSession(session.ID, SessionUpdate{State: &activeState})
 	fmt.Println("Session activated")
-	
+
 	// 3. 작업 수행
 	// ... Claude CLI와 상호작용 ...
-	
+
 	// 4. 유휴 상태로 전환
 	idleState := SessionStateIdle
 	sm.UpdateSession(session.ID, SessionUpdate{State: &idleState})
 	fmt.Println("Session idle")
-	
+
 	// 5. 세션 종료
 	sm.CloseSession(session.ID)
 	fmt.Println("Session closed")
@@ -240,29 +241,29 @@ func ExampleSessionLifecycle() {
 // ExampleSessionPoolUsage demonstrates session pool usage
 func ExampleSessionPoolUsage() {
 	ctx := context.Background()
-	
+
 	// 초기화
 	pm := NewProcessManager(ProcessManagerConfig{})
 	sm := NewSessionManager(pm, nil)
 	pool := NewSessionPool(sm, DefaultSessionPoolConfig())
 	defer pool.Shutdown()
-	
+
 	// 동일한 설정으로 여러 작업 수행
 	config := SessionConfig{
 		WorkingDir:  "/workspace",
 		MaxTurns:    50,
 		Temperature: 0.7,
 	}
-	
+
 	// 작업 1
 	session1, _ := pool.AcquireSession(ctx, config)
 	fmt.Printf("Task 1 using session: %s\n", session1.ID)
 	// ... 작업 수행 ...
 	pool.ReleaseSession(session1.ID)
-	
+
 	// 작업 2 (같은 세션 재사용)
 	session2, _ := pool.AcquireSession(ctx, config)
-	fmt.Printf("Task 2 using session: %s (reused: %v)\n", 
+	fmt.Printf("Task 2 using session: %s (reused: %v)\n",
 		session2.ID, session2.ID == session1.ID)
 	// ... 작업 수행 ...
 	pool.ReleaseSession(session2.ID)

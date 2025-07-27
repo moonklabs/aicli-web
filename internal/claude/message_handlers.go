@@ -36,7 +36,7 @@ func (h *TextMessageHandler) Handle(ctx context.Context, msg StreamMessage) erro
 	}
 
 	h.logger.WithFields(logrus.Fields{
-		"message_id": msg.ID,
+		"message_id":  msg.ID,
 		"content_len": len(msg.Content),
 	}).Debug("Handling text message")
 
@@ -131,14 +131,14 @@ func (h *ErrorMessageHandler) Handle(ctx context.Context, msg StreamMessage) err
 	// 에러 정보 추출
 	errorType, _ := msg.Meta["error_type"].(string)
 	errorCode, _ := msg.Meta["error_code"].(int)
-	
+
 	err := fmt.Errorf("claude error [%s:%d]: %s", errorType, errorCode, msg.Content)
-	
+
 	h.logger.WithFields(logrus.Fields{
-		"message_id":  msg.ID,
-		"error_type":  errorType,
-		"error_code":  errorCode,
-		"error_msg":   msg.Content,
+		"message_id": msg.ID,
+		"error_type": errorType,
+		"error_code": errorCode,
+		"error_msg":  msg.Content,
 	}).Error("Handling error message")
 
 	if h.errorReporter != nil {
@@ -175,7 +175,7 @@ func (h *SystemMessageHandler) Handle(ctx context.Context, msg StreamMessage) er
 	}
 
 	event, _ := msg.Meta["event"].(string)
-	
+
 	h.logger.WithFields(logrus.Fields{
 		"message_id": msg.ID,
 		"event":      event,
@@ -244,7 +244,7 @@ func (h *MetadataHandler) GetMetadata(key string) (interface{}, bool) {
 func (h *MetadataHandler) GetAllMetadata() map[string]interface{} {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	
+
 	result := make(map[string]interface{})
 	for k, v := range h.metadataStore {
 		result[k] = v
@@ -302,10 +302,10 @@ type ProgressMessageHandler struct {
 
 // ProgressTracker는 진행률을 추적하는 구조체입니다.
 type ProgressTracker struct {
-	tasks      map[string]*TaskProgress
-	mu         sync.RWMutex
-	logger     *logrus.Logger
-	onUpdate   func(taskID string, progress *TaskProgress)
+	tasks    map[string]*TaskProgress
+	mu       sync.RWMutex
+	logger   *logrus.Logger
+	onUpdate func(taskID string, progress *TaskProgress)
 }
 
 // TaskProgress는 태스크 진행률 정보입니다.
@@ -384,7 +384,7 @@ func (pt *ProgressTracker) UpdateProgress(taskID, description string, current, t
 	progress.Total = total
 	progress.Status = status
 	progress.UpdateTime = time.Now()
-	
+
 	if total > 0 {
 		progress.Percentage = float64(current) / float64(total) * 100
 	}
@@ -434,7 +434,7 @@ func (h *CompleteMessageHandler) Handle(ctx context.Context, msg StreamMessage) 
 	result["message_id"] = msg.ID
 	result["content"] = msg.Content
 	result["timestamp"] = time.Now()
-	
+
 	// 메타데이터 병합
 	for k, v := range msg.Meta {
 		result[k] = v

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	
-	"github.com/go-redis/redis/v8"
+
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/go-redis/redis/v8"
 )
 
 // RedisPermissionCache Redis 기반 권한 캐시 구현
@@ -31,7 +31,7 @@ func NewRedisPermissionCache(client *redis.Client, prefix string) *RedisPermissi
 func (rpc *RedisPermissionCache) GetUserPermissionMatrix(userID string) (*models.UserPermissionMatrix, error) {
 	ctx := context.Background()
 	key := rpc.userMatrixKey(userID)
-	
+
 	data, err := rpc.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -39,12 +39,12 @@ func (rpc *RedisPermissionCache) GetUserPermissionMatrix(userID string) (*models
 		}
 		return nil, fmt.Errorf("Redis 조회 실패: %w", err)
 	}
-	
+
 	var matrix models.UserPermissionMatrix
 	if err := json.Unmarshal([]byte(data), &matrix); err != nil {
 		return nil, fmt.Errorf("권한 매트릭스 역직렬화 실패: %w", err)
 	}
-	
+
 	return &matrix, nil
 }
 
@@ -52,16 +52,16 @@ func (rpc *RedisPermissionCache) GetUserPermissionMatrix(userID string) (*models
 func (rpc *RedisPermissionCache) SetUserPermissionMatrix(userID string, matrix *models.UserPermissionMatrix, ttl time.Duration) error {
 	ctx := context.Background()
 	key := rpc.userMatrixKey(userID)
-	
+
 	data, err := json.Marshal(matrix)
 	if err != nil {
 		return fmt.Errorf("권한 매트릭스 직렬화 실패: %w", err)
 	}
-	
+
 	if err := rpc.client.Set(ctx, key, data, ttl).Err(); err != nil {
 		return fmt.Errorf("Redis 저장 실패: %w", err)
 	}
-	
+
 	// 사용자별 캐시 키 목록에 추가 (무효화를 위해)
 	userKeysKey := rpc.userKeysKey(userID)
 	if err := rpc.client.SAdd(ctx, userKeysKey, key).Err(); err != nil {
@@ -69,7 +69,7 @@ func (rpc *RedisPermissionCache) SetUserPermissionMatrix(userID string, matrix *
 		fmt.Printf("사용자 키 목록 저장 실패: %v\n", err)
 	}
 	rpc.client.Expire(ctx, userKeysKey, ttl*2) // 키 목록은 더 오래 보관
-	
+
 	return nil
 }
 
@@ -77,23 +77,23 @@ func (rpc *RedisPermissionCache) SetUserPermissionMatrix(userID string, matrix *
 func (rpc *RedisPermissionCache) InvalidateUser(userID string) error {
 	ctx := context.Background()
 	userKeysKey := rpc.userKeysKey(userID)
-	
+
 	// 사용자의 모든 캐시 키 조회
 	keys, err := rpc.client.SMembers(ctx, userKeysKey).Result()
 	if err != nil && err != redis.Nil {
 		return fmt.Errorf("사용자 키 목록 조회 실패: %w", err)
 	}
-	
+
 	// 모든 캐시 키 삭제
 	if len(keys) > 0 {
 		if err := rpc.client.Del(ctx, keys...).Err(); err != nil {
 			return fmt.Errorf("사용자 캐시 키 삭제 실패: %w", err)
 		}
 	}
-	
+
 	// 키 목록도 삭제
 	rpc.client.Del(ctx, userKeysKey)
-	
+
 	return nil
 }
 
@@ -101,23 +101,23 @@ func (rpc *RedisPermissionCache) InvalidateUser(userID string) error {
 func (rpc *RedisPermissionCache) InvalidateRole(roleID string) error {
 	ctx := context.Background()
 	roleUsersKey := rpc.roleUsersKey(roleID)
-	
+
 	// 해당 역할을 가진 모든 사용자 조회
 	users, err := rpc.client.SMembers(ctx, roleUsersKey).Result()
 	if err != nil && err != redis.Nil {
 		return fmt.Errorf("역할 사용자 목록 조회 실패: %w", err)
 	}
-	
+
 	// 각 사용자의 캐시 무효화
 	for _, userID := range users {
 		if err := rpc.InvalidateUser(userID); err != nil {
 			fmt.Printf("사용자 %s 캐시 무효화 실패: %v\n", userID, err)
 		}
 	}
-	
+
 	// 역할 사용자 목록 삭제
 	rpc.client.Del(ctx, roleUsersKey)
-	
+
 	return nil
 }
 
@@ -125,23 +125,23 @@ func (rpc *RedisPermissionCache) InvalidateRole(roleID string) error {
 func (rpc *RedisPermissionCache) InvalidateGroup(groupID string) error {
 	ctx := context.Background()
 	groupUsersKey := rpc.groupUsersKey(groupID)
-	
+
 	// 해당 그룹에 속한 모든 사용자 조회
 	users, err := rpc.client.SMembers(ctx, groupUsersKey).Result()
 	if err != nil && err != redis.Nil {
 		return fmt.Errorf("그룹 사용자 목록 조회 실패: %w", err)
 	}
-	
+
 	// 각 사용자의 캐시 무효화
 	for _, userID := range users {
 		if err := rpc.InvalidateUser(userID); err != nil {
 			fmt.Printf("사용자 %s 캐시 무효화 실패: %v\n", userID, err)
 		}
 	}
-	
+
 	// 그룹 사용자 목록 삭제
 	rpc.client.Del(ctx, groupUsersKey)
-	
+
 	return nil
 }
 
@@ -149,14 +149,14 @@ func (rpc *RedisPermissionCache) InvalidateGroup(groupID string) error {
 func (rpc *RedisPermissionCache) TrackUserRole(userID, roleID string) error {
 	ctx := context.Background()
 	roleUsersKey := rpc.roleUsersKey(roleID)
-	
+
 	if err := rpc.client.SAdd(ctx, roleUsersKey, userID).Err(); err != nil {
 		return fmt.Errorf("사용자-역할 추적 실패: %w", err)
 	}
-	
+
 	// 키 만료 시간 설정 (24시간)
 	rpc.client.Expire(ctx, roleUsersKey, 24*time.Hour)
-	
+
 	return nil
 }
 
@@ -164,28 +164,28 @@ func (rpc *RedisPermissionCache) TrackUserRole(userID, roleID string) error {
 func (rpc *RedisPermissionCache) TrackUserGroup(userID, groupID string) error {
 	ctx := context.Background()
 	groupUsersKey := rpc.groupUsersKey(groupID)
-	
+
 	if err := rpc.client.SAdd(ctx, groupUsersKey, userID).Err(); err != nil {
 		return fmt.Errorf("사용자-그룹 추적 실패: %w", err)
 	}
-	
+
 	// 키 만료 시간 설정 (24시간)
 	rpc.client.Expire(ctx, groupUsersKey, 24*time.Hour)
-	
+
 	return nil
 }
 
 // GetCacheStats 캐시 통계 조회
 func (rpc *RedisPermissionCache) GetCacheStats() (map[string]interface{}, error) {
 	ctx := context.Background()
-	
+
 	// 패턴에 맞는 모든 키 조회
 	pattern := rpc.prefix + ":*"
 	keys, err := rpc.client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return nil, fmt.Errorf("캐시 키 조회 실패: %w", err)
 	}
-	
+
 	stats := map[string]interface{}{
 		"total_keys": len(keys),
 		"patterns": map[string]int{
@@ -195,7 +195,7 @@ func (rpc *RedisPermissionCache) GetCacheStats() (map[string]interface{}, error)
 			"group_users": 0,
 		},
 	}
-	
+
 	// 키 패턴별 분류
 	for _, key := range keys {
 		if contains(key, ":user:") && contains(key, ":matrix") {
@@ -208,7 +208,7 @@ func (rpc *RedisPermissionCache) GetCacheStats() (map[string]interface{}, error)
 			stats["patterns"].(map[string]int)["group_users"]++
 		}
 	}
-	
+
 	return stats, nil
 }
 
@@ -216,18 +216,18 @@ func (rpc *RedisPermissionCache) GetCacheStats() (map[string]interface{}, error)
 func (rpc *RedisPermissionCache) ClearAll() error {
 	ctx := context.Background()
 	pattern := rpc.prefix + ":*"
-	
+
 	keys, err := rpc.client.Keys(ctx, pattern).Result()
 	if err != nil {
 		return fmt.Errorf("캐시 키 조회 실패: %w", err)
 	}
-	
+
 	if len(keys) > 0 {
 		if err := rpc.client.Del(ctx, keys...).Err(); err != nil {
 			return fmt.Errorf("캐시 삭제 실패: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -251,11 +251,11 @@ func (rpc *RedisPermissionCache) groupUsersKey(groupID string) string {
 
 // contains 문자열 포함 여부 확인 헬퍼
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-		    s[:len(substr)] == substr ||
-		    s[len(s)-len(substr):] == substr ||
-		    findSubstring(s, substr))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			s[:len(substr)] == substr ||
+			s[len(s)-len(substr):] == substr ||
+			findSubstring(s, substr))
 }
 
 func findSubstring(s, substr string) bool {
@@ -296,13 +296,13 @@ func (ipc *InMemoryPermissionCache) GetUserPermissionMatrix(userID string) (*mod
 	if !exists {
 		return nil, nil // 캐시 미스
 	}
-	
+
 	// 만료 확인
 	if time.Now().After(cached.expiresAt) {
 		delete(ipc.userMatrices, userID)
 		return nil, nil // 만료된 캐시
 	}
-	
+
 	return cached.matrix, nil
 }
 
@@ -328,11 +328,11 @@ func (ipc *InMemoryPermissionCache) InvalidateRole(roleID string) error {
 	if !exists {
 		return nil
 	}
-	
+
 	for _, userID := range users {
 		ipc.InvalidateUser(userID)
 	}
-	
+
 	delete(ipc.roleUsers, roleID)
 	return nil
 }
@@ -343,11 +343,11 @@ func (ipc *InMemoryPermissionCache) InvalidateGroup(groupID string) error {
 	if !exists {
 		return nil
 	}
-	
+
 	for _, userID := range users {
 		ipc.InvalidateUser(userID)
 	}
-	
+
 	delete(ipc.groupUsers, groupID)
 	return nil
 }

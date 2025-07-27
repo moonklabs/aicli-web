@@ -27,17 +27,17 @@ func NewContainerManager(client *Client) *ContainerManager {
 
 // WorkspaceContainer 워크스페이스 컨테이너 정보를 담는 구조체입니다.
 type WorkspaceContainer struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	WorkspaceID string                 `json:"workspace_id"`
-	State       ContainerState         `json:"state"`
-	Created     time.Time              `json:"created_at"`
-	Started     *time.Time             `json:"started_at,omitempty"`
-	Finished    *time.Time             `json:"finished_at,omitempty"`
-	ExitCode    *int                   `json:"exit_code,omitempty"`
-	Stats       *ContainerStats        `json:"stats,omitempty"`
-	Ports       map[string]string      `json:"ports,omitempty"`
-	Mounts      []ContainerMount       `json:"mounts,omitempty"`
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	WorkspaceID string            `json:"workspace_id"`
+	State       ContainerState    `json:"state"`
+	Created     time.Time         `json:"created_at"`
+	Started     *time.Time        `json:"started_at,omitempty"`
+	Finished    *time.Time        `json:"finished_at,omitempty"`
+	ExitCode    *int              `json:"exit_code,omitempty"`
+	Stats       *ContainerStats   `json:"stats,omitempty"`
+	Ports       map[string]string `json:"ports,omitempty"`
+	Mounts      []ContainerMount  `json:"mounts,omitempty"`
 }
 
 // ContainerState 컨테이너 상태를 나타냅니다.
@@ -78,7 +78,6 @@ func (wc *WorkspaceContainer) GetCreatedAt() time.Time {
 	return wc.Created
 }
 
-
 // ContainerMount 컨테이너 마운트 정보입니다.
 type ContainerMount struct {
 	Source      string `json:"source"`
@@ -89,42 +88,42 @@ type ContainerMount struct {
 
 // CreateContainerRequest 컨테이너 생성 요청 구조체입니다.
 type CreateContainerRequest struct {
-	WorkspaceID   string            `json:"workspace_id"`
-	Name          string            `json:"name"`
-	ProjectPath   string            `json:"project_path"`
-	Image         string            `json:"image,omitempty"`
-	Command       []string          `json:"command,omitempty"`
-	Environment   map[string]string `json:"environment,omitempty"`
-	WorkingDir    string            `json:"working_dir,omitempty"`
-	
+	WorkspaceID string            `json:"workspace_id"`
+	Name        string            `json:"name"`
+	ProjectPath string            `json:"project_path"`
+	Image       string            `json:"image,omitempty"`
+	Command     []string          `json:"command,omitempty"`
+	Environment map[string]string `json:"environment,omitempty"`
+	WorkingDir  string            `json:"working_dir,omitempty"`
+
 	// 리소스 제한
-	CPULimit      float64           `json:"cpu_limit,omitempty"`
-	MemoryLimit   int64             `json:"memory_limit,omitempty"`
-	
+	CPULimit    float64 `json:"cpu_limit,omitempty"`
+	MemoryLimit int64   `json:"memory_limit,omitempty"`
+
 	// 네트워크 설정
-	Ports         map[string]string `json:"ports,omitempty"`
-	
+	Ports map[string]string `json:"ports,omitempty"`
+
 	// 보안 설정
-	Privileged    bool              `json:"privileged,omitempty"`
-	ReadOnly      bool              `json:"read_only,omitempty"`
+	Privileged bool `json:"privileged,omitempty"`
+	ReadOnly   bool `json:"read_only,omitempty"`
 }
 
 // CreateWorkspaceContainerRequest Docker 통합 서비스용 컨테이너 생성 요청
 type CreateWorkspaceContainerRequest struct {
-	WorkspaceID string                     `json:"workspace_id"`
-	Name        string                     `json:"name"`
-	Image       string                     `json:"image"`
-	ProjectPath string                     `json:"project_path"`
-	Environment map[string]string          `json:"environment,omitempty"`
-	Isolation   interface{}                `json:"isolation,omitempty"` // security.WorkspaceIsolation 타입이지만 순환 참조 방지
-	MemoryLimit   int64             `json:"memory_limit,omitempty"`
-	
+	WorkspaceID string            `json:"workspace_id"`
+	Name        string            `json:"name"`
+	Image       string            `json:"image"`
+	ProjectPath string            `json:"project_path"`
+	Environment map[string]string `json:"environment,omitempty"`
+	Isolation   interface{}       `json:"isolation,omitempty"` // security.WorkspaceIsolation 타입이지만 순환 참조 방지
+	MemoryLimit int64             `json:"memory_limit,omitempty"`
+
 	// 네트워크 설정
-	Ports         map[string]string `json:"ports,omitempty"`
-	
+	Ports map[string]string `json:"ports,omitempty"`
+
 	// 보안 설정
-	Privileged    bool              `json:"privileged,omitempty"`
-	ReadOnly      bool              `json:"read_only,omitempty"`
+	Privileged bool `json:"privileged,omitempty"`
+	ReadOnly   bool `json:"read_only,omitempty"`
 }
 
 // CreateWorkspaceContainer 워크스페이스용 컨테이너를 생성합니다.
@@ -136,14 +135,14 @@ func (cm *ContainerManager) CreateWorkspaceContainer(ctx context.Context, req *C
 	if req.WorkingDir == "" {
 		req.WorkingDir = "/workspace"
 	}
-	
+
 	containerName := cm.client.GenerateContainerName(req.WorkspaceID)
-	
+
 	// 기존 컨테이너 정리
 	if err := cm.cleanupExistingContainer(ctx, containerName); err != nil {
 		return nil, fmt.Errorf("cleanup existing container: %w", err)
 	}
-	
+
 	// 컨테이너 설정
 	config := &container.Config{
 		Image:        req.Image,
@@ -158,10 +157,10 @@ func (cm *ContainerManager) CreateWorkspaceContainer(ctx context.Context, req *C
 		Tty:          true,
 		Labels:       cm.client.WorkspaceLabels(req.WorkspaceID, req.Name),
 	}
-	
+
 	// 환경 변수 설정
 	config.Env = cm.buildEnvironment(req)
-	
+
 	// 호스트 설정
 	hostConfig := &container.HostConfig{
 		// 프로젝트 디렉토리 마운트
@@ -175,26 +174,26 @@ func (cm *ContainerManager) CreateWorkspaceContainer(ctx context.Context, req *C
 				},
 			},
 		},
-		
+
 		// 리소스 제한
 		Resources: cm.buildResourceLimits(req),
-		
+
 		// 보안 설정
 		Privileged:     req.Privileged,
 		ReadonlyRootfs: req.ReadOnly || cm.client.config.ReadOnly,
 		SecurityOpt:    cm.client.config.SecurityOpts,
 		CapDrop:        []string{"ALL"},
 		CapAdd:         []string{"CHOWN", "SETUID", "SETGID", "DAC_OVERRIDE"},
-		
+
 		// 재시작 정책
 		RestartPolicy: container.RestartPolicy{
 			Name: "unless-stopped",
 		},
-		
+
 		// 포트 매핑
 		PortBindings: cm.buildPortBindings(req.Ports),
 	}
-	
+
 	// 네트워크 설정
 	networkConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
@@ -203,7 +202,7 @@ func (cm *ContainerManager) CreateWorkspaceContainer(ctx context.Context, req *C
 			},
 		},
 	}
-	
+
 	// 컨테이너 생성
 	resp, err := cm.client.cli.ContainerCreate(
 		ctx, config, hostConfig, networkConfig, nil, containerName,
@@ -211,7 +210,7 @@ func (cm *ContainerManager) CreateWorkspaceContainer(ctx context.Context, req *C
 	if err != nil {
 		return nil, fmt.Errorf("create container: %w", err)
 	}
-	
+
 	return &WorkspaceContainer{
 		ID:          resp.ID,
 		Name:        containerName,
@@ -228,12 +227,12 @@ func (cm *ContainerManager) buildEnvironment(req *CreateContainerRequest) []stri
 		fmt.Sprintf("WORKSPACE_NAME=%s", req.Name),
 		fmt.Sprintf("AICLI_MANAGED=true"),
 	}
-	
+
 	// 사용자 지정 환경 변수 추가
 	for key, value := range req.Environment {
 		env = append(env, fmt.Sprintf("%s=%s", key, value))
 	}
-	
+
 	return env
 }
 
@@ -243,20 +242,20 @@ func (cm *ContainerManager) buildResourceLimits(req *CreateContainerRequest) con
 	if cpuLimit == 0 {
 		cpuLimit = cm.client.config.CPULimit
 	}
-	
+
 	memLimit := req.MemoryLimit
 	if memLimit == 0 {
 		memLimit = cm.client.config.MemoryLimit
 	}
-	
+
 	return container.Resources{
 		CPUQuota:   int64(cpuLimit * 100000), // 1.0 = 100%
 		CPUPeriod:  100000,
 		Memory:     memLimit,
 		MemorySwap: memLimit, // Swap 비활성화
-		
+
 		// PID 제한
-		PidsLimit: func() *int64 { 
+		PidsLimit: func() *int64 {
 			limit := int64(100) // 최대 100개 프로세스
 			return &limit
 		}(),
@@ -266,20 +265,20 @@ func (cm *ContainerManager) buildResourceLimits(req *CreateContainerRequest) con
 // buildPortBindings 포트 매핑을 구성합니다.
 func (cm *ContainerManager) buildPortBindings(ports map[string]string) nat.PortMap {
 	bindings := make(nat.PortMap)
-	
+
 	for containerPort, hostPort := range ports {
 		port, err := nat.NewPort("tcp", containerPort)
 		if err != nil {
 			continue // 잘못된 포트는 무시
 		}
-		
+
 		bindings[port] = []nat.PortBinding{
 			{
 				HostPort: hostPort,
 			},
 		}
 	}
-	
+
 	return bindings
 }
 
@@ -296,7 +295,7 @@ func (cm *ContainerManager) StopContainer(ctx context.Context, containerID strin
 	if timeout == 0 {
 		timeout = 10 * time.Second
 	}
-	
+
 	timeoutSeconds := int(timeout.Seconds())
 	if err := cm.client.cli.ContainerStop(ctx, containerID, container.StopOptions{
 		Timeout: &timeoutSeconds,
@@ -311,7 +310,7 @@ func (cm *ContainerManager) RestartContainer(ctx context.Context, containerID st
 	if timeout == 0 {
 		timeout = 10 * time.Second
 	}
-	
+
 	timeoutSeconds := int(timeout.Seconds())
 	if err := cm.client.cli.ContainerRestart(ctx, containerID, container.StopOptions{
 		Timeout: &timeoutSeconds,
@@ -328,7 +327,7 @@ func (cm *ContainerManager) RemoveContainer(ctx context.Context, containerID str
 		RemoveLinks:   true,
 		Force:         force,
 	}
-	
+
 	if err := cm.client.cli.ContainerRemove(ctx, containerID, options); err != nil {
 		return fmt.Errorf("remove container: %w", err)
 	}
@@ -341,7 +340,7 @@ func (cm *ContainerManager) InspectContainer(ctx context.Context, containerID st
 	if err != nil {
 		return nil, fmt.Errorf("inspect container: %w", err)
 	}
-	
+
 	return cm.inspectResultToWorkspaceContainer(&inspect), nil
 }
 
@@ -354,7 +353,7 @@ func (cm *ContainerManager) inspectResultToWorkspaceContainer(inspect *types.Con
 			createdTime = parsedTime
 		}
 	}
-	
+
 	wc := &WorkspaceContainer{
 		ID:          inspect.ID,
 		Name:        inspect.Name,
@@ -362,23 +361,23 @@ func (cm *ContainerManager) inspectResultToWorkspaceContainer(inspect *types.Con
 		State:       ContainerState(inspect.State.Status),
 		Created:     createdTime,
 	}
-	
+
 	if inspect.State.StartedAt != "" {
 		if startTime, err := time.Parse(time.RFC3339Nano, inspect.State.StartedAt); err == nil {
 			wc.Started = &startTime
 		}
 	}
-	
+
 	if inspect.State.FinishedAt != "" {
 		if finishTime, err := time.Parse(time.RFC3339Nano, inspect.State.FinishedAt); err == nil {
 			wc.Finished = &finishTime
 		}
 	}
-	
+
 	if inspect.State.ExitCode != 0 {
 		wc.ExitCode = &inspect.State.ExitCode
 	}
-	
+
 	// 마운트 정보
 	for _, mount := range inspect.Mounts {
 		wc.Mounts = append(wc.Mounts, ContainerMount{
@@ -388,7 +387,7 @@ func (cm *ContainerManager) inspectResultToWorkspaceContainer(inspect *types.Con
 			ReadOnly:    !mount.RW,
 		})
 	}
-	
+
 	return wc
 }
 
@@ -396,7 +395,7 @@ func (cm *ContainerManager) inspectResultToWorkspaceContainer(inspect *types.Con
 func (cm *ContainerManager) ListWorkspaceContainers(ctx context.Context, workspaceID string) ([]*WorkspaceContainer, error) {
 	filters := filters.NewArgs()
 	filters.Add("label", fmt.Sprintf("%s.workspace.id=%s", cm.client.labelPrefix, workspaceID))
-	
+
 	containers, err := cm.client.cli.ContainerList(ctx, types.ContainerListOptions{
 		All:     true,
 		Filters: filters,
@@ -404,7 +403,7 @@ func (cm *ContainerManager) ListWorkspaceContainers(ctx context.Context, workspa
 	if err != nil {
 		return nil, fmt.Errorf("list containers: %w", err)
 	}
-	
+
 	result := make([]*WorkspaceContainer, 0, len(containers))
 	for _, container := range containers {
 		wc := &WorkspaceContainer{
@@ -416,7 +415,7 @@ func (cm *ContainerManager) ListWorkspaceContainers(ctx context.Context, workspa
 		}
 		result = append(result, wc)
 	}
-	
+
 	return result, nil
 }
 
@@ -426,7 +425,7 @@ func (cm *ContainerManager) CleanupWorkspace(ctx context.Context, workspaceID st
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	for _, container := range containers {
 		// 실행 중이면 중지
 		if container.State == ContainerStateRunning {
@@ -436,7 +435,7 @@ func (cm *ContainerManager) CleanupWorkspace(ctx context.Context, workspaceID st
 				}
 			}
 		}
-		
+
 		// 컨테이너 삭제
 		if err := cm.RemoveContainer(ctx, container.ID, force); err != nil {
 			if !force {
@@ -444,7 +443,7 @@ func (cm *ContainerManager) CleanupWorkspace(ctx context.Context, workspaceID st
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -457,17 +456,17 @@ func (cm *ContainerManager) cleanupExistingContainer(ctx context.Context, contai
 			filters.Arg("name", containerName),
 		),
 	})
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	// 기존 컨테이너 삭제
 	for _, container := range containers {
 		if err := cm.RemoveContainer(ctx, container.ID, true); err != nil {
 			return fmt.Errorf("remove existing container %s: %w", container.ID, err)
 		}
 	}
-	
+
 	return nil
 }

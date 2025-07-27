@@ -23,7 +23,7 @@ type StreamHandler interface {
 	Close() error
 	IsRunning() bool
 	GetStats() map[string]interface{}
-	
+
 	// 새로운 스트림 처리 메서드
 	Stream(ctx context.Context, reader io.Reader) (<-chan StreamMessage, error)
 	StreamWithCallback(ctx context.Context, reader io.Reader, callback MessageCallback) error
@@ -45,22 +45,22 @@ type StreamMetrics struct {
 
 // claudeStreamHandler는 StreamHandler 인터페이스의 구현체입니다.
 type claudeStreamHandler struct {
-	stdin        io.WriteCloser
-	stdout       io.ReadCloser
-	stderr       io.ReadCloser
-	parser       *JSONStreamParser
-	eventBus     *EventBus
-	buffer       *StreamBuffer
-	isRunning    bool
-	mutex        sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
-	logger       *logrus.Logger
-	
+	stdin     io.WriteCloser
+	stdout    io.ReadCloser
+	stderr    io.ReadCloser
+	parser    *JSONStreamParser
+	eventBus  *EventBus
+	buffer    *StreamBuffer
+	isRunning bool
+	mutex     sync.RWMutex
+	ctx       context.Context
+	cancel    context.CancelFunc
+	logger    *logrus.Logger
+
 	// 채널들
 	responseChan chan *Response
 	errorChan    chan error
-	
+
 	// 메트릭
 	messagesSent     int64
 	messagesReceived int64
@@ -68,12 +68,12 @@ type claudeStreamHandler struct {
 	startTime        time.Time
 	bytesProcessed   int64
 	parseErrors      int64
-	
+
 	// 백프레셔 및 라우팅
-	backpressure    *BackpressureHandler
-	messageRouter   *MessageRouter
-	bufferSize      int
-	metrics         *StreamMetrics
+	backpressure  *BackpressureHandler
+	messageRouter *MessageRouter
+	bufferSize    int
+	metrics       *StreamMetrics
 }
 
 // NewStreamHandler는 새로운 스트림 핸들러를 생성합니다.
@@ -87,28 +87,28 @@ func NewStreamHandler(logger *logrus.Logger) StreamHandler {
 		BufferGrowthRate:  1.5,
 		BufferShrinkRate:  0.8,
 	}
-	
+
 	// 메시지 라우터 설정
 	routerConfig := RouterConfig{
 		AsyncMode:      true,
 		MaxConcurrency: 10,
 	}
-	
+
 	handler := &claudeStreamHandler{
-		eventBus:       NewEventBus(logger),
-		buffer:         NewStreamBuffer(1024 * 1024), // 1MB 버퍼
-		logger:         logger,
-		responseChan:   make(chan *Response, 100),
-		errorChan:      make(chan error, 10),
-		backpressure:   NewBackpressureHandler(backpressureConfig, logger),
-		messageRouter:  NewMessageRouter(routerConfig, logger),
-		bufferSize:     100,
-		metrics:        &StreamMetrics{},
+		eventBus:      NewEventBus(logger),
+		buffer:        NewStreamBuffer(1024 * 1024), // 1MB 버퍼
+		logger:        logger,
+		responseChan:  make(chan *Response, 100),
+		errorChan:     make(chan error, 10),
+		backpressure:  NewBackpressureHandler(backpressureConfig, logger),
+		messageRouter: NewMessageRouter(routerConfig, logger),
+		bufferSize:    100,
+		metrics:       &StreamMetrics{},
 	}
-	
+
 	// 기본 메시지 핸들러 등록
 	handler.registerDefaultHandlers()
-	
+
 	return handler
 }
 
@@ -172,7 +172,7 @@ func (sh *claudeStreamHandler) processOutputStream() {
 // processErrorStream은 stderr 스트림을 처리합니다.
 func (sh *claudeStreamHandler) processErrorStream() {
 	buffer := make([]byte, 4096)
-	
+
 	for {
 		select {
 		case <-sh.ctx.Done():
@@ -383,9 +383,9 @@ func (sh *claudeStreamHandler) GetStats() map[string]interface{} {
 	defer sh.mutex.RUnlock()
 
 	stats := map[string]interface{}{
-		"is_running":         sh.isRunning,
-		"messages_sent":      sh.messagesSent,
-		"messages_received":  sh.messagesReceived,
+		"is_running":        sh.isRunning,
+		"messages_sent":     sh.messagesSent,
+		"messages_received": sh.messagesReceived,
 		"errors":            sh.errors,
 		"uptime_seconds":    0,
 	}
@@ -442,13 +442,13 @@ func (sh *claudeStreamHandler) GetBuffer() *StreamBuffer {
 // Stream은 리더에서 메시지를 스트리밍합니다.
 func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-chan StreamMessage, error) {
 	messageChan := make(chan StreamMessage, sh.bufferSize)
-	
+
 	go func() {
 		defer close(messageChan)
-		
+
 		parser := NewJSONStreamParser(reader, sh.logger)
 		responseChan, errorChan := parser.ParseStream(ctx)
-		
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -457,7 +457,7 @@ func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-
 				if response == nil {
 					return
 				}
-				
+
 				// Response를 StreamMessage로 변환
 				msg := StreamMessage{
 					Type:    response.Type,
@@ -465,7 +465,7 @@ func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-
 					Meta:    response.Metadata,
 					ID:      response.MessageID,
 				}
-				
+
 				// 백프레셔 처리
 				if sh.backpressure.ShouldDrop() {
 					if err := sh.backpressure.WaitForSpace(ctx); err != nil {
@@ -473,17 +473,17 @@ func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-
 						return
 					}
 				}
-				
+
 				sh.backpressure.IncrementBuffer()
 				atomic.AddInt64(&sh.messagesReceived, 1)
 				atomic.AddInt64(&sh.bytesProcessed, int64(len(response.Content)))
-				
+
 				select {
 				case messageChan <- msg:
 				case <-ctx.Done():
 					return
 				}
-				
+
 			case err := <-errorChan:
 				if err != nil {
 					atomic.AddInt64(&sh.parseErrors, 1)
@@ -493,10 +493,10 @@ func (sh *claudeStreamHandler) Stream(ctx context.Context, reader io.Reader) (<-
 			}
 		}
 	}()
-	
+
 	// 백프레셔 모니터링 시작
 	go sh.backpressure.MonitorSlowConsumers(ctx)
-	
+
 	return messageChan, nil
 }
 
@@ -506,29 +506,29 @@ func (sh *claudeStreamHandler) StreamWithCallback(ctx context.Context, reader io
 	if err != nil {
 		return err
 	}
-	
+
 	for msg := range messageChan {
 		start := time.Now()
-		
+
 		// 메시지 라우터로 전달
 		if err := sh.messageRouter.Route(ctx, msg); err != nil {
 			sh.logger.WithError(err).Error("Message routing failed")
 		}
-		
+
 		// 콜백 실행
 		if callback != nil {
 			if err := callback(msg); err != nil {
 				sh.logger.WithError(err).Error("Message callback failed")
 			}
 		}
-		
+
 		// 메트릭 업데이트
 		processingTime := time.Since(start)
 		sh.updateProcessingTime(processingTime)
-		
+
 		sh.backpressure.DecrementBuffer()
 	}
-	
+
 	return nil
 }
 
@@ -536,12 +536,12 @@ func (sh *claudeStreamHandler) StreamWithCallback(ctx context.Context, reader io
 func (sh *claudeStreamHandler) SetBufferSize(size int) {
 	sh.mutex.Lock()
 	defer sh.mutex.Unlock()
-	
+
 	if size <= 0 {
 		size = 100
 	}
 	sh.bufferSize = size
-	
+
 	// 백프레셔 핸들러 버퍼 크기도 조정
 	if sh.backpressure != nil {
 		sh.backpressure.mu.Lock()
@@ -554,9 +554,9 @@ func (sh *claudeStreamHandler) SetBufferSize(size int) {
 func (sh *claudeStreamHandler) GetMetrics() StreamMetrics {
 	sh.mutex.RLock()
 	defer sh.mutex.RUnlock()
-	
+
 	backpressureMetrics := sh.backpressure.GetMetrics()
-	
+
 	return StreamMetrics{
 		MessagesReceived:   atomic.LoadInt64(&sh.messagesReceived),
 		BytesProcessed:     atomic.LoadInt64(&sh.bytesProcessed),
@@ -574,14 +574,14 @@ func (sh *claudeStreamHandler) registerDefaultHandlers() {
 		return nil
 	}, sh.logger)
 	sh.messageRouter.RegisterHandler(MessageTypeText, textHandler)
-	
+
 	// 에러 메시지 핸들러
 	errorHandler := NewErrorMessageHandler(func(err error, meta map[string]interface{}) {
 		sh.logger.WithError(err).Error("Claude error")
 		atomic.AddInt64(&sh.errors, 1)
 	}, sh.logger)
 	sh.messageRouter.RegisterHandler(MessageTypeError, errorHandler)
-	
+
 	// 시스템 메시지 핸들러
 	systemHandler := NewSystemMessageHandler(func(event string, data map[string]interface{}) {
 		sh.eventBus.Publish(&StreamEvent{
@@ -592,7 +592,7 @@ func (sh *claudeStreamHandler) registerDefaultHandlers() {
 		})
 	}, sh.logger)
 	sh.messageRouter.RegisterHandler(MessageTypeSystem, systemHandler)
-	
+
 	// 진행률 메시지 핸들러
 	progressHandler := NewProgressMessageHandler(func(taskID string, progress *TaskProgress) {
 		sh.eventBus.Publish(&StreamEvent{
@@ -607,7 +607,7 @@ func (sh *claudeStreamHandler) registerDefaultHandlers() {
 		})
 	}, sh.logger)
 	sh.messageRouter.RegisterHandler(MessageTypeProgress, progressHandler)
-	
+
 	// 완료 메시지 핸들러
 	completeHandler := NewCompleteMessageHandler(func(result map[string]interface{}) {
 		sh.eventBus.Publish(&StreamEvent{
@@ -624,7 +624,7 @@ func (sh *claudeStreamHandler) registerDefaultHandlers() {
 func (sh *claudeStreamHandler) updateProcessingTime(duration time.Duration) {
 	sh.mutex.Lock()
 	defer sh.mutex.Unlock()
-	
+
 	// 이동 평균 계산
 	alpha := 0.1
 	current := sh.metrics.AvgProcessingTime

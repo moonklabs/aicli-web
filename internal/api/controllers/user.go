@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/services"
+	"github.com/gin-gonic/gin"
 )
 
 // UserController는 사용자 관리 관련 API를 처리합니다.
@@ -87,7 +87,7 @@ func (uc *UserController) UpdateProfile(c *gin.Context) {
 	}
 
 	// 활동 로그 기록
-	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "profile_update", "user", 
+	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "profile_update", "user",
 		"프로파일 업데이트", c.ClientIP(), c.GetHeader("User-Agent"))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -130,7 +130,7 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 	}
 
 	// 활동 로그 기록
-	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "password_change", "user", 
+	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "password_change", "user",
 		"비밀번호 변경", c.ClientIP(), c.GetHeader("User-Agent"))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -172,7 +172,7 @@ func (uc *UserController) ChangeEmail(c *gin.Context) {
 	}
 
 	// 활동 로그 기록
-	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "email_change", "user", 
+	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "email_change", "user",
 		"이메일 변경", c.ClientIP(), c.GetHeader("User-Agent"))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -245,7 +245,7 @@ func (uc *UserController) Enable2FA(c *gin.Context) {
 	}
 
 	// 활동 로그 기록
-	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "2fa_enable", "user", 
+	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "2fa_enable", "user",
 		"2FA 활성화", c.ClientIP(), c.GetHeader("User-Agent"))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -279,7 +279,7 @@ func (uc *UserController) Disable2FA(c *gin.Context) {
 	}
 
 	// 활동 로그 기록
-	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "2fa_disable", "user", 
+	uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "2fa_disable", "user",
 		"2FA 비활성화", c.ClientIP(), c.GetHeader("User-Agent"))
 
 	c.JSON(http.StatusOK, gin.H{
@@ -355,7 +355,7 @@ func (uc *UserController) ListUsers(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	search := c.Query("search")
 	role := c.Query("role")
-	
+
 	var isActive *bool
 	if activeStr := c.Query("is_active"); activeStr != "" {
 		if activeVal, err := strconv.ParseBool(activeStr); err == nil {
@@ -414,7 +414,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 	// 활동 로그 기록 (관리자)
 	claims, _ := c.Get("claims")
 	if userClaims, ok := claims.(*auth.Claims); ok {
-		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_create", "admin", 
+		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_create", "admin",
 			"사용자 생성: "+req.Username, c.ClientIP(), c.GetHeader("User-Agent"))
 	}
 
@@ -494,7 +494,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	// 활동 로그 기록 (관리자)
 	claims, _ := c.Get("claims")
 	if userClaims, ok := claims.(*auth.Claims); ok {
-		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_update", "admin", 
+		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_update", "admin",
 			"사용자 업데이트: "+userID, c.ClientIP(), c.GetHeader("User-Agent"))
 	}
 
@@ -535,7 +535,7 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	// 활동 로그 기록 (관리자)
 	claims, _ := c.Get("claims")
 	if userClaims, ok := claims.(*auth.Claims); ok {
-		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_delete", "admin", 
+		uc.userService.LogActivity(c.Request.Context(), userClaims.UserID, "user_delete", "admin",
 			"사용자 삭제: "+userID, c.ClientIP(), c.GetHeader("User-Agent"))
 	}
 

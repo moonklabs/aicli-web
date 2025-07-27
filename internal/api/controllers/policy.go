@@ -189,7 +189,7 @@ func (pc *PolicyController) ListPolicies(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	category := c.Query("category")
 	search := c.Query("search")
-	
+
 	var isActive *bool
 	if activeStr := c.Query("is_active"); activeStr != "" {
 		if activeVal, err := strconv.ParseBool(activeStr); err == nil {
@@ -300,12 +300,12 @@ func (pc *PolicyController) DeactivatePolicy(c *gin.Context) {
 func (pc *PolicyController) RollbackPolicy(c *gin.Context) {
 	policyID := c.Param("id")
 	version := c.Query("version")
-	
+
 	if policyID == "" {
 		middleware.BadRequestError(c, "정책 ID가 필요합니다")
 		return
 	}
-	
+
 	if version == "" {
 		middleware.BadRequestError(c, "롤백할 버전이 필요합니다")
 		return

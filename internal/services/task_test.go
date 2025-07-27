@@ -16,7 +16,7 @@ func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
 	storage := memory.New()
 	projectService := NewProjectService(storage)
 	sessionService := NewSessionService(storage, projectService, nil)
-	
+
 	// 태스크 서비스 설정
 	config := &TaskServiceConfig{
 		MaxWorkers:      2,
@@ -26,7 +26,7 @@ func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
 		CleanupMaxAge:   5 * time.Minute,
 	}
 	taskService := NewTaskService(storage, sessionService, config)
-	
+
 	// 테스트용 워크스페이스와 프로젝트, 세션 생성
 	workspace := &models.Workspace{
 		Name:        "Test Workspace",
@@ -34,11 +34,11 @@ func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
 		ProjectPath: "/test/workspace",
 	}
 	_ = storage.Workspace().Create(context.Background(), workspace)
-	
+
 	// 테스트용 프로젝트 경로 생성
 	testPath := "/tmp/test-" + time.Now().Format("20060102150405")
 	_ = os.MkdirAll(testPath, 0755)
-	
+
 	project := &models.Project{
 		WorkspaceID: workspace.ID,
 		Name:        "Test Project",
@@ -46,22 +46,22 @@ func setupTaskTest() (*TaskService, *SessionService, *models.Session) {
 		Status:      models.ProjectStatusActive,
 	}
 	_ = storage.Project().Create(context.Background(), project)
-	
+
 	session, _ := sessionService.Create(context.Background(), &models.SessionCreateRequest{
 		ProjectID: project.ID,
 	})
 	_ = sessionService.UpdateStatus(context.Background(), session.ID, models.SessionActive)
-	
+
 	// 태스크 서비스 시작
 	_ = taskService.Start(context.Background())
-	
+
 	return taskService, sessionService, session
 }
 
 func TestTaskService_Create(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	tests := []struct {
 		name        string
 		request     *models.TaskCreateRequest
@@ -94,11 +94,11 @@ func TestTaskService_Create(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			task, err := taskService.Create(context.Background(), tt.request)
-			
+
 			if tt.wantError {
 				assert.Error(t, err)
 				if tt.errorString != "" {
@@ -121,14 +121,14 @@ func TestTaskService_Create(t *testing.T) {
 func TestTaskService_GetByID(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	task, err := taskService.Create(context.Background(), &models.TaskCreateRequest{
 		SessionID: session.ID,
 		Command:   "echo test",
 	})
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name      string
 		taskID    string
@@ -150,11 +150,11 @@ func TestTaskService_GetByID(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := taskService.GetByID(context.Background(), tt.taskID)
-			
+
 			if tt.wantError {
 				assert.Error(t, err)
 				assert.Nil(t, result)
@@ -170,7 +170,7 @@ func TestTaskService_GetByID(t *testing.T) {
 func TestTaskService_List(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	// 여러 테스트 태스크 생성
 	tasks := make([]*models.Task, 5)
 	for i := 0; i < 5; i++ {
@@ -181,7 +181,7 @@ func TestTaskService_List(t *testing.T) {
 		require.NoError(t, err)
 		tasks[i] = task
 	}
-	
+
 	tests := []struct {
 		name      string
 		filter    *models.TaskFilter
@@ -229,13 +229,13 @@ func TestTaskService_List(t *testing.T) {
 			wantCount: 2,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := taskService.List(context.Background(), tt.filter, tt.paging)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			
+
 			// 안전하게 타입 assertion 수행
 			tasks, ok := result.Data.([]*models.Task)
 			assert.True(t, ok)
@@ -247,14 +247,14 @@ func TestTaskService_List(t *testing.T) {
 func TestTaskService_Cancel(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	task, err := taskService.Create(context.Background(), &models.TaskCreateRequest{
 		SessionID: session.ID,
 		Command:   "sleep 10", // 긴 실행 시간
 	})
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name      string
 		taskID    string
@@ -276,16 +276,16 @@ func TestTaskService_Cancel(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := taskService.Cancel(context.Background(), tt.taskID)
-			
+
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				
+
 				// 취소된 태스크 상태 확인
 				cancelledTask, getErr := taskService.GetByID(context.Background(), tt.taskID)
 				assert.NoError(t, getErr)
@@ -300,7 +300,7 @@ func TestTaskService_Cancel(t *testing.T) {
 func TestTaskService_GetActiveTasks(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	// 여러 태스크 생성
 	for i := 0; i < 3; i++ {
 		_, err := taskService.Create(context.Background(), &models.TaskCreateRequest{
@@ -309,12 +309,12 @@ func TestTaskService_GetActiveTasks(t *testing.T) {
 		})
 		require.NoError(t, err)
 	}
-	
+
 	// 활성 태스크 조회
 	activeTasks, err := taskService.GetActiveTasks(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, activeTasks)
-	
+
 	// 모든 태스크가 활성 상태인지 확인
 	for _, taskResp := range activeTasks {
 		// activeTasks는 이미 TaskResponse 타입
@@ -325,7 +325,7 @@ func TestTaskService_GetActiveTasks(t *testing.T) {
 func TestTaskService_GetStats(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	// 여러 태스크 생성
 	for i := 0; i < 3; i++ {
 		_, err := taskService.Create(context.Background(), &models.TaskCreateRequest{
@@ -334,12 +334,12 @@ func TestTaskService_GetStats(t *testing.T) {
 		})
 		require.NoError(t, err)
 	}
-	
+
 	// 통계 조회
 	stats, err := taskService.GetStats(context.Background())
 	assert.NoError(t, err)
 	assert.NotNil(t, stats)
-	
+
 	// 기본 통계 항목 확인
 	assert.Contains(t, stats, "total_tasks")
 	assert.Contains(t, stats, "queue_size")
@@ -350,7 +350,7 @@ func TestTaskService_GetStats(t *testing.T) {
 func TestTaskService_ExecuteCommand(t *testing.T) {
 	taskService, _, session := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	tests := []struct {
 		name        string
 		command     string
@@ -379,11 +379,11 @@ func TestTaskService_ExecuteCommand(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output, err := taskService.executeCommand(context.Background(), tt.command, session)
-			
+
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {
@@ -399,7 +399,7 @@ func TestTaskService_ExecuteCommand(t *testing.T) {
 func TestTaskService_ValidateCommand(t *testing.T) {
 	taskService, _, _ := setupTaskTest()
 	defer taskService.Stop()
-	
+
 	tests := []struct {
 		name      string
 		command   string
@@ -426,11 +426,11 @@ func TestTaskService_ValidateCommand(t *testing.T) {
 			wantError: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := taskService.validateCommand(tt.command)
-			
+
 			if tt.wantError {
 				assert.Error(t, err)
 			} else {

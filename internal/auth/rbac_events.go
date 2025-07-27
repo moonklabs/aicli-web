@@ -12,26 +12,26 @@ type RBACEventType string
 
 const (
 	// 역할 관련 이벤트
-	EventRoleCreated   RBACEventType = "role.created"
-	EventRoleUpdated   RBACEventType = "role.updated"
-	EventRoleDeleted   RBACEventType = "role.deleted"
-	EventRoleAssigned  RBACEventType = "role.assigned"
-	EventRoleRevoked   RBACEventType = "role.revoked"
-	
+	EventRoleCreated  RBACEventType = "role.created"
+	EventRoleUpdated  RBACEventType = "role.updated"
+	EventRoleDeleted  RBACEventType = "role.deleted"
+	EventRoleAssigned RBACEventType = "role.assigned"
+	EventRoleRevoked  RBACEventType = "role.revoked"
+
 	// 권한 관련 이벤트
-	EventPermissionCreated   RBACEventType = "permission.created"
-	EventPermissionUpdated   RBACEventType = "permission.updated"
-	EventPermissionDeleted   RBACEventType = "permission.deleted"
-	EventPermissionGranted   RBACEventType = "permission.granted"
-	EventPermissionDenied    RBACEventType = "permission.denied"
-	
+	EventPermissionCreated RBACEventType = "permission.created"
+	EventPermissionUpdated RBACEventType = "permission.updated"
+	EventPermissionDeleted RBACEventType = "permission.deleted"
+	EventPermissionGranted RBACEventType = "permission.granted"
+	EventPermissionDenied  RBACEventType = "permission.denied"
+
 	// 그룹 관련 이벤트
-	EventGroupCreated      RBACEventType = "group.created"
-	EventGroupUpdated      RBACEventType = "group.updated"
-	EventGroupDeleted      RBACEventType = "group.deleted"
-	EventGroupMemberAdded  RBACEventType = "group.member.added"
+	EventGroupCreated       RBACEventType = "group.created"
+	EventGroupUpdated       RBACEventType = "group.updated"
+	EventGroupDeleted       RBACEventType = "group.deleted"
+	EventGroupMemberAdded   RBACEventType = "group.member.added"
 	EventGroupMemberRemoved RBACEventType = "group.member.removed"
-	
+
 	// 캐시 관련 이벤트
 	EventCacheInvalidated RBACEventType = "cache.invalidated"
 )
@@ -39,23 +39,23 @@ const (
 // RBACEvent RBAC 이벤트 구조체
 type RBACEvent struct {
 	ID         string                 `json:"id"`
-	Type       RBACEventType         `json:"type"`
-	Timestamp  time.Time             `json:"timestamp"`
-	UserID     string                `json:"user_id,omitempty"`     // 이벤트를 발생시킨 사용자
-	TargetID   string                `json:"target_id,omitempty"`   // 대상 ID (역할, 권한, 그룹 등)
-	TargetType string                `json:"target_type,omitempty"` // 대상 타입
-	ResourceID string                `json:"resource_id,omitempty"` // 관련 리소스 ID
+	Type       RBACEventType          `json:"type"`
+	Timestamp  time.Time              `json:"timestamp"`
+	UserID     string                 `json:"user_id,omitempty"`     // 이벤트를 발생시킨 사용자
+	TargetID   string                 `json:"target_id,omitempty"`   // 대상 ID (역할, 권한, 그룹 등)
+	TargetType string                 `json:"target_type,omitempty"` // 대상 타입
+	ResourceID string                 `json:"resource_id,omitempty"` // 관련 리소스 ID
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`    // 추가 메타데이터
-	Context    *RBACEventContext     `json:"context,omitempty"`     // 이벤트 컨텍스트
+	Context    *RBACEventContext      `json:"context,omitempty"`     // 이벤트 컨텍스트
 }
 
 // RBACEventContext 이벤트 컨텍스트
 type RBACEventContext struct {
-	IPAddress   string            `json:"ip_address,omitempty"`
-	UserAgent   string            `json:"user_agent,omitempty"`
-	RequestID   string            `json:"request_id,omitempty"`
-	SessionID   string            `json:"session_id,omitempty"`
-	Attributes  map[string]string `json:"attributes,omitempty"`
+	IPAddress  string            `json:"ip_address,omitempty"`
+	UserAgent  string            `json:"user_agent,omitempty"`
+	RequestID  string            `json:"request_id,omitempty"`
+	SessionID  string            `json:"session_id,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 // RBACEventHandler 이벤트 핸들러 인터페이스
@@ -87,7 +87,7 @@ func NewRBACEventBus(logger EventLogger) *RBACEventBus {
 func (bus *RBACEventBus) RegisterHandler(eventType RBACEventType, handler RBACEventHandler) {
 	bus.mu.Lock()
 	defer bus.mu.Unlock()
-	
+
 	if _, exists := bus.handlers[eventType]; !exists {
 		bus.handlers[eventType] = make([]RBACEventHandler, 0)
 	}
@@ -100,32 +100,32 @@ func (bus *RBACEventBus) PublishEvent(ctx context.Context, event *RBACEvent) err
 	if event.ID == "" {
 		event.ID = generateEventID()
 	}
-	
+
 	// 타임스탬프 설정
 	if event.Timestamp.IsZero() {
 		event.Timestamp = time.Now()
 	}
-	
+
 	// 이벤트 로깅
 	if bus.logger != nil {
 		if err := bus.logger.LogEvent(event); err != nil {
 			fmt.Printf("Failed to log event: %v\n", err)
 		}
 	}
-	
+
 	// 핸들러 호출
 	bus.mu.RLock()
 	handlers, exists := bus.handlers[event.Type]
 	bus.mu.RUnlock()
-	
+
 	if !exists || len(handlers) == 0 {
 		return nil // 핸들러가 없어도 오류가 아님
 	}
-	
+
 	// 각 핸들러를 병렬로 실행
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(handlers))
-	
+
 	for _, handler := range handlers {
 		wg.Add(1)
 		go func(h RBACEventHandler) {
@@ -135,20 +135,20 @@ func (bus *RBACEventBus) PublishEvent(ctx context.Context, event *RBACEvent) err
 			}
 		}(handler)
 	}
-	
+
 	wg.Wait()
 	close(errChan)
-	
+
 	// 에러 수집
 	var errors []error
 	for err := range errChan {
 		errors = append(errors, err)
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("event handling errors: %v", errors)
 	}
-	
+
 	return nil
 }
 
@@ -169,7 +169,7 @@ func (h *CacheInvalidationHandler) HandleEvent(ctx context.Context, event *RBACE
 	switch event.Type {
 	case EventRoleCreated, EventRoleUpdated, EventRoleDeleted:
 		return h.rbacManager.InvalidateRolePermissions(event.TargetID)
-		
+
 	case EventRoleAssigned, EventRoleRevoked:
 		// 사용자 캐시 무효화
 		if userID, ok := event.Metadata["user_id"].(string); ok {
@@ -179,7 +179,7 @@ func (h *CacheInvalidationHandler) HandleEvent(ctx context.Context, event *RBACE
 		}
 		// 역할 캐시도 무효화
 		return h.rbacManager.InvalidateRolePermissions(event.TargetID)
-		
+
 	case EventPermissionCreated, EventPermissionUpdated, EventPermissionDeleted:
 		// 권한 변경은 전체적인 영향을 미칠 수 있으므로 관련 역할들의 캐시 무효화
 		if roleIDs, ok := event.Metadata["affected_roles"].([]string); ok {
@@ -189,11 +189,11 @@ func (h *CacheInvalidationHandler) HandleEvent(ctx context.Context, event *RBACE
 				}
 			}
 		}
-		
+
 	case EventGroupCreated, EventGroupUpdated, EventGroupDeleted, EventGroupMemberAdded, EventGroupMemberRemoved:
 		return h.rbacManager.InvalidateGroupPermissions(event.TargetID)
 	}
-	
+
 	return nil
 }
 
@@ -241,13 +241,13 @@ func NewMetricsHandler(collector MetricsCollector) *MetricsHandler {
 // HandleEvent 이벤트 처리
 func (h *MetricsHandler) HandleEvent(ctx context.Context, event *RBACEvent) error {
 	tags := map[string]string{
-		"event_type":   string(event.Type),
-		"target_type":  event.TargetType,
+		"event_type":  string(event.Type),
+		"target_type": event.TargetType,
 	}
-	
+
 	// 이벤트 발생 카운터 증가
 	h.collector.IncrementCounter("rbac.events.total", tags)
-	
+
 	// 이벤트 타입별 특별 메트릭
 	switch event.Type {
 	case EventPermissionDenied:
@@ -257,7 +257,7 @@ func (h *MetricsHandler) HandleEvent(ctx context.Context, event *RBACEvent) erro
 	case EventCacheInvalidated:
 		h.collector.IncrementCounter("rbac.cache.invalidations.total", tags)
 	}
-	
+
 	return nil
 }
 
@@ -288,11 +288,11 @@ func (h *NotificationHandler) HandleEvent(ctx context.Context, event *RBACEvent)
 		EventGroupMemberAdded:   true,
 		EventGroupMemberRemoved: true,
 	}
-	
+
 	if importantEvents[event.Type] {
 		return h.notifier.SendNotification(event)
 	}
-	
+
 	return nil
 }
 
@@ -319,7 +319,7 @@ func (em *RBACEventManager) EmitRoleEvent(eventType RBACEventType, roleID, userI
 		TargetType: "role",
 		Metadata:   metadata,
 	}
-	
+
 	return em.eventBus.PublishEvent(em.ctx, event)
 }
 
@@ -332,7 +332,7 @@ func (em *RBACEventManager) EmitPermissionEvent(eventType RBACEventType, permiss
 		TargetType: "permission",
 		Metadata:   metadata,
 	}
-	
+
 	return em.eventBus.PublishEvent(em.ctx, event)
 }
 
@@ -345,7 +345,7 @@ func (em *RBACEventManager) EmitGroupEvent(eventType RBACEventType, groupID, use
 		TargetType: "group",
 		Metadata:   metadata,
 	}
-	
+
 	return em.eventBus.PublishEvent(em.ctx, event)
 }
 
@@ -360,7 +360,7 @@ func (em *RBACEventManager) EmitCacheEvent(cacheType, targetID, userID string) e
 			"cache_type": cacheType,
 		},
 	}
-	
+
 	return em.eventBus.PublishEvent(em.ctx, event)
 }
 
@@ -376,10 +376,10 @@ type SimpleEventLogger struct{}
 
 // LogEvent 이벤트 로깅
 func (l *SimpleEventLogger) LogEvent(event *RBACEvent) error {
-	fmt.Printf("[RBAC Event] %s: %s (User: %s, Target: %s)\n", 
-		event.Timestamp.Format("2006-01-02 15:04:05"), 
-		event.Type, 
-		event.UserID, 
+	fmt.Printf("[RBAC Event] %s: %s (User: %s, Target: %s)\n",
+		event.Timestamp.Format("2006-01-02 15:04:05"),
+		event.Type,
+		event.UserID,
 		event.TargetID)
 	return nil
 }

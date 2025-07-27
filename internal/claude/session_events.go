@@ -72,7 +72,7 @@ type SessionEventBus struct {
 // NewSessionEventBus는 새로운 세션 이벤트 버스를 생성합니다
 func NewSessionEventBus(bufferSize int) *SessionEventBus {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	bus := &SessionEventBus{
 		listeners: make(map[string][]SessionEventListener),
 		handlers:  make(map[SessionEventType][]SessionEventHandler),
@@ -229,7 +229,7 @@ func (r *SessionEventRecorder) OnSessionEvent(event SessionEvent) {
 func (r *SessionEventRecorder) GetEvents() []SessionEvent {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	// 복사본 반환
 	events := make([]SessionEvent, len(r.events))
 	copy(events, r.events)
@@ -240,7 +240,7 @@ func (r *SessionEventRecorder) GetEvents() []SessionEvent {
 func (r *SessionEventRecorder) GetEventsByType(eventType SessionEventType) []SessionEvent {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	
+
 	filtered := []SessionEvent{}
 	for _, event := range r.events {
 		if event.Type == eventType {

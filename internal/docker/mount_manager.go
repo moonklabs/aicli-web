@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	dockermount "github.com/docker/docker/api/types/mount"
 	"github.com/aicli/aicli-web/internal/docker/mount"
 	"github.com/aicli/aicli-web/internal/models"
+	dockermount "github.com/docker/docker/api/types/mount"
 )
 
 // MountManager Docker 마운트 관리를 담당합니다.
@@ -79,34 +79,34 @@ func (mm *MountManager) StopAllWatchers() {
 // CreateMountsForContainer 컨테이너를 위한 마운트 배열을 생성합니다.
 func (mm *MountManager) CreateMountsForContainer(workspace *models.Workspace, additionalMounts []*mount.CreateMountRequest) ([]dockermount.Mount, error) {
 	var mounts []dockermount.Mount
-	
+
 	// 워크스페이스 기본 마운트 생성
 	workspaceMount, err := mm.CreateWorkspaceMount(workspace)
 	if err != nil {
 		return nil, fmt.Errorf("create workspace mount: %w", err)
 	}
-	
+
 	dockerMount, err := mm.ToDockerMount(workspaceMount)
 	if err != nil {
 		return nil, fmt.Errorf("convert to docker mount: %w", err)
 	}
-	
+
 	mounts = append(mounts, dockerMount)
-	
+
 	// 추가 마운트 생성
 	for _, req := range additionalMounts {
 		customMount, err := mm.CreateCustomMount(req)
 		if err != nil {
 			return nil, fmt.Errorf("create custom mount for %s: %w", req.SourcePath, err)
 		}
-		
+
 		dockerMount, err := mm.ToDockerMount(customMount)
 		if err != nil {
 			return nil, fmt.Errorf("convert custom mount to docker mount: %w", err)
 		}
-		
+
 		mounts = append(mounts, dockerMount)
 	}
-	
+
 	return mounts, nil
 }

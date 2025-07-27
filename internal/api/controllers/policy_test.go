@@ -131,7 +131,7 @@ func TestCreatePolicy(t *testing.T) {
 	}
 
 	expectedPolicy := &security.SecurityPolicy{
-		Base: models.Base{ID: "pol_123"},
+		Base:        models.Base{ID: "pol_123"},
 		Name:        "Test Rate Limiting Policy",
 		Description: "Test policy for rate limiting",
 		Category:    "rate_limiting",
@@ -153,7 +153,7 @@ func TestCreatePolicy(t *testing.T) {
 
 	// 요청 데이터 준비
 	reqBody, _ := json.Marshal(createReq)
-	
+
 	// 요청 실행
 	req, _ := http.NewRequest("POST", "/admin/policies", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -162,7 +162,7 @@ func TestCreatePolicy(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -182,7 +182,7 @@ func TestGetPolicy(t *testing.T) {
 
 	// 테스트 데이터
 	expectedPolicy := &security.SecurityPolicy{
-		Base: models.Base{ID: "pol_123"},
+		Base:        models.Base{ID: "pol_123"},
 		Name:        "Test Policy",
 		Description: "Test policy description",
 		Category:    "rate_limiting",
@@ -204,7 +204,7 @@ func TestGetPolicy(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -234,7 +234,7 @@ func TestApplyPolicy(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -256,12 +256,12 @@ func TestListPolicies(t *testing.T) {
 	}
 	policy2 := &security.SecurityPolicy{
 		Base:     models.Base{ID: "pol_2"},
-		Name:     "Policy 2", 
+		Name:     "Policy 2",
 		Category: "authentication",
 	}
-	
+
 	expectedPolicies := &models.PaginatedResponse[*security.SecurityPolicy]{
-		Data: []*security.SecurityPolicy{policy1, policy2},
+		Data:       []*security.SecurityPolicy{policy1, policy2},
 		Pagination: models.NewPaginationMeta(1, 10, 2),
 	}
 
@@ -280,7 +280,7 @@ func TestListPolicies(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -306,7 +306,7 @@ func TestCreateTemplate(t *testing.T) {
 			"type": "object",
 			"properties": map[string]interface{}{
 				"requests_per_second": map[string]interface{}{
-					"type": "number",
+					"type":    "number",
 					"minimum": 1,
 				},
 			},
@@ -314,7 +314,7 @@ func TestCreateTemplate(t *testing.T) {
 	}
 
 	expectedTemplate := &security.PolicyTemplate{
-		Base: models.Base{ID: "tpl_123"},
+		Base:        models.Base{ID: "tpl_123"},
 		Name:        "Test Template",
 		Description: "Test template description",
 		Category:    "rate_limiting",
@@ -331,7 +331,7 @@ func TestCreateTemplate(t *testing.T) {
 
 	// 요청 데이터 준비
 	reqBody, _ := json.Marshal(createReq)
-	
+
 	// 요청 실행
 	req, _ := http.NewRequest("POST", "/admin/policy-templates", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -340,7 +340,7 @@ func TestCreateTemplate(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -357,13 +357,13 @@ func TestGetActivePolicies(t *testing.T) {
 	// 테스트 데이터
 	activePolicies := []*security.SecurityPolicy{
 		{
-			Base: models.Base{ID: "pol_1"},
+			Base:     models.Base{ID: "pol_1"},
 			Name:     "Active Policy 1",
 			Category: "rate_limiting",
 			IsActive: true,
 		},
 		{
-			Base: models.Base{ID: "pol_2"},
+			Base:     models.Base{ID: "pol_2"},
 			Name:     "Active Policy 2",
 			Category: "rate_limiting",
 			IsActive: true,
@@ -383,7 +383,7 @@ func TestGetActivePolicies(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -391,7 +391,7 @@ func TestGetActivePolicies(t *testing.T) {
 
 	data := response["data"].([]interface{})
 	assert.Len(t, data, 2)
-	
+
 	policy1 := data[0].(map[string]interface{})
 	assert.Equal(t, "pol_1", policy1["id"])
 	assert.Equal(t, "Active Policy 1", policy1["name"])

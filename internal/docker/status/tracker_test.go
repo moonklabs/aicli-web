@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/docker"
-	"github.com/aicli/aicli-web/internal/models"
-	"github.com/aicli/aicli-web/internal/interfaces"
 	"github.com/aicli/aicli-web/internal/errors"
+	"github.com/aicli/aicli-web/internal/interfaces"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // Mock implementations for testing
@@ -40,7 +40,7 @@ func (m *MockWorkspaceService) ListWorkspaces(ctx context.Context, ownerID strin
 	for _, workspace := range m.workspaces {
 		result = append(result, workspace)
 	}
-	
+
 	return &models.WorkspaceListResponse{
 		Success: true,
 		Data: func() []models.Workspace {
@@ -97,10 +97,10 @@ func (m *MockWorkspaceService) UpdateActiveTaskCount(ctx context.Context, id str
 
 func (m *MockWorkspaceService) GetWorkspaceStats(ctx context.Context, ownerID string) (*interfaces.WorkspaceStats, error) {
 	return &interfaces.WorkspaceStats{
-		TotalWorkspaces:  len(m.workspaces),
-		ActiveWorkspaces: len(m.workspaces),
+		TotalWorkspaces:    len(m.workspaces),
+		ActiveWorkspaces:   len(m.workspaces),
 		ArchivedWorkspaces: 0,
-		TotalActiveTasks: 0,
+		TotalActiveTasks:   0,
 	}, nil
 }
 
@@ -287,12 +287,12 @@ func (m *MockStatsCollector) Collect(ctx context.Context, containerID string) (*
 		return stats, nil
 	}
 	return &docker.ContainerStats{
-		CPUPercent:   10.5,
-		MemoryUsage:  100 * 1024 * 1024, // 100MB
-		MemoryLimit:  1024 * 1024 * 1024, // 1GB
-		NetworkRxMB:  50.0,
-		NetworkTxMB:  25.0,
-		Timestamp:    time.Now(),
+		CPUPercent:  10.5,
+		MemoryUsage: 100 * 1024 * 1024,  // 100MB
+		MemoryLimit: 1024 * 1024 * 1024, // 1GB
+		NetworkRxMB: 50.0,
+		NetworkTxMB: 25.0,
+		Timestamp:   time.Now(),
 	}, nil
 }
 
@@ -542,7 +542,7 @@ func TestWorkspaceMetrics(t *testing.T) {
 	// 메트릭 구조체 테스트
 	metrics := &WorkspaceMetrics{
 		CPUPercent:   25.5,
-		MemoryUsage:  512 * 1024 * 1024, // 512MB
+		MemoryUsage:  512 * 1024 * 1024,  // 512MB
 		MemoryLimit:  2048 * 1024 * 1024, // 2GB
 		NetworkRxMB:  100.5,
 		NetworkTxMB:  50.2,

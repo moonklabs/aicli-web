@@ -13,12 +13,12 @@ import (
 
 // WebSessionController는 웹 세션 관련 REST API를 처리합니다
 type WebSessionController struct {
-	sessionManager   claude.SessionManager
-	streamHandler    *ClaudeStreamHandler
+	sessionManager    claude.SessionManager
+	streamHandler     *ClaudeStreamHandler
 	connectionManager *ConnectionManager
-	fileManager      *FileManager
-	storage          storage.Storage
-	authValidator    *auth.Validator
+	fileManager       *FileManager
+	storage           storage.Storage
+	authValidator     *auth.Validator
 }
 
 // CreateSessionRequest는 세션 생성 요청입니다
@@ -34,27 +34,27 @@ type CreateSessionRequest struct {
 
 // SessionResponse는 세션 응답입니다
 type SessionResponse struct {
-	SessionID     string             `json:"session_id"`
-	Name          string             `json:"name"`
-	WorkspaceID   string             `json:"workspace_id"`
-	Status        string             `json:"status"`
-	CreatedAt     time.Time          `json:"created_at"`
-	UpdatedAt     time.Time          `json:"updated_at"`
-	IsPrivate     bool               `json:"is_private"`
-	Tags          []string           `json:"tags"`
-	Participants  []SessionUser      `json:"participants"`
-	ConnectionURL string             `json:"connection_url"`
-	ShareToken    string             `json:"share_token,omitempty"`
-	Statistics    SessionStatistics  `json:"statistics"`
+	SessionID     string            `json:"session_id"`
+	Name          string            `json:"name"`
+	WorkspaceID   string            `json:"workspace_id"`
+	Status        string            `json:"status"`
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	IsPrivate     bool              `json:"is_private"`
+	Tags          []string          `json:"tags"`
+	Participants  []SessionUser     `json:"participants"`
+	ConnectionURL string            `json:"connection_url"`
+	ShareToken    string            `json:"share_token,omitempty"`
+	Statistics    SessionStatistics `json:"statistics"`
 }
 
 // SessionStatistics는 세션 통계입니다
 type SessionStatistics struct {
-	MessageCount      int           `json:"message_count"`
-	ParticipantCount  int           `json:"participant_count"`
-	ActiveConnections int           `json:"active_connections"`
-	LastActivity      time.Time     `json:"last_activity"`
-	TotalDuration     time.Duration `json:"total_duration"`
+	MessageCount        int           `json:"message_count"`
+	ParticipantCount    int           `json:"participant_count"`
+	ActiveConnections   int           `json:"active_connections"`
+	LastActivity        time.Time     `json:"last_activity"`
+	TotalDuration       time.Duration `json:"total_duration"`
 	AverageResponseTime time.Duration `json:"average_response_time"`
 }
 
@@ -124,7 +124,17 @@ func (c *WebSessionController) CreateSession(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -152,15 +162,15 @@ func (c *WebSessionController) CreateSession(ctx *gin.Context) {
 
 	// 웹 세션 메타데이터 저장
 	webSessionData := map[string]interface{}{
-		"session_id":     session.ID,
-		"name":           req.Name,
-		"workspace_id":   req.WorkspaceID,
-		"creator_id":     userInfo.ID,
-		"is_private":     req.IsPrivate,
-		"tags":           req.Tags,
-		"created_at":     time.Now(),
-		"updated_at":     time.Now(),
-		"status":         "active",
+		"session_id":   session.ID,
+		"name":         req.Name,
+		"workspace_id": req.WorkspaceID,
+		"creator_id":   userInfo.ID,
+		"is_private":   req.IsPrivate,
+		"tags":         req.Tags,
+		"created_at":   time.Now(),
+		"updated_at":   time.Now(),
+		"status":       "active",
 	}
 
 	// 스토리지에 저장 (실제 구현에서는 스토리지 스키마에 맞게 조정)
@@ -212,7 +222,17 @@ func (c *WebSessionController) GetSession(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -282,7 +302,17 @@ func (c *WebSessionController) ListSessions(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -312,11 +342,11 @@ func (c *WebSessionController) ListSessions(ctx *gin.Context) {
 	for _, session := range paginatedSessions {
 		metadata, _ := c.getWebSessionMetadata(session.ID)
 		participants := c.streamHandler.GetSessionUsers(session.ID)
-		
+
 		var name string
 		var isPrivate bool
 		var tags []string
-		
+
 		if metadata != nil {
 			if n, ok := metadata["name"].(string); ok {
 				name = n
@@ -341,10 +371,10 @@ func (c *WebSessionController) ListSessions(ctx *gin.Context) {
 			Participants:  participants,
 			ConnectionURL: fmt.Sprintf("/ws/session/%s", session.ID),
 			Statistics: SessionStatistics{
-				MessageCount:      0, // Messages 필드가 없음
-				ParticipantCount:  len(participants),
-				LastActivity:      session.LastActive,
-				TotalDuration:     time.Since(session.Created),
+				MessageCount:     0, // Messages 필드가 없음
+				ParticipantCount: len(participants),
+				LastActivity:     session.LastActive,
+				TotalDuration:    time.Since(session.Created),
 			},
 		})
 	}
@@ -372,7 +402,17 @@ func (c *WebSessionController) UpdateSession(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 및 권한 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -438,7 +478,17 @@ func (c *WebSessionController) DeleteSession(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 및 권한 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -484,7 +534,17 @@ func (c *WebSessionController) SendMessage(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 및 권한 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -519,7 +579,17 @@ func (c *WebSessionController) InviteUser(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 및 권한 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -532,19 +602,19 @@ func (c *WebSessionController) InviteUser(ctx *gin.Context) {
 
 	// 초대 토큰 생성 (실제 구현에서는 더 정교한 초대 시스템 구축)
 	inviteToken := generateInviteToken(sessionID, req.UserID, req.Permission)
-	
+
 	// 초대 정보 저장 (실제 구현 필요)
 	inviteData := map[string]interface{}{
-		"session_id":   sessionID,
-		"inviter_id":   userInfo.ID,
-		"invitee_id":   req.UserID,
+		"session_id":    sessionID,
+		"inviter_id":    userInfo.ID,
+		"invitee_id":    req.UserID,
 		"invitee_email": req.Email,
-		"permission":   req.Permission,
-		"token":        inviteToken,
-		"created_at":   time.Now(),
-		"expires_at":   req.ExpiresAt,
-		"message":      req.Message,
-		"status":       "pending",
+		"permission":    req.Permission,
+		"token":         inviteToken,
+		"created_at":    time.Now(),
+		"expires_at":    req.ExpiresAt,
+		"message":       req.Message,
+		"status":        "pending",
 	}
 
 	if err := c.saveInviteData(inviteToken, inviteData); err != nil {
@@ -568,7 +638,17 @@ func (c *WebSessionController) GetSessionStatistics(ctx *gin.Context) {
 	}
 
 	// 사용자 인증 및 권한 확인
-	token := ctx.GetHeader("Authorization"); if token == "" { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"}); return }; tokenStr, err := auth.ExtractTokenFromHeader(token); if err != nil { ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"}); return }; userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
+	token := ctx.GetHeader("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+		return
+	}
+	tokenStr, err := auth.ExtractTokenFromHeader(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization header"})
+		return
+	}
+	userInfo, err := (*c.authValidator).ValidateToken(ctx.Request.Context(), tokenStr)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "인증이 필요합니다"})
 		return
@@ -589,7 +669,7 @@ func (c *WebSessionController) GetSessionStatistics(ctx *gin.Context) {
 	// 상세 통계 생성
 	participants := c.streamHandler.GetSessionUsers(sessionID)
 	connections := c.streamHandler.GetActiveConnections()
-	
+
 	activeConnections := 0
 	if group, exists := connections[sessionID]; exists {
 		activeConnections = len(group.Connections)
@@ -597,10 +677,10 @@ func (c *WebSessionController) GetSessionStatistics(ctx *gin.Context) {
 
 	// 메시지 분석 (Messages 필드가 없으므로 더미 데이터)
 	messageStats := map[string]interface{}{
-		"user_messages": 0,
+		"user_messages":      0,
 		"assistant_messages": 0,
-		"total_length": 0,
-		"average_length": 0,
+		"total_length":       0,
+		"average_length":     0,
 	}
 
 	statistics := SessionStatistics{
@@ -613,9 +693,9 @@ func (c *WebSessionController) GetSessionStatistics(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"session_id":  sessionID,
-		"statistics":  statistics,
-		"messages":    messageStats,
+		"session_id":   sessionID,
+		"statistics":   statistics,
+		"messages":     messageStats,
 		"participants": participants,
 	})
 }
@@ -663,26 +743,26 @@ func (c *WebSessionController) saveInviteData(token string, data map[string]inte
 
 func (c *WebSessionController) filterSessions(sessions []*claude.Session, req SessionListRequest, userID string) []*claude.Session {
 	var filtered []*claude.Session
-	
+
 	for _, session := range sessions {
 		// 워크스페이스 필터
 		if req.WorkspaceID != "" && session.WorkspaceID != req.WorkspaceID {
 			continue
 		}
-		
+
 		// 상태 필터
 		if req.Status != "" && session.State.String() != req.Status {
 			continue
 		}
-		
+
 		// 접근 권한 확인
 		if !c.hasSessionAccess(userID, session.ID) {
 			continue
 		}
-		
+
 		filtered = append(filtered, session)
 	}
-	
+
 	return filtered
 }
 
@@ -690,12 +770,12 @@ func (c *WebSessionController) paginateSessions(sessions []*claude.Session, offs
 	if offset >= len(sessions) {
 		return []*claude.Session{}
 	}
-	
+
 	end := offset + limit
 	if end > len(sessions) {
 		end = len(sessions)
 	}
-	
+
 	return sessions[offset:end]
 }
 
@@ -706,15 +786,15 @@ func calculateAverageResponseTime(messages []claude.Message) time.Duration {
 
 func analyzeMessages(messages []claude.Message) map[string]interface{} {
 	stats := make(map[string]interface{})
-	
+
 	if len(messages) == 0 {
 		return stats
 	}
-	
+
 	userMessages := 0
 	assistantMessages := 0
 	totalLength := 0
-	
+
 	for _, msg := range messages {
 		switch msg.Type {
 		case "user":
@@ -724,7 +804,7 @@ func analyzeMessages(messages []claude.Message) map[string]interface{} {
 		}
 		totalLength += len(msg.Content)
 	}
-	
+
 	stats["user_messages"] = userMessages
 	stats["assistant_messages"] = assistantMessages
 	stats["total_length"] = totalLength
@@ -733,7 +813,7 @@ func analyzeMessages(messages []claude.Message) map[string]interface{} {
 	} else {
 		stats["average_length"] = 0
 	}
-	
+
 	return stats
 }
 

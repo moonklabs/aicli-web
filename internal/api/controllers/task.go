@@ -297,9 +297,9 @@ func (tc *TaskController) GetStats(c *gin.Context) {
 
 // contains 문자열 포함 여부 확인 (헬퍼 함수)
 func contains(str, substr string) bool {
-	return len(str) >= len(substr) && (str == substr || (len(str) > len(substr) && 
+	return len(str) >= len(substr) && (str == substr || (len(str) > len(substr) &&
 		(str[:len(substr)] == substr || str[len(str)-len(substr):] == substr ||
-		 findIndex(str, substr) >= 0)))
+			findIndex(str, substr) >= 0)))
 }
 
 // findIndex 문자열 인덱스 찾기 (헬퍼 함수)

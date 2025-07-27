@@ -46,7 +46,7 @@ func (m *MockRBACManager) InvalidateGroupPermissions(groupID string) error {
 func TestRequirePermission_Success(t *testing.T) {
 	// Mock RBAC Manager
 	mockRBACManager := &MockRBACManager{}
-	
+
 	// 권한 허용 응답 설정
 	mockResponse := &models.CheckPermissionResponse{
 		Allowed: true,
@@ -60,20 +60,20 @@ func TestRequirePermission_Success(t *testing.T) {
 		},
 		Evaluation: []string{"User has admin role", "Admin role grants workspace:create permission"},
 	}
-	
+
 	mockRBACManager.On("CheckPermission", mock.Anything, mock.AnythingOfType("*models.CheckPermissionRequest")).Return(mockResponse, nil)
 
 	// Gin 설정
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	// 미들웨어 적용
 	router.Use(func(c *gin.Context) {
 		// 테스트용 사용자 ID 설정
 		c.Set("user_id", "test-user-123")
 		c.Next()
 	})
-	
+
 	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -91,7 +91,7 @@ func TestRequirePermission_Success(t *testing.T) {
 func TestRequirePermission_Denied(t *testing.T) {
 	// Mock RBAC Manager
 	mockRBACManager := &MockRBACManager{}
-	
+
 	// 권한 거부 응답 설정
 	mockResponse := &models.CheckPermissionResponse{
 		Allowed: false,
@@ -105,19 +105,19 @@ func TestRequirePermission_Denied(t *testing.T) {
 		},
 		Evaluation: []string{"No matching permissions found"},
 	}
-	
+
 	mockRBACManager.On("CheckPermission", mock.Anything, mock.AnythingOfType("*models.CheckPermissionRequest")).Return(mockResponse, nil)
 
 	// Gin 설정
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	// 미들웨어 적용
 	router.Use(func(c *gin.Context) {
 		c.Set("user_id", "test-user-123")
 		c.Next()
 	})
-	
+
 	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -129,15 +129,15 @@ func TestRequirePermission_Denied(t *testing.T) {
 
 	// 검증
 	assert.Equal(t, http.StatusForbidden, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.False(t, response["success"].(bool))
-	
+
 	errorObj := response["error"].(map[string]interface{})
 	assert.Equal(t, "INSUFFICIENT_PERMISSIONS", errorObj["code"])
-	
+
 	mockRBACManager.AssertExpectations(t)
 }
 
@@ -148,7 +148,7 @@ func TestRequirePermission_NoAuth(t *testing.T) {
 	// Gin 설정
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	router.POST("/test/:id", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionCreate), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -160,12 +160,12 @@ func TestRequirePermission_NoAuth(t *testing.T) {
 
 	// 검증
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.False(t, response["success"].(bool))
-	
+
 	errorObj := response["error"].(map[string]interface{})
 	assert.Equal(t, "AUTHENTICATION_REQUIRED", errorObj["code"])
 }
@@ -174,25 +174,25 @@ func TestRequirePermission_NoAuth(t *testing.T) {
 func BenchmarkRequirePermission(b *testing.B) {
 	// Mock RBAC Manager
 	mockRBACManager := &MockRBACManager{}
-	
+
 	mockResponse := &models.CheckPermissionResponse{
 		Allowed: true,
 		Decision: models.PermissionDecision{
 			Effect: models.PermissionAllow,
 		},
 	}
-	
+
 	mockRBACManager.On("CheckPermission", mock.Anything, mock.Anything).Return(mockResponse, nil)
 
 	// Gin 설정
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	
+
 	router.Use(func(c *gin.Context) {
 		c.Set("user_id", "test-user-123")
 		c.Next()
 	})
-	
+
 	router.GET("/test", RequirePermission(mockRBACManager, models.ResourceTypeWorkspace, models.ActionRead), func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/fatih/color"
 )
 
 // ClaudeFormatter는 Claude 메시지 출력을 위한 인터페이스입니다.
@@ -105,42 +105,42 @@ func (tf *TextFormatter) FormatMessage(msg *claude.Message) string {
 // formatTextMessage는 텍스트 메시지를 포맷합니다.
 func (tf *TextFormatter) formatTextMessage(msg *claude.FormattedMessage) string {
 	content := msg.Content
-	
+
 	// 코드 블록 하이라이팅
 	if tf.useColor {
 		content = tf.highlightCodeBlocks(content)
 	}
-	
+
 	return content
 }
 
 // formatTextMessageFromMsg는 Message 타입에서 텍스트 메시지를 포맷합니다.
 func (tf *TextFormatter) formatTextMessageFromMsg(msg *claude.Message) string {
 	content := msg.Content
-	
+
 	// 코드 블록 하이라이팅
 	if tf.useColor {
 		content = tf.highlightCodeBlocks(content)
 	}
-	
+
 	return content
 }
 
 // formatToolUseMessage는 도구 사용 메시지를 포맷합니다.
 func (tf *TextFormatter) formatToolUseMessage(msg *claude.FormattedMessage) string {
 	var result strings.Builder
-	
+
 	toolName := "unknown"
 	if name, ok := msg.Metadata["tool_name"].(string); ok {
 		toolName = name
 	}
-	
+
 	if tf.useColor {
 		result.WriteString(color.YellowString("🔧 도구 사용: %s", toolName))
 	} else {
 		result.WriteString(fmt.Sprintf("🔧 도구 사용: %s", toolName))
 	}
-	
+
 	// 도구 입력 표시 (간략화)
 	if msg.Content != "" && len(msg.Content) < 200 {
 		result.WriteString("\n")
@@ -150,25 +150,25 @@ func (tf *TextFormatter) formatToolUseMessage(msg *claude.FormattedMessage) stri
 			result.WriteString(fmt.Sprintf("  입력: %s", msg.Content))
 		}
 	}
-	
+
 	return result.String()
 }
 
 // formatToolUseMessageFromMsg는 Message 타입에서 도구 사용 메시지를 포맷합니다.
 func (tf *TextFormatter) formatToolUseMessageFromMsg(msg *claude.Message) string {
 	var result strings.Builder
-	
+
 	toolName := "unknown"
 	if name, ok := msg.Meta["tool_name"].(string); ok {
 		toolName = name
 	}
-	
+
 	if tf.useColor {
 		result.WriteString(color.YellowString("🔧 도구 사용: %s", toolName))
 	} else {
 		result.WriteString(fmt.Sprintf("🔧 도구 사용: %s", toolName))
 	}
-	
+
 	// 도구 입력 표시 (간략화)
 	if msg.Content != "" && len(msg.Content) < 200 {
 		result.WriteString("\n")
@@ -178,19 +178,19 @@ func (tf *TextFormatter) formatToolUseMessageFromMsg(msg *claude.Message) string
 			result.WriteString(fmt.Sprintf("  입력: %s", msg.Content))
 		}
 	}
-	
+
 	return result.String()
 }
 
 // formatToolResultMessage는 도구 결과 메시지를 포맷합니다.
 func (tf *TextFormatter) formatToolResultMessage(msg *claude.FormattedMessage) string {
 	var result strings.Builder
-	
+
 	success := true
 	if s, ok := msg.Metadata["success"].(bool); ok {
 		success = s
 	}
-	
+
 	if success {
 		if tf.useColor {
 			result.WriteString(color.GreenString("✅ 도구 실행 완료"))
@@ -204,13 +204,13 @@ func (tf *TextFormatter) formatToolResultMessage(msg *claude.FormattedMessage) s
 			result.WriteString("❌ 도구 실행 실패")
 		}
 	}
-	
+
 	// 결과 내용 표시 (간략화)
 	if msg.Content != "" {
 		lines := strings.Split(msg.Content, "\n")
 		if len(lines) > 5 {
 			// 처음 3줄과 마지막 1줄만 표시
-			content := strings.Join(lines[:3], "\n") + "\n... (" + 
+			content := strings.Join(lines[:3], "\n") + "\n... (" +
 				fmt.Sprintf("%d lines omitted", len(lines)-4) + ")\n" + lines[len(lines)-1]
 			result.WriteString("\n")
 			if tf.useColor {
@@ -227,19 +227,19 @@ func (tf *TextFormatter) formatToolResultMessage(msg *claude.FormattedMessage) s
 			}
 		}
 	}
-	
+
 	return result.String()
 }
 
 // formatToolResultMessageFromMsg는 Message 타입에서 도구 결과 메시지를 포맷합니다.
 func (tf *TextFormatter) formatToolResultMessageFromMsg(msg *claude.Message) string {
 	var result strings.Builder
-	
+
 	success := true
 	if s, ok := msg.Meta["success"].(bool); ok {
 		success = s
 	}
-	
+
 	if success {
 		if tf.useColor {
 			result.WriteString(color.GreenString("✅ 도구 실행 완료"))
@@ -253,13 +253,13 @@ func (tf *TextFormatter) formatToolResultMessageFromMsg(msg *claude.Message) str
 			result.WriteString("❌ 도구 실행 실패")
 		}
 	}
-	
+
 	// 결과 내용 표시 (간략화)
 	if msg.Content != "" {
 		lines := strings.Split(msg.Content, "\n")
 		if len(lines) > 5 {
 			// 처음 3줄과 마지막 1줄만 표시
-			content := strings.Join(lines[:3], "\n") + "\n... (" + 
+			content := strings.Join(lines[:3], "\n") + "\n... (" +
 				fmt.Sprintf("%d lines omitted", len(lines)-4) + ")\n" + lines[len(lines)-1]
 			result.WriteString("\n")
 			if tf.useColor {
@@ -276,7 +276,7 @@ func (tf *TextFormatter) formatToolResultMessageFromMsg(msg *claude.Message) str
 			}
 		}
 	}
-	
+
 	return result.String()
 }
 
@@ -345,16 +345,16 @@ func (tf *TextFormatter) formatMetadata(metadata map[string]interface{}) string 
 	if len(metadata) == 0 {
 		return ""
 	}
-	
+
 	var result strings.Builder
 	result.WriteString("\n")
-	
+
 	if tf.useColor {
 		result.WriteString(color.HiBlackString("  메타데이터: "))
 	} else {
 		result.WriteString("  메타데이터: ")
 	}
-	
+
 	first := true
 	for key, value := range metadata {
 		if !first {
@@ -363,7 +363,7 @@ func (tf *TextFormatter) formatMetadata(metadata map[string]interface{}) string 
 		result.WriteString(fmt.Sprintf("%s=%v", key, value))
 		first = false
 	}
-	
+
 	return result.String()
 }
 
@@ -373,7 +373,7 @@ func (tf *TextFormatter) highlightCodeBlocks(content string) string {
 	lines := strings.Split(content, "\n")
 	var result strings.Builder
 	inCodeBlock := false
-	
+
 	for _, line := range lines {
 		if strings.HasPrefix(line, "```") {
 			inCodeBlock = !inCodeBlock
@@ -393,7 +393,7 @@ func (tf *TextFormatter) highlightCodeBlocks(content string) string {
 		}
 		result.WriteString("\n")
 	}
-	
+
 	return strings.TrimSuffix(result.String(), "\n")
 }
 
@@ -402,7 +402,7 @@ func (tf *TextFormatter) FormatError(err error) string {
 	if err == nil {
 		return ""
 	}
-	
+
 	if tf.useColor {
 		return color.RedString("❌ 오류: %s", err.Error())
 	}
@@ -414,9 +414,9 @@ func (tf *TextFormatter) FormatComplete(summary *claude.ExecutionSummary) string
 	if summary == nil {
 		return ""
 	}
-	
+
 	var result strings.Builder
-	
+
 	if summary.Success {
 		if tf.useColor {
 			result.WriteString(color.GreenString("✅ 실행 완료"))
@@ -430,7 +430,7 @@ func (tf *TextFormatter) FormatComplete(summary *claude.ExecutionSummary) string
 			result.WriteString("❌ 실행 실패")
 		}
 	}
-	
+
 	// 실행 시간 표시
 	if summary.Duration > 0 {
 		duration := time.Duration(summary.Duration) * time.Millisecond
@@ -440,19 +440,19 @@ func (tf *TextFormatter) FormatComplete(summary *claude.ExecutionSummary) string
 			result.WriteString(fmt.Sprintf(" (%s)", duration.String()))
 		}
 	}
-	
+
 	// 토큰 사용량 표시
 	if summary.InputTokens > 0 || summary.OutputTokens > 0 {
 		result.WriteString("\n")
 		if tf.useColor {
-			result.WriteString(color.HiBlackString("  토큰 사용량: 입력 %d, 출력 %d", 
+			result.WriteString(color.HiBlackString("  토큰 사용량: 입력 %d, 출력 %d",
 				summary.InputTokens, summary.OutputTokens))
 		} else {
-			result.WriteString(fmt.Sprintf("  토큰 사용량: 입력 %d, 출력 %d", 
+			result.WriteString(fmt.Sprintf("  토큰 사용량: 입력 %d, 출력 %d",
 				summary.InputTokens, summary.OutputTokens))
 		}
 	}
-	
+
 	return result.String()
 }
 
@@ -461,17 +461,17 @@ func (tf *TextFormatter) FormatProgress(progress *claude.ProgressInfo) string {
 	if progress == nil {
 		return ""
 	}
-	
+
 	var result strings.Builder
-	
+
 	// 진행률 표시
 	if progress.Total > 0 {
 		percentage := float64(progress.Current) / float64(progress.Total) * 100
 		if tf.useColor {
-			result.WriteString(color.CyanString("⏳ 진행률: %.1f%% (%d/%d)", 
+			result.WriteString(color.CyanString("⏳ 진행률: %.1f%% (%d/%d)",
 				percentage, progress.Current, progress.Total))
 		} else {
-			result.WriteString(fmt.Sprintf("⏳ 진행률: %.1f%% (%d/%d)", 
+			result.WriteString(fmt.Sprintf("⏳ 진행률: %.1f%% (%d/%d)",
 				percentage, progress.Current, progress.Total))
 		}
 	} else {
@@ -481,7 +481,7 @@ func (tf *TextFormatter) FormatProgress(progress *claude.ProgressInfo) string {
 			result.WriteString(fmt.Sprintf("⏳ 처리 중... (%d)", progress.Current))
 		}
 	}
-	
+
 	// 현재 작업 표시
 	if progress.CurrentTask != "" {
 		result.WriteString("\n")
@@ -491,7 +491,7 @@ func (tf *TextFormatter) FormatProgress(progress *claude.ProgressInfo) string {
 			result.WriteString(fmt.Sprintf("  현재 작업: %s", progress.CurrentTask))
 		}
 	}
-	
+
 	return result.String()
 }
 
@@ -502,26 +502,26 @@ func (jf *ClaudeJSONFormatter) FormatMessage(msg *claude.Message) string {
 	if msg == nil {
 		return ""
 	}
-	
+
 	// Message를 JSON 직렬화할 수 있는 구조로 변환
 	jsonMsg := map[string]interface{}{
-		"type":    msg.Type,
-		"content": msg.Content,
-		"id":      msg.ID,
+		"type":      msg.Type,
+		"content":   msg.Content,
+		"id":        msg.ID,
 		"timestamp": time.Now().Format(time.RFC3339),
 	}
-	
+
 	if len(msg.Meta) > 0 {
 		jsonMsg["meta"] = msg.Meta
 	}
-	
+
 	var output strings.Builder
 	encoder := json.NewEncoder(&output)
-	
+
 	if jf.pretty {
 		encoder.SetIndent("", "  ")
 	}
-	
+
 	encoder.Encode(jsonMsg)
 	return output.String()
 }
@@ -531,20 +531,20 @@ func (jf *ClaudeJSONFormatter) FormatError(err error) string {
 	if err == nil {
 		return ""
 	}
-	
+
 	errorObj := map[string]interface{}{
-		"type":    "error",
-		"message": err.Error(),
+		"type":      "error",
+		"message":   err.Error(),
 		"timestamp": time.Now().Format(time.RFC3339),
 	}
-	
+
 	var output strings.Builder
 	encoder := json.NewEncoder(&output)
-	
+
 	if jf.pretty {
 		encoder.SetIndent("", "  ")
 	}
-	
+
 	encoder.Encode(errorObj)
 	return output.String()
 }
@@ -554,14 +554,14 @@ func (jf *ClaudeJSONFormatter) FormatComplete(summary *claude.ExecutionSummary) 
 	if summary == nil {
 		return ""
 	}
-	
+
 	var output strings.Builder
 	encoder := json.NewEncoder(&output)
-	
+
 	if jf.pretty {
 		encoder.SetIndent("", "  ")
 	}
-	
+
 	encoder.Encode(summary)
 	return output.String()
 }
@@ -571,14 +571,14 @@ func (jf *ClaudeJSONFormatter) FormatProgress(progress *claude.ProgressInfo) str
 	if progress == nil {
 		return ""
 	}
-	
+
 	var output strings.Builder
 	encoder := json.NewEncoder(&output)
-	
+
 	if jf.pretty {
 		encoder.SetIndent("", "  ")
 	}
-	
+
 	encoder.Encode(progress)
 	return output.String()
 }
@@ -590,9 +590,9 @@ func (mf *MarkdownFormatter) FormatMessage(msg *claude.Message) string {
 	if msg == nil {
 		return ""
 	}
-	
+
 	var result strings.Builder
-	
+
 	// 메시지 타입에 따른 마크다운 포맷팅
 	switch msg.Type {
 	case "text":
@@ -613,13 +613,13 @@ func (mf *MarkdownFormatter) FormatMessage(msg *claude.Message) string {
 		if s, ok := msg.Meta["success"].(bool); ok {
 			success = s
 		}
-		
+
 		if success {
 			result.WriteString("### ✅ 도구 실행 결과\n\n")
 		} else {
 			result.WriteString("### ❌ 도구 실행 실패\n\n")
 		}
-		
+
 		if msg.Content != "" {
 			result.WriteString("**결과:**\n```\n")
 			result.WriteString(msg.Content)
@@ -632,7 +632,7 @@ func (mf *MarkdownFormatter) FormatMessage(msg *claude.Message) string {
 	default:
 		result.WriteString(fmt.Sprintf("**[%s]** %s\n\n", msg.Type, msg.Content))
 	}
-	
+
 	return result.String()
 }
 
@@ -641,7 +641,7 @@ func (mf *MarkdownFormatter) FormatError(err error) string {
 	if err == nil {
 		return ""
 	}
-	
+
 	return fmt.Sprintf("### ❌ 오류\n\n```\n%s\n```\n", err.Error())
 }
 
@@ -650,15 +650,15 @@ func (mf *MarkdownFormatter) FormatComplete(summary *claude.ExecutionSummary) st
 	if summary == nil {
 		return ""
 	}
-	
+
 	var result strings.Builder
-	
+
 	if summary.Success {
 		result.WriteString("## ✅ 실행 완료\n\n")
 	} else {
 		result.WriteString("## ❌ 실행 실패\n\n")
 	}
-	
+
 	// 실행 시간과 토큰 사용량
 	result.WriteString("**실행 정보:**\n")
 	if summary.Duration > 0 {
@@ -666,11 +666,11 @@ func (mf *MarkdownFormatter) FormatComplete(summary *claude.ExecutionSummary) st
 		result.WriteString(fmt.Sprintf("- 실행 시간: %s\n", duration.String()))
 	}
 	if summary.InputTokens > 0 || summary.OutputTokens > 0 {
-		result.WriteString(fmt.Sprintf("- 토큰 사용량: 입력 %d, 출력 %d\n", 
+		result.WriteString(fmt.Sprintf("- 토큰 사용량: 입력 %d, 출력 %d\n",
 			summary.InputTokens, summary.OutputTokens))
 	}
 	result.WriteString("\n")
-	
+
 	return result.String()
 }
 
@@ -679,21 +679,20 @@ func (mf *MarkdownFormatter) FormatProgress(progress *claude.ProgressInfo) strin
 	if progress == nil {
 		return ""
 	}
-	
+
 	var result strings.Builder
-	
+
 	if progress.Total > 0 {
 		percentage := float64(progress.Current) / float64(progress.Total) * 100
-		result.WriteString(fmt.Sprintf("⏳ **진행률:** %.1f%% (%d/%d)\n\n", 
+		result.WriteString(fmt.Sprintf("⏳ **진행률:** %.1f%% (%d/%d)\n\n",
 			percentage, progress.Current, progress.Total))
 	} else {
 		result.WriteString(fmt.Sprintf("⏳ **처리 중...** (%d)\n\n", progress.Current))
 	}
-	
+
 	if progress.CurrentTask != "" {
 		result.WriteString(fmt.Sprintf("**현재 작업:** %s\n\n", progress.CurrentTask))
 	}
-	
+
 	return result.String()
 }
-

@@ -163,12 +163,12 @@ func TestGetProfile(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.True(t, response["success"].(bool))
-	
+
 	data := response["data"].(map[string]interface{})
 	assert.Equal(t, "user123", data["id"])
 	assert.Equal(t, "testuser", data["username"])
@@ -208,7 +208,7 @@ func TestUpdateProfile(t *testing.T) {
 
 	// 요청 데이터 준비
 	reqBody, _ := json.Marshal(updateReq)
-	
+
 	// 요청 실행
 	req, _ := http.NewRequest("PUT", "/users/me", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -217,7 +217,7 @@ func TestUpdateProfile(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -253,7 +253,7 @@ func TestChangePassword(t *testing.T) {
 
 	// 요청 데이터 준비
 	reqBody, _ := json.Marshal(changePasswordReq)
-	
+
 	// 요청 실행
 	req, _ := http.NewRequest("PUT", "/users/me/password", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -262,7 +262,7 @@ func TestChangePassword(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -278,7 +278,7 @@ func TestGenerate2FASecret(t *testing.T) {
 
 	// 테스트 데이터
 	expectedSecret := &models.TwoFactorSecret{
-		Base: models.Base{ID: "secret123"},
+		Base:        models.Base{ID: "secret123"},
 		UserID:      "user123",
 		Secret:      "ABCDEFGHIJKLMNOP",
 		BackupCodes: []string{"12345678", "87654321"},
@@ -301,7 +301,7 @@ func TestGenerate2FASecret(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -350,7 +350,7 @@ func TestListUsers_Admin(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -359,7 +359,7 @@ func TestListUsers_Admin(t *testing.T) {
 	// data 필드에서 PaginatedResponse 확인
 	data := response["data"].(map[string]interface{})
 	assert.NotNil(t, data)
-	
+
 	// pagination 정보 확인
 	if pagination, ok := data["pagination"].(map[string]interface{}); ok {
 		assert.Equal(t, float64(2), pagination["total"])
@@ -388,7 +388,7 @@ func TestRequestPasswordReset(t *testing.T) {
 
 	// 요청 데이터 준비
 	reqBody, _ := json.Marshal(resetReq)
-	
+
 	// 요청 실행
 	req, _ := http.NewRequest("POST", "/auth/password-reset", bytes.NewBuffer(reqBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -397,7 +397,7 @@ func TestRequestPasswordReset(t *testing.T) {
 
 	// 결과 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)

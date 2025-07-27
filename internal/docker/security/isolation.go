@@ -5,8 +5,8 @@ import (
 	"hash/fnv"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/docker/docker/api/types/container"
 )
 
 // IsolationManager 격리 설정 관리자
@@ -18,23 +18,23 @@ type IsolationManager struct {
 type IsolationConfig struct {
 	// 네트워크 격리
 	EnableNetworkIsolation bool     `yaml:"enable_network_isolation" json:"enable_network_isolation"`
-	AllowedNetworks       []string `yaml:"allowed_networks" json:"allowed_networks"`
-	BlockedPorts          []int    `yaml:"blocked_ports" json:"blocked_ports"`
-	
+	AllowedNetworks        []string `yaml:"allowed_networks" json:"allowed_networks"`
+	BlockedPorts           []int    `yaml:"blocked_ports" json:"blocked_ports"`
+
 	// 리소스 제한
 	DefaultCPULimit    float64 `yaml:"default_cpu_limit" json:"default_cpu_limit"`
 	DefaultMemoryLimit int64   `yaml:"default_memory_limit" json:"default_memory_limit"`
 	DefaultDiskLimit   int64   `yaml:"default_disk_limit" json:"default_disk_limit"`
-	
+
 	// 보안 설정
-	EnableSeccomp    bool `yaml:"enable_seccomp" json:"enable_seccomp"`
-	EnableAppArmor   bool `yaml:"enable_apparmor" json:"enable_apparmor"`
+	EnableSeccomp     bool `yaml:"enable_seccomp" json:"enable_seccomp"`
+	EnableAppArmor    bool `yaml:"enable_apparmor" json:"enable_apparmor"`
 	DisablePrivileged bool `yaml:"disable_privileged" json:"disable_privileged"`
-	
+
 	// 파일 시스템 보안
 	ReadOnlyRootFS  bool `yaml:"read_only_root_fs" json:"read_only_root_fs"`
 	NoNewPrivileges bool `yaml:"no_new_privileges" json:"no_new_privileges"`
-	
+
 	// 로깅 및 모니터링
 	EnableAuditLog     bool `yaml:"enable_audit_log" json:"enable_audit_log"`
 	MonitorSystemCalls bool `yaml:"monitor_system_calls" json:"monitor_system_calls"`
@@ -61,19 +61,19 @@ func DefaultIsolationConfig() *IsolationConfig {
 		EnableNetworkIsolation: true,
 		AllowedNetworks:        []string{"aicli-network"},
 		BlockedPorts:           []int{22, 80, 443, 3000, 8000, 8080},
-		
+
 		// 리소스 기본 제한
-		DefaultCPULimit:    1.0,                   // 1 CPU
-		DefaultMemoryLimit: 512 * 1024 * 1024,    // 512MB
-		DefaultDiskLimit:   1024 * 1024 * 1024,   // 1GB
-		
+		DefaultCPULimit:    1.0,                // 1 CPU
+		DefaultMemoryLimit: 512 * 1024 * 1024,  // 512MB
+		DefaultDiskLimit:   1024 * 1024 * 1024, // 1GB
+
 		// 보안 기본 설정
 		EnableSeccomp:     true,
 		EnableAppArmor:    true,
 		DisablePrivileged: true,
 		ReadOnlyRootFS:    false, // 워크스페이스는 쓰기 가능
 		NoNewPrivileges:   true,
-		
+
 		// 모니터링 기본 설정
 		EnableAuditLog:     true,
 		MonitorSystemCalls: false, // 성능 상 기본 비활성화
@@ -96,7 +96,7 @@ func (im *IsolationManager) CreateWorkspaceIsolation(workspace *models.Workspace
 		MonitoringConfig: im.createMonitoringConfig(),
 		CreatedAt:        time.Now(),
 	}
-	
+
 	return isolation, nil
 }
 
@@ -108,9 +108,9 @@ func (im *IsolationManager) createResourceLimits() *ResourceLimits {
 		CPUPeriod:      100000,
 		Memory:         im.config.DefaultMemoryLimit,
 		MemorySwap:     im.config.DefaultMemoryLimit, // Swap 비활성화
-		PidsLimit:      100,  // 최대 100개 프로세스
-		IOMaxBandwidth: "100m", // 100MB/s
-		IOMaxIOps:      1000,   // 1000 IOPS
+		PidsLimit:      100,                          // 최대 100개 프로세스
+		IOMaxBandwidth: "100m",                       // 100MB/s
+		IOMaxIOps:      1000,                         // 1000 IOPS
 	}
 }
 
@@ -153,10 +153,10 @@ func (im *IsolationManager) createMonitoringConfig() *MonitoringConfig {
 		EnableFileSystemAudit:    im.config.EnableAuditLog,
 		LogLevel:                 "info",
 		AlertThresholds: &AlertThresholds{
-			CPUThreshold:     85.0,  // 85% CPU 사용률
-			MemoryThreshold:  90.0,  // 90% 메모리 사용률
-			NetworkThreshold: 100*1024*1024, // 100MB/s 네트워크 I/O
-			DiskThreshold:    50*1024*1024,  // 50MB/s 디스크 I/O
+			CPUThreshold:     85.0,              // 85% CPU 사용률
+			MemoryThreshold:  90.0,              // 90% 메모리 사용률
+			NetworkThreshold: 100 * 1024 * 1024, // 100MB/s 네트워크 I/O
+			DiskThreshold:    50 * 1024 * 1024,  // 50MB/s 디스크 I/O
 		},
 	}
 }
@@ -338,14 +338,14 @@ const (
 
 // ResourceLimits 리소스 제한
 type ResourceLimits struct {
-	CPUShares      int64  `json:"cpu_shares"`        // CPU 가중치
-	CPUQuota       int64  `json:"cpu_quota"`         // CPU 할당량
-	CPUPeriod      int64  `json:"cpu_period"`        // CPU 주기
-	Memory         int64  `json:"memory"`            // 메모리 제한
-	MemorySwap     int64  `json:"memory_swap"`       // Swap 제한
-	PidsLimit      int64  `json:"pids_limit"`        // 프로세스 수 제한
-	IOMaxBandwidth string `json:"io_max_bandwidth"`  // I/O 대역폭 제한
-	IOMaxIOps      int64  `json:"io_max_iops"`       // I/O 속도 제한
+	CPUShares      int64  `json:"cpu_shares"`       // CPU 가중치
+	CPUQuota       int64  `json:"cpu_quota"`        // CPU 할당량
+	CPUPeriod      int64  `json:"cpu_period"`       // CPU 주기
+	Memory         int64  `json:"memory"`           // 메모리 제한
+	MemorySwap     int64  `json:"memory_swap"`      // Swap 제한
+	PidsLimit      int64  `json:"pids_limit"`       // 프로세스 수 제한
+	IOMaxBandwidth string `json:"io_max_bandwidth"` // I/O 대역폭 제한
+	IOMaxIOps      int64  `json:"io_max_iops"`      // I/O 속도 제한
 }
 
 // SecurityOptions 보안 옵션
@@ -375,8 +375,8 @@ type MonitoringConfig struct {
 
 // AlertThresholds 알림 임계값
 type AlertThresholds struct {
-	CPUThreshold     float64 `json:"cpu_threshold"`      // CPU 사용률 경고 임계값
-	MemoryThreshold  float64 `json:"memory_threshold"`   // 메모리 사용률 경고 임계값
-	NetworkThreshold int64   `json:"network_threshold"`  // 네트워크 I/O 경고 임계값
-	DiskThreshold    int64   `json:"disk_threshold"`     // 디스크 I/O 경고 임계값
+	CPUThreshold     float64 `json:"cpu_threshold"`     // CPU 사용률 경고 임계값
+	MemoryThreshold  float64 `json:"memory_threshold"`  // 메모리 사용률 경고 임계값
+	NetworkThreshold int64   `json:"network_threshold"` // 네트워크 I/O 경고 임계값
+	DiskThreshold    int64   `json:"disk_threshold"`    // 디스크 I/O 경고 임계값
 }

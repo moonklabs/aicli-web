@@ -14,7 +14,7 @@ func NewConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "설정 관리",
-		Long:  `AICLI의 설정을 조회하고 변경합니다.
+		Long: `AICLI의 설정을 조회하고 변경합니다.
 
 설정은 다음 순서로 우선순위를 가집니다:
   1. 명령줄 플래그
@@ -61,7 +61,7 @@ func newConfigGetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get [key]",
 		Short: "설정 값 조회",
-		Long:  `지정된 설정 키의 값을 조회합니다.
+		Long: `지정된 설정 키의 값을 조회합니다.
 
 키는 점(".")으로 구분된 계층 구조로 지정합니다.
 예: api.endpoint, claude.model, logging.level
@@ -76,7 +76,7 @@ func newConfigGetCmd() *cobra.Command {
   
   # 로깅 레벨 조회
   aicli config get logging.level`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// 설정 가능한 키 목록
 			keys := []string{
@@ -128,7 +128,7 @@ func newConfigSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set [key] [value]",
 		Short: "설정 값 변경",
-		Long:  `지정된 설정 키의 값을 변경합니다.
+		Long: `지정된 설정 키의 값을 변경합니다.
 
 기본적으로 설정은 현재 세션에만 적용됩니다.
 --global 플래그를 사용하면 ~/.aicli.yaml 파일에 저장되어
@@ -153,7 +153,7 @@ func newConfigSetCmd() *cobra.Command {
   
   # 환경 변수로도 설정 가능
   export AICLI_CLAUDE_MODEL=claude-3-opus`,
-		Args:  cobra.ExactArgs(2),
+		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
 				// 첫 번째 인자: 설정 키
@@ -247,7 +247,7 @@ func newConfigListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "모든 설정 나열",
-		Long:  `현재 적용된 모든 설정을 나열합니다.
+		Long: `현재 적용된 모든 설정을 나열합니다.
 
 설정은 계층 구조로 표시되며, 각 값의 출처
 (명령줄, 환경 변수, 설정 파일, 기본값)를 확인할 수 있습니다.
@@ -527,7 +527,7 @@ func newConfigResetCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "reset",
 		Short: "설정을 기본값으로 초기화",
-		Long:  `모든 설정을 기본값으로 초기화합니다.
+		Long: `모든 설정을 기본값으로 초기화합니다.
 		
 기존 설정은 자동으로 백업되며, 필요시 restore 명령으로 복구할 수 있습니다.`,
 		Example: `  # 설정 초기화
@@ -554,7 +554,7 @@ func newConfigBackupCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "backup",
 		Short: "현재 설정 백업",
-		Long:  `현재 설정을 백업 파일로 저장합니다.
+		Long: `현재 설정을 백업 파일로 저장합니다.
 		
 백업 파일은 설정 파일과 같은 디렉토리에 .backup 확장자로 저장됩니다.`,
 		Example: `  # 설정 백업
@@ -580,7 +580,7 @@ func newConfigRestoreCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "restore",
 		Short: "백업에서 설정 복구",
-		Long:  `백업 파일에서 설정을 복구합니다.
+		Long: `백업 파일에서 설정을 복구합니다.
 		
 가장 최근의 백업 파일에서 설정을 복구합니다.`,
 		Example: `  # 백업에서 설정 복구

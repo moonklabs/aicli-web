@@ -27,11 +27,11 @@ const (
 	EnvWorkspaceExcludePatterns = "AICLI_WORKSPACE_EXCLUDE_PATTERNS"
 
 	// 출력 환경 변수
-	EnvOutputFormat       = "AICLI_OUTPUT_FORMAT"
-	EnvOutputColorMode    = "AICLI_OUTPUT_COLOR_MODE"
-	EnvOutputWidth        = "AICLI_OUTPUT_WIDTH"
-	EnvOutputVerbosity    = "AICLI_OUTPUT_VERBOSITY"
-	EnvOutputShowProgress = "AICLI_OUTPUT_SHOW_PROGRESS"
+	EnvOutputFormat        = "AICLI_OUTPUT_FORMAT"
+	EnvOutputColorMode     = "AICLI_OUTPUT_COLOR_MODE"
+	EnvOutputWidth         = "AICLI_OUTPUT_WIDTH"
+	EnvOutputVerbosity     = "AICLI_OUTPUT_VERBOSITY"
+	EnvOutputShowProgress  = "AICLI_OUTPUT_SHOW_PROGRESS"
 	EnvOutputShowTimestamp = "AICLI_OUTPUT_SHOW_TIMESTAMP"
 
 	// 로깅 환경 변수
@@ -44,22 +44,22 @@ const (
 	EnvLogJSONFormat = "AICLI_LOG_JSON_FORMAT"
 
 	// Docker 환경 변수
-	EnvDockerSocketPath     = "AICLI_DOCKER_SOCKET_PATH"
-	EnvDockerDefaultImage   = "AICLI_DOCKER_DEFAULT_IMAGE"
-	EnvDockerMemoryLimit    = "AICLI_DOCKER_MEMORY_LIMIT"
-	EnvDockerCPULimit       = "AICLI_DOCKER_CPU_LIMIT"
-	EnvDockerNetworkMode    = "AICLI_DOCKER_NETWORK_MODE"
-	EnvDockerAutoCleanup    = "AICLI_DOCKER_AUTO_CLEANUP"
+	EnvDockerSocketPath      = "AICLI_DOCKER_SOCKET_PATH"
+	EnvDockerDefaultImage    = "AICLI_DOCKER_DEFAULT_IMAGE"
+	EnvDockerMemoryLimit     = "AICLI_DOCKER_MEMORY_LIMIT"
+	EnvDockerCPULimit        = "AICLI_DOCKER_CPU_LIMIT"
+	EnvDockerNetworkMode     = "AICLI_DOCKER_NETWORK_MODE"
+	EnvDockerAutoCleanup     = "AICLI_DOCKER_AUTO_CLEANUP"
 	EnvDockerContainerPrefix = "AICLI_DOCKER_CONTAINER_PREFIX"
 
 	// API 환경 변수
-	EnvAPIAddress      = "AICLI_API_ADDRESS"
-	EnvAPITLSEnabled   = "AICLI_API_TLS_ENABLED"
-	EnvAPITLSCertPath  = "AICLI_API_TLS_CERT_PATH"
-	EnvAPITLSKeyPath   = "AICLI_API_TLS_KEY_PATH"
-	EnvAPICORSOrigins  = "AICLI_API_CORS_ORIGINS"
-	EnvAPIRateLimit    = "AICLI_API_RATE_LIMIT"
-	EnvAPIJWTSecret    = "AICLI_API_JWT_SECRET"
+	EnvAPIAddress       = "AICLI_API_ADDRESS"
+	EnvAPITLSEnabled    = "AICLI_API_TLS_ENABLED"
+	EnvAPITLSCertPath   = "AICLI_API_TLS_CERT_PATH"
+	EnvAPITLSKeyPath    = "AICLI_API_TLS_KEY_PATH"
+	EnvAPICORSOrigins   = "AICLI_API_CORS_ORIGINS"
+	EnvAPIRateLimit     = "AICLI_API_RATE_LIMIT"
+	EnvAPIJWTSecret     = "AICLI_API_JWT_SECRET"
 	EnvAPIJWTExpiration = "AICLI_API_JWT_EXPIRATION"
 )
 

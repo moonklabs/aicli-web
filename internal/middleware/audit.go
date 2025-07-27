@@ -20,57 +20,57 @@ import (
 type AuditConfig struct {
 	// Redis 클라이언트
 	Redis redis.UniversalClient
-	
+
 	// 로깅 설정
-	EnableRequestLogging  bool          // 요청 로깅 활성화
-	EnableResponseLogging bool          // 응답 로깅 활성화
-	EnableBodyLogging     bool          // 요청/응답 바디 로깅
-	MaxBodySize          int64         // 최대 바디 크기 (바이트)
-	
+	EnableRequestLogging  bool  // 요청 로깅 활성화
+	EnableResponseLogging bool  // 응답 로깅 활성화
+	EnableBodyLogging     bool  // 요청/응답 바디 로깅
+	MaxBodySize           int64 // 최대 바디 크기 (바이트)
+
 	// 필터 설정
-	SkipPaths            []string      // 로깅에서 제외할 경로
-	SkipMethods          []string      // 로깅에서 제외할 HTTP 메서드
-	LoggedPaths          []string      // 특별히 로깅할 경로 (비어있으면 모두)
-	SensitiveHeaders     []string      // 마스킹할 헤더
-	SensitiveFields      []string      // 마스킹할 필드
-	
+	SkipPaths        []string // 로깅에서 제외할 경로
+	SkipMethods      []string // 로깅에서 제외할 HTTP 메서드
+	LoggedPaths      []string // 특별히 로깅할 경로 (비어있으면 모두)
+	SensitiveHeaders []string // 마스킹할 헤더
+	SensitiveFields  []string // 마스킹할 필드
+
 	// 보안 설정
-	MaskSensitiveData    bool          // 민감한 데이터 마스킹
-	IncludeSystemEvents  bool          // 시스템 이벤트 포함
-	
+	MaskSensitiveData   bool // 민감한 데이터 마스킹
+	IncludeSystemEvents bool // 시스템 이벤트 포함
+
 	// 저장 설정
-	RetentionPeriod      time.Duration // 로그 보관 기간
-	BatchSize           int           // 배치 저장 크기
-	FlushInterval       time.Duration // 배치 플러시 간격
-	
+	RetentionPeriod time.Duration // 로그 보관 기간
+	BatchSize       int           // 배치 저장 크기
+	FlushInterval   time.Duration // 배치 플러시 간격
+
 	// 이벤트 추적기
 	EventTracker *security.EventTracker
-	
+
 	Logger *zap.Logger
 }
 
 // AuditLog는 감사 로그를 나타냅니다.
 type AuditLog struct {
-	ID            string                 `json:"id"`
-	Timestamp     time.Time              `json:"timestamp"`
-	RequestID     string                 `json:"request_id,omitempty"`
-	UserID        string                 `json:"user_id,omitempty"`
-	SessionID     string                 `json:"session_id,omitempty"`
-	IPAddress     string                 `json:"ip_address"`
-	UserAgent     string                 `json:"user_agent"`
-	Method        string                 `json:"method"`
-	URL           string                 `json:"url"`
-	Path          string                 `json:"path"`
-	Query         string                 `json:"query,omitempty"`
-	Headers       map[string]string      `json:"headers,omitempty"`
-	RequestBody   string                 `json:"request_body,omitempty"`
-	ResponseCode  int                    `json:"response_code"`
-	ResponseSize  int64                  `json:"response_size"`
-	ResponseBody  string                 `json:"response_body,omitempty"`
-	Duration      time.Duration          `json:"duration"`
-	Error         string                 `json:"error,omitempty"`
-	Tags          []string               `json:"tags,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	ID           string                 `json:"id"`
+	Timestamp    time.Time              `json:"timestamp"`
+	RequestID    string                 `json:"request_id,omitempty"`
+	UserID       string                 `json:"user_id,omitempty"`
+	SessionID    string                 `json:"session_id,omitempty"`
+	IPAddress    string                 `json:"ip_address"`
+	UserAgent    string                 `json:"user_agent"`
+	Method       string                 `json:"method"`
+	URL          string                 `json:"url"`
+	Path         string                 `json:"path"`
+	Query        string                 `json:"query,omitempty"`
+	Headers      map[string]string      `json:"headers,omitempty"`
+	RequestBody  string                 `json:"request_body,omitempty"`
+	ResponseCode int                    `json:"response_code"`
+	ResponseSize int64                  `json:"response_size"`
+	ResponseBody string                 `json:"response_body,omitempty"`
+	Duration     time.Duration          `json:"duration"`
+	Error        string                 `json:"error,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // responseWriter는 응답을 캡처하기 위한 래퍼입니다.
@@ -82,11 +82,11 @@ type responseWriter struct {
 
 // AuditLogger는 감사 로깅 미들웨어입니다.
 type AuditLogger struct {
-	config      *AuditConfig
-	redis       redis.UniversalClient
-	logger      *zap.Logger
-	logBuffer   chan *AuditLog
-	stopChan    chan struct{}
+	config    *AuditConfig
+	redis     redis.UniversalClient
+	logger    *zap.Logger
+	logBuffer chan *AuditLog
+	stopChan  chan struct{}
 }
 
 // DefaultAuditConfig는 기본 감사 로깅 설정을 반환합니다.
@@ -95,8 +95,8 @@ func DefaultAuditConfig() *AuditConfig {
 		EnableRequestLogging:  true,
 		EnableResponseLogging: true,
 		EnableBodyLogging:     false,
-		MaxBodySize:          1024 * 1024, // 1MB
-		
+		MaxBodySize:           1024 * 1024, // 1MB
+
 		SkipPaths: []string{
 			"/health",
 			"/metrics",
@@ -104,7 +104,7 @@ func DefaultAuditConfig() *AuditConfig {
 			"/robots.txt",
 		},
 		SkipMethods: []string{"OPTIONS"},
-		
+
 		SensitiveHeaders: []string{
 			"Authorization",
 			"Cookie",
@@ -118,7 +118,7 @@ func DefaultAuditConfig() *AuditConfig {
 			"key",
 			"credential",
 		},
-		
+
 		MaskSensitiveData:   true,
 		IncludeSystemEvents: false,
 		RetentionPeriod:     30 * 24 * time.Hour, // 30일
@@ -196,7 +196,7 @@ func (al *AuditLogger) Handler() gin.HandlerFunc {
 		if al.config.EnableResponseLogging {
 			respWriter = &responseWriter{
 				ResponseWriter: c.Writer,
-				body:          bytes.NewBuffer([]byte{}),
+				body:           bytes.NewBuffer([]byte{}),
 			}
 			c.Writer = respWriter
 		}
@@ -287,7 +287,7 @@ func (al *AuditLogger) getOrGenerateRequestID(c *gin.Context) string {
 	if requestID := c.GetHeader("X-Request-ID"); requestID != "" {
 		return requestID
 	}
-	
+
 	// 컨텍스트에서 확인
 	if requestID, exists := c.Get("request_id"); exists {
 		if id, ok := requestID.(string); ok {
@@ -302,7 +302,7 @@ func (al *AuditLogger) getOrGenerateRequestID(c *gin.Context) string {
 // collectHeaders는 요청 헤더를 수집합니다.
 func (al *AuditLogger) collectHeaders(c *gin.Context) map[string]string {
 	headers := make(map[string]string)
-	
+
 	for name, values := range c.Request.Header {
 		if al.isSensitiveHeader(name) && al.config.MaskSensitiveData {
 			headers[name] = "[MASKED]"
@@ -381,7 +381,7 @@ func (al *AuditLogger) maskSensitiveData(data string) string {
 			fmt.Sprintf(`"%s"\s*:\s*"[^"]*"`, field),
 			fmt.Sprintf(`%s=\w+`, field),
 		}
-		
+
 		for _, pattern := range patterns {
 			maskedData = strings.ReplaceAll(maskedData, pattern, fmt.Sprintf(`"%s":"[MASKED]"`, field))
 		}
@@ -662,7 +662,7 @@ func (al *AuditLogger) storeLog(log *AuditLog) error {
 	}
 
 	ctx := context.Background()
-	
+
 	// 로그 직렬화
 	logData, err := json.Marshal(log)
 	if err != nil {
@@ -719,7 +719,7 @@ func (al *AuditLogger) startBatchWorker() {
 		select {
 		case log := <-al.logBuffer:
 			batch = append(batch, log)
-			
+
 			// 배치가 가득 찬 경우 즉시 처리
 			if len(batch) >= al.config.BatchSize {
 				al.processBatch(batch)
@@ -750,7 +750,7 @@ func (al *AuditLogger) processBatch(batch []*AuditLog) {
 			al.logger.Error("감사 로그 배치 저장 실패", zap.Error(err), zap.String("log_id", log.ID))
 		}
 	}
-	
+
 	al.logger.Debug("감사 로그 배치 처리 완료", zap.Int("count", len(batch)))
 }
 

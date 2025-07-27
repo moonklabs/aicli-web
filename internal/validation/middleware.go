@@ -17,7 +17,7 @@ func ValidationMiddleware() gin.HandlerFunc {
 		// 바인딩 에러를 검증 에러로 변환
 		if len(c.Errors) > 0 {
 			err := c.Errors[0]
-			
+
 			// validator.ValidationErrors 타입인지 확인
 			if ve, ok := err.Err.(validator.ValidationErrors); ok {
 				validationErrors := TranslateValidatorError(ve, "request")
@@ -112,7 +112,7 @@ func ValidateRequestBody(c *gin.Context, model interface{}) bool {
 // ValidateBusinessRules 비즈니스 규칙 검증 헬퍼 함수
 func ValidateBusinessRules(c *gin.Context, operation string, model interface{}, id ...string) bool {
 	ctx := c.Request.Context()
-	
+
 	var err error
 	switch operation {
 	case "create":

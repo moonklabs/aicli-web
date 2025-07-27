@@ -168,12 +168,12 @@ func (qb *QueryBuilder) WhereIn(field string, values []interface{}) *QueryBuilde
 	if len(values) == 0 {
 		return qb
 	}
-	
+
 	placeholders := make([]string, len(values))
 	for i := range placeholders {
 		placeholders[i] = "?"
 	}
-	
+
 	condition := fmt.Sprintf("%s IN (%s)", field, strings.Join(placeholders, ", "))
 	qb.whereClause = append(qb.whereClause, WhereCondition{
 		Custom: condition,
@@ -270,7 +270,7 @@ func (qb *QueryBuilder) Paginate(page, perPage int) *QueryBuilder {
 	if perPage < 1 {
 		perPage = 20
 	}
-	
+
 	offset := (page - 1) * perPage
 	qb.Limit(perPage)
 	qb.Offset(offset)
@@ -282,11 +282,11 @@ func (qb *QueryBuilder) Build() (string, []interface{}, error) {
 	if qb.fromTable == "" {
 		return "", nil, fmt.Errorf("FROM 테이블이 지정되지 않았습니다")
 	}
-	
+
 	var query strings.Builder
 	qb.params = make([]interface{}, 0)
 	qb.paramCount = 0
-	
+
 	// SELECT
 	query.WriteString("SELECT ")
 	if len(qb.selectFields) == 0 {
@@ -294,11 +294,11 @@ func (qb *QueryBuilder) Build() (string, []interface{}, error) {
 	} else {
 		query.WriteString(strings.Join(qb.selectFields, ", "))
 	}
-	
+
 	// FROM
 	query.WriteString(" FROM ")
 	query.WriteString(qb.fromTable)
-	
+
 	// JOIN
 	for _, join := range qb.joins {
 		query.WriteString(" ")
@@ -307,28 +307,28 @@ func (qb *QueryBuilder) Build() (string, []interface{}, error) {
 		query.WriteString(join.Table)
 		query.WriteString(" ON ")
 		query.WriteString(join.Condition)
-		
+
 		qb.params = append(qb.params, join.Params...)
 	}
-	
+
 	// WHERE
 	if len(qb.whereClause) > 0 {
 		query.WriteString(" WHERE ")
 		qb.buildConditions(&query, qb.whereClause)
 	}
-	
+
 	// GROUP BY
 	if len(qb.groupBy) > 0 {
 		query.WriteString(" GROUP BY ")
 		query.WriteString(strings.Join(qb.groupBy, ", "))
 	}
-	
+
 	// HAVING
 	if len(qb.having) > 0 {
 		query.WriteString(" HAVING ")
 		qb.buildConditions(&query, qb.having)
 	}
-	
+
 	// ORDER BY
 	if len(qb.orderBy) > 0 {
 		query.WriteString(" ORDER BY ")
@@ -338,19 +338,19 @@ func (qb *QueryBuilder) Build() (string, []interface{}, error) {
 		}
 		query.WriteString(strings.Join(orderParts, ", "))
 	}
-	
+
 	// LIMIT
 	if qb.limit != nil {
 		query.WriteString(" LIMIT ")
 		query.WriteString(strconv.Itoa(*qb.limit))
 	}
-	
+
 	// OFFSET
 	if qb.offset != nil {
 		query.WriteString(" OFFSET ")
 		query.WriteString(strconv.Itoa(*qb.offset))
 	}
-	
+
 	return query.String(), qb.params, nil
 }
 
@@ -362,7 +362,7 @@ func (qb *QueryBuilder) buildConditions(query *strings.Builder, conditions []Whe
 			query.WriteString(string(condition.Logic))
 			query.WriteString(" ")
 		}
-		
+
 		if condition.Custom != "" {
 			query.WriteString(condition.Custom)
 			qb.params = append(qb.params, condition.Params...)
@@ -387,7 +387,7 @@ func (qb *QueryBuilder) BuildCount() (string, []interface{}, error) {
 		having:      qb.having,
 		params:      make([]interface{}, 0),
 	}
-	
+
 	if len(countBuilder.groupBy) > 0 {
 		// GROUP BY가 있으면 서브쿼리로 감싸서 COUNT
 		countBuilder.selectFields = []string{"COUNT(*) as count"}
@@ -395,7 +395,7 @@ func (qb *QueryBuilder) BuildCount() (string, []interface{}, error) {
 		if err != nil {
 			return "", nil, err
 		}
-		
+
 		query := fmt.Sprintf("SELECT COUNT(*) FROM (%s) as subquery", innerQuery)
 		return query, innerParams, nil
 	} else {
@@ -418,24 +418,24 @@ func (qb *QueryBuilder) Clone() *QueryBuilder {
 		params:       make([]interface{}, 0),
 		paramCount:   0,
 	}
-	
+
 	copy(clone.selectFields, qb.selectFields)
 	copy(clone.joins, qb.joins)
 	copy(clone.whereClause, qb.whereClause)
 	copy(clone.groupBy, qb.groupBy)
 	copy(clone.having, qb.having)
 	copy(clone.orderBy, qb.orderBy)
-	
+
 	if qb.limit != nil {
 		limit := *qb.limit
 		clone.limit = &limit
 	}
-	
+
 	if qb.offset != nil {
 		offset := *qb.offset
 		clone.offset = &offset
 	}
-	
+
 	return clone
 }
 

@@ -57,7 +57,6 @@ func (r *CLITestRunner) SetTimeout(timeout time.Duration) {
 	r.timeout = timeout
 }
 
-
 // RunCommand 명령어 실행
 func (r *CLITestRunner) RunCommand(args ...string) error {
 	if r.cmd == nil {
@@ -76,7 +75,7 @@ func (r *CLITestRunner) RunCommand(args ...string) error {
 	r.cmd.SetArgs(args)
 	r.cmd.SetOut(r.stdout)
 	r.cmd.SetErr(r.stderr)
-	
+
 	if r.stdin != nil {
 		r.cmd.SetIn(r.stdin)
 	}
@@ -85,13 +84,13 @@ func (r *CLITestRunner) RunCommand(args ...string) error {
 	if r.timeout > 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 		defer cancel()
-		
+
 		// context를 사용하여 실행 (단순화된 구현)
 		done := make(chan error, 1)
 		go func() {
 			done <- r.cmd.Execute()
 		}()
-		
+
 		select {
 		case err := <-done:
 			return err
@@ -122,12 +121,12 @@ func (r *CLITestRunner) Reset() {
 // setupEnvironment 환경 변수 설정
 func (r *CLITestRunner) setupEnvironment() map[string]string {
 	oldEnv := make(map[string]string)
-	
+
 	for key, value := range r.env {
 		oldEnv[key] = os.Getenv(key)
 		os.Setenv(key, value)
 	}
-	
+
 	return oldEnv
 }
 
@@ -147,7 +146,7 @@ func (r *CLITestRunner) setupWorkingDir() string {
 	if r.workingDir == "" {
 		return ""
 	}
-	
+
 	oldDir, _ := os.Getwd()
 	os.Chdir(r.workingDir)
 	return oldDir
@@ -162,16 +161,16 @@ func (r *CLITestRunner) restoreWorkingDir(oldDir string) {
 
 // CLITestCase CLI 테스트 케이스 정의
 type CLITestCase struct {
-	Name        string
-	Args        []string
-	Env         map[string]string
-	Stdin       string
-	WantErr     bool
-	WantCode    int
-	WantOutput  string
-	WantError   string
-	Setup       func(t *testing.T) string // 테스트 설정, 작업 디렉토리 반환
-	Cleanup     func(t *testing.T)        // 테스트 정리
+	Name       string
+	Args       []string
+	Env        map[string]string
+	Stdin      string
+	WantErr    bool
+	WantCode   int
+	WantOutput string
+	WantError  string
+	Setup      func(t *testing.T) string // 테스트 설정, 작업 디렉토리 반환
+	Cleanup    func(t *testing.T)        // 테스트 정리
 }
 
 // RunTestCases CLI 테스트 케이스들을 실행

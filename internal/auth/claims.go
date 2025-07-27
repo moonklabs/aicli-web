@@ -38,16 +38,16 @@ func (c *Claims) Valid() error {
 	if c.ExpiresAt != nil && c.ExpiresAt.Before(time.Now()) {
 		return jwt.ErrTokenExpired
 	}
-	
+
 	// Not Before 검증
 	if c.NotBefore != nil && c.NotBefore.After(time.Now()) {
 		return jwt.ErrTokenNotValidYet
 	}
-	
+
 	// 추가 검증 로직 (필요시)
 	if c.UserID == "" {
 		return jwt.ErrTokenInvalidClaims
 	}
-	
+
 	return nil
 }

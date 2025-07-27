@@ -11,32 +11,32 @@ import (
 // SessionSessionPoolMetrics는 풀 메트릭을 수집하고 관리합니다
 type SessionPoolMetrics struct {
 	// 카운터들
-	totalRequests    atomic.Int64
-	successRequests  atomic.Int64
-	failedRequests   atomic.Int64
-	totalSessions    atomic.Int64
-	activeSessions   atomic.Int64
-	
+	totalRequests   atomic.Int64
+	successRequests atomic.Int64
+	failedRequests  atomic.Int64
+	totalSessions   atomic.Int64
+	activeSessions  atomic.Int64
+
 	// 지연시간 추적
 	latencyTracker *LatencyTracker
-	
+
 	// 처리량 추적
 	throughputTracker *ThroughputTracker
-	
+
 	// 에러율 추적
 	errorRateTracker *ErrorRateTracker
-	
+
 	// 액션 추적
 	actionCounter map[string]*atomic.Int64
 	actionMutex   sync.RWMutex
-	
+
 	// 시계열 메트릭
 	timeSeriesMetrics *TimeSeriesMetrics
-	
+
 	// 상태 관리
 	startTime time.Time
 	running   atomic.Bool
-	
+
 	// 생명주기 관리
 	ticker *time.Ticker
 	done   chan struct{}
@@ -75,11 +75,11 @@ type ErrorRateTracker struct {
 
 // ErrorWindow은 에러 윈도우입니다
 type ErrorWindow struct {
-	StartTime    time.Time `json:"start_time"`
-	EndTime      time.Time `json:"end_time"`
-	TotalRequests int64    `json:"total_requests"`
-	ErrorRequests int64    `json:"error_requests"`
-	ErrorRate    float64   `json:"error_rate"`
+	StartTime     time.Time `json:"start_time"`
+	EndTime       time.Time `json:"end_time"`
+	TotalRequests int64     `json:"total_requests"`
+	ErrorRequests int64     `json:"error_requests"`
+	ErrorRate     float64   `json:"error_rate"`
 }
 
 // TimeSeriesMetrics는 시계열 메트릭입니다
@@ -91,65 +91,65 @@ type TimeSeriesMetrics struct {
 
 // MetricDataPoint는 메트릭 데이터 포인트입니다
 type MetricDataPoint struct {
-	Timestamp       time.Time     `json:"timestamp"`
-	ActiveSessions  int64         `json:"active_sessions"`
-	TotalRequests   int64         `json:"total_requests"`
-	RequestsPerSec  float64       `json:"requests_per_sec"`
-	AverageLatency  time.Duration `json:"average_latency"`
-	ErrorRate       float64       `json:"error_rate"`
-	MemoryUsage     int64         `json:"memory_usage"`
-	CPUUsage        float64       `json:"cpu_usage"`
+	Timestamp      time.Time     `json:"timestamp"`
+	ActiveSessions int64         `json:"active_sessions"`
+	TotalRequests  int64         `json:"total_requests"`
+	RequestsPerSec float64       `json:"requests_per_sec"`
+	AverageLatency time.Duration `json:"average_latency"`
+	ErrorRate      float64       `json:"error_rate"`
+	MemoryUsage    int64         `json:"memory_usage"`
+	CPUUsage       float64       `json:"cpu_usage"`
 }
 
 // MetricsSummary는 메트릭 요약입니다
 type MetricsSummary struct {
 	// 기본 통계
-	TotalRequests   int64         `json:"total_requests"`
-	SuccessRequests int64         `json:"success_requests"`
-	FailedRequests  int64         `json:"failed_requests"`
-	SuccessRate     float64       `json:"success_rate"`
-	ErrorRate       float64       `json:"error_rate"`
-	
+	TotalRequests   int64   `json:"total_requests"`
+	SuccessRequests int64   `json:"success_requests"`
+	FailedRequests  int64   `json:"failed_requests"`
+	SuccessRate     float64 `json:"success_rate"`
+	ErrorRate       float64 `json:"error_rate"`
+
 	// 지연시간 통계
-	AverageLatency  time.Duration `json:"average_latency"`
-	MedianLatency   time.Duration `json:"median_latency"`
-	P95Latency      time.Duration `json:"p95_latency"`
-	P99Latency      time.Duration `json:"p99_latency"`
-	MinLatency      time.Duration `json:"min_latency"`
-	MaxLatency      time.Duration `json:"max_latency"`
-	
+	AverageLatency time.Duration `json:"average_latency"`
+	MedianLatency  time.Duration `json:"median_latency"`
+	P95Latency     time.Duration `json:"p95_latency"`
+	P99Latency     time.Duration `json:"p99_latency"`
+	MinLatency     time.Duration `json:"min_latency"`
+	MaxLatency     time.Duration `json:"max_latency"`
+
 	// 처리량 통계
-	CurrentRPS      float64       `json:"current_rps"`
-	AverageRPS      float64       `json:"average_rps"`
-	PeakRPS         float64       `json:"peak_rps"`
-	
+	CurrentRPS float64 `json:"current_rps"`
+	AverageRPS float64 `json:"average_rps"`
+	PeakRPS    float64 `json:"peak_rps"`
+
 	// 세션 통계
-	TotalSessions   int64         `json:"total_sessions"`
-	ActiveSessions  int64         `json:"active_sessions"`
-	SessionUtilization float64    `json:"session_utilization"`
-	
+	TotalSessions      int64   `json:"total_sessions"`
+	ActiveSessions     int64   `json:"active_sessions"`
+	SessionUtilization float64 `json:"session_utilization"`
+
 	// 시간 정보
-	StartTime       time.Time     `json:"start_time"`
-	Uptime          time.Duration `json:"uptime"`
-	LastUpdate      time.Time     `json:"last_update"`
-	
+	StartTime  time.Time     `json:"start_time"`
+	Uptime     time.Duration `json:"uptime"`
+	LastUpdate time.Time     `json:"last_update"`
+
 	// 액션별 통계
-	ActionCounts    map[string]int64 `json:"action_counts"`
+	ActionCounts map[string]int64 `json:"action_counts"`
 }
 
 // NewSessionPoolMetrics는 새로운 풀 메트릭을 생성합니다
 func NewSessionPoolMetrics() *SessionPoolMetrics {
 	pm := &SessionPoolMetrics{
-		latencyTracker:     NewLatencyTracker(1000),
-		throughputTracker:  NewThroughputTracker(time.Minute, 60),
-		errorRateTracker:   NewErrorRateTracker(time.Minute, 60),
-		timeSeriesMetrics:  NewTimeSeriesMetrics(1440), // 24시간 (1분 간격)
-		actionCounter:      make(map[string]*atomic.Int64),
-		startTime:          time.Now(),
-		ticker:             time.NewTicker(time.Minute),
-		done:               make(chan struct{}),
+		latencyTracker:    NewLatencyTracker(1000),
+		throughputTracker: NewThroughputTracker(time.Minute, 60),
+		errorRateTracker:  NewErrorRateTracker(time.Minute, 60),
+		timeSeriesMetrics: NewTimeSeriesMetrics(1440), // 24시간 (1분 간격)
+		actionCounter:     make(map[string]*atomic.Int64),
+		startTime:         time.Now(),
+		ticker:            time.NewTicker(time.Minute),
+		done:              make(chan struct{}),
 	}
-	
+
 	return pm
 }
 
@@ -192,7 +192,7 @@ func (pm *SessionPoolMetrics) Start() {
 	if !pm.running.CompareAndSwap(false, true) {
 		return // 이미 실행 중
 	}
-	
+
 	go pm.metricsLoop()
 }
 
@@ -201,7 +201,7 @@ func (pm *SessionPoolMetrics) Stop() {
 	if !pm.running.CompareAndSwap(true, false) {
 		return // 이미 중지됨
 	}
-	
+
 	close(pm.done)
 	pm.ticker.Stop()
 }
@@ -210,7 +210,7 @@ func (pm *SessionPoolMetrics) Stop() {
 func (pm *SessionPoolMetrics) RecordAction(action string, session *PooledSession) {
 	// 액션 카운터 증가
 	pm.incrementActionCounter(action)
-	
+
 	// 요청 카운터 업데이트
 	switch action {
 	case "acquired", "affinity_hit", "load_balanced":
@@ -222,7 +222,7 @@ func (pm *SessionPoolMetrics) RecordAction(action string, session *PooledSession
 	case "released":
 		// 세션 반환은 별도 처리
 	}
-	
+
 	// 처리량 추적기에 기록
 	pm.throughputTracker.RecordRequest()
 }
@@ -264,13 +264,13 @@ func (pm *SessionPoolMetrics) GetMetricsSummary() MetricsSummary {
 	totalReq := pm.totalRequests.Load()
 	successReq := pm.successRequests.Load()
 	failedReq := pm.failedRequests.Load()
-	
+
 	var successRate, errorRate float64
 	if totalReq > 0 {
 		successRate = float64(successReq) / float64(totalReq)
 		errorRate = float64(failedReq) / float64(totalReq)
 	}
-	
+
 	// 액션 카운트 복사
 	pm.actionMutex.RLock()
 	actionCounts := make(map[string]int64)
@@ -278,7 +278,7 @@ func (pm *SessionPoolMetrics) GetMetricsSummary() MetricsSummary {
 		actionCounts[action] = counter.Load()
 	}
 	pm.actionMutex.RUnlock()
-	
+
 	return MetricsSummary{
 		TotalRequests:      totalReq,
 		SuccessRequests:    successReq,
@@ -332,7 +332,7 @@ func (pm *SessionPoolMetrics) collectTimeSeriesData() {
 		ErrorRate:      pm.errorRateTracker.GetCurrentErrorRate(),
 		// MemoryUsage와 CPUUsage는 외부에서 설정해야 함
 	}
-	
+
 	pm.timeSeriesMetrics.AddDataPoint(dataPoint)
 }
 
@@ -340,7 +340,7 @@ func (pm *SessionPoolMetrics) incrementActionCounter(action string) {
 	pm.actionMutex.RLock()
 	counter, exists := pm.actionCounter[action]
 	pm.actionMutex.RUnlock()
-	
+
 	if !exists {
 		pm.actionMutex.Lock()
 		counter, exists = pm.actionCounter[action]
@@ -350,18 +350,18 @@ func (pm *SessionPoolMetrics) incrementActionCounter(action string) {
 		}
 		pm.actionMutex.Unlock()
 	}
-	
+
 	counter.Add(1)
 }
 
 func (pm *SessionPoolMetrics) calculateSessionUtilization() float64 {
 	total := pm.totalSessions.Load()
 	active := pm.activeSessions.Load()
-	
+
 	if total == 0 {
 		return 0.0
 	}
-	
+
 	return float64(active) / float64(total)
 }
 
@@ -370,9 +370,9 @@ func (pm *SessionPoolMetrics) calculateSessionUtilization() float64 {
 func (lt *LatencyTracker) AddSample(latency time.Duration) {
 	lt.mutex.Lock()
 	defer lt.mutex.Unlock()
-	
+
 	lt.samples = append(lt.samples, latency)
-	
+
 	// 최대 샘플 수 제한
 	if len(lt.samples) > lt.maxSamples {
 		lt.samples = lt.samples[1:]
@@ -382,34 +382,34 @@ func (lt *LatencyTracker) AddSample(latency time.Duration) {
 func (lt *LatencyTracker) GetAverage() time.Duration {
 	lt.mutex.RLock()
 	defer lt.mutex.RUnlock()
-	
+
 	if len(lt.samples) == 0 {
 		return 0
 	}
-	
+
 	var total time.Duration
 	for _, sample := range lt.samples {
 		total += sample
 	}
-	
+
 	return total / time.Duration(len(lt.samples))
 }
 
 func (lt *LatencyTracker) GetPercentile(percentile float64) time.Duration {
 	lt.mutex.RLock()
 	defer lt.mutex.RUnlock()
-	
+
 	if len(lt.samples) == 0 {
 		return 0
 	}
-	
+
 	// 복사본 생성 및 정렬
 	samples := make([]time.Duration, len(lt.samples))
 	copy(samples, lt.samples)
 	sort.Slice(samples, func(i, j int) bool {
 		return samples[i] < samples[j]
 	})
-	
+
 	index := int(math.Ceil(percentile/100.0*float64(len(samples)))) - 1
 	if index < 0 {
 		index = 0
@@ -417,43 +417,43 @@ func (lt *LatencyTracker) GetPercentile(percentile float64) time.Duration {
 	if index >= len(samples) {
 		index = len(samples) - 1
 	}
-	
+
 	return samples[index]
 }
 
 func (lt *LatencyTracker) GetMin() time.Duration {
 	lt.mutex.RLock()
 	defer lt.mutex.RUnlock()
-	
+
 	if len(lt.samples) == 0 {
 		return 0
 	}
-	
+
 	min := lt.samples[0]
 	for _, sample := range lt.samples[1:] {
 		if sample < min {
 			min = sample
 		}
 	}
-	
+
 	return min
 }
 
 func (lt *LatencyTracker) GetMax() time.Duration {
 	lt.mutex.RLock()
 	defer lt.mutex.RUnlock()
-	
+
 	if len(lt.samples) == 0 {
 		return 0
 	}
-	
+
 	max := lt.samples[0]
 	for _, sample := range lt.samples[1:] {
 		if sample > max {
 			max = sample
 		}
 	}
-	
+
 	return max
 }
 
@@ -462,9 +462,9 @@ func (lt *LatencyTracker) GetMax() time.Duration {
 func (tt *ThroughputTracker) RecordRequest() {
 	tt.mutex.Lock()
 	defer tt.mutex.Unlock()
-	
+
 	now := time.Now()
-	
+
 	// 현재 윈도우 찾기 또는 생성
 	var currentWindow *ThroughputWindow
 	if len(tt.windows) > 0 {
@@ -473,7 +473,7 @@ func (tt *ThroughputTracker) RecordRequest() {
 			currentWindow = lastWindow
 		}
 	}
-	
+
 	if currentWindow == nil {
 		// 새 윈도우 생성
 		tt.windows = append(tt.windows, ThroughputWindow{
@@ -482,15 +482,15 @@ func (tt *ThroughputTracker) RecordRequest() {
 			Requests:  0,
 		})
 		currentWindow = &tt.windows[len(tt.windows)-1]
-		
+
 		// 최대 윈도우 수 제한
 		if len(tt.windows) > tt.maxWindows {
 			tt.windows = tt.windows[1:]
 		}
 	}
-	
+
 	currentWindow.Requests++
-	
+
 	// RPS 계산
 	elapsed := time.Since(currentWindow.StartTime)
 	if elapsed > 0 {
@@ -501,45 +501,45 @@ func (tt *ThroughputTracker) RecordRequest() {
 func (tt *ThroughputTracker) GetCurrentRPS() float64 {
 	tt.mutex.RLock()
 	defer tt.mutex.RUnlock()
-	
+
 	if len(tt.windows) == 0 {
 		return 0.0
 	}
-	
+
 	return tt.windows[len(tt.windows)-1].RPS
 }
 
 func (tt *ThroughputTracker) GetAverageRPS() float64 {
 	tt.mutex.RLock()
 	defer tt.mutex.RUnlock()
-	
+
 	if len(tt.windows) == 0 {
 		return 0.0
 	}
-	
+
 	var totalRPS float64
 	for _, window := range tt.windows {
 		totalRPS += window.RPS
 	}
-	
+
 	return totalRPS / float64(len(tt.windows))
 }
 
 func (tt *ThroughputTracker) GetPeakRPS() float64 {
 	tt.mutex.RLock()
 	defer tt.mutex.RUnlock()
-	
+
 	if len(tt.windows) == 0 {
 		return 0.0
 	}
-	
+
 	peak := tt.windows[0].RPS
 	for _, window := range tt.windows[1:] {
 		if window.RPS > peak {
 			peak = window.RPS
 		}
 	}
-	
+
 	return peak
 }
 
@@ -556,9 +556,9 @@ func (et *ErrorRateTracker) RecordSuccess() {
 func (et *ErrorRateTracker) recordRequest(isError bool) {
 	et.mutex.Lock()
 	defer et.mutex.Unlock()
-	
+
 	now := time.Now()
-	
+
 	// 현재 윈도우 찾기 또는 생성
 	var currentWindow *ErrorWindow
 	if len(et.windows) > 0 {
@@ -567,7 +567,7 @@ func (et *ErrorRateTracker) recordRequest(isError bool) {
 			currentWindow = lastWindow
 		}
 	}
-	
+
 	if currentWindow == nil {
 		// 새 윈도우 생성
 		et.windows = append(et.windows, ErrorWindow{
@@ -575,18 +575,18 @@ func (et *ErrorRateTracker) recordRequest(isError bool) {
 			EndTime:   now.Add(et.windowSize),
 		})
 		currentWindow = &et.windows[len(et.windows)-1]
-		
+
 		// 최대 윈도우 수 제한
 		if len(et.windows) > et.maxWindows {
 			et.windows = et.windows[1:]
 		}
 	}
-	
+
 	currentWindow.TotalRequests++
 	if isError {
 		currentWindow.ErrorRequests++
 	}
-	
+
 	// 에러율 계산
 	if currentWindow.TotalRequests > 0 {
 		currentWindow.ErrorRate = float64(currentWindow.ErrorRequests) / float64(currentWindow.TotalRequests)
@@ -596,11 +596,11 @@ func (et *ErrorRateTracker) recordRequest(isError bool) {
 func (et *ErrorRateTracker) GetCurrentErrorRate() float64 {
 	et.mutex.RLock()
 	defer et.mutex.RUnlock()
-	
+
 	if len(et.windows) == 0 {
 		return 0.0
 	}
-	
+
 	return et.windows[len(et.windows)-1].ErrorRate
 }
 
@@ -609,9 +609,9 @@ func (et *ErrorRateTracker) GetCurrentErrorRate() float64 {
 func (tsm *TimeSeriesMetrics) AddDataPoint(point MetricDataPoint) {
 	tsm.mutex.Lock()
 	defer tsm.mutex.Unlock()
-	
+
 	tsm.dataPoints = append(tsm.dataPoints, point)
-	
+
 	// 최대 포인트 수 제한
 	if len(tsm.dataPoints) > tsm.maxPoints {
 		tsm.dataPoints = tsm.dataPoints[1:]
@@ -621,24 +621,24 @@ func (tsm *TimeSeriesMetrics) AddDataPoint(point MetricDataPoint) {
 func (tsm *TimeSeriesMetrics) GetDataPoints() []MetricDataPoint {
 	tsm.mutex.RLock()
 	defer tsm.mutex.RUnlock()
-	
+
 	// 복사본 반환
 	points := make([]MetricDataPoint, len(tsm.dataPoints))
 	copy(points, tsm.dataPoints)
-	
+
 	return points
 }
 
 func (tsm *TimeSeriesMetrics) GetDataPointsSince(since time.Time) []MetricDataPoint {
 	tsm.mutex.RLock()
 	defer tsm.mutex.RUnlock()
-	
+
 	var result []MetricDataPoint
 	for _, point := range tsm.dataPoints {
 		if point.Timestamp.After(since) {
 			result = append(result, point)
 		}
 	}
-	
+
 	return result
 }

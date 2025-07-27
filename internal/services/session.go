@@ -17,20 +17,20 @@ type SessionService struct {
 	storage        storage.Storage
 	projectService *ProjectService
 	logger         *zap.Logger
-	
+
 	// 동시성 제어
 	mu             sync.RWMutex
 	activeSessions map[string]*models.Session
-	
+
 	// 설정
-	maxConcurrent  int
-	cleanupTicker  *time.Ticker
-	stopCleanup    chan struct{}
+	maxConcurrent int
+	cleanupTicker *time.Ticker
+	stopCleanup   chan struct{}
 }
 
 // SessionServiceConfig 세션 서비스 설정
 type SessionServiceConfig struct {
-	MaxConcurrent  int
+	MaxConcurrent   int
 	CleanupInterval time.Duration
 }
 
@@ -47,7 +47,7 @@ func NewSessionService(storage storage.Storage, projectService *ProjectService, 
 	if config == nil {
 		config = DefaultSessionServiceConfig()
 	}
-	
+
 	s := &SessionService{
 		storage:        storage,
 		projectService: projectService,
@@ -57,10 +57,10 @@ func NewSessionService(storage storage.Storage, projectService *ProjectService, 
 		cleanupTicker:  time.NewTicker(config.CleanupInterval),
 		stopCleanup:    make(chan struct{}),
 	}
-	
+
 	// 정리 고루틴 시작
 	go s.cleanupRoutine()
-	
+
 	return s
 }
 
@@ -71,12 +71,12 @@ func (s *SessionService) Create(ctx context.Context, req *models.SessionCreateRe
 	if err != nil {
 		return nil, fmt.Errorf("프로젝트 조회 실패: %w", err)
 	}
-	
+
 	// 동시 세션 수 확인
 	if err := s.checkConcurrentLimit(); err != nil {
 		return nil, err
 	}
-	
+
 	// 세션 생성
 	now := time.Now()
 	session := &models.Session{
@@ -88,27 +88,27 @@ func (s *SessionService) Create(ctx context.Context, req *models.SessionCreateRe
 		LastActive: now,
 		Metadata:   req.Metadata,
 	}
-	
+
 	if req.MaxIdleTime != nil {
 		session.MaxIdleTime = *req.MaxIdleTime
 	}
 	if req.MaxLifetime != nil {
 		session.MaxLifetime = *req.MaxLifetime
 	}
-	
+
 	// 저장
 	if err := s.storage.Session().Create(ctx, session); err != nil {
 		return nil, fmt.Errorf("세션 생성 실패: %w", err)
 	}
-	
+
 	// pending 상태에서는 활성 세션에 추가하지 않음
 	// UpdateStatus에서 Active로 변경할 때 추가됨
-	
+
 	s.logger.Info("세션 생성됨",
 		zap.String("session_id", session.ID),
 		zap.String("project_id", project.ID),
 	)
-	
+
 	return session, nil
 }
 
@@ -121,13 +121,13 @@ func (s *SessionService) GetByID(ctx context.Context, id string) (*models.Sessio
 		return session, nil
 	}
 	s.mu.RUnlock()
-	
+
 	// 저장소에서 조회
 	session, err := s.storage.Session().GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return session, nil
 }
 
@@ -142,14 +142,14 @@ func (s *SessionService) UpdateStatus(ctx context.Context, id string, status mod
 	if err != nil {
 		return err
 	}
-	
+
 	// 상태 전이 검증
 	if err := s.validateStatusTransition(session.Status, status); err != nil {
 		return err
 	}
-	
+
 	session.Status = status
-	
+
 	// 특정 상태 처리
 	switch status {
 	case models.SessionActive:
@@ -170,17 +170,17 @@ func (s *SessionService) UpdateStatus(ctx context.Context, id string, status mod
 		delete(s.activeSessions, id)
 		s.mu.Unlock()
 	}
-	
+
 	// 저장
 	if err := s.storage.Session().Update(ctx, session); err != nil {
 		return fmt.Errorf("세션 상태 업데이트 실패: %w", err)
 	}
-	
+
 	s.logger.Info("세션 상태 업데이트",
 		zap.String("session_id", id),
 		zap.String("status", string(status)),
 	)
-	
+
 	return nil
 }
 
@@ -190,14 +190,14 @@ func (s *SessionService) UpdateActivity(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	session.UpdateActivity()
-	
+
 	// Idle 상태인 경우 Active로 변경
 	if session.Status == models.SessionIdle {
 		session.Status = models.SessionActive
 	}
-	
+
 	return s.storage.Session().Update(ctx, session)
 }
 
@@ -212,13 +212,13 @@ func (s *SessionService) UpdateStats(ctx context.Context, id string, commandDelt
 	if err != nil {
 		return err
 	}
-	
+
 	session.CommandCount += commandDelta
 	session.BytesIn += bytesInDelta
 	session.BytesOut += bytesOutDelta
 	session.ErrorCount += errorDelta
 	session.UpdateActivity()
-	
+
 	return s.storage.Session().Update(ctx, session)
 }
 
@@ -226,7 +226,7 @@ func (s *SessionService) UpdateStats(ctx context.Context, id string, commandDelt
 func (s *SessionService) GetActiveSessions() []*models.Session {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	sessions := make([]*models.Session, 0, len(s.activeSessions))
 	for _, session := range s.activeSessions {
 		sessions = append(sessions, session)
@@ -240,7 +240,7 @@ func (s *SessionService) checkConcurrentLimit() error {
 	filter := &models.SessionFilter{
 		Active: &[]bool{true}[0], // 활성 세션만 필터링
 	}
-	
+
 	result, err := s.storage.Session().List(context.Background(), filter, &models.PagingRequest{
 		Page:  1,
 		Limit: 1, // 카운트만 필요
@@ -248,11 +248,11 @@ func (s *SessionService) checkConcurrentLimit() error {
 	if err != nil {
 		return fmt.Errorf("활성 세션 조회 실패: %w", err)
 	}
-	
+
 	if result.Meta.Total >= s.maxConcurrent {
 		return fmt.Errorf("최대 동시 세션 수(%d) 초과", s.maxConcurrent)
 	}
-	
+
 	return nil
 }
 
@@ -266,18 +266,18 @@ func (s *SessionService) validateStatusTransition(from, to models.SessionStatus)
 		models.SessionError:   {models.SessionEnded},
 		models.SessionEnded:   {},
 	}
-	
+
 	allowedTransitions, ok := validTransitions[from]
 	if !ok {
 		return fmt.Errorf("알 수 없는 상태: %s", from)
 	}
-	
+
 	for _, allowed := range allowedTransitions {
 		if allowed == to {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("잘못된 상태 전이: %s -> %s", from, to)
 }
 
@@ -296,14 +296,14 @@ func (s *SessionService) cleanupRoutine() {
 // cleanupSessions 타임아웃된 세션 정리
 func (s *SessionService) cleanupSessions() {
 	ctx := context.Background()
-	
+
 	s.mu.RLock()
 	sessions := make([]*models.Session, 0, len(s.activeSessions))
 	for _, session := range s.activeSessions {
 		sessions = append(sessions, session)
 	}
 	s.mu.RUnlock()
-	
+
 	for _, session := range sessions {
 		// 타임아웃 확인
 		if session.IsIdleTimeout() {

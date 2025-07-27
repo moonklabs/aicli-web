@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/aicli/aicli-web/internal/docker"
-	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/interfaces"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // Tracker 워크스페이스 상태 추적자
@@ -42,7 +42,7 @@ type WorkspaceState struct {
 	Status      models.WorkspaceStatus `json:"status"`
 
 	// 컨테이너 상태
-	ContainerID    string               `json:"container_id,omitempty"`
+	ContainerID    string                `json:"container_id,omitempty"`
 	ContainerState docker.ContainerState `json:"container_state,omitempty"`
 
 	// 시간 정보
@@ -50,9 +50,9 @@ type WorkspaceState struct {
 	LastSyncAttempt time.Time `json:"last_sync_attempt"`
 
 	// 상태 메타데이터
-	SyncAttempts int                `json:"sync_attempts"`
-	LastError    string             `json:"last_error,omitempty"`
-	Metrics      *WorkspaceMetrics  `json:"metrics,omitempty"`
+	SyncAttempts int               `json:"sync_attempts"`
+	LastError    string            `json:"last_error,omitempty"`
+	Metrics      *WorkspaceMetrics `json:"metrics,omitempty"`
 }
 
 // WorkspaceMetrics 워크스페이스 메트릭 정보
@@ -144,20 +144,20 @@ func (t *Tracker) SetMaxRetries(maxRetries int) {
 // Start 상태 추적 시작
 func (t *Tracker) Start() error {
 	t.logger.Info("상태 추적자 시작 - 동기화 간격: %v", t.syncInterval)
-	
+
 	t.wg.Add(1)
 	go t.syncLoop()
-	
+
 	return nil
 }
 
 // Stop 상태 추적 중지
 func (t *Tracker) Stop() error {
 	t.logger.Info("상태 추적자 중지 중...")
-	
+
 	t.cancel()
 	t.wg.Wait()
-	
+
 	t.logger.Info("상태 추적자 중지 완료")
 	return nil
 }
@@ -298,12 +298,12 @@ func (t *Tracker) containerStatsToMetrics(stats *docker.ContainerStats, containe
 	}
 
 	return &WorkspaceMetrics{
-		CPUPercent:  stats.CPUPercent,
-		MemoryUsage: stats.MemoryUsage,
-		MemoryLimit: stats.MemoryLimit,
-		NetworkRxMB: stats.NetworkRxMB,
-		NetworkTxMB: stats.NetworkTxMB,
-		Uptime:      uptime,
+		CPUPercent:   stats.CPUPercent,
+		MemoryUsage:  stats.MemoryUsage,
+		MemoryLimit:  stats.MemoryLimit,
+		NetworkRxMB:  stats.NetworkRxMB,
+		NetworkTxMB:  stats.NetworkTxMB,
+		Uptime:       uptime,
 		LastActivity: time.Now(),
 		ErrorCount:   0, // 에러 카운터는 따로 관리
 	}
@@ -326,8 +326,8 @@ func (t *Tracker) updateState(workspaceID string, oldState, newState *WorkspaceS
 	// 상태 저장
 	t.states.Store(workspaceID, newState)
 
-	t.logger.Info("워크스페이스 상태 변경: %s [%v -> %v]", 
-		workspaceID, 
+	t.logger.Info("워크스페이스 상태 변경: %s [%v -> %v]",
+		workspaceID,
 		func() string {
 			if oldState != nil {
 				return string(oldState.Status)
@@ -468,10 +468,10 @@ func (t *Tracker) GetStats() TrackerStats {
 	})
 
 	return TrackerStats{
-		TotalWorkspaces:     totalStates,
-		SyncInterval:        t.syncInterval,
-		ActiveCallbacks:     len(t.eventCallbacks),
-		LastSyncTime:        time.Now(), // 실제로는 마지막 동기화 시간을 저장해야 함
+		TotalWorkspaces: totalStates,
+		SyncInterval:    t.syncInterval,
+		ActiveCallbacks: len(t.eventCallbacks),
+		LastSyncTime:    time.Now(), // 실제로는 마지막 동기화 시간을 저장해야 함
 	}
 }
 

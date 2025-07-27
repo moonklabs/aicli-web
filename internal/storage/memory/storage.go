@@ -56,5 +56,3 @@ func (s *Storage) RBAC() storage.RBACStorage {
 func (s *Storage) Close() error {
 	return nil
 }
-
-

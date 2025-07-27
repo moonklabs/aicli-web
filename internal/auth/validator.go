@@ -10,10 +10,10 @@ import (
 type Validator interface {
 	// ValidateToken은 토큰을 검증하고 사용자 정보를 반환합니다.
 	ValidateToken(ctx context.Context, token string) (*UserInfo, error)
-	
+
 	// ValidateSession은 세션을 검증합니다.
 	ValidateSession(ctx context.Context, sessionID string) (*UserInfo, error)
-	
+
 	// IsTokenBlacklisted는 토큰이 블랙리스트에 있는지 확인합니다.
 	IsTokenBlacklisted(ctx context.Context, token string) bool
 }
@@ -84,7 +84,7 @@ func (v *JWTValidator) IsTokenBlacklisted(ctx context.Context, token string) boo
 	if v.blacklist == nil {
 		return false
 	}
-	
+
 	return v.blacklist.IsBlacklisted(token)
 }
 

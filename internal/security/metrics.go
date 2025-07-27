@@ -13,15 +13,15 @@ import (
 
 // MetricsCollector는 보안 메트릭 수집기입니다.
 type MetricsCollector struct {
-	redis      redis.UniversalClient
-	logger     *zap.Logger
-	metrics    map[string]*Metric
-	mu         sync.RWMutex
-	
+	redis   redis.UniversalClient
+	logger  *zap.Logger
+	metrics map[string]*Metric
+	mu      sync.RWMutex
+
 	// 수집 설정
 	collectInterval time.Duration
 	retentionPeriod time.Duration
-	
+
 	// 채널
 	metricChan chan *MetricEvent
 	stopChan   chan struct{}
@@ -29,12 +29,12 @@ type MetricsCollector struct {
 
 // Metric은 개별 메트릭을 나타냅니다.
 type Metric struct {
-	Name        string                 `json:"name"`
-	Type        MetricType             `json:"type"`
-	Value       float64                `json:"value"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Description string                 `json:"description,omitempty"`
+	Name        string            `json:"name"`
+	Type        MetricType        `json:"type"`
+	Value       float64           `json:"value"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Timestamp   time.Time         `json:"timestamp"`
+	Description string            `json:"description,omitempty"`
 }
 
 // MetricEvent는 메트릭 이벤트를 나타냅니다.
@@ -59,37 +59,37 @@ const (
 // SecurityMetrics는 보안 관련 메트릭들을 나타냅니다.
 type SecurityMetrics struct {
 	// 공격 관련 메트릭
-	TotalAttacks         int64                  `json:"total_attacks"`
-	AttacksByType        map[string]int64       `json:"attacks_by_type"`
-	AttacksBySeverity    map[string]int64       `json:"attacks_by_severity"`
-	AttacksBlocked       int64                  `json:"attacks_blocked"`
-	AttacksPerHour       []TimeSeriesPoint      `json:"attacks_per_hour"`
-	
+	TotalAttacks      int64             `json:"total_attacks"`
+	AttacksByType     map[string]int64  `json:"attacks_by_type"`
+	AttacksBySeverity map[string]int64  `json:"attacks_by_severity"`
+	AttacksBlocked    int64             `json:"attacks_blocked"`
+	AttacksPerHour    []TimeSeriesPoint `json:"attacks_per_hour"`
+
 	// Rate Limiting 메트릭
-	RateLimitViolations  int64                  `json:"rate_limit_violations"`
-	RateLimitByType      map[string]int64       `json:"rate_limit_by_type"`
-	BlockedIPs           int64                  `json:"blocked_ips"`
-	
+	RateLimitViolations int64            `json:"rate_limit_violations"`
+	RateLimitByType     map[string]int64 `json:"rate_limit_by_type"`
+	BlockedIPs          int64            `json:"blocked_ips"`
+
 	// 인증 관련 메트릭
-	AuthFailures         int64                  `json:"auth_failures"`
-	AuthSuccesses        int64                  `json:"auth_successes"`
-	BruteForceAttempts   int64                  `json:"brute_force_attempts"`
-	
+	AuthFailures       int64 `json:"auth_failures"`
+	AuthSuccesses      int64 `json:"auth_successes"`
+	BruteForceAttempts int64 `json:"brute_force_attempts"`
+
 	// 세션 관련 메트릭
-	ActiveSessions       int64                  `json:"active_sessions"`
-	SessionAnomalies     int64                  `json:"session_anomalies"`
-	DeviceChanges        int64                  `json:"device_changes"`
-	
+	ActiveSessions   int64 `json:"active_sessions"`
+	SessionAnomalies int64 `json:"session_anomalies"`
+	DeviceChanges    int64 `json:"device_changes"`
+
 	// 시스템 성능 메트릭
-	ResponseTimes        ResponseTimeMetrics    `json:"response_times"`
-	RequestVolume        []TimeSeriesPoint      `json:"request_volume"`
-	ErrorRates           map[string]float64     `json:"error_rates"`
-	
+	ResponseTimes ResponseTimeMetrics `json:"response_times"`
+	RequestVolume []TimeSeriesPoint   `json:"request_volume"`
+	ErrorRates    map[string]float64  `json:"error_rates"`
+
 	// 지리적 분석
-	RequestsByCountry    map[string]int64       `json:"requests_by_country"`
-	SuspiciousCountries  []string               `json:"suspicious_countries"`
-	
-	Timestamp            time.Time              `json:"timestamp"`
+	RequestsByCountry   map[string]int64 `json:"requests_by_country"`
+	SuspiciousCountries []string         `json:"suspicious_countries"`
+
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // TimeSeriesPoint는 시계열 데이터 포인트입니다.
@@ -100,11 +100,11 @@ type TimeSeriesPoint struct {
 
 // ResponseTimeMetrics는 응답 시간 메트릭입니다.
 type ResponseTimeMetrics struct {
-	Mean   float64 `json:"mean"`
-	P50    float64 `json:"p50"`
-	P95    float64 `json:"p95"`
-	P99    float64 `json:"p99"`
-	Max    float64 `json:"max"`
+	Mean float64 `json:"mean"`
+	P50  float64 `json:"p50"`
+	P95  float64 `json:"p95"`
+	P99  float64 `json:"p99"`
+	Max  float64 `json:"max"`
 }
 
 // MetricsCollectorConfig는 메트릭 수집기 설정입니다.
@@ -435,7 +435,7 @@ func (mc *MetricsCollector) storeMetricToRedis(key string, metric *Metric) {
 	}
 
 	ctx := context.Background()
-	
+
 	// 메트릭 직렬화
 	data, err := json.Marshal(metric)
 	if err != nil {
@@ -451,7 +451,7 @@ func (mc *MetricsCollector) storeMetricToRedis(key string, metric *Metric) {
 		Score:  score,
 		Member: data,
 	}).Err()
-	
+
 	if err != nil {
 		mc.logger.Error("메트릭 Redis 저장 실패", zap.String("key", key), zap.Error(err))
 		return
@@ -533,7 +533,7 @@ func (mc *MetricsCollector) getGaugeValue(ctx context.Context, metricName string
 	if mc.redis == nil {
 		mc.mu.RLock()
 		defer mc.mu.RUnlock()
-		
+
 		if metric, exists := mc.metrics[metricName]; exists {
 			return metric.Value, nil
 		}
@@ -541,7 +541,7 @@ func (mc *MetricsCollector) getGaugeValue(ctx context.Context, metricName string
 	}
 
 	key := fmt.Sprintf("metrics:%s", metricName)
-	
+
 	// 최신 값 조회
 	members, err := mc.redis.ZRevRange(ctx, key, 0, 0).Result()
 	if err != nil || len(members) == 0 {
@@ -572,11 +572,11 @@ func (mc *MetricsCollector) getHistogramSummary(ctx context.Context, metricName 
 // getTimeSeriesData는 시계열 데이터를 조회합니다.
 func (mc *MetricsCollector) getTimeSeriesData(ctx context.Context, metricName string, start, end time.Time, interval time.Duration) []TimeSeriesPoint {
 	points := make([]TimeSeriesPoint, 0)
-	
+
 	current := start
 	for current.Before(end) {
 		next := current.Add(interval)
-		
+
 		// 해당 시간 구간의 값 조회
 		value, err := mc.getCounterValue(ctx, metricName, current, next)
 		if err == nil {
@@ -585,7 +585,7 @@ func (mc *MetricsCollector) getTimeSeriesData(ctx context.Context, metricName st
 				Value:     float64(value),
 			})
 		}
-		
+
 		current = next
 	}
 
@@ -644,7 +644,7 @@ func (mc *MetricsCollector) RecordAttackDetection(attackType string, blocked boo
 		"type": attackType,
 	}
 	mc.IncrementCounter("security_attacks_total", labels)
-	
+
 	if blocked {
 		mc.IncrementCounter("security_attacks_blocked_total", labels)
 	}

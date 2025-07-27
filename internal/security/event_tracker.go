@@ -14,18 +14,18 @@ import (
 type EventType string
 
 const (
-	EventTypeRateLimitExceeded EventType = "rate_limit_exceeded"
-	EventTypeCSRFViolation     EventType = "csrf_violation"
-	EventTypeAuthFailure       EventType = "auth_failure"
-	EventTypeSessionAnomaly    EventType = "session_anomaly"
-	EventTypeDeviceChange      EventType = "device_change"
-	EventTypeLocationChange    EventType = "location_change"
-	EventTypeSuspiciousActivity EventType = "suspicious_activity"
-	EventTypeIPBlocked         EventType = "ip_blocked"
-	EventTypeAttackPattern     EventType = "attack_pattern"
-	EventTypeBruteForce        EventType = "brute_force"
+	EventTypeRateLimitExceeded   EventType = "rate_limit_exceeded"
+	EventTypeCSRFViolation       EventType = "csrf_violation"
+	EventTypeAuthFailure         EventType = "auth_failure"
+	EventTypeSessionAnomaly      EventType = "session_anomaly"
+	EventTypeDeviceChange        EventType = "device_change"
+	EventTypeLocationChange      EventType = "location_change"
+	EventTypeSuspiciousActivity  EventType = "suspicious_activity"
+	EventTypeIPBlocked           EventType = "ip_blocked"
+	EventTypeAttackPattern       EventType = "attack_pattern"
+	EventTypeBruteForce          EventType = "brute_force"
 	EventTypePrivilegeEscalation EventType = "privilege_escalation"
-	EventTypeMaliciousRequest  EventType = "malicious_request"
+	EventTypeMaliciousRequest    EventType = "malicious_request"
 )
 
 // Severity는 이벤트 심각도를 정의합니다.
@@ -61,10 +61,10 @@ type SecurityEvent struct {
 // EventTrackerConfig는 이벤트 추적기 설정입니다.
 type EventTrackerConfig struct {
 	Redis           redis.UniversalClient
-	RetentionPeriod time.Duration         // 이벤트 보관 기간
-	MaxEvents       int                   // 최대 이벤트 수
-	AlertThresholds map[EventType]int     // 알림 임계값
-	EnableAlerts    bool                  // 알림 활성화
+	RetentionPeriod time.Duration     // 이벤트 보관 기간
+	MaxEvents       int               // 최대 이벤트 수
+	AlertThresholds map[EventType]int // 알림 임계값
+	EnableAlerts    bool              // 알림 활성화
 	Logger          *zap.Logger
 }
 
@@ -92,14 +92,14 @@ type EventFilter struct {
 
 // EventStatistics는 이벤트 통계를 나타냅니다.
 type EventStatistics struct {
-	TotalEvents       int                    `json:"total_events"`
-	EventsByType      map[EventType]int      `json:"events_by_type"`
-	EventsBySeverity  map[Severity]int       `json:"events_by_severity"`
-	EventsByHour      map[string]int         `json:"events_by_hour"`
-	TopTargets        []TargetStat           `json:"top_targets"`
-	TopSources        []SourceStat           `json:"top_sources"`
-	RecentTrends      []TrendData            `json:"recent_trends"`
-	UnresolvedEvents  int                    `json:"unresolved_events"`
+	TotalEvents      int               `json:"total_events"`
+	EventsByType     map[EventType]int `json:"events_by_type"`
+	EventsBySeverity map[Severity]int  `json:"events_by_severity"`
+	EventsByHour     map[string]int    `json:"events_by_hour"`
+	TopTargets       []TargetStat      `json:"top_targets"`
+	TopSources       []SourceStat      `json:"top_sources"`
+	RecentTrends     []TrendData       `json:"recent_trends"`
+	UnresolvedEvents int               `json:"unresolved_events"`
 }
 
 // TargetStat는 타겟 통계입니다.
@@ -234,7 +234,7 @@ func (et *EventTracker) RecordEvent(ctx context.Context, event *SecurityEvent) e
 // GetEvent는 특정 이벤트를 조회합니다.
 func (et *EventTracker) GetEvent(ctx context.Context, eventID string) (*SecurityEvent, error) {
 	eventKey := et.getEventKey(eventID)
-	
+
 	data, err := et.redis.Get(ctx, eventKey).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -337,7 +337,7 @@ func (et *EventTracker) GetStatistics(ctx context.Context, period time.Duration)
 	for i := 0; i < 24; i++ {
 		hourStart := now.Add(time.Duration(-i) * time.Hour).Truncate(time.Hour)
 		hourEnd := hourStart.Add(time.Hour)
-		
+
 		count, err := et.getEventCountInTimeRange(ctx, hourStart, hourEnd)
 		if err == nil {
 			stats.EventsByHour[hourStart.Format("2006-01-02 15:04")] = count
@@ -430,13 +430,13 @@ func (et *EventTracker) getAllEventIDs(ctx context.Context, filter *EventFilter)
 
 func (et *EventTracker) getEventIDsFromSortedSet(ctx context.Context, key string, filter *EventFilter) ([]string, error) {
 	var minScore, maxScore string
-	
+
 	if filter.StartTime != nil {
 		minScore = fmt.Sprintf("%d", filter.StartTime.Unix())
 	} else {
 		minScore = "-inf"
 	}
-	
+
 	if filter.EndTime != nil {
 		maxScore = fmt.Sprintf("%d", filter.EndTime.Unix())
 	} else {
@@ -496,7 +496,7 @@ func (et *EventTracker) matchesFilter(event *SecurityEvent, filter *EventFilter)
 func (et *EventTracker) updateStatistics(ctx context.Context, event *SecurityEvent) {
 	// 통계 카운터 업데이트
 	pipe := et.redis.Pipeline()
-	
+
 	// 일별 통계
 	dateKey := fmt.Sprintf("security:stats:daily:%s", time.Now().Format("2006-01-02"))
 	pipe.HIncrBy(ctx, dateKey, fmt.Sprintf("type:%s", event.Type), 1)
@@ -520,7 +520,7 @@ func (et *EventTracker) checkAlerts(ctx context.Context, event *SecurityEvent) {
 	// 최근 1시간 내 같은 타입 이벤트 수 확인
 	now := time.Now()
 	oneHourAgo := now.Add(-time.Hour)
-	
+
 	count, err := et.getEventCountByType(ctx, event.Type, oneHourAgo, now)
 	if err != nil {
 		et.logger.Error("알림 확인 중 오류 발생", zap.Error(err))
@@ -532,7 +532,7 @@ func (et *EventTracker) checkAlerts(ctx context.Context, event *SecurityEvent) {
 			zap.String("event_type", string(event.Type)),
 			zap.Int("count", count),
 			zap.Int("threshold", threshold))
-		
+
 		// 여기에 실제 알림 로직 구현 (이메일, 슬랙 등)
 		// TODO: 알림 발송 구현
 	}

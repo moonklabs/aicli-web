@@ -281,12 +281,12 @@ func TestManager_RefreshMountConfig(t *testing.T) {
 	tempDir := t.TempDir()
 
 	config := &MountConfig{
-		SourcePath:   tempDir,
-		TargetPath:   "/workspace",
-		UserID:       1000,
-		GroupID:      1000,
-		SyncMode:     SyncModeNative,
-		LastChecked:  time.Time{}, // 초기값
+		SourcePath:  tempDir,
+		TargetPath:  "/workspace",
+		UserID:      1000,
+		GroupID:     1000,
+		SyncMode:    SyncModeNative,
+		LastChecked: time.Time{}, // 초기값
 	}
 
 	t.Run("successful refresh", func(t *testing.T) {
@@ -313,7 +313,7 @@ func TestManager_getDefaultExcludePatterns(t *testing.T) {
 	patterns := manager.getDefaultExcludePatterns()
 
 	assert.NotEmpty(t, patterns)
-	
+
 	// 중요한 제외 패턴들이 포함되어 있는지 확인
 	expectedPatterns := []string{".git", "node_modules", "*.log", ".DS_Store"}
 	for _, expected := range expectedPatterns {

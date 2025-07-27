@@ -3,9 +3,9 @@ package auth
 import (
 	"net/http"
 	"strings"
-	
-	"github.com/gin-gonic/gin"
+
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/gin-gonic/gin"
 )
 
 // RBACMiddleware RBAC 미들웨어
@@ -36,13 +36,13 @@ func (rm *RBACMiddleware) RequirePermission(resourceType models.ResourceType, ac
 			c.Abort()
 			return
 		}
-		
+
 		// 2. 리소스 ID 추출 (경로 매개변수 또는 쿼리 파라미터에서)
 		resourceID := rm.extractResourceID(c)
 		if resourceID == "" {
 			resourceID = "*" // 일반적인 권한 확인
 		}
-		
+
 		// 3. 권한 확인
 		req := &models.CheckPermissionRequest{
 			UserID:       userID,
@@ -51,7 +51,7 @@ func (rm *RBACMiddleware) RequirePermission(resourceType models.ResourceType, ac
 			Action:       action,
 			Attributes:   rm.extractRequestAttributes(c),
 		}
-		
+
 		resp, err := rm.rbacManager.CheckPermission(c.Request.Context(), req)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -65,7 +65,7 @@ func (rm *RBACMiddleware) RequirePermission(resourceType models.ResourceType, ac
 			c.Abort()
 			return
 		}
-		
+
 		// 4. 권한이 없는 경우
 		if !resp.Allowed {
 			c.JSON(http.StatusForbidden, models.ErrorResponse{
@@ -79,11 +79,11 @@ func (rm *RBACMiddleware) RequirePermission(resourceType models.ResourceType, ac
 			c.Abort()
 			return
 		}
-		
+
 		// 5. 권한 정보를 컨텍스트에 저장
 		c.Set("permission_decision", resp.Decision)
 		c.Set("permission_evaluation", resp.Evaluation)
-		
+
 		c.Next()
 	}
 }
@@ -103,7 +103,7 @@ func (rm *RBACMiddleware) RequireRole(roleNames ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// 사용자의 권한 매트릭스 조회
 		matrix, err := rm.rbacManager.ComputeUserPermissionMatrix(c.Request.Context(), userID)
 		if err != nil {
@@ -118,11 +118,11 @@ func (rm *RBACMiddleware) RequireRole(roleNames ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// 모든 역할 수집
 		allUserRoles := append(matrix.DirectRoles, matrix.InheritedRoles...)
 		allUserRoles = append(allUserRoles, matrix.GroupRoles...)
-		
+
 		// 필요한 역할 중 하나라도 가지고 있는지 확인
 		hasRequiredRole := false
 		for _, roleName := range roleNames {
@@ -131,7 +131,7 @@ func (rm *RBACMiddleware) RequireRole(roleNames ...string) gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !hasRequiredRole {
 			c.JSON(http.StatusForbidden, models.ErrorResponse{
 				Success: false,
@@ -144,7 +144,7 @@ func (rm *RBACMiddleware) RequireRole(roleNames ...string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Set("user_roles", allUserRoles)
 		c.Next()
 	}
@@ -165,7 +165,7 @@ func (rm *RBACMiddleware) RequireOwnership(resourceType models.ResourceType) gin
 			c.Abort()
 			return
 		}
-		
+
 		resourceID := rm.extractResourceID(c)
 		if resourceID == "" {
 			c.JSON(http.StatusBadRequest, models.ErrorResponse{
@@ -178,7 +178,7 @@ func (rm *RBACMiddleware) RequireOwnership(resourceType models.ResourceType) gin
 			c.Abort()
 			return
 		}
-		
+
 		// 소유권 확인을 위한 권한 검사
 		req := &models.CheckPermissionRequest{
 			UserID:       userID,
@@ -189,7 +189,7 @@ func (rm *RBACMiddleware) RequireOwnership(resourceType models.ResourceType) gin
 				"ownership_check": "true",
 			},
 		}
-		
+
 		resp, err := rm.rbacManager.CheckPermission(c.Request.Context(), req)
 		if err != nil || !resp.Allowed {
 			c.JSON(http.StatusForbidden, models.ErrorResponse{
@@ -202,7 +202,7 @@ func (rm *RBACMiddleware) RequireOwnership(resourceType models.ResourceType) gin
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -215,12 +215,12 @@ func (rm *RBACMiddleware) OptionalPermission(resourceType models.ResourceType, a
 			c.Next()
 			return
 		}
-		
+
 		resourceID := rm.extractResourceID(c)
 		if resourceID == "" {
 			resourceID = "*"
 		}
-		
+
 		req := &models.CheckPermissionRequest{
 			UserID:       userID,
 			ResourceType: resourceType,
@@ -228,7 +228,7 @@ func (rm *RBACMiddleware) OptionalPermission(resourceType models.ResourceType, a
 			Action:       action,
 			Attributes:   rm.extractRequestAttributes(c),
 		}
-		
+
 		resp, err := rm.rbacManager.CheckPermission(c.Request.Context(), req)
 		if err == nil && resp.Allowed {
 			c.Set("has_permission", true)
@@ -236,7 +236,7 @@ func (rm *RBACMiddleware) OptionalPermission(resourceType models.ResourceType, a
 		} else {
 			c.Set("has_permission", false)
 		}
-		
+
 		c.Next()
 	}
 }
@@ -249,12 +249,12 @@ func (rm *RBACMiddleware) extractUserID(c *gin.Context) string {
 			return jwtClaims.UserID
 		}
 	}
-	
+
 	// 헤더에서 사용자 ID 추출 (대안)
 	if userID := c.GetHeader("X-User-ID"); userID != "" {
 		return userID
 	}
-	
+
 	return ""
 }
 
@@ -264,7 +264,7 @@ func (rm *RBACMiddleware) extractResourceID(c *gin.Context) string {
 	if id := c.Param("id"); id != "" {
 		return id
 	}
-	
+
 	// 리소스별 특정 파라미터 확인
 	resourceParams := []string{
 		"workspace_id", "workspaceId",
@@ -275,7 +275,7 @@ func (rm *RBACMiddleware) extractResourceID(c *gin.Context) string {
 		"group_id", "groupId",
 		"role_id", "roleId",
 	}
-	
+
 	for _, param := range resourceParams {
 		if id := c.Param(param); id != "" {
 			return id
@@ -284,38 +284,38 @@ func (rm *RBACMiddleware) extractResourceID(c *gin.Context) string {
 			return id
 		}
 	}
-	
+
 	return ""
 }
 
 // extractRequestAttributes 요청에서 추가 속성 추출
 func (rm *RBACMiddleware) extractRequestAttributes(c *gin.Context) map[string]string {
 	attributes := make(map[string]string)
-	
+
 	// HTTP 메서드
 	attributes["http_method"] = c.Request.Method
-	
+
 	// 요청 경로
 	attributes["request_path"] = c.Request.URL.Path
-	
+
 	// IP 주소
 	attributes["client_ip"] = c.ClientIP()
-	
+
 	// User-Agent
 	attributes["user_agent"] = c.GetHeader("User-Agent")
-	
+
 	// 시간대
 	attributes["request_time"] = strings.Split(c.GetString("request_time"), "T")[0] // 날짜만
-	
+
 	// 추가 커스텀 헤더들
 	if workspace := c.GetHeader("X-Workspace-ID"); workspace != "" {
 		attributes["workspace_id"] = workspace
 	}
-	
+
 	if project := c.GetHeader("X-Project-ID"); project != "" {
 		attributes["project_id"] = project
 	}
-	
+
 	return attributes
 }
 
@@ -331,9 +331,9 @@ func (rm *RBACMiddleware) containsRole(roles []string, targetRole string) bool {
 
 // PermissionResponse 권한 확인 결과 응답
 type PermissionResponse struct {
-	HasPermission bool                      `json:"has_permission"`
+	HasPermission bool                       `json:"has_permission"`
 	Decision      *models.PermissionDecision `json:"decision,omitempty"`
-	Evaluation    []string                  `json:"evaluation,omitempty"`
+	Evaluation    []string                   `json:"evaluation,omitempty"`
 }
 
 // GetCurrentUserPermissions 현재 사용자의 권한 정보 조회 핸들러
@@ -350,7 +350,7 @@ func (rm *RBACMiddleware) GetCurrentUserPermissions() gin.HandlerFunc {
 			})
 			return
 		}
-		
+
 		matrix, err := rm.rbacManager.ComputeUserPermissionMatrix(c.Request.Context(), userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -363,7 +363,7 @@ func (rm *RBACMiddleware) GetCurrentUserPermissions() gin.HandlerFunc {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusOK, models.SuccessResponse{
 			Success: true,
 			Data:    matrix,
@@ -387,12 +387,12 @@ func (rm *RBACMiddleware) CheckSpecificPermission() gin.HandlerFunc {
 			})
 			return
 		}
-		
+
 		// 사용자 ID가 없으면 현재 사용자 ID 사용
 		if req.UserID == "" {
 			req.UserID = rm.extractUserID(c)
 		}
-		
+
 		if req.UserID == "" {
 			c.JSON(http.StatusUnauthorized, models.ErrorResponse{
 				Success: false,
@@ -403,7 +403,7 @@ func (rm *RBACMiddleware) CheckSpecificPermission() gin.HandlerFunc {
 			})
 			return
 		}
-		
+
 		resp, err := rm.rbacManager.CheckPermission(c.Request.Context(), &req)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, models.ErrorResponse{
@@ -416,7 +416,7 @@ func (rm *RBACMiddleware) CheckSpecificPermission() gin.HandlerFunc {
 			})
 			return
 		}
-		
+
 		c.JSON(http.StatusOK, models.SuccessResponse{
 			Success: true,
 			Data:    resp,

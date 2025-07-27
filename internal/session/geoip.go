@@ -19,7 +19,7 @@ type GeoIPService struct {
 
 // GeoIPConfig는 GeoIP 서비스 설정입니다.
 type GeoIPConfig struct {
-	DatabasePath string `json:"database_path" yaml:"database_path"`
+	DatabasePath  string `json:"database_path" yaml:"database_path"`
 	MaxMindAPIKey string `json:"maxmind_api_key" yaml:"maxmind_api_key"`
 }
 
@@ -158,14 +158,14 @@ func (g *GeoIPService) isLocalIP(ip net.IP) bool {
 		"fc00::/7",       // IPv6 unique local
 		"fe80::/10",      // IPv6 link local
 	}
-	
+
 	for _, block := range privateIPBlocks {
 		_, cidr, err := net.ParseCIDR(block)
 		if err == nil && cidr.Contains(ip) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -174,20 +174,20 @@ func (g *GeoIPService) CalculateDistance(loc1, loc2 *models.LocationInfo) float6
 	if loc1 == nil || loc2 == nil {
 		return 0
 	}
-	
+
 	const R = 6371 // 지구 반지름 (km)
-	
+
 	lat1 := loc1.Latitude * math.Pi / 180
 	lat2 := loc2.Latitude * math.Pi / 180
 	deltaLat := (loc2.Latitude - loc1.Latitude) * math.Pi / 180
 	deltaLon := (loc2.Longitude - loc1.Longitude) * math.Pi / 180
-	
+
 	a := math.Sin(deltaLat/2)*math.Sin(deltaLat/2) +
 		math.Cos(lat1)*math.Cos(lat2)*
-		math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
-		
+			math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
+
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	
+
 	return R * c
 }
 
@@ -214,13 +214,13 @@ func (g *GeoIPService) GetDatabaseInfo() map[string]interface{} {
 
 	metadata := g.db.Metadata()
 	return map[string]interface{}{
-		"available":       true,
-		"build_date":      metadata.BuildEpoch,
-		"version":         metadata.BinaryFormatMajorVersion,
-		"database_type":   metadata.DatabaseType,
-		"description":     metadata.Description,
-		"record_size":     metadata.RecordSize,
-		"node_count":      metadata.NodeCount,
+		"available":     true,
+		"build_date":    metadata.BuildEpoch,
+		"version":       metadata.BinaryFormatMajorVersion,
+		"database_type": metadata.DatabaseType,
+		"description":   metadata.Description,
+		"record_size":   metadata.RecordSize,
+		"node_count":    metadata.NodeCount,
 	}
 }
 

@@ -84,7 +84,7 @@ func CaptureError(f func()) string {
 // CreateTestProject 테스트용 프로젝트 구조 생성
 func CreateTestProject(t *testing.T, dir string) {
 	t.Helper()
-	
+
 	// 프로젝트 디렉토리 구조 생성
 	dirs := []string{
 		filepath.Join(dir, "cmd", "aicli"),

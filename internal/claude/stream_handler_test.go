@@ -123,7 +123,7 @@ func TestStreamHandler_ReceiveMessage(t *testing.T) {
 
 	// 짧은 대기 후 메시지 수신 시도
 	time.Sleep(100 * time.Millisecond)
-	
+
 	received, err := handler.ReceiveMessage(1 * time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, received)
@@ -271,7 +271,7 @@ func TestStreamBuffer_Overflow(t *testing.T) {
 
 func TestStreamBuffer_Stats(t *testing.T) {
 	buffer := NewStreamBuffer(100)
-	
+
 	data := []byte("Hello!")
 	buffer.Write(data)
 
@@ -377,14 +377,14 @@ func TestEventBus_Metrics(t *testing.T) {
 
 func TestJSONStreamParser_ParseNext(t *testing.T) {
 	logger := logrus.New()
-	
+
 	response := &Response{
 		Type:      "test",
 		Content:   "Hello!",
 		MessageID: "123",
 	}
 	responseJSON, _ := json.Marshal(response)
-	
+
 	reader := bytes.NewReader(responseJSON)
 	parser := NewJSONStreamParser(reader, logger)
 
@@ -398,7 +398,7 @@ func TestJSONStreamParser_ParseNext(t *testing.T) {
 
 func TestJSONStreamParser_ParseStream(t *testing.T) {
 	logger := logrus.New()
-	
+
 	responses := []*Response{
 		{Type: "test1", Content: "Hello 1", MessageID: "1"},
 		{Type: "test2", Content: "Hello 2", MessageID: "2"},
@@ -427,12 +427,12 @@ func TestJSONStreamParser_ParseStream(t *testing.T) {
 			}
 			receivedCount++
 			assert.Contains(t, []string{"test1", "test2"}, response.Type)
-			
+
 		case err := <-errorChan:
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
-			
+
 		case <-ctx.Done():
 			goto done
 		}

@@ -10,21 +10,21 @@ type MessageType string
 
 const (
 	// 시스템 메시지
-	MessageTypeAuth       MessageType = "auth"        // 인증
-	MessageTypePing       MessageType = "ping"        // 핑
-	MessageTypePong       MessageType = "pong"        // 퐁
-	MessageTypeError      MessageType = "error"       // 에러
-	MessageTypeSuccess    MessageType = "success"     // 성공
-	MessageTypeSubscribe  MessageType = "subscribe"   // 채널 구독
+	MessageTypeAuth        MessageType = "auth"        // 인증
+	MessageTypePing        MessageType = "ping"        // 핑
+	MessageTypePong        MessageType = "pong"        // 퐁
+	MessageTypeError       MessageType = "error"       // 에러
+	MessageTypeSuccess     MessageType = "success"     // 성공
+	MessageTypeSubscribe   MessageType = "subscribe"   // 채널 구독
 	MessageTypeUnsubscribe MessageType = "unsubscribe" // 구독 취소
-	
+
 	// 비즈니스 메시지
-	MessageTypeLog        MessageType = "log"         // 로그 스트림
-	MessageTypeStatus     MessageType = "status"      // 상태 업데이트
-	MessageTypeEvent      MessageType = "event"       // 이벤트
-	MessageTypeCommand    MessageType = "command"     // 명령
-	MessageTypeTask       MessageType = "task"        // 태스크 업데이트
-	MessageTypeSession    MessageType = "session"     // 세션 업데이트
+	MessageTypeLog     MessageType = "log"     // 로그 스트림
+	MessageTypeStatus  MessageType = "status"  // 상태 업데이트
+	MessageTypeEvent   MessageType = "event"   // 이벤트
+	MessageTypeCommand MessageType = "command" // 명령
+	MessageTypeTask    MessageType = "task"    // 태스크 업데이트
+	MessageTypeSession MessageType = "session" // 세션 업데이트
 )
 
 // Message WebSocket 메시지 구조체
@@ -209,7 +209,7 @@ func (m *Message) WithUserID(userID string) *Message {
 func (m *Message) IsSystemMessage() bool {
 	switch m.Type {
 	case MessageTypeAuth, MessageTypePing, MessageTypePong, MessageTypeError, MessageTypeSuccess,
-		 MessageTypeSubscribe, MessageTypeUnsubscribe:
+		MessageTypeSubscribe, MessageTypeUnsubscribe:
 		return true
 	default:
 		return false
@@ -273,11 +273,11 @@ func (m *Message) ParseCommandMessage() (*CommandMessage, error) {
 
 // Channel 상수들
 const (
-	ChannelWorkspace = "workspace"  // 워크스페이스 채널
-	ChannelSession   = "session"    // 세션 채널
-	ChannelTask      = "task"       // 태스크 채널
-	ChannelSystem    = "system"     // 시스템 채널
-	ChannelBroadcast = "broadcast"  // 브로드캐스트 채널
+	ChannelWorkspace = "workspace" // 워크스페이스 채널
+	ChannelSession   = "session"   // 세션 채널
+	ChannelTask      = "task"      // 태스크 채널
+	ChannelSystem    = "system"    // 시스템 채널
+	ChannelBroadcast = "broadcast" // 브로드캐스트 채널
 )
 
 // GetWorkspaceChannel 워크스페이스 채널명 생성

@@ -25,10 +25,10 @@ func BenchmarkGetParallel(b *testing.B) {
 func BenchmarkVersionInfoJSON(b *testing.B) {
 	// VersionInfo JSON 마샬링 성능 측정
 	info := Get()
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		_, err := json.Marshal(info)
 		if err != nil {
@@ -40,10 +40,10 @@ func BenchmarkVersionInfoJSON(b *testing.B) {
 func BenchmarkVersionInfoString(b *testing.B) {
 	// 버전 정보 문자열 생성 성능 측정
 	info := Get()
-	
+
 	b.ResetTimer()
 	b.ReportAllocs()
-	
+
 	for i := 0; i < b.N; i++ {
 		_ = info.Version + " " + info.GitCommit + " " + info.BuildTime
 	}

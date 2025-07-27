@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/session"
+	"github.com/gin-gonic/gin"
 )
 
 // AdvancedSessionController는 고급 세션 관리 컨트롤러입니다.
@@ -43,20 +43,20 @@ func (c *AdvancedSessionController) GetUserSessions(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "사용자 ID가 필요합니다"})
 		return
 	}
-	
+
 	sessions, err := c.sessionManager.GetUserSessions(ctx, userID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "세션 조회 실패: " + err.Error()})
 		return
 	}
-	
+
 	response := SessionListResponse{
 		UserID:      userID,
 		Sessions:    sessions,
 		TotalCount:  len(sessions),
 		RetrievedAt: time.Now(),
 	}
-	
+
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -78,13 +78,13 @@ func (c *AdvancedSessionController) TerminateSession(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "세션 ID가 필요합니다"})
 		return
 	}
-	
+
 	var req TerminateSessionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "잘못된 요청 형식: " + err.Error()})
 		return
 	}
-	
+
 	// 세션 종료
 	if err := c.sessionManager.TerminateSession(ctx, sessionID, req.Reason); err != nil {
 		if err == session.ErrSessionNotFound {
@@ -94,19 +94,19 @@ func (c *AdvancedSessionController) TerminateSession(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "세션 종료 실패: " + err.Error()})
 		return
 	}
-	
+
 	// 관리자 작업으로 감사 로그 기록
 	if c.auditLogger != nil {
 		adminID := ctx.GetString("user_id") // JWT에서 추출
-		c.auditLogger.LogAdminAction(ctx, adminID, "terminate_session", "", 
+		c.auditLogger.LogAdminAction(ctx, adminID, "terminate_session", "",
 			"관리자에 의한 세션 강제 종료", map[string]interface{}{
 				"session_id": sessionID,
-				"reason": req.Reason,
+				"reason":     req.Reason,
 			})
 	}
-	
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "세션이 성공적으로 종료되었습니다",
+		"message":    "세션이 성공적으로 종료되었습니다",
 		"session_id": sessionID,
 	})
 }
@@ -128,29 +128,29 @@ func (c *AdvancedSessionController) TerminateUserSessions(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "사용자 ID가 필요합니다"})
 		return
 	}
-	
+
 	var req TerminateSessionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "잘못된 요청 형식: " + err.Error()})
 		return
 	}
-	
+
 	// 사용자의 모든 세션 종료
 	if err := c.sessionManager.TerminateUserSessions(ctx, userID, req.Reason); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "세션 종료 실패: " + err.Error()})
 		return
 	}
-	
+
 	// 관리자 작업으로 감사 로그 기록
 	if c.auditLogger != nil {
 		adminID := ctx.GetString("user_id")
 		c.auditLogger.LogAdminAction(ctx, adminID, "terminate_user_sessions", userID,
 			"관리자에 의한 사용자 모든 세션 종료", map[string]interface{}{
 				"target_user_id": userID,
-				"reason": req.Reason,
+				"reason":         req.Reason,
 			})
 	}
-	
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "사용자의 모든 세션이 종료되었습니다",
 		"user_id": userID,
@@ -171,7 +171,7 @@ func (c *AdvancedSessionController) GetSessionMetrics(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "세션 통계 조회 실패: " + err.Error()})
 		return
 	}
-	
+
 	ctx.JSON(http.StatusOK, metrics)
 }
 
@@ -201,27 +201,27 @@ func (c *AdvancedSessionController) GetAuditLogs(ctx *gin.Context) {
 		EndDate:   ctx.Query("end_date"),
 		Limit:     100, // 기본값
 	}
-	
+
 	// Limit 파라미터 파싱
 	if limitStr := ctx.Query("limit"); limitStr != "" {
 		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
 			filter.Limit = limit
 		}
 	}
-	
+
 	logs, err := c.auditLogger.GetAuditLogs(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "감사 로그 조회 실패: " + err.Error()})
 		return
 	}
-	
+
 	response := AuditLogListResponse{
 		Logs:        logs,
 		TotalCount:  len(logs),
 		Filter:      filter,
 		RetrievedAt: time.Now(),
 	}
-	
+
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -238,13 +238,13 @@ func (c *AdvancedSessionController) GetCleanupStats(ctx *gin.Context) {
 		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "정리 서비스가 비활성화되어 있습니다"})
 		return
 	}
-	
+
 	stats, err := c.cleanupService.GetCleanupStats(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "정리 통계 조회 실패: " + err.Error()})
 		return
 	}
-	
+
 	ctx.JSON(http.StatusOK, stats)
 }
 
@@ -261,21 +261,21 @@ func (c *AdvancedSessionController) ForceCleanup(ctx *gin.Context) {
 		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "정리 서비스가 비활성화되어 있습니다"})
 		return
 	}
-	
+
 	if err := c.cleanupService.ForceCleanup(ctx); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "정리 실행 실패: " + err.Error()})
 		return
 	}
-	
+
 	// 관리자 작업으로 감사 로그 기록
 	if c.auditLogger != nil {
 		adminID := ctx.GetString("user_id")
 		c.auditLogger.LogAdminAction(ctx, adminID, "force_cleanup", "",
 			"관리자에 의한 즉시 세션 정리 실행", nil)
 	}
-	
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "세션 정리가 실행되었습니다",
+		"message":   "세션 정리가 실행되었습니다",
 		"timestamp": time.Now(),
 	})
 }

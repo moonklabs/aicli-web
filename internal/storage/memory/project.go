@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/google/uuid"
 )
 
 // ProjectStorage 메모리 기반 프로젝트 스토리지
 type ProjectStorage struct {
-	mu       sync.RWMutex
-	projects map[string]*models.Project
+	mu        sync.RWMutex
+	projects  map[string]*models.Project
 	nameIndex map[string]string // workspaceID:name -> projectID
 	pathIndex map[string]string // path -> projectID
 }
@@ -158,11 +158,11 @@ func (s *ProjectStorage) Update(ctx context.Context, id string, updates map[stri
 		if existingID, exists := s.nameIndex[nameKey]; exists && existingID != id {
 			return ErrAlreadyExists
 		}
-		
+
 		// 기존 인덱스 삭제
 		oldNameKey := fmt.Sprintf("%s:%s", project.WorkspaceID, project.Name)
 		delete(s.nameIndex, oldNameKey)
-		
+
 		// 새 인덱스 추가
 		s.nameIndex[nameKey] = id
 		project.Name = name
@@ -173,10 +173,10 @@ func (s *ProjectStorage) Update(ctx context.Context, id string, updates map[stri
 		if existingID, exists := s.pathIndex[path]; exists && existingID != id {
 			return ErrAlreadyExists
 		}
-		
+
 		// 기존 인덱스 삭제
 		delete(s.pathIndex, project.Path)
-		
+
 		// 새 인덱스 추가
 		s.pathIndex[path] = id
 		project.Path = path

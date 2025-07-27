@@ -14,7 +14,7 @@ func RegisterCustomValidators() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		// 디렉토리 존재 여부 검증
 		v.RegisterValidation("dir", validateDirectory)
-		
+
 		// 안전한 경로 검증 (상위 디렉토리 접근 방지)
 		v.RegisterValidation("safepath", validateSafePath)
 	}

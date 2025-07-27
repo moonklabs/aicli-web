@@ -13,7 +13,7 @@ import (
 func TestNew(t *testing.T) {
 	// 서버 인스턴스 생성 테스트
 	s := New()
-	
+
 	testutil.AssertNotNil(t, s)
 	testutil.AssertNotNil(t, s.router)
 }
@@ -21,9 +21,9 @@ func TestNew(t *testing.T) {
 func TestServer_Router(t *testing.T) {
 	s := New()
 	router := s.Router()
-	
+
 	testutil.AssertNotNil(t, router)
-	
+
 	// Gin 엔진 타입 확인 (이미 *gin.Engine 타입이므로 추가 검증은 불필요)
 	if router == nil {
 		t.Error("Router()가 nil을 반환하면 안됨")
@@ -58,17 +58,17 @@ func TestSetupRouter(t *testing.T) {
 			// viper 설정
 			viper.Reset()
 			viper.Set("env", tt.env)
-			
+
 			// 서버 생성
 			s := &Server{}
 			s.setupRouter()
-			
+
 			// Gin 모드 확인
 			testutil.AssertEqual(t, tt.ginMode, gin.Mode())
-			
+
 			// 라우터가 생성되었는지 확인
 			testutil.AssertNotNil(t, s.router)
-			
+
 			// 미들웨어가 설정되었는지 확인 (핸들러 개수로 간접 확인)
 			routes := s.router.Routes()
 			if len(routes) == 0 {
@@ -82,7 +82,7 @@ func TestServerEndpoints(t *testing.T) {
 	// 테스트용 서버 생성
 	gin.SetMode(gin.TestMode)
 	s := New()
-	
+
 	tests := []struct {
 		name       string
 		method     string
@@ -149,13 +149,13 @@ func TestServerEndpoints(t *testing.T) {
 			// 요청 생성
 			req := httptest.NewRequest(tt.method, tt.path, nil)
 			w := httptest.NewRecorder()
-			
+
 			// 요청 실행
 			s.router.ServeHTTP(w, req)
-			
+
 			// 상태 코드 확인
 			testutil.AssertEqual(t, tt.wantStatus, w.Code)
-			
+
 			// 응답 본문 확인
 			if tt.checkBody != nil {
 				tt.checkBody(t, w.Body.String())
@@ -168,13 +168,13 @@ func TestDebugRoutes(t *testing.T) {
 	// 디버그 모드 설정
 	gin.SetMode(gin.DebugMode)
 	s := New()
-	
+
 	// 디버그 라우트 테스트
 	req := httptest.NewRequest("GET", "/debug/routes", nil)
 	w := httptest.NewRecorder()
-	
+
 	s.router.ServeHTTP(w, req)
-	
+
 	testutil.AssertEqual(t, http.StatusOK, w.Code)
 	testutil.AssertContains(t, w.Body.String(), "routes")
 	testutil.AssertContains(t, w.Body.String(), "count")
@@ -183,24 +183,24 @@ func TestDebugRoutes(t *testing.T) {
 func TestMiddlewareOrder(t *testing.T) {
 	// 미들웨어 순서가 중요하므로 테스트
 	s := New()
-	
+
 	// 테스트 요청으로 미들웨어 실행 확인
 	req := httptest.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
-	
+
 	s.router.ServeHTTP(w, req)
-	
+
 	// 응답 헤더로 미들웨어 실행 확인
 	// RequestID 미들웨어 확인
 	if w.Header().Get("X-Request-ID") == "" {
 		t.Error("RequestID 미들웨어가 실행되지 않음")
 	}
-	
+
 	// CORS 미들웨어 확인
 	if w.Header().Get("Access-Control-Allow-Origin") == "" {
 		t.Error("CORS 미들웨어가 실행되지 않음")
 	}
-	
+
 	// Security 미들웨어 확인
 	if w.Header().Get("X-Content-Type-Options") == "" {
 		t.Error("Security 미들웨어가 실행되지 않음")

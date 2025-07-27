@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/aicli/aicli-web/internal/cli/output"
+	"github.com/spf13/cobra"
 )
 
 // NewTaskCmd는 task 관련 명령어를 생성합니다.
@@ -14,7 +14,7 @@ func NewTaskCmd() *cobra.Command {
 		Use:     "task",
 		Aliases: []string{"t"},
 		Short:   "Claude 태스크 관리",
-		Long:    `워크스페이스에서 실행 중인 Claude 태스크를 관리합니다.
+		Long: `워크스페이스에서 실행 중인 Claude 태스크를 관리합니다.
 
 태스크는 Claude CLI에 전달되는 작업 단위로, 코드 생성, 버그 수정,
 리팩토링 등의 작업을 수행합니다. 각 태스크는 고유한 ID를 가지며,
@@ -61,7 +61,7 @@ func newTaskCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "새 태스크 생성",
-		Long:  `지정된 워크스페이스에서 새로운 Claude 태스크를 생성하고 실행합니다.
+		Long: `지정된 워크스페이스에서 새로운 Claude 태스크를 생성하고 실행합니다.
 
 태스크는 명령형 또는 대화형으로 실행할 수 있습니다:
   • 명령형: --command 플래그로 실행할 명령어 지정
@@ -96,13 +96,13 @@ func newTaskCreateCmd() *cobra.Command {
 			} else {
 				fmt.Printf("Executing command: %s\n", command)
 			}
-			
+
 			if detach {
 				fmt.Println("Task started in background. Task ID: task-12345")
 			} else {
 				fmt.Println("Task completed successfully!")
 			}
-			
+
 			return nil
 		},
 	}
@@ -144,7 +144,7 @@ func newTaskListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "태스크 목록 조회",
-		Long:  `실행 중이거나 완료된 태스크 목록을 조회합니다.
+		Long: `실행 중이거나 완료된 태스크 목록을 조회합니다.
 
 기본적으로 실행 중인 태스크만 표시합니다. --all 플래그를 사용하면
 완료된 태스크도 함께 표시합니다. --status 플래그로 특정 상태의
@@ -175,10 +175,10 @@ func newTaskListCmd() *cobra.Command {
 			// 임시 데이터 (실제로는 API에서 가져옴)
 			tasks := []map[string]interface{}{
 				{
-					"id":        "task-12345",
-					"workspace": "project-alpha",
-					"status":    "running",
-					"command":   "implement login feature",
+					"id":         "task-12345",
+					"workspace":  "project-alpha",
+					"status":     "running",
+					"command":    "implement login feature",
 					"started_at": time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
 					"duration":   "10m",
 				},
@@ -187,11 +187,11 @@ func newTaskListCmd() *cobra.Command {
 					"workspace":  "project-beta",
 					"status":     "completed",
 					"command":    "fix database migration",
-					"started_at":  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
-					"duration":    "45m",
+					"started_at": time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+					"duration":   "45m",
 				},
 			}
-			
+
 			// 필터링 적용
 			filteredTasks := []map[string]interface{}{}
 			for _, task := range tasks {
@@ -209,17 +209,17 @@ func newTaskListCmd() *cobra.Command {
 				}
 				filteredTasks = append(filteredTasks, task)
 			}
-			
+
 			// 빈 목록 처리
 			if len(filteredTasks) == 0 {
 				fmt.Println("No tasks found")
 				return nil
 			}
-			
+
 			// 출력 포맷터 생성
 			formatter := output.DefaultFormatterManager()
 			formatter.SetHeaders([]string{"id", "workspace", "status", "command", "started_at", "duration"})
-			
+
 			return formatter.Print(filteredTasks)
 		},
 	}
@@ -262,7 +262,7 @@ func newTaskStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status [task-id]",
 		Short: "태스크 상태 조회",
-		Long:  `지정된 태스크의 상세 상태를 조회합니다.
+		Long: `지정된 태스크의 상세 상태를 조회합니다.
 
 표시되는 정보:
   • 태스크 ID 및 이름
@@ -280,7 +280,7 @@ func newTaskStatusCmd() *cobra.Command {
   
   # JSON 형식으로 출력
   aicli task status task-001 --output json`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 태스크 ID 목록을 가져오는 로직 구현
 			tasks := []string{
@@ -310,7 +310,7 @@ func newTaskCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel [task-id]",
 		Short: "태스크 취소",
-		Long:  `실행 중인 태스크를 취소합니다.
+		Long: `실행 중인 태스크를 취소합니다.
 
 태스크는 정상적으로 종료되며, 현재까지의 작업 결과는 보존됩니다.
 --force 플래그를 사용하면 강제로 종료하며, 진행 중인 작업이
@@ -325,7 +325,7 @@ func newTaskCancelCmd() *cobra.Command {
   
   # 짧은 별칭 사용
   aicli t cancel task-001 -f`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실행 중인 태스크 ID만 반환하도록 개선
 			tasks := []string{

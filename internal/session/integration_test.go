@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package session
@@ -18,17 +19,17 @@ import (
 
 // IntegrationTestSuite는 세션 관리 시스템의 통합 테스트를 위한 테스트 스위트입니다.
 type IntegrationTestSuite struct {
-	store        *RedisStore
+	store         *RedisStore
 	fingerprinter *DeviceFingerprintGenerator
 	geoipService  *GeoIPService
-	client       *mockRedisClient
+	client        *mockRedisClient
 }
 
 func setupIntegrationTest(t *testing.T) *IntegrationTestSuite {
 	client := newMockRedisClient()
 	store := NewRedisStore(client, "integration_test", time.Hour)
 	fingerprinter := NewDeviceFingerprintGeneratorWithoutGeoIP()
-	
+
 	return &IntegrationTestSuite{
 		store:         store,
 		fingerprinter: fingerprinter,
@@ -124,13 +125,13 @@ func TestConcurrentSessionManagement(t *testing.T) {
 	const numSessions = 50
 	const numUsers = 5
 	var wg sync.WaitGroup
-	
+
 	// 동시에 여러 세션 생성
 	wg.Add(numSessions)
 	for i := 0; i < numSessions; i++ {
 		go func(sessionNum int) {
 			defer wg.Done()
-			
+
 			userID := fmt.Sprintf("user_%d", sessionNum%numUsers)
 			session := &models.AuthSession{
 				ID:       fmt.Sprintf("session_%d", sessionNum),
@@ -148,7 +149,7 @@ func TestConcurrentSessionManagement(t *testing.T) {
 				LastAccess: time.Now(),
 				ExpiresAt:  time.Now().Add(time.Hour),
 			}
-			
+
 			err := suite.store.Create(ctx, session)
 			assert.NoError(t, err, "Session creation should succeed for session %d", sessionNum)
 		}(i)
@@ -162,52 +163,52 @@ func TestConcurrentSessionManagement(t *testing.T) {
 		count, err := suite.store.CountUserActiveSessions(ctx, userID)
 		require.NoError(t, err)
 		totalActiveSessions += count
-		
+
 		// 각 사용자는 최소 1개 이상의 세션을 가져야 함
 		assert.Greater(t, count, 0, "User %s should have at least one session", userID)
 	}
 
 	// 전체 세션 수 확인
 	assert.Equal(t, numSessions, totalActiveSessions, "Total active sessions should match created sessions")
-	
+
 	// 동시 세션 업데이트 테스트
 	wg.Add(numSessions)
 	for i := 0; i < numSessions; i++ {
 		go func(sessionNum int) {
 			defer wg.Done()
-			
+
 			sessionID := fmt.Sprintf("session_%d", sessionNum)
 			session, err := suite.store.Get(ctx, sessionID)
 			if err != nil {
 				assert.NoError(t, err, "Failed to get session %d", sessionNum)
 				return
 			}
-			
+
 			session.LastAccess = time.Now()
 			session.Metadata = map[string]interface{}{
 				"concurrent_update": true,
 				"thread_id":         sessionNum,
 			}
-			
+
 			err = suite.store.Update(ctx, session)
 			assert.NoError(t, err, "Session update should succeed for session %d", sessionNum)
 		}(i)
 	}
 	wg.Wait()
-	
+
 	// 동시 세션 삭제 테스트
 	wg.Add(numSessions)
 	for i := 0; i < numSessions; i++ {
 		go func(sessionNum int) {
 			defer wg.Done()
-			
+
 			sessionID := fmt.Sprintf("session_%d", sessionNum)
 			err := suite.store.Delete(ctx, sessionID)
 			assert.NoError(t, err, "Session deletion should succeed for session %d", sessionNum)
 		}(i)
 	}
 	wg.Wait()
-	
+
 	// 모든 세션이 삭제되었는지 확인
 	for i := 0; i < numUsers; i++ {
 		userID := fmt.Sprintf("user_%d", i)
@@ -221,11 +222,11 @@ func TestDeviceFingerprintingAccuracy(t *testing.T) {
 	suite := setupIntegrationTest(t)
 
 	testCases := []struct {
-		name        string
-		userAgent   string
-		remoteAddr  string
+		name         string
+		userAgent    string
+		remoteAddr   string
 		expectDevice string
-		expectOS    string
+		expectOS     string
 	}{
 		{
 			name:         "Chrome Windows Desktop",
@@ -257,12 +258,12 @@ func TestDeviceFingerprintingAccuracy(t *testing.T) {
 			req.RemoteAddr = tc.remoteAddr
 
 			fingerprint := suite.fingerprinter.GenerateFromRequest(req)
-			
+
 			assert.NotNil(t, fingerprint)
 			assert.NotEmpty(t, fingerprint.Fingerprint)
 			assert.Equal(t, tc.userAgent, fingerprint.UserAgent)
 			assert.Contains(t, fingerprint.IPAddress, "203.0.113")
-			
+
 			// Device type and OS detection
 			assert.Equal(t, tc.expectDevice, fingerprint.Device)
 			// OS 검증은 UA Parser 결과에 따라 달라질 수 있으므로 포함 관계로 검증
@@ -293,7 +294,7 @@ func TestSessionSecurityFeatures(t *testing.T) {
 	// 약간 다른 디바이스 정보 (버전 업그레이드)
 	similarFingerprint := &models.DeviceFingerprint{
 		UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/92.0", // 버전만 다름
-		IPAddress:   "192.168.1.101", // IP도 약간 다름
+		IPAddress:   "192.168.1.101",                                         // IP도 약간 다름
 		Browser:     "Chrome",
 		OS:          "Windows",
 		Device:      "Desktop",
@@ -322,9 +323,9 @@ func TestSessionSecurityFeatures(t *testing.T) {
 	assert.Less(t, similarity3, 0.3, "Different fingerprints should have low similarity")
 
 	// IP 주소 유사성 테스트
-	assert.True(t, suite.fingerprinter.similarIPAddress("192.168.1.100", "192.168.1.101"), 
+	assert.True(t, suite.fingerprinter.similarIPAddress("192.168.1.100", "192.168.1.101"),
 		"IPs in same subnet should be considered similar")
-	assert.False(t, suite.fingerprinter.similarIPAddress("192.168.1.100", "10.0.0.1"), 
+	assert.False(t, suite.fingerprinter.similarIPAddress("192.168.1.100", "10.0.0.1"),
 		"IPs in different subnets should not be similar")
 }
 
@@ -336,25 +337,25 @@ func TestSessionCleanupAndMaintenance(t *testing.T) {
 	now := time.Now()
 	sessions := []*models.AuthSession{
 		{
-			ID:         "active_session",
-			UserID:     "user1",
-			IsActive:   true,
-			CreatedAt:  now.Add(-30 * time.Minute),
-			ExpiresAt:  now.Add(30 * time.Minute), // 아직 유효
+			ID:        "active_session",
+			UserID:    "user1",
+			IsActive:  true,
+			CreatedAt: now.Add(-30 * time.Minute),
+			ExpiresAt: now.Add(30 * time.Minute), // 아직 유효
 		},
 		{
-			ID:         "expiring_soon_session", 
-			UserID:     "user1",
-			IsActive:   true,
-			CreatedAt:  now.Add(-50 * time.Minute),
-			ExpiresAt:  now.Add(10 * time.Minute), // 곧 만료
+			ID:        "expiring_soon_session",
+			UserID:    "user1",
+			IsActive:  true,
+			CreatedAt: now.Add(-50 * time.Minute),
+			ExpiresAt: now.Add(10 * time.Minute), // 곧 만료
 		},
 		{
-			ID:         "expired_session",
-			UserID:     "user2",
-			IsActive:   true,
-			CreatedAt:  now.Add(-2 * time.Hour),
-			ExpiresAt:  now.Add(-30 * time.Minute), // 이미 만료됨
+			ID:        "expired_session",
+			UserID:    "user2",
+			IsActive:  true,
+			CreatedAt: now.Add(-2 * time.Hour),
+			ExpiresAt: now.Add(-30 * time.Minute), // 이미 만료됨
 		},
 	}
 
@@ -391,7 +392,7 @@ func TestSessionStorePerformance(t *testing.T) {
 
 	// 대량 세션 생성 성능 테스트
 	const numSessions = 1000
-	
+
 	start := time.Now()
 	for i := 0; i < numSessions; i++ {
 		session := &models.AuthSession{
@@ -404,13 +405,13 @@ func TestSessionStorePerformance(t *testing.T) {
 			CreatedAt: time.Now(),
 			ExpiresAt: time.Now().Add(time.Hour),
 		}
-		
+
 		err := suite.store.Create(ctx, session)
 		require.NoError(t, err)
 	}
 	createDuration := time.Since(start)
 
-	t.Logf("Created %d sessions in %v (%.2f sessions/sec)", 
+	t.Logf("Created %d sessions in %v (%.2f sessions/sec)",
 		numSessions, createDuration, float64(numSessions)/createDuration.Seconds())
 
 	// 조회 성능 테스트
@@ -422,7 +423,7 @@ func TestSessionStorePerformance(t *testing.T) {
 	}
 	readDuration := time.Since(start)
 
-	t.Logf("Retrieved %d sessions in %v (%.2f sessions/sec)", 
+	t.Logf("Retrieved %d sessions in %v (%.2f sessions/sec)",
 		numSessions, readDuration, float64(numSessions)/readDuration.Seconds())
 
 	// 사용자별 세션 조회 성능 테스트
@@ -435,7 +436,7 @@ func TestSessionStorePerformance(t *testing.T) {
 	}
 	userQueryDuration := time.Since(start)
 
-	t.Logf("Retrieved sessions for 100 users in %v (%.2f queries/sec)", 
+	t.Logf("Retrieved sessions for 100 users in %v (%.2f queries/sec)",
 		userQueryDuration, float64(100)/userQueryDuration.Seconds())
 
 	// 삭제 성능 테스트
@@ -447,7 +448,7 @@ func TestSessionStorePerformance(t *testing.T) {
 	}
 	deleteDuration := time.Since(start)
 
-	t.Logf("Deleted %d sessions in %v (%.2f sessions/sec)", 
+	t.Logf("Deleted %d sessions in %v (%.2f sessions/sec)",
 		numSessions, deleteDuration, float64(numSessions)/deleteDuration.Seconds())
 
 	// 성능 임계값 검증 (선택적)
@@ -474,9 +475,9 @@ func TestMemoryUsageAndGoroutineLeak(t *testing.T) {
 	for i := 0; i < iterations; i++ {
 		// 세션 생성, 조회, 업데이트, 삭제 사이클
 		session := &models.AuthSession{
-			ID:       fmt.Sprintf("memory_test_%d", i),
-			UserID:   "memory_user",
-			IsActive: true,
+			ID:        fmt.Sprintf("memory_test_%d", i),
+			UserID:    "memory_user",
+			IsActive:  true,
 			CreatedAt: time.Now(),
 			ExpiresAt: time.Now().Add(time.Hour),
 		}
@@ -501,7 +502,7 @@ func TestMemoryUsageAndGoroutineLeak(t *testing.T) {
 	// 고루틴 리크 검사 (정확한 수는 환경에 따라 다를 수 있음)
 	goroutineDiff := finalGoroutines - initialGoroutines
 	if goroutineDiff > 10 { // 임계값은 조정 가능
-		t.Logf("Warning: Potential goroutine leak detected. Initial: %f, Final: %f, Diff: %f", 
+		t.Logf("Warning: Potential goroutine leak detected. Initial: %f, Final: %f, Diff: %f",
 			initialGoroutines, finalGoroutines, goroutineDiff)
 	}
 

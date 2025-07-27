@@ -69,11 +69,11 @@ func (nm *NetworkManager) CreateNetwork(ctx context.Context, req CreateNetworkRe
 	// 서브넷 및 게이트웨이 설정
 	if req.Subnet != "" || req.Gateway != "" {
 		ipamConfig := network.IPAMConfig{}
-		
+
 		if req.Subnet != "" {
 			ipamConfig.Subnet = req.Subnet
 		}
-		
+
 		if req.Gateway != "" {
 			ipamConfig.Gateway = req.Gateway
 		}

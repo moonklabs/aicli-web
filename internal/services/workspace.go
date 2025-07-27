@@ -3,10 +3,10 @@ package services
 import (
 	"context"
 	"time"
-	
+
+	wsinterfaces "github.com/aicli/aicli-web/internal/interfaces"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
-	wsinterfaces "github.com/aicli/aicli-web/internal/interfaces"
 )
 
 // WorkspaceService 는 interfaces 패키지에서 사용
@@ -32,36 +32,36 @@ func (s *workspaceService) CreateWorkspace(ctx context.Context, req *models.Crea
 	if req == nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "생성 요청이 nil입니다", ErrInvalidRequest)
 	}
-	
+
 	if ownerID == "" {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "소유자 ID가 필요합니다", ErrInvalidRequest)
 	}
-	
+
 	// 요청 검증
 	if err := s.validator.ValidateCreate(ctx, req); err != nil {
 		return nil, err
 	}
-	
+
 	// 사용자별 워크스페이스 수 제한 확인
 	_, count, err := s.storage.Workspace().GetByOwnerID(ctx, ownerID, &models.PaginationRequest{Page: 1, Limit: 1})
 	if err != nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 수 확인 실패", err)
 	}
-	
+
 	if err := s.validator.CanCreateWorkspace(ctx, ownerID, count); err != nil {
 		return nil, err
 	}
-	
+
 	// 이름 중복 확인
 	exists, err := s.storage.Workspace().ExistsByName(ctx, ownerID, req.Name)
 	if err != nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "이름 중복 확인 실패", err)
 	}
-	
+
 	if exists {
 		return nil, NewWorkspaceError(ErrCodeAlreadyExists, "이미 존재하는 워크스페이스 이름입니다", ErrWorkspaceExists)
 	}
-	
+
 	// 워크스페이스 객체 생성
 	workspace := &models.Workspace{
 		Name:        req.Name,
@@ -73,12 +73,12 @@ func (s *workspaceService) CreateWorkspace(ctx context.Context, req *models.Crea
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	
+
 	// 워크스페이스 검증
 	if err := s.validator.ValidateWorkspace(ctx, workspace); err != nil {
 		return nil, err
 	}
-	
+
 	// 데이터베이스에 저장
 	if err := s.storage.Workspace().Create(ctx, workspace); err != nil {
 		if err == storage.ErrAlreadyExists {
@@ -86,10 +86,10 @@ func (s *workspaceService) CreateWorkspace(ctx context.Context, req *models.Crea
 		}
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 생성 실패", err)
 	}
-	
+
 	// API 키 마스킹
 	workspace.MaskClaudeKey()
-	
+
 	return workspace, nil
 }
 
@@ -98,11 +98,11 @@ func (s *workspaceService) GetWorkspace(ctx context.Context, id string, ownerID 
 	if id == "" {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 ID가 필요합니다", ErrInvalidRequest)
 	}
-	
+
 	if ownerID == "" {
 		return nil, NewWorkspaceError(ErrCodeUnauthorized, "소유자 ID가 필요합니다", ErrUnauthorized)
 	}
-	
+
 	// 워크스페이스 조회
 	workspace, err := s.storage.Workspace().GetByID(ctx, id)
 	if err != nil {
@@ -111,15 +111,15 @@ func (s *workspaceService) GetWorkspace(ctx context.Context, id string, ownerID 
 		}
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 조회 실패", err)
 	}
-	
+
 	// 권한 확인
 	if workspace.OwnerID != ownerID {
 		return nil, NewWorkspaceError(ErrCodeOwnershipRequired, "워크스페이스에 접근할 권한이 없습니다", ErrUnauthorized)
 	}
-	
+
 	// API 키 마스킹
 	workspace.MaskClaudeKey()
-	
+
 	return workspace, nil
 }
 
@@ -128,38 +128,38 @@ func (s *workspaceService) UpdateWorkspace(ctx context.Context, id string, req *
 	if id == "" {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 ID가 필요합니다", ErrInvalidRequest)
 	}
-	
+
 	if req == nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "수정 요청이 nil입니다", ErrInvalidRequest)
 	}
-	
+
 	if ownerID == "" {
 		return nil, NewWorkspaceError(ErrCodeUnauthorized, "소유자 ID가 필요합니다", ErrUnauthorized)
 	}
-	
+
 	// 요청 검증
 	if err := s.validator.ValidateUpdate(ctx, req); err != nil {
 		return nil, err
 	}
-	
+
 	// 기존 워크스페이스 조회 및 권한 확인
 	workspace, err := s.GetWorkspace(ctx, id, ownerID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 이름 변경 시 중복 확인
 	if req.Name != "" && req.Name != workspace.Name {
 		exists, err := s.storage.Workspace().ExistsByName(ctx, ownerID, req.Name)
 		if err != nil {
 			return nil, NewWorkspaceError(ErrCodeInvalidRequest, "이름 중복 확인 실패", err)
 		}
-		
+
 		if exists {
 			return nil, NewWorkspaceError(ErrCodeAlreadyExists, "이미 존재하는 워크스페이스 이름입니다", ErrWorkspaceExists)
 		}
 	}
-	
+
 	// 상태 변경 검증
 	if req.Status != "" && req.Status != workspace.Status {
 		switch req.Status {
@@ -177,7 +177,7 @@ func (s *workspaceService) UpdateWorkspace(ctx context.Context, id string, req *
 			}
 		}
 	}
-	
+
 	// 업데이트할 필드 구성
 	updates := make(map[string]interface{})
 	if req.Name != "" {
@@ -193,7 +193,7 @@ func (s *workspaceService) UpdateWorkspace(ctx context.Context, id string, req *
 		updates["status"] = req.Status
 	}
 	updates["updated_at"] = time.Now()
-	
+
 	// 데이터베이스 업데이트
 	if err := s.storage.Workspace().Update(ctx, id, updates); err != nil {
 		if err == storage.ErrNotFound {
@@ -204,13 +204,13 @@ func (s *workspaceService) UpdateWorkspace(ctx context.Context, id string, req *
 		}
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 수정 실패", err)
 	}
-	
+
 	// 수정된 워크스페이스 조회
 	updatedWorkspace, err := s.GetWorkspace(ctx, id, ownerID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return updatedWorkspace, nil
 }
 
@@ -219,22 +219,22 @@ func (s *workspaceService) DeleteWorkspace(ctx context.Context, id string, owner
 	if id == "" {
 		return NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 ID가 필요합니다", ErrInvalidRequest)
 	}
-	
+
 	if ownerID == "" {
 		return NewWorkspaceError(ErrCodeUnauthorized, "소유자 ID가 필요합니다", ErrUnauthorized)
 	}
-	
+
 	// 워크스페이스 존재 및 권한 확인
 	workspace, err := s.GetWorkspace(ctx, id, ownerID)
 	if err != nil {
 		return err
 	}
-	
+
 	// 삭제 가능 여부 확인
 	if err := s.validator.CanDeleteWorkspace(ctx, workspace); err != nil {
 		return err
 	}
-	
+
 	// 데이터베이스에서 삭제 (Soft Delete)
 	if err := s.storage.Workspace().Delete(ctx, id); err != nil {
 		if err == storage.ErrNotFound {
@@ -242,7 +242,7 @@ func (s *workspaceService) DeleteWorkspace(ctx context.Context, id string, owner
 		}
 		return NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 삭제 실패", err)
 	}
-	
+
 	return nil
 }
 
@@ -251,7 +251,7 @@ func (s *workspaceService) ListWorkspaces(ctx context.Context, ownerID string, r
 	if ownerID == "" {
 		return nil, NewWorkspaceError(ErrCodeUnauthorized, "소유자 ID가 필요합니다", ErrUnauthorized)
 	}
-	
+
 	if req == nil {
 		req = &models.PaginationRequest{
 			Page:  1,
@@ -260,7 +260,7 @@ func (s *workspaceService) ListWorkspaces(ctx context.Context, ownerID string, r
 			Order: "desc",
 		}
 	}
-	
+
 	// 기본값 설정
 	if req.Page < 1 {
 		req.Page = 1
@@ -274,18 +274,18 @@ func (s *workspaceService) ListWorkspaces(ctx context.Context, ownerID string, r
 	if req.Order == "" {
 		req.Order = "desc"
 	}
-	
+
 	// 워크스페이스 목록 조회
 	workspaces, total, err := s.storage.Workspace().GetByOwnerID(ctx, ownerID, req)
 	if err != nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 목록 조회 실패", err)
 	}
-	
+
 	// API 키 마스킹
 	for _, workspace := range workspaces {
 		workspace.MaskClaudeKey()
 	}
-	
+
 	// 응답 생성
 	response := &models.WorkspaceListResponse{
 		Success: true,
@@ -297,12 +297,12 @@ func (s *workspaceService) ListWorkspaces(ctx context.Context, ownerID string, r
 			TotalPages:  (total + req.Limit - 1) / req.Limit,
 		},
 	}
-	
+
 	// 포인터를 값으로 변환
 	for i, workspace := range workspaces {
 		response.Data[i] = *workspace
 	}
-	
+
 	return response, nil
 }
 
@@ -316,7 +316,7 @@ func (s *workspaceService) ActivateWorkspace(ctx context.Context, id string, own
 	req := &models.UpdateWorkspaceRequest{
 		Status: models.WorkspaceStatusActive,
 	}
-	
+
 	_, err := s.UpdateWorkspace(ctx, id, req, ownerID)
 	return err
 }
@@ -326,7 +326,7 @@ func (s *workspaceService) DeactivateWorkspace(ctx context.Context, id string, o
 	req := &models.UpdateWorkspaceRequest{
 		Status: models.WorkspaceStatusInactive,
 	}
-	
+
 	_, err := s.UpdateWorkspace(ctx, id, req, ownerID)
 	return err
 }
@@ -336,7 +336,7 @@ func (s *workspaceService) ArchiveWorkspace(ctx context.Context, id string, owne
 	req := &models.UpdateWorkspaceRequest{
 		Status: models.WorkspaceStatusArchived,
 	}
-	
+
 	_, err := s.UpdateWorkspace(ctx, id, req, ownerID)
 	return err
 }
@@ -346,7 +346,7 @@ func (s *workspaceService) UpdateActiveTaskCount(ctx context.Context, id string,
 	if id == "" {
 		return NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 ID가 필요합니다", ErrInvalidRequest)
 	}
-	
+
 	// 현재 워크스페이스 조회
 	workspace, err := s.storage.Workspace().GetByID(ctx, id)
 	if err != nil {
@@ -355,23 +355,23 @@ func (s *workspaceService) UpdateActiveTaskCount(ctx context.Context, id string,
 		}
 		return NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 조회 실패", err)
 	}
-	
+
 	// 새로운 활성 태스크 수 계산
 	newCount := workspace.ActiveTasks + delta
 	if newCount < 0 {
 		newCount = 0
 	}
-	
+
 	// 업데이트
 	updates := map[string]interface{}{
 		"active_tasks": newCount,
 		"updated_at":   time.Now(),
 	}
-	
+
 	if err := s.storage.Workspace().Update(ctx, id, updates); err != nil {
 		return NewWorkspaceError(ErrCodeInvalidRequest, "활성 태스크 수 업데이트 실패", err)
 	}
-	
+
 	return nil
 }
 
@@ -380,7 +380,7 @@ func (s *workspaceService) GetWorkspaceStats(ctx context.Context, ownerID string
 	if ownerID == "" {
 		return nil, NewWorkspaceError(ErrCodeUnauthorized, "소유자 ID가 필요합니다", ErrUnauthorized)
 	}
-	
+
 	// 전체 워크스페이스 목록 조회
 	workspaces, total, err := s.storage.Workspace().GetByOwnerID(ctx, ownerID, &models.PaginationRequest{
 		Page:  1,
@@ -389,11 +389,11 @@ func (s *workspaceService) GetWorkspaceStats(ctx context.Context, ownerID string
 	if err != nil {
 		return nil, NewWorkspaceError(ErrCodeInvalidRequest, "워크스페이스 통계 조회 실패", err)
 	}
-	
+
 	stats := &WorkspaceStats{
 		TotalWorkspaces: total,
 	}
-	
+
 	// 상태별 카운트 및 활성 태스크 수 집계
 	for _, workspace := range workspaces {
 		switch workspace.Status {
@@ -404,6 +404,6 @@ func (s *workspaceService) GetWorkspaceStats(ctx context.Context, ownerID string
 		}
 		stats.TotalActiveTasks += workspace.ActiveTasks
 	}
-	
+
 	return stats, nil
 }

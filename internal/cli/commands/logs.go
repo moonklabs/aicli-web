@@ -21,7 +21,7 @@ func NewLogsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "로그 조회",
-		Long:  `워크스페이스나 태스크의 로그를 조회합니다.
+		Long: `워크스페이스나 태스크의 로그를 조회합니다.
 
 워크스페이스의 모든 로그나 특정 태스크의 로그를 조회할 수 있습니다.
 --follow 플래그를 사용하면 실시간으로 로그를 스트리밍합니다.

@@ -83,7 +83,7 @@ func ClassifyError(err error) *DockerError {
 		strings.Contains(errStr, "context deadline exceeded") {
 		return NewDockerError(ErrorTypeTimeout, "TIMEOUT", "Operation timed out", err)
 	}
-	
+
 	// 연결 관련 에러
 	if strings.Contains(errStr, "connection refused") ||
 		strings.Contains(errStr, "no such host") {
@@ -113,7 +113,6 @@ func ClassifyError(err error) *DockerError {
 		strings.Contains(errStr, "unauthorized") {
 		return NewDockerError(ErrorTypePermission, "PERMISSION_DENIED", "Permission denied", err)
 	}
-
 
 	// 기타 에러
 	return NewDockerError(ErrorTypeUnknown, "UNKNOWN", "Unknown Docker error", err)

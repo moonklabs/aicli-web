@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage/interfaces"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserService는 사용자 관리 비즈니스 로직을 처리하는 서비스 인터페이스입니다
@@ -17,32 +17,32 @@ type UserService interface {
 	// 프로파일 관리
 	GetProfile(ctx context.Context, userID string) (*models.UserResponse, error)
 	UpdateProfile(ctx context.Context, userID string, req *models.UpdateProfileRequest) (*models.UserResponse, error)
-	
+
 	// 계정 설정 관리
 	ChangePassword(ctx context.Context, userID string, req *models.ChangePasswordRequest) error
 	ChangeEmail(ctx context.Context, userID string, req *models.ChangeEmailRequest) error
-	
+
 	// 보안 설정
 	Enable2FA(ctx context.Context, userID string, req *models.Enable2FARequest) (*models.TwoFactorSecret, error)
 	Disable2FA(ctx context.Context, userID string) error
 	Verify2FA(ctx context.Context, userID string, req *models.Verify2FARequest) error
 	Generate2FASecret(ctx context.Context, userID string) (*models.TwoFactorSecret, error)
-	
+
 	// 비밀번호 재설정
 	RequestPasswordReset(ctx context.Context, req *models.ResetPasswordRequest) error
 	ConfirmPasswordReset(ctx context.Context, req *models.ConfirmResetPasswordRequest) error
-	
+
 	// 관리자 기능
 	ListUsers(ctx context.Context, filter *models.UserFilter) (*models.PaginatedResponse[models.UserResponse], error)
 	CreateUser(ctx context.Context, req *models.CreateUserRequest) (*models.UserResponse, error)
 	GetUser(ctx context.Context, userID string) (*models.UserResponse, error)
 	UpdateUser(ctx context.Context, userID string, req *models.UpdateUserRequest) (*models.UserResponse, error)
 	DeleteUser(ctx context.Context, userID string) error
-	
+
 	// 활동 로그
 	LogActivity(ctx context.Context, userID, action, resource, details, ipAddress, userAgent string) error
 	GetUserActivities(ctx context.Context, userID string, pagination *models.PaginationRequest) (*models.PaginatedResponse[models.UserActivity], error)
-	
+
 	// 통계 및 메트릭
 	GetUserStats(ctx context.Context) (*models.UserStats, error)
 }
@@ -66,7 +66,7 @@ func (s *userService) GetProfile(ctx context.Context, userID string) (*models.Us
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user profile: %w", err)
 	}
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -78,7 +78,7 @@ func (s *userService) UpdateProfile(ctx context.Context, userID string, req *mod
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	// 업데이트할 필드 적용
 	if req.DisplayName != nil {
 		user.DisplayName = *req.DisplayName
@@ -104,18 +104,18 @@ func (s *userService) UpdateProfile(ctx context.Context, userID string, req *mod
 	if req.Avatar != nil {
 		user.Avatar = req.Avatar
 	}
-	
+
 	user.UpdatedAt = time.Now()
-	
+
 	// 데이터베이스 업데이트
 	err = s.storage.Update(ctx, "users", userID, user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user profile: %w", err)
 	}
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, userID, "profile_update", "user", "프로파일 업데이트", "", "")
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -125,14 +125,14 @@ func (s *userService) ChangePassword(ctx context.Context, userID string, req *mo
 	if req.NewPassword != req.ConfirmPassword {
 		return fmt.Errorf("새 비밀번호와 확인 비밀번호가 일치하지 않습니다")
 	}
-	
+
 	// 기존 사용자 조회
 	user := &models.User{}
 	err := s.storage.GetByID(ctx, "users", userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	// 현재 비밀번호 검증
 	if user.PasswordHash != nil {
 		err = bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(req.CurrentPassword))
@@ -140,26 +140,26 @@ func (s *userService) ChangePassword(ctx context.Context, userID string, req *mo
 			return fmt.Errorf("현재 비밀번호가 올바르지 않습니다")
 		}
 	}
-	
+
 	// 새 비밀번호 해시화
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
-	
+
 	hashedPasswordStr := string(hashedPassword)
 	user.PasswordHash = &hashedPasswordStr
 	user.UpdatedAt = time.Now()
-	
+
 	// 데이터베이스 업데이트
 	err = s.storage.Update(ctx, "users", userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, userID, "password_change", "user", "비밀번호 변경", "", "")
-	
+
 	return nil
 }
 
@@ -171,7 +171,7 @@ func (s *userService) ChangeEmail(ctx context.Context, userID string, req *model
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	// 비밀번호 검증
 	if user.PasswordHash != nil {
 		err = bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(req.Password))
@@ -179,27 +179,27 @@ func (s *userService) ChangeEmail(ctx context.Context, userID string, req *model
 			return fmt.Errorf("비밀번호가 올바르지 않습니다")
 		}
 	}
-	
+
 	// 이메일 중복 확인
 	existingUser := &models.User{}
 	err = s.storage.GetByField(ctx, "users", "email", req.NewEmail, existingUser)
 	if err == nil {
 		return fmt.Errorf("이미 사용 중인 이메일입니다")
 	}
-	
+
 	// 이메일 업데이트
 	user.Email = req.NewEmail
 	user.EmailVerified = false // 새 이메일은 재인증 필요
 	user.UpdatedAt = time.Now()
-	
+
 	err = s.storage.Update(ctx, "users", userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to update email: %w", err)
 	}
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, userID, "email_change", "user", fmt.Sprintf("이메일 변경: %s", req.NewEmail), "", "")
-	
+
 	return nil
 }
 
@@ -211,9 +211,9 @@ func (s *userService) Generate2FASecret(ctx context.Context, userID string) (*mo
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate secret: %w", err)
 	}
-	
+
 	secretStr := hex.EncodeToString(secret)
-	
+
 	// 백업 코드 생성 (8개의 8자리 코드)
 	backupCodes := make([]string, 8)
 	for i := range backupCodes {
@@ -221,7 +221,7 @@ func (s *userService) Generate2FASecret(ctx context.Context, userID string) (*mo
 		rand.Read(code)
 		backupCodes[i] = hex.EncodeToString(code)
 	}
-	
+
 	twoFactorSecret := &models.TwoFactorSecret{
 		Base: models.Base{
 			ID:        generateID(),
@@ -233,20 +233,20 @@ func (s *userService) Generate2FASecret(ctx context.Context, userID string) (*mo
 		BackupCodes: backupCodes,
 		IsActive:    false, // 아직 활성화되지 않음
 	}
-	
+
 	// 기존 2FA 설정이 있다면 비활성화
 	existingSecret := &models.TwoFactorSecret{}
 	err = s.storage.GetByField(ctx, "two_factor_secrets", "user_id", userID, existingSecret)
 	if err == nil {
 		s.storage.Delete(ctx, "two_factor_secrets", existingSecret.ID)
 	}
-	
+
 	// 새 비밀키 저장
 	err = s.storage.Create(ctx, "two_factor_secrets", twoFactorSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save 2FA secret: %w", err)
 	}
-	
+
 	return twoFactorSecret, nil
 }
 
@@ -258,24 +258,24 @@ func (s *userService) Enable2FA(ctx context.Context, userID string, req *models.
 	if err != nil {
 		return nil, fmt.Errorf("2FA 비밀키를 찾을 수 없습니다")
 	}
-	
+
 	// 제공된 비밀키와 일치하는지 확인
 	if secret.Secret != req.Secret {
 		return nil, fmt.Errorf("비밀키가 일치하지 않습니다")
 	}
-	
+
 	// TODO: TOTP 코드 검증 로직 추가 필요
 	// 실제 구현에서는 pquerna/otp 라이브러리 등을 사용하여 검증
-	
+
 	// 2FA 활성화
 	secret.IsActive = true
 	secret.UpdatedAt = time.Now()
-	
+
 	err = s.storage.Update(ctx, "two_factor_secrets", secret.ID, secret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to enable 2FA: %w", err)
 	}
-	
+
 	// 사용자 모델에도 2FA 활성화 표시
 	user := &models.User{}
 	err = s.storage.GetByID(ctx, "users", userID, user)
@@ -284,10 +284,10 @@ func (s *userService) Enable2FA(ctx context.Context, userID string, req *models.
 		user.UpdatedAt = time.Now()
 		s.storage.Update(ctx, "users", userID, user)
 	}
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, userID, "2fa_enable", "user", "2FA 활성화", "", "")
-	
+
 	return secret, nil
 }
 
@@ -299,25 +299,25 @@ func (s *userService) Disable2FA(ctx context.Context, userID string) error {
 	if err == nil {
 		s.storage.Delete(ctx, "two_factor_secrets", secret.ID)
 	}
-	
+
 	// 사용자 모델에서 2FA 비활성화
 	user := &models.User{}
 	err = s.storage.GetByID(ctx, "users", userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	user.TwoFactorEnabled = false
 	user.UpdatedAt = time.Now()
-	
+
 	err = s.storage.Update(ctx, "users", userID, user)
 	if err != nil {
 		return fmt.Errorf("failed to disable 2FA: %w", err)
 	}
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, userID, "2fa_disable", "user", "2FA 비활성화", "", "")
-	
+
 	return nil
 }
 
@@ -337,19 +337,19 @@ func (s *userService) RequestPasswordReset(ctx context.Context, req *models.Rese
 		// 보안상 사용자가 존재하지 않아도 성공으로 응답
 		return nil
 	}
-	
+
 	// 기존 토큰 삭제
 	existingToken := &models.PasswordResetToken{}
 	err = s.storage.GetByField(ctx, "password_reset_tokens", "user_id", user.ID, existingToken)
 	if err == nil {
 		s.storage.Delete(ctx, "password_reset_tokens", existingToken.ID)
 	}
-	
+
 	// 새 토큰 생성
 	tokenBytes := make([]byte, 32)
 	rand.Read(tokenBytes)
 	tokenStr := hex.EncodeToString(tokenBytes)
-	
+
 	resetToken := &models.PasswordResetToken{
 		Base: models.Base{
 			ID:        generateID(),
@@ -360,18 +360,18 @@ func (s *userService) RequestPasswordReset(ctx context.Context, req *models.Rese
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(24 * time.Hour), // 24시간 후 만료
 	}
-	
+
 	err = s.storage.Create(ctx, "password_reset_tokens", resetToken)
 	if err != nil {
 		return fmt.Errorf("failed to create reset token: %w", err)
 	}
-	
+
 	// TODO: 이메일 발송 로직 추가
 	// NotificationService를 통해 이메일 발송
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, user.ID, "password_reset_request", "user", "비밀번호 재설정 요청", "", "")
-	
+
 	return nil
 }
 
@@ -381,57 +381,57 @@ func (s *userService) ConfirmPasswordReset(ctx context.Context, req *models.Conf
 	if req.NewPassword != req.ConfirmPassword {
 		return fmt.Errorf("새 비밀번호와 확인 비밀번호가 일치하지 않습니다")
 	}
-	
+
 	// 토큰 조회
 	resetToken := &models.PasswordResetToken{}
 	err := s.storage.GetByField(ctx, "password_reset_tokens", "token", req.Token, resetToken)
 	if err != nil {
 		return fmt.Errorf("유효하지 않은 토큰입니다")
 	}
-	
+
 	// 토큰 만료 확인
 	if time.Now().After(resetToken.ExpiresAt) {
 		s.storage.Delete(ctx, "password_reset_tokens", resetToken.ID)
 		return fmt.Errorf("토큰이 만료되었습니다")
 	}
-	
+
 	// 토큰 사용 여부 확인
 	if resetToken.UsedAt != nil {
 		return fmt.Errorf("이미 사용된 토큰입니다")
 	}
-	
+
 	// 사용자 조회
 	user := &models.User{}
 	err = s.storage.GetByID(ctx, "users", resetToken.UserID, user)
 	if err != nil {
 		return fmt.Errorf("사용자를 찾을 수 없습니다")
 	}
-	
+
 	// 새 비밀번호 해시화
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
-	
+
 	hashedPasswordStr := string(hashedPassword)
 	user.PasswordHash = &hashedPasswordStr
 	user.UpdatedAt = time.Now()
-	
+
 	// 사용자 업데이트
 	err = s.storage.Update(ctx, "users", user.ID, user)
 	if err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
-	
+
 	// 토큰을 사용됨으로 표시
 	now := time.Now()
 	resetToken.UsedAt = &now
 	resetToken.UpdatedAt = now
 	s.storage.Update(ctx, "password_reset_tokens", resetToken.ID, resetToken)
-	
+
 	// 활동 로그 기록
 	s.LogActivity(ctx, user.ID, "password_reset_confirm", "user", "비밀번호 재설정 완료", "", "")
-	
+
 	return nil
 }
 
@@ -450,7 +450,7 @@ func (s *userService) LogActivity(ctx context.Context, userID, action, resource,
 		IPAddress: ipAddress,
 		UserAgent: userAgent,
 	}
-	
+
 	return s.storage.Create(ctx, "user_activities", activity)
 }
 
@@ -462,7 +462,7 @@ func (s *userService) GetUserActivities(ctx context.Context, userID string, pagi
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user activities: %w", err)
 	}
-	
+
 	return &models.PaginatedResponse[models.UserActivity]{
 		Data: activities,
 		Pagination: models.PaginationMeta{
@@ -470,7 +470,7 @@ func (s *userService) GetUserActivities(ctx context.Context, userID string, pagi
 			PerPage:     pagination.Limit,
 			Total:       len(activities),
 			TotalPages:  (len(activities) + pagination.Limit - 1) / pagination.Limit,
-			HasNext:     pagination.Page < (len(activities) + pagination.Limit - 1) / pagination.Limit,
+			HasNext:     pagination.Page < (len(activities)+pagination.Limit-1)/pagination.Limit,
 			HasPrev:     pagination.Page > 1,
 		},
 	}, nil
@@ -487,7 +487,7 @@ func (s *userService) GetUserStats(ctx context.Context) (*models.UserStats, erro
 		UsersByProvider: make(map[string]int64),
 		RecentLogins:    0,
 	}
-	
+
 	return stats, nil
 }
 
@@ -499,13 +499,13 @@ func (s *userService) ListUsers(ctx context.Context, filter *models.UserFilter) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
-	
+
 	// User 모델을 UserResponse로 변환
 	userResponses := make([]models.UserResponse, len(users))
 	for i, user := range users {
 		userResponses[i] = *user.ToResponse()
 	}
-	
+
 	return &models.PaginatedResponse[models.UserResponse]{
 		Data: userResponses,
 		Pagination: models.PaginationMeta{
@@ -513,7 +513,7 @@ func (s *userService) ListUsers(ctx context.Context, filter *models.UserFilter) 
 			PerPage:     filter.Limit,
 			Total:       len(userResponses),
 			TotalPages:  (len(userResponses) + filter.Limit - 1) / filter.Limit,
-			HasNext:     filter.Page < (len(userResponses) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(userResponses)+filter.Limit-1)/filter.Limit,
 			HasPrev:     filter.Page > 1,
 		},
 	}, nil
@@ -527,18 +527,18 @@ func (s *userService) CreateUser(ctx context.Context, req *models.CreateUserRequ
 	if err == nil {
 		return nil, fmt.Errorf("이미 사용 중인 사용자명입니다")
 	}
-	
+
 	err = s.storage.GetByField(ctx, "users", "email", req.Email, existingUser)
 	if err == nil {
 		return nil, fmt.Errorf("이미 사용 중인 이메일입니다")
 	}
-	
+
 	// 비밀번호 해시화
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
-	
+
 	hashedPasswordStr := string(hashedPassword)
 	user := &models.User{
 		Base: models.Base{
@@ -554,12 +554,12 @@ func (s *userService) CreateUser(ctx context.Context, req *models.CreateUserRequ
 		IsActive:      true,
 		EmailVerified: false,
 	}
-	
+
 	err = s.storage.Create(ctx, "users", user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -570,7 +570,7 @@ func (s *userService) GetUser(ctx context.Context, userID string) (*models.UserR
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -581,7 +581,7 @@ func (s *userService) UpdateUser(ctx context.Context, userID string, req *models
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
-	
+
 	// 업데이트할 필드 적용
 	if req.DisplayName != nil {
 		user.DisplayName = *req.DisplayName
@@ -595,14 +595,14 @@ func (s *userService) UpdateUser(ctx context.Context, userID string, req *models
 	if req.Role != nil {
 		user.Role = *req.Role
 	}
-	
+
 	user.UpdatedAt = time.Now()
-	
+
 	err = s.storage.Update(ctx, "users", userID, user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -613,7 +613,7 @@ func (s *userService) DeleteUser(ctx context.Context, userID string) error {
 	// s.storage.DeleteByField(ctx, "user_activities", "user_id", userID)
 	// s.storage.DeleteByField(ctx, "password_reset_tokens", "user_id", userID)
 	// s.storage.DeleteByField(ctx, "two_factor_secrets", "user_id", userID)
-	
+
 	return s.storage.Delete(ctx, "users", userID)
 }
 

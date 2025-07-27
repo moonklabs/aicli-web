@@ -206,7 +206,7 @@ func (cm *ConfigManager) isDefaultValue(key string) bool {
 	// 임시로 기본값만 있는 새 Viper 인스턴스 생성
 	tempViper := viper.New()
 	cm.setDefaultsForViper(tempViper)
-	
+
 	return cm.viper.Get(key) == tempViper.Get(key)
 }
 

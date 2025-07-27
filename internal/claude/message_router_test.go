@@ -34,7 +34,7 @@ func newMockHandler(name string, priority int) *mockHandler {
 
 func (h *mockHandler) Handle(ctx context.Context, msg StreamMessage) error {
 	atomic.AddInt32(&h.handled, 1)
-	
+
 	h.mu.Lock()
 	h.messages = append(h.messages, msg)
 	h.mu.Unlock()
@@ -322,7 +322,7 @@ func TestMessageRouter(t *testing.T) {
 
 		handler := newMockHandler("metrics", 100)
 		router.RegisterHandler(MessageTypeText, handler)
-		
+
 		errorHandler := newMockHandler("error", 100)
 		errorHandler.failAfter = 2
 		router.RegisterHandler(MessageTypeError, errorHandler)
@@ -524,7 +524,7 @@ func TestMessageTypeHandlers(t *testing.T) {
 			Content: "System event",
 			ID:      "system-123",
 			Meta: map[string]interface{}{
-				"event": "startup",
+				"event":   "startup",
 				"version": "1.0.0",
 			},
 		}
@@ -590,12 +590,12 @@ func TestMessageTypeHandlers(t *testing.T) {
 	})
 
 	t.Run("ChainHandler", func(t *testing.T) {
-		
+
 		handler1 := newMockHandler("first", 100)
 		handler1.delay = 10 * time.Millisecond
-		
+
 		handler2 := newMockHandler("second", 50)
-		
+
 		chainHandler := NewChainHandler("chain", 200, []MessageHandler{handler1, handler2}, logger)
 
 		ctx := context.Background()
@@ -621,7 +621,7 @@ func BenchmarkMessageRouter(b *testing.B) {
 			AsyncMode: false,
 		}
 		router := NewMessageRouter(config, logger)
-		
+
 		handler := newMockHandler("bench", 100)
 		router.RegisterHandler(MessageTypeText, handler)
 
@@ -645,7 +645,7 @@ func BenchmarkMessageRouter(b *testing.B) {
 		}
 		router := NewMessageRouter(config, logger)
 		defer router.Stop()
-		
+
 		handler := newMockHandler("bench", 100)
 		router.RegisterHandler(MessageTypeText, handler)
 

@@ -23,7 +23,7 @@ const (
 type ErrorFormatter interface {
 	// Format은 기본 에러 메시지를 포맷팅합니다.
 	Format(err *CLIError) string
-	
+
 	// FormatWithDetails는 상세 정보를 포함하여 에러 메시지를 포맷팅합니다.
 	FormatWithDetails(err *CLIError, verbose bool) string
 }
@@ -55,7 +55,7 @@ func (f *HumanErrorFormatter) getErrorIcon(errorType ErrorType) string {
 	if !f.showIcon {
 		return ""
 	}
-	
+
 	switch errorType {
 	case ErrorTypeValidation:
 		return "⚠️  "
@@ -85,13 +85,13 @@ func (f *HumanErrorFormatter) getErrorIcon(errorType ErrorType) string {
 // Format은 기본 에러 메시지를 포맷팅합니다.
 func (f *HumanErrorFormatter) Format(err *CLIError) string {
 	var buf strings.Builder
-	
+
 	// 에러 아이콘과 메시지
 	icon := f.getErrorIcon(err.Type)
 	buf.WriteString(f.colorize(icon+"오류: ", ColorRed))
 	buf.WriteString(err.Message)
 	buf.WriteString("\n")
-	
+
 	// 제안사항
 	if len(err.Suggestions) > 0 {
 		buf.WriteString("\n")
@@ -102,7 +102,7 @@ func (f *HumanErrorFormatter) Format(err *CLIError) string {
 			buf.WriteString("\n")
 		}
 	}
-	
+
 	// 원본 에러 메시지 (존재하는 경우)
 	if err.Cause != nil {
 		buf.WriteString("\n")
@@ -110,71 +110,71 @@ func (f *HumanErrorFormatter) Format(err *CLIError) string {
 		buf.WriteString(err.Cause.Error())
 		buf.WriteString("\n")
 	}
-	
+
 	return buf.String()
 }
 
 // FormatWithDetails는 상세 정보를 포함하여 에러 메시지를 포맷팅합니다.
 func (f *HumanErrorFormatter) FormatWithDetails(err *CLIError, verbose bool) string {
 	var buf strings.Builder
-	
+
 	// 기본 포맷부터 시작
 	buf.WriteString(f.Format(err))
-	
+
 	// verbose 모드가 아니면 기본 포맷만 반환
 	if !verbose {
 		return buf.String()
 	}
-	
+
 	// 에러 분류 정보
 	buf.WriteString("\n")
 	buf.WriteString(f.colorize("진단 정보:\n", ColorCyan))
 	buf.WriteString(fmt.Sprintf("  에러 타입: %s\n", err.Type.String()))
 	buf.WriteString(fmt.Sprintf("  종료 코드: %d\n", err.ExitCode))
-	
+
 	// 맥락 정보
 	if len(err.Context) > 0 {
 		buf.WriteString("\n")
 		buf.WriteString(f.colorize("맥락 정보:\n", ColorBlue))
-		
+
 		// 키를 정렬하여 일관된 출력
 		keys := make([]string, 0, len(err.Context))
 		for k := range err.Context {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		
+
 		for _, key := range keys {
 			value := err.Context[key]
 			buf.WriteString(fmt.Sprintf("  %s: %v\n", key, value))
 		}
 	}
-	
+
 	// 디버그 정보
 	if len(err.Debug) > 0 {
 		buf.WriteString("\n")
 		buf.WriteString(f.colorize("디버그 정보:\n", ColorPurple))
-		
+
 		// 키를 정렬하여 일관된 출력
 		keys := make([]string, 0, len(err.Debug))
 		for k := range err.Debug {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		
+
 		for _, key := range keys {
 			value := err.Debug[key]
 			buf.WriteString(fmt.Sprintf("  %s: %v\n", key, value))
 		}
 	}
-	
+
 	// 추가 도움말
 	buf.WriteString("\n")
 	buf.WriteString(f.colorize("추가 도움말:\n", ColorGreen))
 	buf.WriteString("  • 더 많은 로그를 보려면 --verbose 플래그를 사용하세요\n")
 	buf.WriteString("  • 도움말을 보려면 'aicli help [command]'를 사용하세요\n")
 	buf.WriteString("  • 문제가 지속되면 GitHub에 이슈를 생성하세요\n")
-	
+
 	return buf.String()
 }
 
@@ -195,15 +195,15 @@ func (f *JSONErrorFormatter) Format(err *CLIError) string {
 			"exitCode": err.ExitCode,
 		},
 	}
-	
+
 	if len(err.Suggestions) > 0 {
 		result["suggestions"] = err.Suggestions
 	}
-	
+
 	if err.Cause != nil {
 		result["cause"] = err.Cause.Error()
 	}
-	
+
 	// 간단한 JSON 직렬화 (외부 라이브러리 없이)
 	return f.toJSON(result)
 }
@@ -217,25 +217,25 @@ func (f *JSONErrorFormatter) FormatWithDetails(err *CLIError, verbose bool) stri
 			"exitCode": err.ExitCode,
 		},
 	}
-	
+
 	if len(err.Suggestions) > 0 {
 		result["suggestions"] = err.Suggestions
 	}
-	
+
 	if err.Cause != nil {
 		result["cause"] = err.Cause.Error()
 	}
-	
+
 	if verbose {
 		if len(err.Context) > 0 {
 			result["context"] = err.Context
 		}
-		
+
 		if len(err.Debug) > 0 {
 			result["debug"] = err.Debug
 		}
 	}
-	
+
 	return f.toJSON(result)
 }
 
@@ -274,11 +274,11 @@ func NewPlainErrorFormatter() *PlainErrorFormatter {
 // Format은 기본 플레인 텍스트 에러 메시지를 포맷팅합니다.
 func (f *PlainErrorFormatter) Format(err *CLIError) string {
 	var buf strings.Builder
-	
+
 	buf.WriteString("Error: ")
 	buf.WriteString(err.Message)
 	buf.WriteString("\n")
-	
+
 	if len(err.Suggestions) > 0 {
 		buf.WriteString("\nSuggestions:\n")
 		for _, suggestion := range err.Suggestions {
@@ -287,27 +287,27 @@ func (f *PlainErrorFormatter) Format(err *CLIError) string {
 			buf.WriteString("\n")
 		}
 	}
-	
+
 	if err.Cause != nil {
 		buf.WriteString("\nCause: ")
 		buf.WriteString(err.Cause.Error())
 		buf.WriteString("\n")
 	}
-	
+
 	return buf.String()
 }
 
 // FormatWithDetails는 상세 정보를 포함한 플레인 텍스트 에러 메시지를 포맷팅합니다.
 func (f *PlainErrorFormatter) FormatWithDetails(err *CLIError, verbose bool) string {
 	var buf strings.Builder
-	
+
 	buf.WriteString(f.Format(err))
-	
+
 	if verbose {
 		buf.WriteString("\nDiagnostics:\n")
 		buf.WriteString(fmt.Sprintf("  Error Type: %s\n", err.Type.String()))
 		buf.WriteString(fmt.Sprintf("  Exit Code: %d\n", err.ExitCode))
-		
+
 		if len(err.Context) > 0 {
 			buf.WriteString("\nContext:\n")
 			keys := make([]string, 0, len(err.Context))
@@ -315,12 +315,12 @@ func (f *PlainErrorFormatter) FormatWithDetails(err *CLIError, verbose bool) str
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
-			
+
 			for _, key := range keys {
 				buf.WriteString(fmt.Sprintf("  %s: %v\n", key, err.Context[key]))
 			}
 		}
-		
+
 		if len(err.Debug) > 0 {
 			buf.WriteString("\nDebug:\n")
 			keys := make([]string, 0, len(err.Debug))
@@ -328,13 +328,13 @@ func (f *PlainErrorFormatter) FormatWithDetails(err *CLIError, verbose bool) str
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
-			
+
 			for _, key := range keys {
 				buf.WriteString(fmt.Sprintf("  %s: %v\n", key, err.Debug[key]))
 			}
 		}
 	}
-	
+
 	return buf.String()
 }
 

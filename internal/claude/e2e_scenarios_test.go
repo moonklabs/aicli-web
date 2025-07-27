@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package claude
@@ -9,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/aicli/aicli-web/internal/storage"
 )
 
 // TestE2EScenarios는 전체 시스템의 E2E 시나리오를 테스트합니다.
@@ -45,9 +46,9 @@ func testCompleteWorkflow(t *testing.T) {
 	defer store.Close()
 
 	sessionManager := NewSessionManager(store.Session())
-	
+
 	ctx := context.Background()
-	
+
 	// 1. 세션 생성
 	sessionID, err := sessionManager.Create(ctx, &SessionConfig{
 		WorkspaceID:  "test-workspace",
@@ -107,7 +108,7 @@ func testConcurrentSessions(t *testing.T) {
 
 	sessionManager := NewSessionManager(store.Session())
 	ctx := context.Background()
-	
+
 	const numSessions = 10
 	var wg sync.WaitGroup
 	sessionIDs := make([]string, numSessions)
@@ -118,13 +119,13 @@ func testConcurrentSessions(t *testing.T) {
 		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
-			
+
 			sessionID, err := sessionManager.Create(ctx, &SessionConfig{
 				WorkspaceID:  fmt.Sprintf("workspace-%d", index),
 				SystemPrompt: fmt.Sprintf("Assistant %d", index),
 				MaxTurns:     5,
 			})
-			
+
 			sessionIDs[index] = sessionID
 			errors[index] = err
 		}(i)
@@ -139,7 +140,7 @@ func testConcurrentSessions(t *testing.T) {
 			createdCount++
 		}
 	}
-	
+
 	assert.Equal(t, numSessions, createdCount, "All sessions should be created successfully")
 
 	// 모든 세션 ID가 고유한지 확인
@@ -235,7 +236,7 @@ func testResourceManagement(t *testing.T) {
 
 	session, err := sessionManager.Get(ctx, sessionID)
 	require.NoError(t, err)
-	
+
 	// 리소스 제한이 올바르게 설정되었는지 확인
 	assert.Equal(t, int64(100*1024*1024), session.Config.MaxMemory)
 	assert.Equal(t, 0.5, session.Config.MaxCPU)
@@ -269,9 +270,9 @@ func testMessageStreaming(t *testing.T) {
 {"type":"system","content":"Complete","id":"msg3"}`
 
 	parser := NewJSONStreamParser(strings.NewReader(streamData), nil)
-	
+
 	messages := make([]Message, 0)
-	
+
 	// 스트림에서 모든 메시지 읽기
 	for {
 		response, err := parser.ParseNext()
@@ -281,14 +282,14 @@ func testMessageStreaming(t *testing.T) {
 			}
 			require.NoError(t, err)
 		}
-		
+
 		messages = append(messages, Message{
 			Type:    response.Type,
 			Content: response.Content,
 			ID:      response.MessageID,
 		})
 	}
-	
+
 	// 메시지 검증
 	require.Len(t, messages, 3)
 	assert.Equal(t, "text", messages[0].Type)
@@ -306,15 +307,15 @@ func testBackpressureHandling(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		streamBuilder.WriteString(fmt.Sprintf(`{"type":"text","content":"Message %d","id":"msg%d"}`+"\n", i, i))
 	}
-	
+
 	parser := NewJSONStreamParser(strings.NewReader(streamBuilder.String()), nil)
-	
+
 	// 백프레셔 핸들러 생성
 	handler := NewBackpressureHandler(100, DropOldest) // 버퍼 크기 100
-	
+
 	messageCount := 0
 	droppedCount := 0
-	
+
 	// 스트림 처리
 	for {
 		response, err := parser.ParseNext()
@@ -324,13 +325,13 @@ func testBackpressureHandling(t *testing.T) {
 			}
 			require.NoError(t, err)
 		}
-		
+
 		msg := Message{
 			Type:    response.Type,
 			Content: response.Content,
 			ID:      response.MessageID,
 		}
-		
+
 		accepted := handler.Submit(msg)
 		if accepted {
 			messageCount++
@@ -338,7 +339,7 @@ func testBackpressureHandling(t *testing.T) {
 			droppedCount++
 		}
 	}
-	
+
 	// 백프레셔로 인해 일부 메시지가 드롭되었는지 확인
 	t.Logf("Processed: %d, Dropped: %d", messageCount, droppedCount)
 	assert.Greater(t, droppedCount, 0, "Some messages should be dropped due to backpressure")

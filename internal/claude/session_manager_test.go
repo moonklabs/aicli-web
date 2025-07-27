@@ -289,7 +289,7 @@ func TestSessionManager_ListSessions(t *testing.T) {
 		session, err := sm.CreateSession(ctx, config)
 		require.NoError(t, err)
 		session.WorkspaceID = workspaceID
-		
+
 		// 하나는 Active 상태로 변경
 		if i == 0 {
 			activeState := SessionStateActive
@@ -323,8 +323,8 @@ func TestSessionStateMachine(t *testing.T) {
 
 	// 유효한 전이 테스트
 	tests := []struct {
-		from SessionState
-		to   SessionState
+		from  SessionState
+		to    SessionState
 		valid bool
 	}{
 		{SessionStateCreated, SessionStateInitializing, true},
@@ -334,7 +334,7 @@ func TestSessionStateMachine(t *testing.T) {
 		{SessionStateIdle, SessionStateActive, true},
 		{SessionStateSuspended, SessionStateReady, true},
 		{SessionStateClosing, SessionStateClosed, true},
-		
+
 		// 무효한 전이
 		{SessionStateCreated, SessionStateActive, false},
 		{SessionStateClosed, SessionStateActive, false},
@@ -355,7 +355,7 @@ func TestSessionPool(t *testing.T) {
 	ctx := context.Background()
 	pm := NewMockSessionProcessManager()
 	sm := NewSessionManager(pm, nil)
-	
+
 	poolConfig := SessionPoolConfig{
 		MaxSessions:     3,
 		MaxIdleTime:     1 * time.Minute,
@@ -421,7 +421,7 @@ func TestSessionEventBus(t *testing.T) {
 	// 이벤트 레코더 생성
 	recorder := NewSessionEventRecorder()
 	sessionID := "test-session-123"
-	
+
 	// 세션별 구독
 	bus.Subscribe(sessionID, recorder)
 

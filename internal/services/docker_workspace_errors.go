@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	
+
 	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/models"
 )
@@ -44,15 +44,15 @@ func (dws *DockerWorkspaceService) HandleWorkspaceError(workspaceID string, err 
 			FallbackAction:  "stop",
 		}
 	}
-	
+
 	workspace, getErr := dws.storage.Workspace().GetByID(context.Background(), workspaceID)
 	if getErr != nil {
 		return fmt.Errorf("get workspace for error handling: %w", getErr)
 	}
-	
+
 	// 에러 로깅
 	dws.logWorkspaceError(workspace, err)
-	
+
 	// 에러 유형별 처리
 	switch {
 	case isDockerError(err):
@@ -69,13 +69,13 @@ func (dws *DockerWorkspaceService) HandleWorkspaceError(workspaceID string, err 
 // handleDockerError Docker 특이적 에러를 처리합니다
 func (dws *DockerWorkspaceService) handleDockerError(workspace *models.Workspace, err error, strategy *ErrorRecoveryStrategy) error {
 	ctx := context.Background()
-	
+
 	// Docker 컨테이너 상태 확인
 	containers, listErr := dws.dockerManager.Container().ListWorkspaceContainers(ctx, workspace.ID)
 	if listErr != nil {
 		return fmt.Errorf("list containers for error handling: %w", listErr)
 	}
-	
+
 	// 컨테이너 상태에 따른 복구 전략
 	for _, container := range containers {
 		switch container.State {
@@ -85,13 +85,13 @@ func (dws *DockerWorkspaceService) handleDockerError(workspace *models.Workspace
 		case docker.ContainerStateDead:
 			// 컨테이너가 죽은 경우 재생성
 			return dws.recreateWorkspace(workspace.ID, strategy)
-		// TODO: OOMKilled 상태 처리 추가
-		// case docker.ContainerStateOOMKilled:
-		// 	// 메모리 부족으로 종료된 경우 리소스 제한 조정 후 재시작
-		// 	return dws.recreateWorkspaceWithMoreResources(workspace.ID, strategy)
+			// TODO: OOMKilled 상태 처리 추가
+			// case docker.ContainerStateOOMKilled:
+			// 	// 메모리 부족으로 종료된 경우 리소스 제한 조정 후 재시작
+			// 	return dws.recreateWorkspaceWithMoreResources(workspace.ID, strategy)
 		}
 	}
-	
+
 	// 기본 복구 전략 적용
 	return dws.applyFallbackAction(workspace.ID, strategy)
 }
@@ -115,11 +115,11 @@ func (dws *DockerWorkspaceService) handleGenericError(workspace *models.Workspac
 		"status":     models.WorkspaceStatusInactive,
 		"updated_at": time.Now(),
 	}
-	
+
 	if updateErr := dws.storage.Workspace().Update(context.Background(), workspace.ID, updates); updateErr != nil {
 		return fmt.Errorf("update workspace status after error: %w", updateErr)
 	}
-	
+
 	return err
 }
 
@@ -131,7 +131,7 @@ func (dws *DockerWorkspaceService) restartWorkspace(workspaceID string, strategy
 		Timeout:     30 * time.Second,
 		Retries:     strategy.MaxRetries,
 	}
-	
+
 	return dws.retryTask(task, strategy)
 }
 
@@ -144,11 +144,11 @@ func (dws *DockerWorkspaceService) recreateWorkspace(workspaceID string, strateg
 		Timeout:     30 * time.Second,
 		Retries:     strategy.MaxRetries,
 	}
-	
+
 	if err := dws.retryTask(cleanupTask, strategy); err != nil {
 		return fmt.Errorf("cleanup containers: %w", err)
 	}
-	
+
 	// 새 컨테이너 생성
 	createTask := &WorkspaceTask{
 		Type:        TaskTypeCreate,
@@ -156,7 +156,7 @@ func (dws *DockerWorkspaceService) recreateWorkspace(workspaceID string, strateg
 		Timeout:     60 * time.Second,
 		Retries:     strategy.MaxRetries,
 	}
-	
+
 	return dws.retryTask(createTask, strategy)
 }
 
@@ -170,19 +170,19 @@ func (dws *DockerWorkspaceService) recreateWorkspaceWithMoreResources(workspaceI
 // retryNetworkOperation 네트워크 작업을 재시도합니다
 func (dws *DockerWorkspaceService) retryNetworkOperation(workspaceID string, strategy *ErrorRecoveryStrategy) error {
 	ctx := context.Background()
-	
+
 	for i := 0; i < strategy.MaxRetries; i++ {
 		// 네트워크 상태 확인
 		if healthy, _ := dws.dockerManager.GetFactory().IsHealthy(ctx); healthy {
 			return nil
 		}
-		
+
 		// 백오프 대기
 		if i < strategy.MaxRetries-1 {
 			time.Sleep(strategy.BackoffDuration * time.Duration(i+1))
 		}
 	}
-	
+
 	return fmt.Errorf("network operation retry failed after %d attempts", strategy.MaxRetries)
 }
 
@@ -202,7 +202,7 @@ func (dws *DockerWorkspaceService) applyFallbackAction(workspaceID string, strat
 			Timeout:     30 * time.Second,
 		}
 		return dws.executeTask(task)
-		
+
 	case "remove":
 		task := &WorkspaceTask{
 			Type:        TaskTypeDelete,
@@ -210,10 +210,10 @@ func (dws *DockerWorkspaceService) applyFallbackAction(workspaceID string, strat
 			Timeout:     30 * time.Second,
 		}
 		return dws.executeTask(task)
-		
+
 	case "ignore":
 		return nil
-		
+
 	default:
 		return fmt.Errorf("unknown fallback action: %s", strategy.FallbackAction)
 	}
@@ -222,19 +222,19 @@ func (dws *DockerWorkspaceService) applyFallbackAction(workspaceID string, strat
 // retryTask 작업을 재시도합니다
 func (dws *DockerWorkspaceService) retryTask(task *WorkspaceTask, strategy *ErrorRecoveryStrategy) error {
 	var lastErr error
-	
+
 	for i := 0; i <= strategy.MaxRetries; i++ {
 		lastErr = dws.executeTask(task)
 		if lastErr == nil {
 			return nil
 		}
-		
+
 		// 마지막 시도가 아니면 백오프 대기
 		if i < strategy.MaxRetries {
 			time.Sleep(strategy.BackoffDuration * time.Duration(i+1))
 		}
 	}
-	
+
 	return fmt.Errorf("task retry failed after %d attempts: %w", strategy.MaxRetries+1, lastErr)
 }
 
@@ -249,7 +249,7 @@ func isDockerError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	errStr := err.Error()
 	dockerErrorKeywords := []string{
 		"docker",
@@ -260,13 +260,13 @@ func isDockerError(err error) bool {
 		"daemon",
 		"API error",
 	}
-	
+
 	for _, keyword := range dockerErrorKeywords {
 		if strings.Contains(strings.ToLower(errStr), strings.ToLower(keyword)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -275,7 +275,7 @@ func isNetworkError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	errStr := err.Error()
 	networkErrorKeywords := []string{
 		"network",
@@ -285,13 +285,13 @@ func isNetworkError(err error) bool {
 		"unreachable",
 		"dns",
 	}
-	
+
 	for _, keyword := range networkErrorKeywords {
 		if strings.Contains(strings.ToLower(errStr), strings.ToLower(keyword)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -300,7 +300,7 @@ func isStorageError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	errStr := err.Error()
 	storageErrorKeywords := []string{
 		"storage",
@@ -311,13 +311,13 @@ func isStorageError(err error) bool {
 		"permission",
 		"no space left",
 	}
-	
+
 	for _, keyword := range storageErrorKeywords {
 		if strings.Contains(strings.ToLower(errStr), strings.ToLower(keyword)) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

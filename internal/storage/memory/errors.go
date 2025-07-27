@@ -6,7 +6,7 @@ import "errors"
 var (
 	// ErrNotFound 항목을 찾을 수 없음
 	ErrNotFound = errors.New("not found")
-	
+
 	// ErrAlreadyExists 이미 존재함
 	ErrAlreadyExists = errors.New("already exists")
 )

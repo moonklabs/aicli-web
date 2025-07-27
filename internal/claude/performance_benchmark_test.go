@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package claude
@@ -28,7 +29,7 @@ func BenchmarkSessionManagement(b *testing.B) {
 
 	b.Run("CreateSession", func(b *testing.B) {
 		sessionIDs := make([]string, b.N)
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			sessionID, err := sessionManager.Create(ctx, &SessionConfig{
@@ -100,14 +101,14 @@ func BenchmarkStreamProcessing(b *testing.B) {
 		// 1KB 메시지 생성
 		messageData := strings.Repeat("x", 1000)
 		streamData := fmt.Sprintf(`{"type":"text","content":"%s","id":"bench"}`, messageData)
-		
+
 		b.SetBytes(int64(len(streamData)))
 		b.ResetTimer()
-		
+
 		for i := 0; i < b.N; i++ {
 			reader := strings.NewReader(streamData)
 			parser := NewJSONStreamParser(reader, nil)
-			
+
 			_, err := parser.ParseNext()
 			if err != nil {
 				b.Fatal(err)
@@ -122,14 +123,14 @@ func BenchmarkStreamProcessing(b *testing.B) {
 			streamBuilder.WriteString(fmt.Sprintf(`{"type":"text","content":"Message %d","id":"msg%d"}`+"\n", i, i))
 		}
 		streamData := streamBuilder.String()
-		
+
 		b.SetBytes(int64(len(streamData)))
 		b.ResetTimer()
-		
+
 		for i := 0; i < b.N; i++ {
 			reader := strings.NewReader(streamData)
 			parser := NewJSONStreamParser(reader, nil)
-			
+
 			messageCount := 0
 			for {
 				_, err := parser.ParseNext()
@@ -141,7 +142,7 @@ func BenchmarkStreamProcessing(b *testing.B) {
 				}
 				messageCount++
 			}
-			
+
 			if messageCount != 100 {
 				b.Fatalf("Expected 100 messages, got %d", messageCount)
 			}
@@ -150,12 +151,12 @@ func BenchmarkStreamProcessing(b *testing.B) {
 
 	b.Run("ConcurrentStreamProcessing", func(b *testing.B) {
 		streamData := `{"type":"text","content":"Concurrent test","id":"concurrent"}`
-		
+
 		b.RunParallel(func(pb *testing.PB) {
 			for pb.Next() {
 				reader := strings.NewReader(streamData)
 				parser := NewJSONStreamParser(reader, nil)
-				
+
 				_, err := parser.ParseNext()
 				if err != nil {
 					b.Fatal(err)
@@ -169,7 +170,7 @@ func BenchmarkStreamProcessing(b *testing.B) {
 func BenchmarkBackpressureHandling(b *testing.B) {
 	b.Run("DropOldest", func(b *testing.B) {
 		handler := NewBackpressureHandler(1000, DropOldest)
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			msg := Message{
@@ -183,7 +184,7 @@ func BenchmarkBackpressureHandling(b *testing.B) {
 
 	b.Run("DropNewest", func(b *testing.B) {
 		handler := NewBackpressureHandler(1000, DropNewest)
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			msg := Message{
@@ -197,7 +198,7 @@ func BenchmarkBackpressureHandling(b *testing.B) {
 
 	b.Run("BlockUntilReady", func(b *testing.B) {
 		handler := NewBackpressureHandler(1000, BlockUntilReady)
-		
+
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			msg := Message{
@@ -314,7 +315,7 @@ func testHighConcurrencyStability(t *testing.T) {
 
 	const numWorkers = 100
 	const operationsPerWorker = 10
-	
+
 	var wg sync.WaitGroup
 	errors := make(chan error, numWorkers*operationsPerWorker)
 
@@ -323,7 +324,7 @@ func testHighConcurrencyStability(t *testing.T) {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			
+
 			for j := 0; j < operationsPerWorker; j++ {
 				// 세션 생성
 				sessionID, err := sessionManager.Create(ctx, &SessionConfig{
@@ -382,7 +383,7 @@ func testLongRunningStability(t *testing.T) {
 	// 30초 동안 지속적으로 세션 생성/종료
 	duration := 30 * time.Second
 	deadline := time.Now().Add(duration)
-	
+
 	var operationCount int
 	var errorCount int
 
@@ -393,7 +394,7 @@ func testLongRunningStability(t *testing.T) {
 			MaxTurns:     3,
 		})
 		operationCount++
-		
+
 		if err != nil {
 			t.Logf("Create error: %v", err)
 			errorCount++
@@ -417,7 +418,7 @@ func testLongRunningStability(t *testing.T) {
 	}
 
 	t.Logf("Long running test completed: %d operations, %d errors", operationCount, errorCount)
-	
+
 	errorRate := float64(errorCount) / float64(operationCount)
 	if errorRate > 0.01 { // 1% 이상 에러가 발생하면 실패
 		t.Errorf("Error rate too high: %.2f%% (%d/%d)", errorRate*100, errorCount, operationCount)
@@ -492,7 +493,7 @@ func testMemoryLeaks(t *testing.T) {
 
 	// 두 번째 라운드의 메모리 증가가 첫 번째보다 현저히 작아야 함 (메모리 누수가 없다면)
 	if secondRoundAlloc > firstRoundAlloc*2 {
-		t.Errorf("Potential memory leak detected: second round used %d bytes, first round used %d bytes", 
+		t.Errorf("Potential memory leak detected: second round used %d bytes, first round used %d bytes",
 			secondRoundAlloc, firstRoundAlloc)
 	}
 }

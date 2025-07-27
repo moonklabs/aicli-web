@@ -91,20 +91,20 @@ type CircuitBreaker interface {
 
 // circuitBreaker 회로 차단기 구현
 type circuitBreaker struct {
-	config       *CircuitBreakerConfig
-	state        CircuitBreakerState
-	failureCount int64
-	successCount int64
-	lastFailure  time.Time
-	nextAttempt  time.Time
+	config        *CircuitBreakerConfig
+	state         CircuitBreakerState
+	failureCount  int64
+	successCount  int64
+	lastFailure   time.Time
+	nextAttempt   time.Time
 	totalRequests int64
-	stateChanges int64
-	mutex        sync.RWMutex
-	logger       *logrus.Logger
-	
+	stateChanges  int64
+	mutex         sync.RWMutex
+	logger        *logrus.Logger
+
 	// 슬라이딩 윈도우를 위한 필드
-	window       *slidingWindow
-	windowSize   time.Duration
+	window     *slidingWindow
+	windowSize time.Duration
 }
 
 // NewCircuitBreaker 새로운 회로 차단기를 생성합니다
@@ -118,13 +118,13 @@ func NewCircuitBreaker(config *CircuitBreakerConfig, logger *logrus.Logger) Circ
 			ErrorPercentageThreshold: 50.0,
 		}
 	}
-	
+
 	if logger == nil {
 		logger = logrus.StandardLogger()
 	}
-	
+
 	windowSize := 1 * time.Minute // 1분 슬라이딩 윈도우
-	
+
 	return &circuitBreaker{
 		config:     config,
 		state:      StateClosed,
@@ -138,15 +138,15 @@ func NewCircuitBreaker(config *CircuitBreakerConfig, logger *logrus.Logger) Circ
 func (cb *circuitBreaker) Allow() bool {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.totalRequests++
-	
+
 	now := time.Now()
-	
+
 	switch cb.state {
 	case StateClosed:
 		return true
-		
+
 	case StateOpen:
 		// 복구 타임아웃이 지났는지 확인
 		if now.After(cb.nextAttempt) {
@@ -155,11 +155,11 @@ func (cb *circuitBreaker) Allow() bool {
 		}
 		cb.logger.Debug("Circuit breaker is open, rejecting request")
 		return false
-		
+
 	case StateHalfOpen:
 		// half-open 상태에서는 제한적으로 요청 허용
 		return true
-		
+
 	default:
 		return false
 	}
@@ -169,16 +169,16 @@ func (cb *circuitBreaker) Allow() bool {
 func (cb *circuitBreaker) RecordSuccess() {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.successCount++
 	cb.window.RecordSuccess()
-	
+
 	if cb.state == StateHalfOpen {
 		if cb.successCount >= int64(cb.config.SuccessThreshold) {
 			cb.transitionToClosed()
 		}
 	}
-	
+
 	cb.logger.WithFields(logrus.Fields{
 		"state":         cb.state,
 		"success_count": cb.successCount,
@@ -189,23 +189,23 @@ func (cb *circuitBreaker) RecordSuccess() {
 func (cb *circuitBreaker) RecordError() {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.failureCount++
 	cb.lastFailure = time.Now()
 	cb.window.RecordFailure()
-	
+
 	cb.logger.WithFields(logrus.Fields{
 		"state":         cb.state,
 		"failure_count": cb.failureCount,
 	}).Debug("Recorded error in circuit breaker")
-	
+
 	// 상태에 따른 처리
 	switch cb.state {
 	case StateClosed:
 		if cb.shouldOpenCircuit() {
 			cb.transitionToOpen()
 		}
-		
+
 	case StateHalfOpen:
 		// half-open 상태에서 실패하면 바로 open으로 전환
 		cb.transitionToOpen()
@@ -218,18 +218,18 @@ func (cb *circuitBreaker) shouldOpenCircuit() bool {
 	if cb.window.TotalRequests() < int64(cb.config.RequestVolumeThreshold) {
 		return false
 	}
-	
+
 	// 에러 비율 확인
 	errorPercentage := cb.window.ErrorPercentage()
 	if errorPercentage >= cb.config.ErrorPercentageThreshold {
 		return true
 	}
-	
+
 	// 연속 실패 횟수 확인
 	if cb.failureCount >= int64(cb.config.FailureThreshold) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -239,7 +239,7 @@ func (cb *circuitBreaker) transitionToClosed() {
 	cb.failureCount = 0
 	cb.successCount = 0
 	cb.stateChanges++
-	
+
 	cb.logger.WithField("state", cb.state).Info("Circuit breaker transitioned to CLOSED")
 }
 
@@ -248,7 +248,7 @@ func (cb *circuitBreaker) transitionToOpen() {
 	cb.state = StateOpen
 	cb.nextAttempt = time.Now().Add(cb.config.RecoveryTimeout)
 	cb.stateChanges++
-	
+
 	cb.logger.WithFields(logrus.Fields{
 		"state":        cb.state,
 		"next_attempt": cb.nextAttempt,
@@ -260,7 +260,7 @@ func (cb *circuitBreaker) transitionToHalfOpen() {
 	cb.state = StateHalfOpen
 	cb.successCount = 0
 	cb.stateChanges++
-	
+
 	cb.logger.WithField("state", cb.state).Info("Circuit breaker transitioned to HALF-OPEN")
 }
 
@@ -275,7 +275,7 @@ func (cb *circuitBreaker) State() CircuitBreakerState {
 func (cb *circuitBreaker) Stats() CircuitBreakerStats {
 	cb.mutex.RLock()
 	defer cb.mutex.RUnlock()
-	
+
 	return CircuitBreakerStats{
 		State:           cb.state,
 		FailureCount:    cb.failureCount,
@@ -292,7 +292,7 @@ func (cb *circuitBreaker) Stats() CircuitBreakerStats {
 func (cb *circuitBreaker) Reset() {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
-	
+
 	cb.state = StateClosed
 	cb.failureCount = 0
 	cb.successCount = 0
@@ -301,7 +301,7 @@ func (cb *circuitBreaker) Reset() {
 	cb.totalRequests = 0
 	cb.stateChanges = 0
 	cb.window.Reset()
-	
+
 	cb.logger.Info("Circuit breaker has been reset")
 }
 
@@ -340,7 +340,7 @@ type bucket struct {
 func newSlidingWindow(windowSize time.Duration) *slidingWindow {
 	bucketCount := 10
 	bucketSize := windowSize / time.Duration(bucketCount)
-	
+
 	return &slidingWindow{
 		buckets:    make([]bucket, bucketCount),
 		bucketSize: bucketSize,
@@ -352,16 +352,16 @@ func newSlidingWindow(windowSize time.Duration) *slidingWindow {
 func (sw *slidingWindow) getCurrentBucket() *bucket {
 	now := time.Now()
 	bucketIndex := int(now.UnixNano()/int64(sw.bucketSize)) % len(sw.buckets)
-	
+
 	bucket := &sw.buckets[bucketIndex]
-	
+
 	// 버킷이 오래된 경우 초기화
 	if now.Sub(bucket.timestamp) > sw.bucketSize {
 		bucket.timestamp = now
 		bucket.requests = 0
 		bucket.failures = 0
 	}
-	
+
 	return bucket
 }
 
@@ -369,7 +369,7 @@ func (sw *slidingWindow) getCurrentBucket() *bucket {
 func (sw *slidingWindow) RecordSuccess() {
 	sw.mutex.Lock()
 	defer sw.mutex.Unlock()
-	
+
 	bucket := sw.getCurrentBucket()
 	bucket.requests++
 }
@@ -378,7 +378,7 @@ func (sw *slidingWindow) RecordSuccess() {
 func (sw *slidingWindow) RecordFailure() {
 	sw.mutex.Lock()
 	defer sw.mutex.Unlock()
-	
+
 	bucket := sw.getCurrentBucket()
 	bucket.requests++
 	bucket.failures++
@@ -388,16 +388,16 @@ func (sw *slidingWindow) RecordFailure() {
 func (sw *slidingWindow) TotalRequests() int64 {
 	sw.mutex.RLock()
 	defer sw.mutex.RUnlock()
-	
+
 	var total int64
 	now := time.Now()
-	
+
 	for _, bucket := range sw.buckets {
 		if now.Sub(bucket.timestamp) <= sw.windowSize {
 			total += bucket.requests
 		}
 	}
-	
+
 	return total
 }
 
@@ -405,16 +405,16 @@ func (sw *slidingWindow) TotalRequests() int64 {
 func (sw *slidingWindow) TotalFailures() int64 {
 	sw.mutex.RLock()
 	defer sw.mutex.RUnlock()
-	
+
 	var total int64
 	now := time.Now()
-	
+
 	for _, bucket := range sw.buckets {
 		if now.Sub(bucket.timestamp) <= sw.windowSize {
 			total += bucket.failures
 		}
 	}
-	
+
 	return total
 }
 
@@ -424,7 +424,7 @@ func (sw *slidingWindow) ErrorPercentage() float64 {
 	if totalRequests == 0 {
 		return 0
 	}
-	
+
 	totalFailures := sw.TotalFailures()
 	return (float64(totalFailures) / float64(totalRequests)) * 100
 }
@@ -433,7 +433,7 @@ func (sw *slidingWindow) ErrorPercentage() float64 {
 func (sw *slidingWindow) Reset() {
 	sw.mutex.Lock()
 	defer sw.mutex.Unlock()
-	
+
 	for i := range sw.buckets {
 		sw.buckets[i] = bucket{}
 	}

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 	"time"
-	
+
+	"github.com/aicli/aicli-web/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/aicli/aicli-web/internal/models"
 )
 
 // MockRBACStorage RBAC 저장소 모킹
@@ -162,48 +162,48 @@ func TestRBACManager_CheckPermission_Allow(t *testing.T) {
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
 	resourceType := models.ResourceTypeWorkspace
 	resourceID := "workspace-456"
 	action := models.ActionRead
-	
+
 	// Mock 설정: 캐시 미스
 	mockCache.On("GetUserPermissionMatrix", userID).Return(nil, nil)
-	
+
 	// Mock 설정: 사용자 역할 조회
 	testRole := createTestRole("role-user", "user", "일반 사용자", 2, nil)
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{*testRole}, nil)
-	
+
 	// Mock 설정: 사용자 그룹 조회
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{}, nil)
-	
+
 	// Mock 설정: 역할 권한 조회
 	testPermission := createTestPermission("perm-workspace-read", "workspace_read", models.ResourceTypeWorkspace, models.ActionRead, models.PermissionAllow)
 	mockStorage.On("GetPermissionsByRoleID", ctx, testRole.ID).Return([]models.Permission{*testPermission}, nil)
-	
+
 	// Mock 설정: 역할 상속 조회
 	mockStorage.On("GetRoleHierarchy", ctx, testRole.ID).Return([]models.Role{}, nil)
-	
+
 	// Mock 설정: 캐시 저장
 	mockCache.On("SetUserPermissionMatrix", userID, mock.AnythingOfType("*models.UserPermissionMatrix"), 30*time.Minute).Return(nil)
-	
+
 	req := &models.CheckPermissionRequest{
 		UserID:       userID,
 		ResourceType: resourceType,
 		ResourceID:   resourceID,
 		Action:       action,
 	}
-	
+
 	// When
 	resp, err := rbacManager.CheckPermission(ctx, req)
-	
+
 	// Then
 	assert.NoError(t, err)
 	assert.True(t, resp.Allowed)
 	assert.Equal(t, models.PermissionAllow, resp.Decision.Effect)
 	assert.Contains(t, resp.Decision.Source, "role:user")
-	
+
 	mockStorage.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }
@@ -214,38 +214,38 @@ func TestRBACManager_CheckPermission_Deny(t *testing.T) {
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
 	resourceType := models.ResourceTypeWorkspace
 	resourceID := "workspace-456"
 	action := models.ActionDelete
-	
+
 	// Mock 설정: 캐시 미스
 	mockCache.On("GetUserPermissionMatrix", userID).Return(nil, nil)
-	
+
 	// Mock 설정: 사용자에게 역할이 없음
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{}, nil)
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{}, nil)
-	
+
 	// Mock 설정: 캐시 저장 (빈 권한)
 	mockCache.On("SetUserPermissionMatrix", userID, mock.AnythingOfType("*models.UserPermissionMatrix"), 30*time.Minute).Return(nil)
-	
+
 	req := &models.CheckPermissionRequest{
 		UserID:       userID,
 		ResourceType: resourceType,
 		ResourceID:   resourceID,
 		Action:       action,
 	}
-	
+
 	// When
 	resp, err := rbacManager.CheckPermission(ctx, req)
-	
+
 	// Then
 	assert.NoError(t, err)
 	assert.False(t, resp.Allowed)
 	assert.Equal(t, models.PermissionDeny, resp.Decision.Effect)
 	assert.Equal(t, "default", resp.Decision.Source)
-	
+
 	mockStorage.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }
@@ -256,12 +256,12 @@ func TestRBACManager_CheckPermission_CacheHit(t *testing.T) {
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
 	resourceType := models.ResourceTypeWorkspace
 	resourceID := "workspace-456"
 	action := models.ActionRead
-	
+
 	// 캐시된 권한 매트릭스 생성
 	matrix := &models.UserPermissionMatrix{
 		UserID:         userID,
@@ -280,25 +280,25 @@ func TestRBACManager_CheckPermission_CacheHit(t *testing.T) {
 		},
 		ComputedAt: time.Now(),
 	}
-	
+
 	// Mock 설정: 캐시 히트
 	mockCache.On("GetUserPermissionMatrix", userID).Return(matrix, nil)
-	
+
 	req := &models.CheckPermissionRequest{
 		UserID:       userID,
 		ResourceType: resourceType,
 		ResourceID:   resourceID,
 		Action:       action,
 	}
-	
+
 	// When
 	resp, err := rbacManager.CheckPermission(ctx, req)
-	
+
 	// Then
 	assert.NoError(t, err)
 	assert.True(t, resp.Allowed)
 	assert.Equal(t, models.PermissionAllow, resp.Decision.Effect)
-	
+
 	// 스토리지 호출이 없어야 함 (캐시 히트)
 	mockStorage.AssertNotCalled(t, "GetRolesByUserID")
 	mockCache.AssertExpectations(t)
@@ -310,51 +310,51 @@ func TestRBACManager_ComputeUserPermissionMatrix_WithGroupRoles(t *testing.T) {
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
-	
+
 	// 직접 역할
 	directRole := createTestRole("role-user", "user", "일반 사용자", 2, nil)
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{*directRole}, nil)
-	
+
 	// 그룹을 통한 역할
 	testGroup := createTestUserGroup("group-dev", "developers", "개발자 그룹", "team", nil)
 	groupRole := createTestRole("role-developer", "developer", "개발자", 3, nil)
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{*testGroup}, nil)
 	mockStorage.On("GetRolesByGroupID", ctx, testGroup.ID).Return([]models.Role{*groupRole}, nil)
 	mockStorage.On("GetRoleByID", ctx, groupRole.ID).Return(groupRole, nil)
-	
+
 	// 권한 조회
 	userPermission := createTestPermission("perm-workspace-read", "workspace_read", models.ResourceTypeWorkspace, models.ActionRead, models.PermissionAllow)
 	devPermission := createTestPermission("perm-project-create", "project_create", models.ResourceTypeProject, models.ActionCreate, models.PermissionAllow)
-	
+
 	mockStorage.On("GetPermissionsByRoleID", ctx, directRole.ID).Return([]models.Permission{*userPermission}, nil)
 	mockStorage.On("GetPermissionsByRoleID", ctx, groupRole.ID).Return([]models.Permission{*devPermission}, nil)
-	
+
 	// 상속 역할 없음
 	mockStorage.On("GetRoleHierarchy", ctx, directRole.ID).Return([]models.Role{}, nil)
 	mockStorage.On("GetRoleHierarchy", ctx, groupRole.ID).Return([]models.Role{}, nil)
-	
+
 	// When
 	matrix, err := rbacManager.ComputeUserPermissionMatrix(ctx, userID)
-	
+
 	// Then
 	assert.NoError(t, err)
 	assert.Equal(t, userID, matrix.UserID)
 	assert.Contains(t, matrix.DirectRoles, directRole.ID)
 	assert.Contains(t, matrix.GroupRoles, groupRole.ID)
 	assert.Empty(t, matrix.InheritedRoles)
-	
+
 	// 권한이 올바르게 계산되었는지 확인
 	workspaceReadKey := "workspace:*:read"
 	projectCreateKey := "project:*:create"
-	
+
 	assert.Contains(t, matrix.FinalPermissions, workspaceReadKey)
 	assert.Contains(t, matrix.FinalPermissions, projectCreateKey)
-	
+
 	assert.Equal(t, models.PermissionAllow, matrix.FinalPermissions[workspaceReadKey].Effect)
 	assert.Equal(t, models.PermissionAllow, matrix.FinalPermissions[projectCreateKey].Effect)
-	
+
 	mockStorage.AssertExpectations(t)
 }
 
@@ -364,39 +364,39 @@ func TestRBACManager_ComputeUserPermissionMatrix_WithRoleHierarchy(t *testing.T)
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
-	
+
 	// 역할 계층: admin(1) -> user(2)
 	adminRoleID := "role-admin"
 	userRole := createTestRole("role-user", "user", "일반 사용자", 2, &adminRoleID)
 	adminRole := createTestRole(adminRoleID, "admin", "관리자", 1, nil)
-	
+
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{*userRole}, nil)
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{}, nil)
-	
+
 	// 상속 역할 조회
 	mockStorage.On("GetRoleHierarchy", ctx, userRole.ID).Return([]models.Role{*adminRole}, nil)
-	
+
 	// 권한 조회
 	userPermission := createTestPermission("perm-workspace-read", "workspace_read", models.ResourceTypeWorkspace, models.ActionRead, models.PermissionAllow)
 	adminPermission := createTestPermission("perm-user-manage", "user_manage", models.ResourceTypeUser, models.ActionManage, models.PermissionAllow)
-	
+
 	mockStorage.On("GetPermissionsByRoleID", ctx, userRole.ID).Return([]models.Permission{*userPermission}, nil)
 	mockStorage.On("GetPermissionsByRoleID", ctx, adminRole.ID).Return([]models.Permission{*adminPermission}, nil)
-	
+
 	// When
 	matrix, err := rbacManager.ComputeUserPermissionMatrix(ctx, userID)
-	
+
 	// Then
 	assert.NoError(t, err)
 	assert.Contains(t, matrix.DirectRoles, userRole.ID)
 	assert.Contains(t, matrix.InheritedRoles, adminRole.ID)
-	
+
 	// 두 권한 모두 있어야 함
 	assert.Contains(t, matrix.FinalPermissions, "workspace:*:read")
 	assert.Contains(t, matrix.FinalPermissions, "user:*:manage")
-	
+
 	mockStorage.AssertExpectations(t)
 }
 
@@ -406,46 +406,46 @@ func TestRBACManager_PermissionConflictResolution(t *testing.T) {
 	mockStorage := new(MockRBACStorage)
 	mockCache := new(MockPermissionCache)
 	rbacManager := NewRBACManager(mockStorage, mockCache)
-	
+
 	userID := "user-123"
-	
+
 	// 두 개의 역할: 하나는 허용, 하나는 거부
 	allowRole := createTestRole("role-allow", "allow", "허용 역할", 2, nil)
 	denyRole := createTestRole("role-deny", "deny", "거부 역할", 2, nil)
-	
+
 	mockStorage.On("GetRolesByUserID", ctx, userID).Return([]models.Role{*allowRole, *denyRole}, nil)
 	mockStorage.On("GetUserGroups", ctx, userID).Return([]models.UserGroup{}, nil)
-	
+
 	// 충돌하는 권한 설정
 	allowPermission := createTestPermission("perm-workspace-delete-allow", "workspace_delete", models.ResourceTypeWorkspace, models.ActionDelete, models.PermissionAllow)
 	denyPermission := createTestPermission("perm-workspace-delete-deny", "workspace_delete", models.ResourceTypeWorkspace, models.ActionDelete, models.PermissionDeny)
-	
+
 	mockStorage.On("GetPermissionsByRoleID", ctx, allowRole.ID).Return([]models.Permission{*allowPermission}, nil)
 	mockStorage.On("GetPermissionsByRoleID", ctx, denyRole.ID).Return([]models.Permission{*denyPermission}, nil)
-	
+
 	mockStorage.On("GetRoleHierarchy", ctx, allowRole.ID).Return([]models.Role{}, nil)
 	mockStorage.On("GetRoleHierarchy", ctx, denyRole.ID).Return([]models.Role{}, nil)
-	
+
 	// When
 	matrix, err := rbacManager.ComputeUserPermissionMatrix(ctx, userID)
-	
+
 	// Then
 	assert.NoError(t, err)
-	
+
 	deleteKey := "workspace:*:delete"
 	assert.Contains(t, matrix.FinalPermissions, deleteKey)
-	
+
 	// 거부 권한이 우선해야 함
 	decision := matrix.FinalPermissions[deleteKey]
 	assert.Equal(t, models.PermissionDeny, decision.Effect)
 	assert.Contains(t, decision.Reason, "거부 권한이 허용 권한을 오버라이드함")
-	
+
 	mockStorage.AssertExpectations(t)
 }
 
 func TestJSONConditionEvaluator_EvaluateConditions(t *testing.T) {
 	evaluator := &JSONConditionEvaluator{}
-	
+
 	tests := []struct {
 		name       string
 		conditions string
@@ -503,11 +503,11 @@ func TestJSONConditionEvaluator_EvaluateConditions(t *testing.T) {
 			shouldErr:  true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := evaluator.EvaluateConditions(tt.conditions, tt.context)
-			
+
 			if tt.shouldErr {
 				assert.Error(t, err)
 			} else {
@@ -520,7 +520,7 @@ func TestJSONConditionEvaluator_EvaluateConditions(t *testing.T) {
 
 func TestRBACManager_removeDuplicates(t *testing.T) {
 	rbacManager := &RBACManager{}
-	
+
 	tests := []struct {
 		name     string
 		input    []string
@@ -552,7 +552,7 @@ func TestRBACManager_removeDuplicates(t *testing.T) {
 			expected: []string{"a"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := rbacManager.removeDuplicates(tt.input)

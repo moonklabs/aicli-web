@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/gin-gonic/gin"
 )
 
 // JWTAuth JWT 인증 미들웨어
@@ -316,7 +316,7 @@ func RequirePermission(rbacManager RBACManagerInterface, resourceType models.Res
 							"resource_id":   resourceID,
 							"action":        action,
 						},
-						"decision": response.Decision,
+						"decision":   response.Decision,
 						"evaluation": response.Evaluation,
 					},
 				},
@@ -425,7 +425,7 @@ func RequireAnyPermission(rbacManager RBACManagerInterface, permissions ...Permi
 
 		ctx := context.Background()
 		attributes := extractRequestAttributes(c)
-		
+
 		// 모든 권한을 시도해보고 하나라도 통과하면 성공
 		for _, perm := range permissions {
 			resourceID := c.Param("id")
@@ -486,7 +486,7 @@ func RequireRoleAdvanced(rbacManager RBACManagerInterface, roleNames ...string) 
 		}
 
 		ctx := context.Background()
-		
+
 		// 사용자의 권한 매트릭스 계산
 		matrix, err := rbacManager.ComputeUserPermissionMatrix(ctx, userID)
 		if err != nil {
@@ -551,31 +551,31 @@ type PermissionRequirement struct {
 // extractRequestAttributes 요청에서 속성 추출
 func extractRequestAttributes(c *gin.Context) map[string]string {
 	attributes := make(map[string]string)
-	
+
 	// HTTP 메서드
 	attributes["http_method"] = c.Request.Method
-	
+
 	// 경로
 	attributes["path"] = c.Request.URL.Path
-	
+
 	// IP 주소
 	attributes["client_ip"] = c.ClientIP()
-	
+
 	// 사용자 에이전트
 	attributes["user_agent"] = c.GetHeader("User-Agent")
-	
+
 	// 요청 시간
 	attributes["request_time"] = c.GetHeader("X-Request-Time")
-	
+
 	// 추가 컨텍스트 정보
 	if userID, exists := GetUserID(c); exists {
 		attributes["user_id"] = userID
 	}
-	
+
 	if username, exists := GetUsername(c); exists {
 		attributes["username"] = username
 	}
-	
+
 	return attributes
 }
 
@@ -585,12 +585,12 @@ func GetPermissionDecision(c *gin.Context) (*models.PermissionDecision, bool) {
 	if !exists {
 		return nil, false
 	}
-	
+
 	permDecision, ok := decision.(models.PermissionDecision)
 	if !ok {
 		return nil, false
 	}
-	
+
 	return &permDecision, true
 }
 
@@ -600,7 +600,7 @@ func GetPermissionEvaluation(c *gin.Context) ([]string, bool) {
 	if !exists {
 		return nil, false
 	}
-	
+
 	evalSlice, ok := evaluation.([]string)
 	return evalSlice, ok
 }
@@ -611,7 +611,7 @@ func IsResourceOwner(c *gin.Context) bool {
 	if !exists {
 		return false
 	}
-	
+
 	owner, ok := isOwner.(bool)
 	return ok && owner
 }

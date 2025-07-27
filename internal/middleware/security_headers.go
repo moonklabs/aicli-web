@@ -11,50 +11,50 @@ import (
 // SecurityHeadersConfig는 보안 헤더 설정입니다.
 type SecurityHeadersConfig struct {
 	// HSTS (HTTP Strict Transport Security) 설정
-	HSTSMaxAge            int    // HSTS Max-Age (초)
-	HSTSIncludeSubdomains bool   // 서브도메인 포함 여부
-	HSTSPreload           bool   // Preload 목록 등록 여부
-	
+	HSTSMaxAge            int  // HSTS Max-Age (초)
+	HSTSIncludeSubdomains bool // 서브도메인 포함 여부
+	HSTSPreload           bool // Preload 목록 등록 여부
+
 	// Content Security Policy 설정
-	CSPDefaultSrc    []string // default-src 지시문
-	CSPScriptSrc     []string // script-src 지시문
-	CSPStyleSrc      []string // style-src 지시문
-	CSPImgSrc        []string // img-src 지시문
-	CSPConnectSrc    []string // connect-src 지시문
-	CSPFontSrc       []string // font-src 지시문
-	CSPObjectSrc     []string // object-src 지시문
-	CSPMediaSrc      []string // media-src 지시문
-	CSPFrameSrc      []string // frame-src 지시문
-	CSPSandbox       []string // sandbox 지시문
-	CSPReportURI     string   // report-uri 지시문
-	CSPReportOnly    bool     // Report-Only 모드 활성화
-	
+	CSPDefaultSrc []string // default-src 지시문
+	CSPScriptSrc  []string // script-src 지시문
+	CSPStyleSrc   []string // style-src 지시문
+	CSPImgSrc     []string // img-src 지시문
+	CSPConnectSrc []string // connect-src 지시문
+	CSPFontSrc    []string // font-src 지시문
+	CSPObjectSrc  []string // object-src 지시문
+	CSPMediaSrc   []string // media-src 지시문
+	CSPFrameSrc   []string // frame-src 지시문
+	CSPSandbox    []string // sandbox 지시문
+	CSPReportURI  string   // report-uri 지시문
+	CSPReportOnly bool     // Report-Only 모드 활성화
+
 	// X-Frame-Options 설정
 	FrameOptions string // DENY, SAMEORIGIN, ALLOW-FROM uri
-	
+
 	// X-Content-Type-Options 설정
 	ContentTypeNosniff bool // nosniff 활성화
-	
+
 	// X-XSS-Protection 설정
 	XSSProtection string // 0, 1, 1; mode=block
-	
+
 	// Referrer-Policy 설정
 	ReferrerPolicy string // no-referrer, strict-origin-when-cross-origin 등
-	
+
 	// Permissions-Policy 설정
 	PermissionsPolicy map[string][]string // 기능별 허용 도메인 목록
-	
+
 	// Cross-Origin 설정
 	CrossOriginEmbedderPolicy string // require-corp, unsafe-none
 	CrossOriginOpenerPolicy   string // same-origin, same-origin-allow-popups, unsafe-none
 	CrossOriginResourcePolicy string // same-site, same-origin, cross-origin
-	
+
 	// Custom 헤더
 	CustomHeaders map[string]string // 추가 보안 헤더
-	
+
 	// 개발 모드 설정
 	DevelopmentMode bool // 개발 모드 (일부 보안 헤더 완화)
-	
+
 	Logger *zap.Logger
 }
 
@@ -71,7 +71,7 @@ func DefaultSecurityHeadersConfig() *SecurityHeadersConfig {
 		HSTSMaxAge:            31536000,
 		HSTSIncludeSubdomains: true,
 		HSTSPreload:           false,
-		
+
 		// CSP 기본 설정
 		CSPDefaultSrc: []string{"'self'"},
 		CSPScriptSrc:  []string{"'self'", "'unsafe-inline'"},
@@ -83,31 +83,31 @@ func DefaultSecurityHeadersConfig() *SecurityHeadersConfig {
 		CSPMediaSrc:   []string{"'self'"},
 		CSPFrameSrc:   []string{"'none'"},
 		CSPReportOnly: false,
-		
+
 		// 기본 보안 헤더
 		FrameOptions:       "SAMEORIGIN",
 		ContentTypeNosniff: true,
 		XSSProtection:      "1; mode=block",
 		ReferrerPolicy:     "strict-origin-when-cross-origin",
-		
+
 		// Cross-Origin 정책
 		CrossOriginEmbedderPolicy: "require-corp",
 		CrossOriginOpenerPolicy:   "same-origin",
 		CrossOriginResourcePolicy: "same-origin",
-		
+
 		// Permissions Policy 기본 설정
 		PermissionsPolicy: map[string][]string{
-			"geolocation":    {"'none'"},
-			"microphone":     {"'none'"},
-			"camera":         {"'none'"},
-			"payment":        {"'none'"},
+			"geolocation":   {"'none'"},
+			"microphone":    {"'none'"},
+			"camera":        {"'none'"},
+			"payment":       {"'none'"},
 			"usb":           {"'none'"},
 			"accelerometer": {"'none'"},
 			"gyroscope":     {"'none'"},
 			"magnetometer":  {"'none'"},
 		},
-		
-		CustomHeaders: make(map[string]string),
+
+		CustomHeaders:   make(map[string]string),
 		DevelopmentMode: false,
 	}
 }
@@ -115,18 +115,18 @@ func DefaultSecurityHeadersConfig() *SecurityHeadersConfig {
 // DevelopmentSecurityHeadersConfig는 개발용 보안 헤더 설정을 반환합니다.
 func DevelopmentSecurityHeadersConfig() *SecurityHeadersConfig {
 	config := DefaultSecurityHeadersConfig()
-	
+
 	// 개발 모드 설정
 	config.DevelopmentMode = true
 	config.HSTSMaxAge = 0 // HSTS 비활성화
-	
+
 	// CSP 완화
 	config.CSPScriptSrc = append(config.CSPScriptSrc, "'unsafe-eval'")
 	config.CSPConnectSrc = append(config.CSPConnectSrc, "ws:", "wss:")
-	
+
 	// 개발 도구 허용
 	config.CrossOriginEmbedderPolicy = "unsafe-none"
-	
+
 	return config
 }
 
@@ -135,7 +135,7 @@ func NewSecurityHeaders(config *SecurityHeadersConfig) *SecurityHeaders {
 	if config == nil {
 		config = DefaultSecurityHeadersConfig()
 	}
-	
+
 	return &SecurityHeaders{
 		config: config,
 		logger: config.Logger,
@@ -153,34 +153,34 @@ func (sh *SecurityHeaders) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// HSTS 헤더 설정
 		sh.setHSTSHeader(c)
-		
+
 		// CSP 헤더 설정
 		sh.setCSPHeader(c)
-		
+
 		// X-Frame-Options 헤더 설정
 		sh.setFrameOptionsHeader(c)
-		
+
 		// X-Content-Type-Options 헤더 설정
 		sh.setContentTypeOptionsHeader(c)
-		
+
 		// X-XSS-Protection 헤더 설정
 		sh.setXSSProtectionHeader(c)
-		
+
 		// Referrer-Policy 헤더 설정
 		sh.setReferrerPolicyHeader(c)
-		
+
 		// Permissions-Policy 헤더 설정
 		sh.setPermissionsPolicyHeader(c)
-		
+
 		// Cross-Origin 헤더 설정
 		sh.setCrossOriginHeaders(c)
-		
+
 		// Custom 헤더 설정
 		sh.setCustomHeaders(c)
-		
+
 		// Server 헤더 숨기기
 		sh.hideServerHeader(c)
-		
+
 		c.Next()
 	}
 }
@@ -191,18 +191,18 @@ func (sh *SecurityHeaders) setHSTSHeader(c *gin.Context) {
 	if sh.config.DevelopmentMode || c.Request.TLS == nil {
 		return
 	}
-	
+
 	if sh.config.HSTSMaxAge > 0 {
 		hstsValue := fmt.Sprintf("max-age=%d", sh.config.HSTSMaxAge)
-		
+
 		if sh.config.HSTSIncludeSubdomains {
 			hstsValue += "; includeSubDomains"
 		}
-		
+
 		if sh.config.HSTSPreload {
 			hstsValue += "; preload"
 		}
-		
+
 		c.Header("Strict-Transport-Security", hstsValue)
 	}
 }
@@ -210,71 +210,71 @@ func (sh *SecurityHeaders) setHSTSHeader(c *gin.Context) {
 // setCSPHeader는 Content Security Policy 헤더를 설정합니다.
 func (sh *SecurityHeaders) setCSPHeader(c *gin.Context) {
 	cspDirectives := make([]string, 0)
-	
+
 	// 각 CSP 지시문 설정
 	if len(sh.config.CSPDefaultSrc) > 0 {
-		cspDirectives = append(cspDirectives, 
+		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("default-src %s", strings.Join(sh.config.CSPDefaultSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPScriptSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("script-src %s", strings.Join(sh.config.CSPScriptSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPStyleSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("style-src %s", strings.Join(sh.config.CSPStyleSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPImgSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("img-src %s", strings.Join(sh.config.CSPImgSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPConnectSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("connect-src %s", strings.Join(sh.config.CSPConnectSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPFontSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("font-src %s", strings.Join(sh.config.CSPFontSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPObjectSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("object-src %s", strings.Join(sh.config.CSPObjectSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPMediaSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("media-src %s", strings.Join(sh.config.CSPMediaSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPFrameSrc) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("frame-src %s", strings.Join(sh.config.CSPFrameSrc, " ")))
 	}
-	
+
 	if len(sh.config.CSPSandbox) > 0 {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("sandbox %s", strings.Join(sh.config.CSPSandbox, " ")))
 	}
-	
+
 	if sh.config.CSPReportURI != "" {
 		cspDirectives = append(cspDirectives,
 			fmt.Sprintf("report-uri %s", sh.config.CSPReportURI))
 	}
-	
+
 	if len(cspDirectives) > 0 {
 		cspValue := strings.Join(cspDirectives, "; ")
 		headerName := "Content-Security-Policy"
-		
+
 		if sh.config.CSPReportOnly {
 			headerName = "Content-Security-Policy-Report-Only"
 		}
-		
+
 		c.Header(headerName, cspValue)
 	}
 }
@@ -311,12 +311,12 @@ func (sh *SecurityHeaders) setReferrerPolicyHeader(c *gin.Context) {
 func (sh *SecurityHeaders) setPermissionsPolicyHeader(c *gin.Context) {
 	if len(sh.config.PermissionsPolicy) > 0 {
 		policies := make([]string, 0, len(sh.config.PermissionsPolicy))
-		
+
 		for feature, allowlist := range sh.config.PermissionsPolicy {
 			policy := fmt.Sprintf("%s=(%s)", feature, strings.Join(allowlist, " "))
 			policies = append(policies, policy)
 		}
-		
+
 		if len(policies) > 0 {
 			c.Header("Permissions-Policy", strings.Join(policies, ", "))
 		}
@@ -328,11 +328,11 @@ func (sh *SecurityHeaders) setCrossOriginHeaders(c *gin.Context) {
 	if sh.config.CrossOriginEmbedderPolicy != "" {
 		c.Header("Cross-Origin-Embedder-Policy", sh.config.CrossOriginEmbedderPolicy)
 	}
-	
+
 	if sh.config.CrossOriginOpenerPolicy != "" {
 		c.Header("Cross-Origin-Opener-Policy", sh.config.CrossOriginOpenerPolicy)
 	}
-	
+
 	if sh.config.CrossOriginResourcePolicy != "" {
 		c.Header("Cross-Origin-Resource-Policy", sh.config.CrossOriginResourcePolicy)
 	}
@@ -445,37 +445,37 @@ func (b *SecurityHeadersBuilder) GetConfig() *SecurityHeadersConfig {
 // SecurityHeadersInfo는 설정된 보안 헤더 정보를 반환합니다.
 func (sh *SecurityHeaders) GetSecurityHeadersInfo() map[string]interface{} {
 	info := make(map[string]interface{})
-	
+
 	info["hsts_enabled"] = sh.config.HSTSMaxAge > 0 && !sh.config.DevelopmentMode
 	info["hsts_max_age"] = sh.config.HSTSMaxAge
 	info["hsts_include_subdomains"] = sh.config.HSTSIncludeSubdomains
 	info["hsts_preload"] = sh.config.HSTSPreload
-	
+
 	info["csp_enabled"] = len(sh.config.CSPDefaultSrc) > 0
 	info["csp_report_only"] = sh.config.CSPReportOnly
-	
+
 	info["frame_options"] = sh.config.FrameOptions
 	info["content_type_nosniff"] = sh.config.ContentTypeNosniff
 	info["xss_protection"] = sh.config.XSSProtection
 	info["referrer_policy"] = sh.config.ReferrerPolicy
-	
+
 	info["permissions_policy_count"] = len(sh.config.PermissionsPolicy)
 	info["custom_headers_count"] = len(sh.config.CustomHeaders)
-	
+
 	info["development_mode"] = sh.config.DevelopmentMode
-	
+
 	return info
 }
 
 // ValidateConfig는 보안 헤더 설정을 검증합니다.
 func (sh *SecurityHeaders) ValidateConfig() []string {
 	var warnings []string
-	
+
 	// HSTS 검증
 	if sh.config.HSTSMaxAge > 0 && sh.config.HSTSMaxAge < 3600 {
 		warnings = append(warnings, "HSTS Max-Age가 너무 짧습니다 (최소 1시간 권장)")
 	}
-	
+
 	// CSP 검증
 	if len(sh.config.CSPScriptSrc) > 0 {
 		for _, src := range sh.config.CSPScriptSrc {
@@ -484,7 +484,7 @@ func (sh *SecurityHeaders) ValidateConfig() []string {
 			}
 		}
 	}
-	
+
 	// Frame Options 검증
 	validFrameOptions := []string{"DENY", "SAMEORIGIN"}
 	if sh.config.FrameOptions != "" {
@@ -499,6 +499,6 @@ func (sh *SecurityHeaders) ValidateConfig() []string {
 			warnings = append(warnings, "유효하지 않은 X-Frame-Options 값입니다")
 		}
 	}
-	
+
 	return warnings
 }

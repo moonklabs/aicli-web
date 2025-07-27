@@ -29,7 +29,7 @@ func NewManager() (*Manager, error) {
 
 	// 검증기 초기화
 	v := validator.New()
-	
+
 	// 커스텀 검증 규칙 등록
 	v.RegisterValidation("dir", validateDirectory)
 
@@ -141,7 +141,7 @@ func (m *Manager) Backup() error {
 	if err := m.Save(); err != nil {
 		return err
 	}
-	
+
 	// 백업은 Write 과정에서 자동으로 생성됨
 	return nil
 }
@@ -151,7 +151,7 @@ func (m *Manager) Restore() error {
 	if err := m.fileManager.RestoreBackup(); err != nil {
 		return err
 	}
-	
+
 	// 복구된 설정을 다시 로드
 	return m.Load()
 }
@@ -281,7 +281,6 @@ func isValidLogLevel(level string) bool {
 	return false
 }
 
-
 // isValidStorageType 는 스토리지 타입이 유효한지 검증합니다
 func isValidStorageType(storageType string) bool {
 	validTypes := []string{"memory", "sqlite", "boltdb"}
@@ -298,7 +297,7 @@ func (m *Manager) AllSettings() map[string]interface{} {
 	if m.config == nil {
 		m.config = GetDefaultConfig()
 	}
-	
+
 	// 구조체를 맵으로 변환
 	return map[string]interface{}{
 		"claude": map[string]interface{}{
@@ -331,7 +330,7 @@ func (m *Manager) IsSet(key string) bool {
 	if os.Getenv(envKey) != "" {
 		return true
 	}
-	
+
 	// 설정 파일에서 확인
 	return m.IsFromConfigFile(key)
 }
@@ -348,10 +347,10 @@ func (m *Manager) IsFromConfigFile(key string) bool {
 	if m.config == nil {
 		return false
 	}
-	
+
 	// 기본값과 비교하여 변경되었는지 확인
 	defaultConfig := GetDefaultConfig()
-	
+
 	switch key {
 	case "claude.api_key":
 		return m.config.Claude.APIKey != defaultConfig.Claude.APIKey
@@ -385,8 +384,8 @@ func (m *Manager) IsFromConfigFile(key string) bool {
 // ConvertValue는 문자열 값을 적절한 타입으로 변환합니다
 func (m *Manager) ConvertValue(key string, value string) (interface{}, error) {
 	switch key {
-	case "claude.api_key", "claude.model", "workspace.default_path", 
-	     "output.format", "output.color_mode", "logging.level", "logging.file_path":
+	case "claude.api_key", "claude.model", "workspace.default_path",
+		"output.format", "output.color_mode", "logging.level", "logging.file_path":
 		return value, nil
 	case "claude.temperature":
 		return parseFloat(value)
@@ -398,4 +397,3 @@ func (m *Manager) ConvertValue(key string, value string) (interface{}, error) {
 		return value, nil
 	}
 }
-

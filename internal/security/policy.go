@@ -17,16 +17,16 @@ type SecurityPolicy struct {
 	Version         string                 `json:"version" db:"version"`
 	IsActive        bool                   `json:"is_active" db:"is_active"`
 	IsTemplate      bool                   `json:"is_template" db:"is_template"`
-	ParentID        *string                `json:"parent_id" db:"parent_id"` // 템플릿으로부터 생성된 경우
+	ParentID        *string                `json:"parent_id" db:"parent_id"`     // 템플릿으로부터 생성된 경우
 	ConfigData      map[string]interface{} `json:"config_data" db:"config_data"` // JSON으로 저장
 	Priority        int                    `json:"priority" db:"priority"`       // 우선순위 (높은 값이 우선)
 	Category        string                 `json:"category" db:"category"`       // authentication, authorization, rate_limiting 등
 	Tags            []string               `json:"tags" db:"tags"`               // JSON 배열로 저장
 	EffectiveFrom   time.Time              `json:"effective_from" db:"effective_from"`
 	EffectiveUntil  *time.Time             `json:"effective_until" db:"effective_until"`
-	AppliedBy       string                 `json:"applied_by" db:"applied_by"`      // 적용한 관리자 ID
-	ValidationRules []ValidationRule       `json:"validation_rules,omitempty"`     // DB에는 저장하지 않음
-	AuditLog        []PolicyAuditEntry     `json:"audit_log,omitempty"`            // 별도 테이블
+	AppliedBy       string                 `json:"applied_by" db:"applied_by"` // 적용한 관리자 ID
+	ValidationRules []ValidationRule       `json:"validation_rules,omitempty"` // DB에는 저장하지 않음
+	AuditLog        []PolicyAuditEntry     `json:"audit_log,omitempty"`        // 별도 테이블
 }
 
 // ValidationRule 정책 유효성 검증 규칙
@@ -41,15 +41,15 @@ type ValidationRule struct {
 // PolicyAuditEntry 정책 변경 감사 로그
 type PolicyAuditEntry struct {
 	models.Base
-	PolicyID    string                 `json:"policy_id" db:"policy_id"`
-	Action      string                 `json:"action" db:"action"`           // create, update, delete, apply, rollback
-	OldVersion  string                 `json:"old_version" db:"old_version"`
-	NewVersion  string                 `json:"new_version" db:"new_version"`
-	Changes     map[string]interface{} `json:"changes" db:"changes"`         // JSON으로 저장
-	AppliedBy   string                 `json:"applied_by" db:"applied_by"`
-	Reason      string                 `json:"reason" db:"reason"`
-	IPAddress   string                 `json:"ip_address" db:"ip_address"`
-	UserAgent   string                 `json:"user_agent" db:"user_agent"`
+	PolicyID   string                 `json:"policy_id" db:"policy_id"`
+	Action     string                 `json:"action" db:"action"` // create, update, delete, apply, rollback
+	OldVersion string                 `json:"old_version" db:"old_version"`
+	NewVersion string                 `json:"new_version" db:"new_version"`
+	Changes    map[string]interface{} `json:"changes" db:"changes"` // JSON으로 저장
+	AppliedBy  string                 `json:"applied_by" db:"applied_by"`
+	Reason     string                 `json:"reason" db:"reason"`
+	IPAddress  string                 `json:"ip_address" db:"ip_address"`
+	UserAgent  string                 `json:"user_agent" db:"user_agent"`
 }
 
 // PolicyTemplate 정책 템플릿
@@ -66,11 +66,11 @@ type PolicyTemplate struct {
 
 // PolicyManager 정책 관리자
 type PolicyManager struct {
-	activePolicies map[string]*SecurityPolicy
-	templates      map[string]*PolicyTemplate
-	mu             sync.RWMutex
+	activePolicies  map[string]*SecurityPolicy
+	templates       map[string]*PolicyTemplate
+	mu              sync.RWMutex
 	changeNotifiers []PolicyChangeNotifier
-	validator      *PolicyValidator
+	validator       *PolicyValidator
 }
 
 // PolicyChangeNotifier 정책 변경 알림 인터페이스
@@ -91,23 +91,23 @@ type PolicyService interface {
 	UpdatePolicy(ctx context.Context, id string, req *UpdatePolicyRequest) (*SecurityPolicy, error)
 	DeletePolicy(ctx context.Context, id string) error
 	ListPolicies(ctx context.Context, filter *PolicyFilter) (*models.PaginatedResponse[*SecurityPolicy], error)
-	
+
 	// 정책 적용 및 관리
 	ApplyPolicy(ctx context.Context, id string) error
 	DeactivatePolicy(ctx context.Context, id string) error
 	RollbackPolicy(ctx context.Context, id string, toVersion string) error
 	GetActivePolicies(ctx context.Context, category string) ([]*SecurityPolicy, error)
-	
+
 	// 정책 템플릿
 	CreateTemplate(ctx context.Context, req *CreateTemplateRequest) (*PolicyTemplate, error)
 	GetTemplate(ctx context.Context, id string) (*PolicyTemplate, error)
 	ListTemplates(ctx context.Context) ([]*PolicyTemplate, error)
 	CreatePolicyFromTemplate(ctx context.Context, templateID string, req *CreateFromTemplateRequest) (*SecurityPolicy, error)
-	
+
 	// 정책 검증
 	ValidatePolicy(ctx context.Context, policy *SecurityPolicy) (*ValidationResult, error)
 	TestPolicy(ctx context.Context, id string, testData interface{}) (*TestResult, error)
-	
+
 	// 감사 및 히스토리
 	GetPolicyHistory(ctx context.Context, id string) ([]*PolicyAuditEntry, error)
 	GetPolicyAuditLog(ctx context.Context, filter *AuditFilter) (*models.PaginatedResponse[*PolicyAuditEntry], error)
@@ -176,10 +176,10 @@ type AuditFilter struct {
 }
 
 type ValidationResult struct {
-	IsValid bool              `json:"is_valid"`
-	Errors  []ValidationError `json:"errors,omitempty"`
+	IsValid  bool              `json:"is_valid"`
+	Errors   []ValidationError `json:"errors,omitempty"`
 	Warnings []ValidationError `json:"warnings,omitempty"`
-	Score   int               `json:"score"` // 0-100
+	Score    int               `json:"score"` // 0-100
 }
 
 type ValidationError struct {
@@ -217,7 +217,7 @@ func (pm *PolicyManager) RegisterNotifier(notifier PolicyChangeNotifier) {
 func (pm *PolicyManager) ApplyPolicyRuntime(ctx context.Context, policy *SecurityPolicy) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
-	
+
 	// 정책 유효성 검증
 	if result, err := pm.validator.Validate(policy); err != nil || !result.IsValid {
 		if err != nil {
@@ -225,19 +225,19 @@ func (pm *PolicyManager) ApplyPolicyRuntime(ctx context.Context, policy *Securit
 		}
 		return fmt.Errorf("정책이 유효하지 않습니다: %v", result.Errors)
 	}
-	
+
 	// 기존 같은 카테고리 정책들과 우선순위 체크
 	for _, existingPolicy := range pm.activePolicies {
-		if existingPolicy.Category == policy.Category && 
-		   existingPolicy.Priority >= policy.Priority && 
-		   existingPolicy.ID != policy.ID {
+		if existingPolicy.Category == policy.Category &&
+			existingPolicy.Priority >= policy.Priority &&
+			existingPolicy.ID != policy.ID {
 			return fmt.Errorf("더 높은 우선순위의 정책이 이미 활성화되어 있습니다: %s", existingPolicy.Name)
 		}
 	}
-	
+
 	// 정책 활성화
 	pm.activePolicies[policy.ID] = policy
-	
+
 	// 변경 알림 발송
 	for _, notifier := range pm.changeNotifiers {
 		if err := notifier.OnPolicyChanged(ctx, policy, "apply"); err != nil {
@@ -245,7 +245,7 @@ func (pm *PolicyManager) ApplyPolicyRuntime(ctx context.Context, policy *Securit
 			fmt.Printf("정책 변경 알림 실패: %v\n", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -253,10 +253,10 @@ func (pm *PolicyManager) ApplyPolicyRuntime(ctx context.Context, policy *Securit
 func (pm *PolicyManager) GetActivePolicy(category string, key string) (*SecurityPolicy, bool) {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
-	
+
 	var bestPolicy *SecurityPolicy
 	var bestPriority int = -1
-	
+
 	for _, policy := range pm.activePolicies {
 		if policy.Category == category && policy.IsActive {
 			// 현재 시간이 유효 기간 내인지 확인
@@ -267,7 +267,7 @@ func (pm *PolicyManager) GetActivePolicy(category string, key string) (*Security
 			if policy.EffectiveUntil != nil && now.After(*policy.EffectiveUntil) {
 				continue
 			}
-			
+
 			// 더 높은 우선순위인지 확인
 			if policy.Priority > bestPriority {
 				bestPolicy = policy
@@ -275,7 +275,7 @@ func (pm *PolicyManager) GetActivePolicy(category string, key string) (*Security
 			}
 		}
 	}
-	
+
 	return bestPolicy, bestPolicy != nil
 }
 
@@ -294,7 +294,7 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 		Warnings: []ValidationError{},
 		Score:    100,
 	}
-	
+
 	// 필수 필드 검증
 	if policy.Name == "" {
 		result.IsValid = false
@@ -305,7 +305,7 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 			Code:     "REQUIRED_FIELD",
 		})
 	}
-	
+
 	if policy.Category == "" {
 		result.IsValid = false
 		result.Errors = append(result.Errors, ValidationError{
@@ -315,12 +315,12 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 			Code:     "REQUIRED_FIELD",
 		})
 	}
-	
+
 	// 카테고리별 특화 검증
 	if err := pv.validateByCategory(policy, result); err != nil {
 		return nil, err
 	}
-	
+
 	// 우선순위 검증
 	if policy.Priority < 1 || policy.Priority > 100 {
 		result.IsValid = false
@@ -331,7 +331,7 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 			Code:     "INVALID_RANGE",
 		})
 	}
-	
+
 	// 유효 기간 검증
 	if policy.EffectiveUntil != nil && policy.EffectiveFrom.After(*policy.EffectiveUntil) {
 		result.IsValid = false
@@ -342,7 +342,7 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 			Code:     "INVALID_DATE_RANGE",
 		})
 	}
-	
+
 	// 점수 계산
 	if len(result.Errors) > 0 {
 		result.Score = max(0, result.Score-len(result.Errors)*20)
@@ -350,7 +350,7 @@ func (pv *PolicyValidator) Validate(policy *SecurityPolicy) (*ValidationResult, 
 	if len(result.Warnings) > 0 {
 		result.Score = max(0, result.Score-len(result.Warnings)*5)
 	}
-	
+
 	return result, nil
 }
 
@@ -379,7 +379,7 @@ func (pv *PolicyValidator) validateByCategory(policy *SecurityPolicy, result *Va
 // validateRateLimitingPolicy Rate Limiting 정책 검증
 func (pv *PolicyValidator) validateRateLimitingPolicy(policy *SecurityPolicy, result *ValidationResult) error {
 	config := policy.ConfigData
-	
+
 	// requests_per_second 검증
 	if rps, exists := config["requests_per_second"]; exists {
 		if rpsFloat, ok := rps.(float64); ok {
@@ -402,14 +402,14 @@ func (pv *PolicyValidator) validateRateLimitingPolicy(policy *SecurityPolicy, re
 			result.IsValid = false
 		}
 	}
-	
+
 	return nil
 }
 
 // validateAuthenticationPolicy 인증 정책 검증
 func (pv *PolicyValidator) validateAuthenticationPolicy(policy *SecurityPolicy, result *ValidationResult) error {
 	config := policy.ConfigData
-	
+
 	// session_timeout 검증
 	if timeout, exists := config["session_timeout"]; exists {
 		if timeoutFloat, ok := timeout.(float64); ok {
@@ -423,7 +423,7 @@ func (pv *PolicyValidator) validateAuthenticationPolicy(policy *SecurityPolicy, 
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -436,7 +436,7 @@ func (pv *PolicyValidator) validateAuthorizationPolicy(policy *SecurityPolicy, r
 // validateSecurityHeadersPolicy 보안 헤더 정책 검증
 func (pv *PolicyValidator) validateSecurityHeadersPolicy(policy *SecurityPolicy, result *ValidationResult) error {
 	config := policy.ConfigData
-	
+
 	// CSP 검증
 	if csp, exists := config["content_security_policy"]; exists {
 		if cspStr, ok := csp.(string); ok {
@@ -450,7 +450,7 @@ func (pv *PolicyValidator) validateSecurityHeadersPolicy(policy *SecurityPolicy,
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -572,11 +572,11 @@ type SecurityPolicyResponse struct {
 
 // PolicyStats 정책 통계
 type PolicyStats struct {
-	TotalPolicies     int                    `json:"total_policies"`
-	ActivePolicies    int                    `json:"active_policies"`
-	PoliciesByCategory map[string]int        `json:"policies_by_category"`
-	RecentChanges     []PolicyAuditEntry    `json:"recent_changes"`
-	EffectivenesScore int                    `json:"effectiveness_score"`
+	TotalPolicies      int                `json:"total_policies"`
+	ActivePolicies     int                `json:"active_policies"`
+	PoliciesByCategory map[string]int     `json:"policies_by_category"`
+	RecentChanges      []PolicyAuditEntry `json:"recent_changes"`
+	EffectivenesScore  int                `json:"effectiveness_score"`
 }
 
 // max 헬퍼 함수

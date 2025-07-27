@@ -28,9 +28,9 @@ func (rm *ResourceManager) CreateResourceLimits() *ResourceLimits {
 		CPUPeriod:      100000,
 		Memory:         rm.config.DefaultMemoryLimit,
 		MemorySwap:     rm.config.DefaultMemoryLimit, // Swap 비활성화
-		PidsLimit:      100,    // 최대 100개 프로세스
-		IOMaxBandwidth: "100m", // 100MB/s
-		IOMaxIOps:      1000,   // 1000 IOPS
+		PidsLimit:      100,                          // 최대 100개 프로세스
+		IOMaxBandwidth: "100m",                       // 100MB/s
+		IOMaxIOps:      1000,                         // 1000 IOPS
 	}
 }
 
@@ -67,10 +67,10 @@ func (rm *ResourceManager) ToDockerResources(limits *ResourceLimits) container.R
 		CPUPeriod:  limits.CPUPeriod,
 		Memory:     limits.Memory,
 		MemorySwap: limits.MemorySwap,
-		
+
 		// Block I/O 제한
 		BlkioWeight: 500, // 기본 I/O 가중치
-		
+
 		// Device cgroup rules
 		DeviceCgroupRules: []string{
 			"c 1:3 rmw",   // /dev/null 접근 허용
@@ -202,27 +202,27 @@ func (rm *ResourceManager) CalculateOptimalLimits(workloadType WorkloadType, his
 		limits.CPUQuota = int64(2.0 * 100000) // 2 CPU
 		limits.Memory = 1024 * 1024 * 1024    // 1GB
 		limits.PidsLimit = 200
-		
+
 	case WorkloadTypeBuild:
 		// 빌드 환경: 매우 높은 CPU, 높은 메모리
 		limits.CPUQuota = int64(4.0 * 100000) // 4 CPU
 		limits.Memory = 2048 * 1024 * 1024    // 2GB
 		limits.PidsLimit = 500
 		limits.IOMaxIOps = 2000
-		
+
 	case WorkloadTypeTest:
 		// 테스트 환경: 중간 CPU, 낮은 메모리
 		limits.CPUQuota = int64(1.0 * 100000) // 1 CPU
 		limits.Memory = 512 * 1024 * 1024     // 512MB
 		limits.PidsLimit = 100
-		
+
 	case WorkloadTypeProduction:
 		// 프로덕션: 안정적인 리소스 배분
 		limits.CPUQuota = int64(1.5 * 100000) // 1.5 CPU
 		limits.Memory = 1024 * 1024 * 1024    // 1GB
 		limits.PidsLimit = 300
 		limits.IOMaxIOps = 1500
-		
+
 	default:
 		// 기본값 유지
 	}
@@ -230,7 +230,7 @@ func (rm *ResourceManager) CalculateOptimalLimits(workloadType WorkloadType, his
 	// 히스토리 메트릭을 이용한 동적 조정
 	if len(historyMetrics) > 0 {
 		avgCPU, avgMemory := rm.calculateAverageUsage(historyMetrics)
-		
+
 		// CPU 사용량 기반 조정 (평균 사용량의 150% 여유 확보)
 		if avgCPU > 0 {
 			recommendedCPU := avgCPU * 1.5
@@ -238,7 +238,7 @@ func (rm *ResourceManager) CalculateOptimalLimits(workloadType WorkloadType, his
 				limits.CPUQuota = int64(recommendedCPU * 100000)
 			}
 		}
-		
+
 		// 메모리 사용량 기반 조정 (평균 사용량의 120% 여유 확보)
 		if avgMemory > 0 {
 			recommendedMemory := int64(avgMemory * 1.2)
@@ -281,7 +281,7 @@ func (rm *ResourceManager) GetResourceLimitPreset(preset ResourcePreset) *Resour
 			IOMaxBandwidth: "50m",
 			IOMaxIOps:      500,
 		}
-		
+
 	case ResourcePresetSmall:
 		return &ResourceLimits{
 			CPUShares:      1024,
@@ -293,7 +293,7 @@ func (rm *ResourceManager) GetResourceLimitPreset(preset ResourcePreset) *Resour
 			IOMaxBandwidth: "100m",
 			IOMaxIOps:      1000,
 		}
-		
+
 	case ResourcePresetMedium:
 		return &ResourceLimits{
 			CPUShares:      2048,
@@ -305,7 +305,7 @@ func (rm *ResourceManager) GetResourceLimitPreset(preset ResourcePreset) *Resour
 			IOMaxBandwidth: "200m",
 			IOMaxIOps:      2000,
 		}
-		
+
 	case ResourcePresetLarge:
 		return &ResourceLimits{
 			CPUShares:      4096,
@@ -317,7 +317,7 @@ func (rm *ResourceManager) GetResourceLimitPreset(preset ResourcePreset) *Resour
 			IOMaxBandwidth: "500m",
 			IOMaxIOps:      5000,
 		}
-		
+
 	default:
 		return rm.CreateResourceLimits()
 	}
@@ -344,16 +344,16 @@ type ResourceViolation struct {
 
 // WorkspaceMetrics 워크스페이스 메트릭
 type WorkspaceMetrics struct {
-	WorkspaceID   string    `json:"workspace_id"`
-	CPUPercent    float64   `json:"cpu_percent"`    // CPU 사용률 (0-100%)
-	MemoryUsage   int64     `json:"memory_usage"`   // 메모리 사용량 (바이트)
-	MemoryLimit   int64     `json:"memory_limit"`   // 메모리 제한 (바이트)
-	NetworkRx     int64     `json:"network_rx"`     // 네트워크 수신 바이트/초
-	NetworkTx     int64     `json:"network_tx"`     // 네트워크 송신 바이트/초
-	DiskRead      int64     `json:"disk_read"`      // 디스크 읽기 바이트/초
-	DiskWrite     int64     `json:"disk_write"`     // 디스크 쓰기 바이트/초
-	ProcessCount  int       `json:"process_count"`  // 프로세스 수
-	Timestamp     time.Time `json:"timestamp"`
+	WorkspaceID  string    `json:"workspace_id"`
+	CPUPercent   float64   `json:"cpu_percent"`   // CPU 사용률 (0-100%)
+	MemoryUsage  int64     `json:"memory_usage"`  // 메모리 사용량 (바이트)
+	MemoryLimit  int64     `json:"memory_limit"`  // 메모리 제한 (바이트)
+	NetworkRx    int64     `json:"network_rx"`    // 네트워크 수신 바이트/초
+	NetworkTx    int64     `json:"network_tx"`    // 네트워크 송신 바이트/초
+	DiskRead     int64     `json:"disk_read"`     // 디스크 읽기 바이트/초
+	DiskWrite    int64     `json:"disk_write"`    // 디스크 쓰기 바이트/초
+	ProcessCount int       `json:"process_count"` // 프로세스 수
+	Timestamp    time.Time `json:"timestamp"`
 }
 
 // WorkloadType 워크로드 타입

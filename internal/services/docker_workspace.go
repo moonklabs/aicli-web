@@ -5,60 +5,60 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
+	"github.com/aicli/aicli-web/internal/docker"
+	"github.com/aicli/aicli-web/internal/docker/security"
+	"github.com/aicli/aicli-web/internal/docker/status"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
-	"github.com/aicli/aicli-web/internal/docker"
-	"github.com/aicli/aicli-web/internal/docker/status"
-	"github.com/aicli/aicli-web/internal/docker/security"
 )
 
 // TaskType 워크스페이스 작업 타입
 type TaskType string
 
 const (
-	TaskTypeCreate    TaskType = "create"
-	TaskTypeStart     TaskType = "start"
-	TaskTypeStop      TaskType = "stop"
-	TaskTypeRestart   TaskType = "restart"
-	TaskTypeDelete    TaskType = "delete"
-	TaskTypeSync      TaskType = "sync"
+	TaskTypeCreate  TaskType = "create"
+	TaskTypeStart   TaskType = "start"
+	TaskTypeStop    TaskType = "stop"
+	TaskTypeRestart TaskType = "restart"
+	TaskTypeDelete  TaskType = "delete"
+	TaskTypeSync    TaskType = "sync"
 )
 
 // WorkspaceTask 비동기 워크스페이스 작업 정의
 type WorkspaceTask struct {
-	Type        TaskType             `json:"type"`
-	WorkspaceID string               `json:"workspace_id"`
-	Data        interface{}          `json:"data"`
-	Callback    func(error)          `json:"-"`
-	Timeout     time.Duration        `json:"timeout"`
-	Retries     int                  `json:"retries"`
-	Context     context.Context      `json:"-"`
-	Cancel      context.CancelFunc   `json:"-"`
+	Type        TaskType           `json:"type"`
+	WorkspaceID string             `json:"workspace_id"`
+	Data        interface{}        `json:"data"`
+	Callback    func(error)        `json:"-"`
+	Timeout     time.Duration      `json:"timeout"`
+	Retries     int                `json:"retries"`
+	Context     context.Context    `json:"-"`
+	Cancel      context.CancelFunc `json:"-"`
 }
 
 // DockerWorkspaceService Docker와 통합된 워크스페이스 서비스
 type DockerWorkspaceService struct {
 	// 기본 서비스
-	baseService   WorkspaceService
-	storage       storage.Storage
-	
+	baseService WorkspaceService
+	storage     storage.Storage
+
 	// Docker 관리 컴포넌트
 	dockerManager *docker.Manager
 	statusTracker *status.Tracker
 	isolationMgr  *security.IsolationManager
-	
+
 	// 비동기 작업 처리
-	taskQueue     chan *WorkspaceTask
-	workers       int
-	ctx           context.Context
-	cancel        context.CancelFunc
-	wg            sync.WaitGroup
-	mu            sync.RWMutex
-	
+	taskQueue chan *WorkspaceTask
+	workers   int
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
+	mu        sync.RWMutex
+
 	// 배치 작업 관리
-	batchJobs     map[string]*BatchJob
-	batchMu       sync.RWMutex
+	batchJobs map[string]*BatchJob
+	batchMu   sync.RWMutex
 }
 
 // BatchJob 배치 작업 정의
@@ -109,9 +109,9 @@ func NewDockerWorkspaceService(
 	storage storage.Storage,
 	dockerManager *docker.Manager,
 ) *DockerWorkspaceService {
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	service := &DockerWorkspaceService{
 		baseService:   baseService,
 		storage:       storage,
@@ -122,17 +122,17 @@ func NewDockerWorkspaceService(
 		cancel:        cancel,
 		batchJobs:     make(map[string]*BatchJob),
 	}
-	
+
 	// 상태 추적기 초기화 (선택적)
 	// TODO: 상태 추적기 통합 구현
 	service.statusTracker = nil
-	
+
 	// 격리 관리자 초기화
 	service.isolationMgr = security.NewIsolationManager()
-	
+
 	// 워커 시작
 	service.startWorkers()
-	
+
 	return service
 }
 
@@ -147,7 +147,7 @@ func (dws *DockerWorkspaceService) startWorkers() {
 // worker 개별 워커 고루틴
 func (dws *DockerWorkspaceService) worker(id int) {
 	defer dws.wg.Done()
-	
+
 	for {
 		select {
 		case task := <-dws.taskQueue:
@@ -158,7 +158,7 @@ func (dws *DockerWorkspaceService) worker(id int) {
 			if task.Callback != nil {
 				task.Callback(err)
 			}
-			
+
 		case <-dws.ctx.Done():
 			return
 		}
@@ -172,7 +172,7 @@ func (dws *DockerWorkspaceService) CreateWorkspace(ctx context.Context, req *mod
 	if err != nil {
 		return nil, fmt.Errorf("create base workspace: %w", err)
 	}
-	
+
 	// Phase 2: Docker 컨테이너 생성 (비동기)
 	createTask := &WorkspaceTask{
 		Type:        TaskTypeCreate,
@@ -192,13 +192,13 @@ func (dws *DockerWorkspaceService) CreateWorkspace(ctx context.Context, req *mod
 		Retries: 3,
 		Context: ctx,
 	}
-	
+
 	// 동기 실행을 위한 채널
 	resultChan := make(chan error, 1)
 	createTask.Callback = func(err error) {
 		resultChan <- err
 	}
-	
+
 	// 작업 큐에 추가
 	select {
 	case dws.taskQueue <- createTask:
@@ -210,7 +210,7 @@ func (dws *DockerWorkspaceService) CreateWorkspace(ctx context.Context, req *mod
 			createTask.Callback(err)
 		}()
 	}
-	
+
 	// 컨테이너 생성 대기 (5초 타임아웃)
 	select {
 	case err := <-resultChan:
@@ -231,7 +231,7 @@ func (dws *DockerWorkspaceService) CreateWorkspace(ctx context.Context, req *mod
 			fmt.Printf("failed to update workspace status to inactive: %v\n", err)
 		}
 	}
-	
+
 	return workspace, nil
 }
 
@@ -255,13 +255,13 @@ func (dws *DockerWorkspaceService) DeleteWorkspace(ctx context.Context, id strin
 		Retries:     2,
 		Context:     ctx,
 	}
-	
+
 	// 동기 실행을 위한 채널
 	resultChan := make(chan error, 1)
 	deleteTask.Callback = func(err error) {
 		resultChan <- err
 	}
-	
+
 	// 작업 큐에 추가
 	select {
 	case dws.taskQueue <- deleteTask:
@@ -273,7 +273,7 @@ func (dws *DockerWorkspaceService) DeleteWorkspace(ctx context.Context, id strin
 			deleteTask.Callback(err)
 		}()
 	}
-	
+
 	// 컨테이너 삭제 대기 (10초 타임아웃)
 	select {
 	case containerErr := <-resultChan:
@@ -285,7 +285,7 @@ func (dws *DockerWorkspaceService) DeleteWorkspace(ctx context.Context, id strin
 		// 컨테이너 삭제 타임아웃은 무시하고 DB 삭제 진행
 		fmt.Printf("container deletion timeout for workspace %s\n", id)
 	}
-	
+
 	// Phase 2: DB에서 워크스페이스 삭제
 	return dws.baseService.DeleteWorkspace(ctx, id, ownerID)
 }
@@ -310,7 +310,7 @@ func (dws *DockerWorkspaceService) ActivateWorkspace(ctx context.Context, id str
 		Retries:     2,
 		Context:     ctx,
 	}
-	
+
 	// 비동기 실행
 	select {
 	case dws.taskQueue <- startTask:
@@ -318,7 +318,7 @@ func (dws *DockerWorkspaceService) ActivateWorkspace(ctx context.Context, id str
 	default:
 		return fmt.Errorf("task queue is full, cannot activate workspace")
 	}
-	
+
 	return dws.baseService.ActivateWorkspace(ctx, id, ownerID)
 }
 
@@ -332,7 +332,7 @@ func (dws *DockerWorkspaceService) DeactivateWorkspace(ctx context.Context, id s
 		Retries:     2,
 		Context:     ctx,
 	}
-	
+
 	// 비동기 실행
 	select {
 	case dws.taskQueue <- stopTask:
@@ -340,7 +340,7 @@ func (dws *DockerWorkspaceService) DeactivateWorkspace(ctx context.Context, id s
 	default:
 		return fmt.Errorf("task queue is full, cannot deactivate workspace")
 	}
-	
+
 	return dws.baseService.DeactivateWorkspace(ctx, id, ownerID)
 }
 
@@ -367,7 +367,7 @@ func (dws *DockerWorkspaceService) executeTask(task *WorkspaceTask) error {
 		ctx, cancel = context.WithTimeout(context.Background(), task.Timeout)
 		defer cancel()
 	}
-	
+
 	switch task.Type {
 	case TaskTypeCreate:
 		return dws.executeCreateTask(ctx, task)
@@ -392,20 +392,20 @@ func (dws *DockerWorkspaceService) executeCreateTask(ctx context.Context, task *
 	if !ok {
 		return fmt.Errorf("invalid create task data type")
 	}
-	
+
 	// Step 1: 워크스페이스 정보 조회
 	workspace, err := dws.storage.Workspace().GetByID(ctx, task.WorkspaceID)
 	if err != nil {
 		return fmt.Errorf("get workspace: %w", err)
 	}
-	
+
 	// Step 2: 격리 설정 생성
 	// TODO: isolation 설정을 컨테이너 생성 요청에 추가
 	_, err = dws.isolationMgr.CreateWorkspaceIsolation(workspace)
 	if err != nil {
 		return fmt.Errorf("create isolation config: %w", err)
 	}
-	
+
 	// Step 3: 컨테이너 생성
 	container, err := dws.dockerManager.Container().CreateWorkspaceContainer(ctx, &docker.CreateContainerRequest{
 		WorkspaceID: req.WorkspaceID,
@@ -420,7 +420,7 @@ func (dws *DockerWorkspaceService) executeCreateTask(ctx context.Context, task *
 	if err != nil {
 		return fmt.Errorf("create container: %w", err)
 	}
-	
+
 	// Step 4: 컨테이너 시작
 	if err := dws.dockerManager.Container().StartContainer(ctx, container.ID); err != nil {
 		// 실패 시 컨테이너 삭제
@@ -429,18 +429,18 @@ func (dws *DockerWorkspaceService) executeCreateTask(ctx context.Context, task *
 		}
 		return fmt.Errorf("start container: %w", err)
 	}
-	
+
 	// Step 5: 데이터베이스 상태 업데이트
 	updates := map[string]interface{}{
 		"status":       models.WorkspaceStatusActive,
 		"active_tasks": workspace.ActiveTasks + 1,
 		"updated_at":   time.Now(),
 	}
-	
+
 	if err := dws.storage.Workspace().Update(ctx, task.WorkspaceID, updates); err != nil {
 		return fmt.Errorf("update workspace status: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -450,13 +450,13 @@ func (dws *DockerWorkspaceService) executeStartTask(ctx context.Context, task *W
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	for _, container := range containers {
 		if err := dws.dockerManager.Container().StartContainer(ctx, container.ID); err != nil {
 			return fmt.Errorf("start container %s: %w", container.ID, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -466,13 +466,13 @@ func (dws *DockerWorkspaceService) executeStopTask(ctx context.Context, task *Wo
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	for _, container := range containers {
 		if err := dws.dockerManager.Container().StopContainer(ctx, container.ID, 10*time.Second); err != nil {
 			return fmt.Errorf("stop container %s: %w", container.ID, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -482,13 +482,13 @@ func (dws *DockerWorkspaceService) executeRestartTask(ctx context.Context, task 
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	for _, container := range containers {
 		if err := dws.dockerManager.Container().RestartContainer(ctx, container.ID, 10*time.Second); err != nil {
 			return fmt.Errorf("restart container %s: %w", container.ID, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -498,19 +498,19 @@ func (dws *DockerWorkspaceService) executeDeleteTask(ctx context.Context, task *
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	for _, container := range containers {
 		// 컨테이너 중지 후 삭제
 		if err := dws.dockerManager.Container().StopContainer(ctx, container.ID, 10*time.Second); err != nil {
 			// 중지 실패는 로그만 남기고 계속 진행
 			fmt.Printf("failed to stop container %s before deletion: %v\n", container.ID, err)
 		}
-		
+
 		if err := dws.dockerManager.Container().RemoveContainer(ctx, container.ID, true); err != nil {
 			return fmt.Errorf("remove container %s: %w", container.ID, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -521,7 +521,7 @@ func (dws *DockerWorkspaceService) executeSyncTask(ctx context.Context, task *Wo
 	if err != nil {
 		return fmt.Errorf("list workspace containers: %w", err)
 	}
-	
+
 	// 컨테이너가 없으면 워크스페이스를 비활성 상태로 변경
 	if len(containers) == 0 {
 		updates := map[string]interface{}{
@@ -530,7 +530,7 @@ func (dws *DockerWorkspaceService) executeSyncTask(ctx context.Context, task *Wo
 		}
 		return dws.storage.Workspace().Update(ctx, task.WorkspaceID, updates)
 	}
-	
+
 	// 활성 컨테이너가 있으면 워크스페이스를 활성 상태로 변경
 	hasRunning := false
 	for _, container := range containers {
@@ -539,17 +539,17 @@ func (dws *DockerWorkspaceService) executeSyncTask(ctx context.Context, task *Wo
 			break
 		}
 	}
-	
+
 	status := models.WorkspaceStatusInactive
 	if hasRunning {
 		status = models.WorkspaceStatusActive
 	}
-	
+
 	updates := map[string]interface{}{
 		"status":     status,
 		"updated_at": time.Now(),
 	}
-	
+
 	return dws.storage.Workspace().Update(ctx, task.WorkspaceID, updates)
 }
 
@@ -557,12 +557,12 @@ func (dws *DockerWorkspaceService) executeSyncTask(ctx context.Context, task *Wo
 func (dws *DockerWorkspaceService) Close() error {
 	// 컨텍스트 취소
 	dws.cancel()
-	
+
 	// 태스크 큐 닫기
 	close(dws.taskQueue)
-	
+
 	// 워커 고루틴들이 종료될 때까지 대기
 	dws.wg.Wait()
-	
+
 	return nil
 }

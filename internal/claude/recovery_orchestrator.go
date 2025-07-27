@@ -10,30 +10,30 @@ import (
 // RecoveryOrchestrator는 복구 작업을 총괄 관리합니다
 type RecoveryOrchestrator struct {
 	// 복구 전략들
-	strategies    map[ErrorType][]RecoveryStrategy
+	strategies      map[ErrorType][]RecoveryStrategy
 	strategiesMutex sync.RWMutex
-	
+
 	// 핵심 컴포넌트들
 	processManager ProcessManager // 인터페이스이므로 포인터 제거
 	sessionManager SessionManager
 	healthChecker  HealthChecker // 인터페이스로 변경
-	alertManager   AlertManager // 인터페이스로 변경
-	
+	alertManager   AlertManager  // 인터페이스로 변경
+
 	// 에러 분류기
 	classifier ErrorClassifier
-	
+
 	// 활성 복구 작업들
 	activeRecoveries map[string]*RecoveryExecution
 	activeMutex      sync.RWMutex
-	
+
 	// 복구 히스토리
 	recoveryHistory []RecoveryRecord
 	historyMutex    sync.RWMutex
 	maxHistory      int
-	
+
 	// 설정
 	config RecoveryConfig
-	
+
 	// 생명주기
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -42,10 +42,10 @@ type RecoveryOrchestrator struct {
 
 // RecoveryTargetImpl는 복구 대상의 구체적 구현입니다
 type RecoveryTargetImpl struct {
-	Type       string                 `json:"type"`        // "process", "session", "resource"
-	Identifier string                 `json:"identifier"`  // ID 또는 이름
-	Context    map[string]interface{} `json:"context"`     // 추가 컨텍스트
-	Priority   RecoveryPriority       `json:"priority"`    // 복구 우선순위
+	Type       string                 `json:"type"`       // "process", "session", "resource"
+	Identifier string                 `json:"identifier"` // ID 또는 이름
+	Context    map[string]interface{} `json:"context"`    // 추가 컨텍스트
+	Priority   RecoveryPriority       `json:"priority"`   // 복구 우선순위
 }
 
 // RecoveryTarget 인터페이스 구현
@@ -74,16 +74,16 @@ const (
 
 // RecoveryExecution은 진행 중인 복구 작업입니다
 type RecoveryExecution struct {
-	ID          string           `json:"id"`
-	Target      RecoveryTarget   `json:"target"`
-	Strategy    RecoveryStrategy `json:"-"`
-	Status      RecoveryStatus   `json:"status"`
-	StartTime   time.Time        `json:"start_time"`
-	EndTime     *time.Time       `json:"end_time,omitempty"`
-	Progress    float64          `json:"progress"`
-	Error       string           `json:"error,omitempty"`
-	Steps       []RecoveryStep   `json:"steps"`
-	
+	ID        string           `json:"id"`
+	Target    RecoveryTarget   `json:"target"`
+	Strategy  RecoveryStrategy `json:"-"`
+	Status    RecoveryStatus   `json:"status"`
+	StartTime time.Time        `json:"start_time"`
+	EndTime   *time.Time       `json:"end_time,omitempty"`
+	Progress  float64          `json:"progress"`
+	Error     string           `json:"error,omitempty"`
+	Steps     []RecoveryStep   `json:"steps"`
+
 	// 실행 컨텍스트
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -125,14 +125,14 @@ const (
 
 // RecoveryRecord는 복구 기록입니다
 type RecoveryRecord struct {
-	ExecutionID   string         `json:"execution_id"`
-	Target        RecoveryTarget `json:"target"`
-	StrategyName  string         `json:"strategy_name"`
-	Status        RecoveryStatus `json:"status"`
-	StartTime     time.Time      `json:"start_time"`
-	Duration      time.Duration  `json:"duration"`
-	Error         string         `json:"error,omitempty"`
-	SuccessRate   float64        `json:"success_rate"`
+	ExecutionID  string         `json:"execution_id"`
+	Target       RecoveryTarget `json:"target"`
+	StrategyName string         `json:"strategy_name"`
+	Status       RecoveryStatus `json:"status"`
+	StartTime    time.Time      `json:"start_time"`
+	Duration     time.Duration  `json:"duration"`
+	Error        string         `json:"error,omitempty"`
+	SuccessRate  float64        `json:"success_rate"`
 }
 
 // RecoveryConfig는 복구 설정입니다
@@ -159,7 +159,7 @@ func NewRecoveryOrchestrator(
 	config RecoveryConfig,
 ) *RecoveryOrchestrator {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	orchestrator := &RecoveryOrchestrator{
 		strategies:       make(map[ErrorType][]RecoveryStrategy),
 		processManager:   processManager,
@@ -174,15 +174,15 @@ func NewRecoveryOrchestrator(
 		ctx:              ctx,
 		cancel:           cancel,
 	}
-	
+
 	// 기본 복구 전략 등록
 	orchestrator.registerDefaultStrategies()
-	
+
 	// 백그라운드 작업 시작
 	orchestrator.wg.Add(2)
 	go orchestrator.healthMonitor()
 	go orchestrator.historyCleanup()
-	
+
 	return orchestrator
 }
 
@@ -190,13 +190,13 @@ func NewRecoveryOrchestrator(
 func (ro *RecoveryOrchestrator) RegisterStrategy(errorType ErrorType, strategy RecoveryStrategy) {
 	ro.strategiesMutex.Lock()
 	defer ro.strategiesMutex.Unlock()
-	
+
 	if ro.strategies[errorType] == nil {
 		ro.strategies[errorType] = make([]RecoveryStrategy, 0)
 	}
-	
+
 	ro.strategies[errorType] = append(ro.strategies[errorType], strategy)
-	
+
 	// 우선순위 순으로 정렬
 	strategies := ro.strategies[errorType]
 	for i := 0; i < len(strategies); i++ {
@@ -213,30 +213,30 @@ func (ro *RecoveryOrchestrator) RecoverFromError(ctx context.Context, err error,
 	if err == nil {
 		return nil, fmt.Errorf("error cannot be nil")
 	}
-	
+
 	// 에러 분류
 	errorClass := ro.classifier.ClassifyError(err)
-	
+
 	// 적절한 복구 전략 선택
 	strategy := ro.selectRecoveryStrategy(ctx, errorClass.Type, err)
 	if strategy == nil {
 		return nil, fmt.Errorf("no suitable recovery strategy found for error type: %v", errorClass.Type)
 	}
-	
+
 	// 동시 복구 작업 수 제한 확인
 	if ro.getActiveRecoveryCount() >= ro.config.MaxConcurrentRecoveries {
 		return nil, fmt.Errorf("maximum concurrent recoveries exceeded")
 	}
-	
+
 	// 복구 실행 생성
 	execution := ro.createRecoveryExecution(target, strategy)
-	
+
 	// 복구 시작
 	go ro.executeRecovery(execution)
-	
+
 	// 알림 발송
 	if ro.alertManager != nil {
-		ro.alertManager.SendAlert(AlertLevelWarning, 
+		ro.alertManager.SendAlert(AlertLevelWarning,
 			fmt.Sprintf("Recovery started for %s", target.GetType()),
 			map[string]interface{}{
 				"target":   target,
@@ -244,7 +244,7 @@ func (ro *RecoveryOrchestrator) RecoverFromError(ctx context.Context, err error,
 				"error":    err.Error(),
 			})
 	}
-	
+
 	return execution, nil
 }
 
@@ -252,12 +252,12 @@ func (ro *RecoveryOrchestrator) RecoverFromError(ctx context.Context, err error,
 func (ro *RecoveryOrchestrator) GetActiveRecoveries() []*RecoveryExecution {
 	ro.activeMutex.RLock()
 	defer ro.activeMutex.RUnlock()
-	
+
 	executions := make([]*RecoveryExecution, 0, len(ro.activeRecoveries))
 	for _, execution := range ro.activeRecoveries {
 		executions = append(executions, execution)
 	}
-	
+
 	return executions
 }
 
@@ -265,10 +265,10 @@ func (ro *RecoveryOrchestrator) GetActiveRecoveries() []*RecoveryExecution {
 func (ro *RecoveryOrchestrator) GetRecoveryHistory() []RecoveryRecord {
 	ro.historyMutex.RLock()
 	defer ro.historyMutex.RUnlock()
-	
+
 	history := make([]RecoveryRecord, len(ro.recoveryHistory))
 	copy(history, ro.recoveryHistory)
-	
+
 	return history
 }
 
@@ -277,19 +277,19 @@ func (ro *RecoveryOrchestrator) CancelRecovery(executionID string) error {
 	ro.activeMutex.RLock()
 	execution, exists := ro.activeRecoveries[executionID]
 	ro.activeMutex.RUnlock()
-	
+
 	if !exists {
 		return fmt.Errorf("recovery execution not found: %s", executionID)
 	}
-	
+
 	if execution.Status != RecoveryStatusRunning && execution.Status != RecoveryStatusPending {
 		return fmt.Errorf("cannot cancel recovery in status: %v", execution.Status)
 	}
-	
+
 	// 취소 신호 발송
 	execution.cancel()
 	execution.Status = RecoveryStatusCancelled
-	
+
 	return nil
 }
 
@@ -298,11 +298,11 @@ func (ro *RecoveryOrchestrator) GetRecoveryStatus(executionID string) (*Recovery
 	ro.activeMutex.RLock()
 	execution, exists := ro.activeRecoveries[executionID]
 	ro.activeMutex.RUnlock()
-	
+
 	if !exists {
 		return nil, fmt.Errorf("recovery execution not found: %s", executionID)
 	}
-	
+
 	return execution, nil
 }
 
@@ -314,7 +314,7 @@ func (ro *RecoveryOrchestrator) Shutdown() {
 		execution.cancel()
 	}
 	ro.activeMutex.RUnlock()
-	
+
 	ro.cancel()
 	ro.wg.Wait()
 }
@@ -325,31 +325,31 @@ func (ro *RecoveryOrchestrator) selectRecoveryStrategy(ctx context.Context, erro
 	ro.strategiesMutex.RLock()
 	strategies := ro.strategies[errorType]
 	ro.strategiesMutex.RUnlock()
-	
+
 	// 우선순위 순으로 전략 검토
 	for _, strategy := range strategies {
 		if strategy.CanRecover(ctx, err) {
 			return strategy
 		}
 	}
-	
+
 	// 범용 전략 검토
 	ro.strategiesMutex.RLock()
 	universalStrategies := ro.strategies[UnknownError]
 	ro.strategiesMutex.RUnlock()
-	
+
 	for _, strategy := range universalStrategies {
 		if strategy.CanRecover(ctx, err) {
 			return strategy
 		}
 	}
-	
+
 	return nil
 }
 
 func (ro *RecoveryOrchestrator) createRecoveryExecution(target RecoveryTarget, strategy RecoveryStrategy) *RecoveryExecution {
 	ctx, cancel := context.WithTimeout(ro.ctx, ro.config.DefaultTimeout)
-	
+
 	execution := &RecoveryExecution{
 		ID:        fmt.Sprintf("recovery_%d", time.Now().UnixNano()),
 		Target:    target,
@@ -361,12 +361,12 @@ func (ro *RecoveryOrchestrator) createRecoveryExecution(target RecoveryTarget, s
 		ctx:       ctx,
 		cancel:    cancel,
 	}
-	
+
 	// 활성 복구 목록에 추가
 	ro.activeMutex.Lock()
 	ro.activeRecoveries[execution.ID] = execution
 	ro.activeMutex.Unlock()
-	
+
 	return execution
 }
 
@@ -376,10 +376,10 @@ func (ro *RecoveryOrchestrator) executeRecovery(execution *RecoveryExecution) {
 		ro.activeMutex.Lock()
 		delete(ro.activeRecoveries, execution.ID)
 		ro.activeMutex.Unlock()
-		
+
 		// 히스토리에 추가
 		ro.addToHistory(execution)
-		
+
 		// 알림 발송
 		if ro.alertManager != nil {
 			level := AlertLevelInfo
@@ -387,7 +387,7 @@ func (ro *RecoveryOrchestrator) executeRecovery(execution *RecoveryExecution) {
 				level = AlertLevelError
 			}
 			ro.alertManager.SendAlert(level,
-				fmt.Sprintf("Recovery %s for %s", 
+				fmt.Sprintf("Recovery %s for %s",
 					ro.statusToString(execution.Status),
 					execution.Target.GetType()),
 				map[string]interface{}{
@@ -397,24 +397,24 @@ func (ro *RecoveryOrchestrator) executeRecovery(execution *RecoveryExecution) {
 				})
 		}
 	}()
-	
+
 	// 실행 시작
 	execution.Status = RecoveryStatusRunning
 	ro.addStep(execution, "recovery_started", "Recovery execution started")
-	
+
 	// 복구 전략 실행
 	err := execution.Strategy.Execute(execution.ctx, execution.Target)
-	
+
 	// 결과 처리
 	now := time.Now()
 	execution.EndTime = &now
 	execution.Progress = 100.0
-	
+
 	if err != nil {
 		execution.Status = RecoveryStatusFailed
 		execution.Error = err.Error()
 		ro.addStep(execution, "recovery_failed", fmt.Sprintf("Recovery failed: %v", err))
-		
+
 		// 재시도 로직
 		if ro.shouldRetry(execution) {
 			ro.retryRecovery(execution)
@@ -432,7 +432,7 @@ func (ro *RecoveryOrchestrator) addStep(execution *RecoveryExecution, name, desc
 		StartTime:   time.Now(),
 		Description: description,
 	}
-	
+
 	execution.Steps = append(execution.Steps, step)
 }
 
@@ -440,12 +440,12 @@ func (ro *RecoveryOrchestrator) completeStep(execution *RecoveryExecution, stepI
 	if stepIndex >= len(execution.Steps) {
 		return
 	}
-	
+
 	step := &execution.Steps[stepIndex]
 	now := time.Now()
 	step.EndTime = &now
 	step.Duration = now.Sub(step.StartTime)
-	
+
 	if err != nil {
 		step.Status = StepStatusFailed
 		step.Error = err.Error()
@@ -465,7 +465,7 @@ func (ro *RecoveryOrchestrator) shouldRetry(execution *RecoveryExecution) bool {
 func (ro *RecoveryOrchestrator) retryRecovery(execution *RecoveryExecution) {
 	// 재시도 구현 (실제로는 별도 고루틴에서)
 	time.Sleep(ro.config.RetryDelay)
-	
+
 	// 새로운 실행 생성
 	newExecution := ro.createRecoveryExecution(execution.Target, execution.Strategy)
 	go ro.executeRecovery(newExecution)
@@ -481,14 +481,14 @@ func (ro *RecoveryOrchestrator) addToHistory(execution *RecoveryExecution) {
 		Error:        execution.Error,
 		SuccessRate:  execution.Strategy.GetSuccessRate(),
 	}
-	
+
 	if execution.EndTime != nil {
 		record.Duration = execution.EndTime.Sub(execution.StartTime)
 	}
-	
+
 	ro.historyMutex.Lock()
 	ro.recoveryHistory = append(ro.recoveryHistory, record)
-	
+
 	// 히스토리 크기 제한
 	if len(ro.recoveryHistory) > ro.maxHistory {
 		ro.recoveryHistory = ro.recoveryHistory[1:]
@@ -504,10 +504,10 @@ func (ro *RecoveryOrchestrator) getActiveRecoveryCount() int {
 
 func (ro *RecoveryOrchestrator) healthMonitor() {
 	defer ro.wg.Done()
-	
+
 	ticker := time.NewTicker(ro.config.HealthCheckInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ro.ctx.Done():
@@ -527,13 +527,13 @@ func (ro *RecoveryOrchestrator) performHealthCheck() {
 	if healthInterface == nil {
 		return
 	}
-	
+
 	// OverallHealth 타입으로 assertion
 	health, ok := healthInterface.(*OverallHealth)
 	if !ok {
 		return
 	}
-	
+
 	if health.Status != HealthHealthy {
 		for _, issue := range health.Issues {
 			target := &RecoveryTargetImpl{
@@ -567,10 +567,10 @@ func (ro *RecoveryOrchestrator) mapHealthToPriority(status int) RecoveryPriority
 
 func (ro *RecoveryOrchestrator) historyCleanup() {
 	defer ro.wg.Done()
-	
+
 	ticker := time.NewTicker(time.Hour)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ro.ctx.Done():
@@ -583,17 +583,17 @@ func (ro *RecoveryOrchestrator) historyCleanup() {
 
 func (ro *RecoveryOrchestrator) cleanupOldHistory() {
 	cutoff := time.Now().Add(-ro.config.HistoryRetentionPeriod)
-	
+
 	ro.historyMutex.Lock()
 	defer ro.historyMutex.Unlock()
-	
+
 	var filtered []RecoveryRecord
 	for _, record := range ro.recoveryHistory {
 		if record.StartTime.After(cutoff) {
 			filtered = append(filtered, record)
 		}
 	}
-	
+
 	ro.recoveryHistory = filtered
 }
 
@@ -622,17 +622,17 @@ func (ro *RecoveryOrchestrator) registerDefaultStrategies() {
 		processManager: ro.processManager,
 	}
 	ro.RegisterStrategy(ProcessError, processStrategy)
-	
+
 	// 세션 복구 전략
 	sessionStrategy := &SessionRecoveryStrategy{
 		sessionManager: ro.sessionManager,
 	}
 	ro.RegisterStrategy(InternalError, sessionStrategy)
-	
+
 	// 리소스 복구 전략
 	resourceStrategy := &ResourceRecoveryStrategy{}
 	ro.RegisterStrategy(ResourceError, resourceStrategy)
-	
+
 	// 네트워크 복구 전략
 	networkStrategy := &NetworkRecoveryStrategy{}
 	ro.RegisterStrategy(NetworkError, networkStrategy)

@@ -66,12 +66,12 @@ func TestResourceMonitor_StartMonitoring(t *testing.T) {
 
 	// 통계 데이터 설정
 	stats := &docker.ContainerStats{
-		CPUPercent:   15.0,
-		MemoryUsage:  256 * 1024 * 1024, // 256MB
-		MemoryLimit:  1024 * 1024 * 1024, // 1GB
-		NetworkRxMB:  75.5,
-		NetworkTxMB:  32.1,
-		Timestamp:    time.Now(),
+		CPUPercent:  15.0,
+		MemoryUsage: 256 * 1024 * 1024,  // 256MB
+		MemoryLimit: 1024 * 1024 * 1024, // 1GB
+		NetworkRxMB: 75.5,
+		NetworkTxMB: 32.1,
+		Timestamp:   time.Now(),
 	}
 	mockFactory.statsCollector.AddStats("monitor-test-container", stats)
 
@@ -217,12 +217,12 @@ func TestResourceMonitor_CollectMetrics(t *testing.T) {
 
 	// 통계 데이터 설정
 	stats := &docker.ContainerStats{
-		CPUPercent:   85.5, // 높은 CPU 사용률 (경고 테스트)
-		MemoryUsage:  900 * 1024 * 1024,  // 900MB
-		MemoryLimit:  1024 * 1024 * 1024, // 1GB (87.5% 사용률, 경고 테스트)
-		NetworkRxMB:  200.0,
-		NetworkTxMB:  150.0,
-		Timestamp:    time.Now(),
+		CPUPercent:  85.5,               // 높은 CPU 사용률 (경고 테스트)
+		MemoryUsage: 900 * 1024 * 1024,  // 900MB
+		MemoryLimit: 1024 * 1024 * 1024, // 1GB (87.5% 사용률, 경고 테스트)
+		NetworkRxMB: 200.0,
+		NetworkTxMB: 150.0,
+		Timestamp:   time.Now(),
 	}
 	mockFactory.statsCollector.AddStats("metrics-test-container", stats)
 

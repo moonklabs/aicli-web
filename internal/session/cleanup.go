@@ -12,13 +12,13 @@ import (
 type CleanupService struct {
 	store   Store
 	monitor Monitor
-	
+
 	// 정리 정책 설정
-	cleanupInterval    time.Duration
-	expiredRetention   time.Duration // 만료된 세션 보관 기간
-	inactiveThreshold  time.Duration // 비활성 세션 임계값
-	batchSize          int           // 배치 처리 크기
-	
+	cleanupInterval   time.Duration
+	expiredRetention  time.Duration // 만료된 세션 보관 기간
+	inactiveThreshold time.Duration // 비활성 세션 임계값
+	batchSize         int           // 배치 처리 크기
+
 	stopCh chan struct{}
 }
 
@@ -26,12 +26,12 @@ type CleanupService struct {
 func NewCleanupService(store Store, monitor Monitor) *CleanupService {
 	return &CleanupService{
 		store:             store,
-		monitor:          monitor,
-		cleanupInterval:  time.Hour,        // 1시간마다 정리
-		expiredRetention: time.Hour * 24,   // 만료된 세션 24시간 보관
-		inactiveThreshold: time.Hour * 2,   // 2시간 비활성시 정리 대상
-		batchSize:        100,              // 한 번에 100개씩 처리
-		stopCh:           make(chan struct{}),
+		monitor:           monitor,
+		cleanupInterval:   time.Hour,      // 1시간마다 정리
+		expiredRetention:  time.Hour * 24, // 만료된 세션 24시간 보관
+		inactiveThreshold: time.Hour * 2,  // 2시간 비활성시 정리 대상
+		batchSize:         100,            // 한 번에 100개씩 처리
+		stopCh:            make(chan struct{}),
 	}
 }
 
@@ -54,10 +54,10 @@ func (c *CleanupService) SetInactiveThreshold(threshold time.Duration) {
 func (c *CleanupService) Start(ctx context.Context) {
 	ticker := time.NewTicker(c.cleanupInterval)
 	defer ticker.Stop()
-	
+
 	// 시작 시 한 번 정리 실행
 	c.runCleanup(ctx)
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -89,7 +89,7 @@ func (c *CleanupService) runCleanup(ctx context.Context) {
 			c.monitor.RecordSessionEvent(ctx, event)
 		}
 	}
-	
+
 	// 2. 비활성 세션 정리
 	if err := c.cleanupInactiveSessions(ctx); err != nil {
 		if c.monitor != nil {
@@ -102,7 +102,7 @@ func (c *CleanupService) runCleanup(ctx context.Context) {
 			c.monitor.RecordSessionEvent(ctx, event)
 		}
 	}
-	
+
 	// 3. 고아 데이터 정리
 	if err := c.cleanupOrphanedData(ctx); err != nil {
 		if c.monitor != nil {
@@ -115,7 +115,7 @@ func (c *CleanupService) runCleanup(ctx context.Context) {
 			c.monitor.RecordSessionEvent(ctx, event)
 		}
 	}
-	
+
 	// 정리 완료 이벤트 기록
 	if c.monitor != nil {
 		event := &SessionEvent{
@@ -141,30 +141,30 @@ func (c *CleanupService) cleanupInactiveSessions(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("활성 세션 조회 실패: %w", err)
 	}
-	
+
 	inactiveThreshold := time.Now().Add(-c.inactiveThreshold)
 	var inactiveSessions []*models.AuthSession
-	
+
 	// 비활성 세션 식별
 	for _, session := range activeSessions {
 		if session.LastAccess.Before(inactiveThreshold) {
 			inactiveSessions = append(inactiveSessions, session)
 		}
 	}
-	
+
 	// 배치별로 정리 처리
 	for i := 0; i < len(inactiveSessions); i += c.batchSize {
 		end := i + c.batchSize
 		if end > len(inactiveSessions) {
 			end = len(inactiveSessions)
 		}
-		
+
 		batch := inactiveSessions[i:end]
 		if err := c.processBatch(ctx, batch, "비활성으로 인한 자동 정리"); err != nil {
 			return fmt.Errorf("배치 처리 실패 (인덱스 %d-%d): %w", i, end-1, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -174,12 +174,12 @@ func (c *CleanupService) processBatch(ctx context.Context, sessions []*models.Au
 		// 세션 비활성화
 		session.IsActive = false
 		session.LastAccess = time.Now()
-		
+
 		if err := c.store.Update(ctx, session); err != nil {
 			// 개별 세션 처리 실패는 로그만 남기고 계속 진행
 			continue
 		}
-		
+
 		// 세션 종료 이벤트 기록
 		if c.monitor != nil {
 			event := &SessionEvent{
@@ -190,14 +190,14 @@ func (c *CleanupService) processBatch(ctx context.Context, sessions []*models.Au
 				Severity:    SeverityInfo,
 				Description: reason,
 				EventData: map[string]interface{}{
-					"last_access":     session.LastAccess,
+					"last_access":       session.LastAccess,
 					"inactive_duration": time.Since(session.LastAccess),
 				},
 			}
 			c.monitor.RecordSessionEvent(ctx, event)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -205,10 +205,10 @@ func (c *CleanupService) processBatch(ctx context.Context, sessions []*models.Au
 func (c *CleanupService) cleanupOrphanedData(ctx context.Context) error {
 	// 예: 사용자 세션 리스트에는 있지만 실제 세션은 없는 경우
 	// 예: 디바이스 세션 리스트에는 있지만 실제 세션은 없는 경우
-	
+
 	// 이 기능은 Redis 구현체에 따라 달라질 수 있음
 	// 현재는 기본 정리 기능에 의존
-	
+
 	return nil
 }
 
@@ -225,7 +225,7 @@ func (c *CleanupService) GetCleanupStats(ctx context.Context) (*CleanupStats, er
 	if err != nil {
 		return nil, fmt.Errorf("활성 세션 조회 실패: %w", err)
 	}
-	
+
 	stats := &CleanupStats{
 		LastCleanupTime:   time.Now(), // 실제로는 마지막 정리 시간을 저장해야 함
 		ActiveSessions:    len(activeSessions),
@@ -233,7 +233,7 @@ func (c *CleanupService) GetCleanupStats(ctx context.Context) (*CleanupStats, er
 		InactiveThreshold: c.inactiveThreshold,
 		ExpiredRetention:  c.expiredRetention,
 	}
-	
+
 	// 비활성 세션 수 계산
 	inactiveThreshold := time.Now().Add(-c.inactiveThreshold)
 	for _, session := range activeSessions {
@@ -241,7 +241,7 @@ func (c *CleanupService) GetCleanupStats(ctx context.Context) (*CleanupStats, er
 			stats.InactiveSessions++
 		}
 	}
-	
+
 	// 만료 임박 세션 수 계산
 	expirationThreshold := time.Now().Add(time.Hour) // 1시간 내 만료
 	for _, session := range activeSessions {
@@ -249,7 +249,7 @@ func (c *CleanupService) GetCleanupStats(ctx context.Context) (*CleanupStats, er
 			stats.ExpiringSoon++
 		}
 	}
-	
+
 	return stats, nil
 }
 
@@ -279,19 +279,19 @@ func (c *CleanupService) ApplyPolicy(policy *CleanupPolicy) {
 	if policy == nil {
 		return
 	}
-	
+
 	if policy.CleanupInterval > 0 {
 		c.cleanupInterval = policy.CleanupInterval
 	}
-	
+
 	if policy.InactiveThreshold > 0 {
 		c.inactiveThreshold = policy.InactiveThreshold
 	}
-	
+
 	if policy.ExpiredRetention > 0 {
 		c.expiredRetention = policy.ExpiredRetention
 	}
-	
+
 	if policy.BatchSize > 0 {
 		c.batchSize = policy.BatchSize
 	}

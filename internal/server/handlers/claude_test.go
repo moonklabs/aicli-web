@@ -63,11 +63,6 @@ func (m *MockSessionRepository) GetByID(ctx context.Context, id string) (*models
 	return args.Get(0).(*models.Session), args.Error(1)
 }
 
-func (m *MockSessionRepository) Update(ctx context.Context, id string, update *models.SessionUpdate) (*models.Session, error) {
-	args := m.Called(ctx, id, update)
-	return args.Get(0).(*models.Session), args.Error(1)
-}
-
 func (m *MockSessionRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
@@ -76,6 +71,16 @@ func (m *MockSessionRepository) Delete(ctx context.Context, id string) error {
 func (m *MockSessionRepository) List(ctx context.Context, filter *models.SessionFilter, paging *models.PaginationRequest) (*models.PaginationResponse, error) {
 	args := m.Called(ctx, filter, paging)
 	return args.Get(0).(*models.PaginationResponse), args.Error(1)
+}
+
+func (m *MockSessionRepository) Update(ctx context.Context, session *models.Session) error {
+	args := m.Called(ctx, session)
+	return args.Error(0)
+}
+
+func (m *MockSessionRepository) GetActiveCount(ctx context.Context, projectID string) (int64, error) {
+	args := m.Called(ctx, projectID)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func TestClaudeHandler_Execute(t *testing.T) {
@@ -97,19 +102,38 @@ func TestClaudeHandler_Execute(t *testing.T) {
 			expectedStatus: http.StatusAccepted,
 			setupMocks: func(wrapper *MockClaudeWrapper, repo *MockSessionRepository) {
 				// 기존 세션이 없는 경우
-				repo.On("FindByWorkspace", "workspace-1").Return([]*claude.Session{}, nil)
-				
-				// 새 세션 생성
+				paginationResp := &models.PaginationResponse{
+					Data: []interface{}{},
+					Meta: models.PaginationMeta{
+						CurrentPage: 1,
+						PerPage:     10,
+						Total:       0,
+						TotalPages:  0,
+						HasNext:     false,
+						HasPrev:     false,
+					},
+				}
+				repo.On("List", mock.Anything, mock.AnythingOfType("*models.SessionFilter"), mock.Anything).Return(paginationResp, nil)
+
+				// 새 세션 생성을 위한 모델 세션
+				repo.On("Create", mock.Anything, mock.AnythingOfType("*models.Session")).Return(nil).Run(func(args mock.Arguments) {
+					session := args.Get(1).(*models.Session)
+					session.ID = "session-1"
+					session.CreatedAt = time.Now()
+					session.UpdatedAt = time.Now()
+				})
+
+				// Claude 세션 생성
 				session := &claude.Session{
 					ID:          "session-1",
 					WorkspaceID: "workspace-1",
 					UserID:      "user-1",
-					State:       claude.SessionState{Status: "idle"},
+					State:       claude.SessionStateIdle,
 					Created:     time.Now(),
 					LastActive:  time.Now(),
 				}
 				wrapper.On("CreateSession", mock.AnythingOfType("*claude.SessionConfig")).Return(session, nil)
-				
+
 				// Execute는 비동기로 실행되므로 mock 설정하지 않음
 			},
 		},
@@ -200,7 +224,7 @@ func TestClaudeHandler_ListSessions(t *testing.T) {
 						ID:          "session-1",
 						WorkspaceID: "workspace-1",
 						UserID:      "user-1",
-						State:       claude.SessionState{Status: "idle"},
+						State:       claude.SessionStateIdle,
 						Created:     time.Now(),
 						LastActive:  time.Now(),
 					},
@@ -208,7 +232,7 @@ func TestClaudeHandler_ListSessions(t *testing.T) {
 						ID:          "session-2",
 						WorkspaceID: "workspace-1",
 						UserID:      "user-1",
-						State:       claude.SessionState{Status: "running"},
+						State:       claude.SessionStateActive,
 						Created:     time.Now(),
 						LastActive:  time.Now(),
 					},
@@ -291,7 +315,7 @@ func TestClaudeHandler_GetSession(t *testing.T) {
 					ID:          "session-1",
 					WorkspaceID: "workspace-1",
 					UserID:      "user-1",
-					State:       claude.SessionState{Status: "idle"},
+					State:       claude.SessionStateIdle,
 					Created:     time.Now(),
 					LastActive:  time.Now(),
 				}
@@ -450,7 +474,7 @@ func TestClaudeHandler_executeAsync(t *testing.T) {
 		ID:          "session-1",
 		WorkspaceID: "workspace-1",
 		UserID:      "user-1",
-		State:       claude.SessionState{Status: "idle"},
+		State:       claude.SessionStateIdle,
 		Created:     time.Now(),
 		LastActive:  time.Now(),
 	}

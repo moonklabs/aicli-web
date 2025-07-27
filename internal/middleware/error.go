@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	apierrors "github.com/aicli/aicli-web/internal/errors"
+	"github.com/gin-gonic/gin"
 )
 
 // ErrorResponse는 표준 에러 응답 구조체입니다.
@@ -47,7 +47,7 @@ func ErrorHandler() gin.HandlerFunc {
 
 			// 에러 타입에 따른 응답 생성
 			response := createErrorResponse(err, requestID)
-			
+
 			// 이미 응답이 작성된 경우 처리하지 않음
 			if c.Writer.Written() {
 				return
@@ -55,7 +55,7 @@ func ErrorHandler() gin.HandlerFunc {
 
 			// HTTP 상태 코드 결정
 			statusCode := determineStatusCode(err)
-			
+
 			c.JSON(statusCode, response)
 			c.Abort()
 		}
@@ -125,7 +125,7 @@ func NewAPIError(code string, message string, details interface{}) *gin.Error {
 			detailsMap = dm
 		}
 	}
-	
+
 	return &gin.Error{
 		Err: &APIError{
 			Code:      code,
@@ -138,11 +138,10 @@ func NewAPIError(code string, message string, details interface{}) *gin.Error {
 	}
 }
 
-
 // AbortWithError는 에러와 함께 요청을 중단합니다.
 func AbortWithError(c *gin.Context, statusCode int, code string, message string, details interface{}) {
 	requestID := GetRequestID(c)
-	
+
 	response := ErrorResponse{
 		Success: false,
 		Error: Error{
@@ -152,7 +151,7 @@ func AbortWithError(c *gin.Context, statusCode int, code string, message string,
 			RequestID: requestID,
 		},
 	}
-	
+
 	c.JSON(statusCode, response)
 	c.Abort()
 }
@@ -202,7 +201,7 @@ func HandleServiceError(c *gin.Context, err error) {
 	if err == nil {
 		return
 	}
-	
+
 	// WorkspaceError 타입 확인
 	var workspaceErr *apierrors.WorkspaceError
 	if errors.As(err, &workspaceErr) {
@@ -210,7 +209,7 @@ func HandleServiceError(c *gin.Context, err error) {
 		AbortWithError(c, statusCode, workspaceErr.Code, workspaceErr.Message, nil)
 		return
 	}
-	
+
 	// 일반적인 서비스 에러 처리
 	switch err {
 	case apierrors.ErrWorkspaceNotFound:

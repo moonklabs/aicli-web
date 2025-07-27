@@ -10,9 +10,9 @@ import (
 
 func TestNewDeviceFingerprintGenerator(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		geoipService *GeoIPService
-		expectError bool
+		expectError  bool
 	}{
 		{
 			name:         "with GeoIP service",
@@ -29,7 +29,7 @@ func TestNewDeviceFingerprintGenerator(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var generator *DeviceFingerprintGenerator
-			
+
 			if tt.geoipService != nil {
 				generator = NewDeviceFingerprintGenerator(tt.geoipService)
 			} else {
@@ -38,7 +38,7 @@ func TestNewDeviceFingerprintGenerator(t *testing.T) {
 
 			assert.NotNil(t, generator)
 			assert.NotNil(t, generator.parser)
-			
+
 			if tt.geoipService != nil {
 				assert.Equal(t, tt.geoipService, generator.geoipService)
 			} else {
@@ -52,37 +52,37 @@ func TestGenerateFromRequest(t *testing.T) {
 	generator := NewDeviceFingerprintGeneratorWithoutGeoIP()
 
 	tests := []struct {
-		name        string
-		userAgent   string
-		remoteAddr  string
-		headers     map[string]string
+		name          string
+		userAgent     string
+		remoteAddr    string
+		headers       map[string]string
 		expectBrowser string
-		expectOS     string
-		expectDevice string
+		expectOS      string
+		expectDevice  string
 	}{
 		{
-			name:      "Chrome on Windows Desktop",
-			userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-			remoteAddr: "192.168.1.1:12345",
+			name:          "Chrome on Windows Desktop",
+			userAgent:     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+			remoteAddr:    "192.168.1.1:12345",
 			expectBrowser: "Chrome 91",
-			expectOS:     "Windows 10",
-			expectDevice: "Desktop",
+			expectOS:      "Windows 10",
+			expectDevice:  "Desktop",
 		},
 		{
-			name:      "Safari on iPhone",
-			userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Mobile/15E148 Safari/604.1",
-			remoteAddr: "10.0.0.1:54321",
+			name:          "Safari on iPhone",
+			userAgent:     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Mobile/15E148 Safari/604.1",
+			remoteAddr:    "10.0.0.1:54321",
 			expectBrowser: "Mobile Safari 14",
-			expectOS:     "iOS 14",
-			expectDevice: "Mobile",
+			expectOS:      "iOS 14",
+			expectDevice:  "Mobile",
 		},
 		{
-			name:      "Firefox on Ubuntu",
-			userAgent: "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0",
-			remoteAddr: "172.16.1.1:8080",
+			name:          "Firefox on Ubuntu",
+			userAgent:     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0",
+			remoteAddr:    "172.16.1.1:8080",
 			expectBrowser: "Firefox 89",
-			expectOS:     "Ubuntu",
-			expectDevice: "Desktop",
+			expectOS:      "Ubuntu",
+			expectDevice:  "Desktop",
 		},
 	}
 
@@ -91,7 +91,7 @@ func TestGenerateFromRequest(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.Header.Set("User-Agent", tt.userAgent)
 			req.RemoteAddr = tt.remoteAddr
-			
+
 			for key, value := range tt.headers {
 				req.Header.Set(key, value)
 			}
@@ -102,7 +102,7 @@ func TestGenerateFromRequest(t *testing.T) {
 			assert.Equal(t, tt.userAgent, fingerprint.UserAgent)
 			assert.NotEmpty(t, fingerprint.IPAddress)
 			assert.NotEmpty(t, fingerprint.Fingerprint)
-			
+
 			// UA Parser에서 정확한 파싱 결과는 버전에 따라 달라질 수 있으므로
 			// 기본적인 검증만 수행
 			assert.NotEmpty(t, fingerprint.Browser)
@@ -158,7 +158,7 @@ func TestExtractIPAddress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.RemoteAddr = tt.remoteAddr
-			
+
 			for key, value := range tt.headers {
 				req.Header.Set(key, value)
 			}
@@ -299,7 +299,7 @@ func TestCompareFingerprints(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			score := generator.CompareFingerprints(baseFingerprint, tt.fingerprint)
-			
+
 			if tt.expectScore == 0.0 {
 				assert.Equal(t, tt.expectScore, score, tt.description)
 			} else {
@@ -405,7 +405,7 @@ func BenchmarkGenerateFromRequest(b *testing.B) {
 
 func BenchmarkCompareFingerprints(b *testing.B) {
 	generator := NewDeviceFingerprintGeneratorWithoutGeoIP()
-	
+
 	fp1 := &models.DeviceFingerprint{
 		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0",
 		IPAddress: "192.168.1.1",
@@ -413,12 +413,12 @@ func BenchmarkCompareFingerprints(b *testing.B) {
 		OS:        "Windows",
 		Device:    "Desktop",
 	}
-	
+
 	fp2 := &models.DeviceFingerprint{
 		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/92.0",
 		IPAddress: "192.168.1.2",
 		Browser:   "Chrome",
-		OS:        "Windows",  
+		OS:        "Windows",
 		Device:    "Desktop",
 	}
 

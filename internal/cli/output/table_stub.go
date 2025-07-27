@@ -36,19 +36,19 @@ func (t *Table) Render() {
 		t.writer.Write([]byte(strings.Join(t.headers, "\t") + "\n"))
 		t.writer.Write([]byte(strings.Repeat("-", len(strings.Join(t.headers, "\t"))) + "\n"))
 	}
-	
+
 	for _, row := range t.rows {
 		t.writer.Write([]byte(strings.Join(row, "\t") + "\n"))
 	}
 }
 
 // SetBorder, SetAlignment 등은 호환성을 위한 스텁 메서드들
-func (t *Table) SetBorder(bool) {}
-func (t *Table) SetAlignment(int) {}
-func (t *Table) SetHeaderAlignment(int) {}
+func (t *Table) SetBorder(bool)                {}
+func (t *Table) SetAlignment(int)              {}
+func (t *Table) SetHeaderAlignment(int)        {}
 func (t *Table) SetHeaderColor(...interface{}) {}
-func (t *Table) SetBorders(interface{}) {}
-func (t *Table) SetCenterSeparator(string) {}
+func (t *Table) SetBorders(interface{})        {}
+func (t *Table) SetCenterSeparator(string)     {}
 
 // 상수들
 const (

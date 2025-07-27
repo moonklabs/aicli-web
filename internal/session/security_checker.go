@@ -46,22 +46,22 @@ func (s *RedisSecurityChecker) CheckDeviceFingerprint(ctx context.Context, userI
 	if deviceInfo == nil {
 		return fmt.Errorf("디바이스 정보가 제공되지 않았습니다")
 	}
-	
+
 	// 사용자의 기존 세션들 조회
 	existingSessions, err := s.store.GetUserSessions(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("사용자 세션 조회 실패: %w", err)
 	}
-	
+
 	// 첫 번째 세션인 경우 통과
 	if len(existingSessions) == 0 {
 		return nil
 	}
-	
+
 	// 기존 디바이스들과 비교
 	var maxSimilarity float64
 	var mostSimilarDevice *models.DeviceFingerprint
-	
+
 	for _, session := range existingSessions {
 		if session.DeviceInfo != nil {
 			similarity := s.deviceGenerator.CompareFingerprints(deviceInfo, session.DeviceInfo)
@@ -71,31 +71,31 @@ func (s *RedisSecurityChecker) CheckDeviceFingerprint(ctx context.Context, userI
 			}
 		}
 	}
-	
+
 	// 유사도가 임계값 미만이면 의심스러운 디바이스로 판단
 	if maxSimilarity < s.suspiciousThreshold {
 		// 의심스러운 활동 기록
 		event := &SessionEvent{
-			UserID:    userID,
-			EventType: EventDeviceChanged,
-			Timestamp: time.Now(),
-			Severity:  SeverityWarning,
+			UserID:      userID,
+			EventType:   EventDeviceChanged,
+			Timestamp:   time.Now(),
+			Severity:    SeverityWarning,
 			Description: fmt.Sprintf("새로운 디바이스 감지 (유사도: %.2f%%)", maxSimilarity*100),
 			EventData: map[string]interface{}{
-				"new_device":        deviceInfo,
-				"similar_device":    mostSimilarDevice,
-				"similarity_score":  maxSimilarity,
-				"threshold":         s.suspiciousThreshold,
+				"new_device":       deviceInfo,
+				"similar_device":   mostSimilarDevice,
+				"similarity_score": maxSimilarity,
+				"threshold":        s.suspiciousThreshold,
 			},
 		}
-		
+
 		if s.monitor != nil {
 			s.monitor.RecordSuspiciousActivity(ctx, event)
 		}
-		
+
 		return ErrDeviceNotRecognized
 	}
-	
+
 	return nil
 }
 
@@ -104,84 +104,84 @@ func (s *RedisSecurityChecker) CheckLocationChange(ctx context.Context, sessionI
 	if newLocation == nil {
 		return nil // 위치 정보가 없으면 검사하지 않음
 	}
-	
+
 	// 현재 세션 정보 조회
 	session, err := s.store.Get(ctx, sessionID)
 	if err != nil {
 		return fmt.Errorf("세션 조회 실패: %w", err)
 	}
-	
+
 	// 기존 위치 정보가 없으면 새 위치로 설정
 	if session.LocationInfo == nil {
 		session.LocationInfo = newLocation
 		return s.store.Update(ctx, session)
 	}
-	
+
 	// 위치 간 거리 계산
 	distance := s.calculateDistance(session.LocationInfo, newLocation)
-	
+
 	// 허용 거리를 초과하면 의심스러운 활동으로 기록
 	if distance > s.maxLocationDistance {
 		event := &SessionEvent{
-			SessionID: sessionID,
-			UserID:    session.UserID,
-			EventType: EventLocationChanged,
-			Timestamp: time.Now(),
-			Severity:  SeverityWarning,
+			SessionID:   sessionID,
+			UserID:      session.UserID,
+			EventType:   EventLocationChanged,
+			Timestamp:   time.Now(),
+			Severity:    SeverityWarning,
 			Description: fmt.Sprintf("비정상적인 위치 변경 감지 (거리: %.2fkm)", distance),
 			EventData: map[string]interface{}{
-				"old_location":   session.LocationInfo,
-				"new_location":   newLocation,
-				"distance_km":    distance,
-				"threshold_km":   s.maxLocationDistance,
+				"old_location": session.LocationInfo,
+				"new_location": newLocation,
+				"distance_km":  distance,
+				"threshold_km": s.maxLocationDistance,
 			},
 		}
-		
+
 		if s.monitor != nil {
 			s.monitor.RecordSuspiciousActivity(ctx, event)
 		}
-		
+
 		return ErrLocationChanged
 	}
-	
+
 	// 위치 정보 업데이트
 	session.LocationInfo = newLocation
 	return s.store.Update(ctx, session)
 }
 
-// DetectSuspiciousActivity는 의심스러운 활동을 감지합니다.  
+// DetectSuspiciousActivity는 의심스러운 활동을 감지합니다.
 func (s *RedisSecurityChecker) DetectSuspiciousActivity(ctx context.Context, session *models.AuthSession) (bool, string) {
 	var suspiciousReasons []string
-	
+
 	// 1. 비정상적인 접속 시간 패턴 검사
 	if s.isUnusualAccessTime(session) {
 		suspiciousReasons = append(suspiciousReasons, "비정상적인 접속 시간")
 	}
-	
+
 	// 2. 짧은 시간 내 많은 요청 검사
 	if s.isHighFrequencyAccess(ctx, session) {
 		suspiciousReasons = append(suspiciousReasons, "짧은 시간 내 과도한 접속")
 	}
-	
+
 	// 3. 의심스러운 User-Agent 검사
 	if s.isSuspiciousUserAgent(session) {
 		suspiciousReasons = append(suspiciousReasons, "의심스러운 사용자 에이전트")
 	}
-	
+
 	// 4. IP 주소 변경 패턴 검사
 	if s.isIPAddressHopping(ctx, session) {
 		suspiciousReasons = append(suspiciousReasons, "IP 주소 빈번한 변경")
 	}
-	
+
 	// 5. 봇 활동 패턴 검사
 	if s.isBotLikeActivity(session) {
 		suspiciousReasons = append(suspiciousReasons, "봇과 유사한 활동 패턴")
 	}
-	
+
 	if len(suspiciousReasons) > 0 {
 		return true, strings.Join(suspiciousReasons, ", ")
 	}
-	
+
 	return false, ""
 }
 
@@ -191,11 +191,11 @@ func (s *RedisSecurityChecker) ValidateConcurrentSessions(ctx context.Context, u
 	if err != nil {
 		return fmt.Errorf("활성 세션 수 조회 실패: %w", err)
 	}
-	
+
 	if count >= maxSessions {
 		return ErrConcurrentSessionLimitExceeded
 	}
-	
+
 	return nil
 }
 
@@ -213,17 +213,17 @@ func (s *RedisSecurityChecker) isHighFrequencyAccess(ctx context.Context, sessio
 	if err != nil {
 		return false
 	}
-	
+
 	// 최근 1시간 내 생성된 세션 수 확인
 	recentCount := 0
 	oneHourAgo := time.Now().Add(-time.Hour)
-	
+
 	for _, recentSession := range recentSessions {
 		if recentSession.CreatedAt.After(oneHourAgo) {
 			recentCount++
 		}
 	}
-	
+
 	// 1시간 내 5개 이상의 세션은 의심스러움
 	return recentCount >= 5
 }
@@ -233,27 +233,27 @@ func (s *RedisSecurityChecker) isSuspiciousUserAgent(session *models.AuthSession
 	if session.DeviceInfo == nil || session.DeviceInfo.UserAgent == "" {
 		return true // User-Agent가 없는 경우 의심
 	}
-	
+
 	ua := strings.ToLower(session.DeviceInfo.UserAgent)
-	
+
 	// 봇, 크롤러, 자동화 도구 패턴
 	suspiciousPatterns := []string{
 		"bot", "crawler", "spider", "scraper",
 		"curl", "wget", "python", "go-http-client",
 		"headless", "phantom", "selenium",
 	}
-	
+
 	for _, pattern := range suspiciousPatterns {
 		if strings.Contains(ua, pattern) {
 			return true
 		}
 	}
-	
+
 	// 너무 짧거나 긴 User-Agent
 	if len(ua) < 20 || len(ua) > 500 {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -262,13 +262,13 @@ func (s *RedisSecurityChecker) isIPAddressHopping(ctx context.Context, session *
 	if session.DeviceInfo == nil {
 		return false
 	}
-	
+
 	// 같은 디바이스의 다른 세션들 조회
 	deviceSessions, err := s.store.GetDeviceSessions(ctx, session.DeviceInfo.Fingerprint)
 	if err != nil {
 		return false
 	}
-	
+
 	// 서로 다른 IP 주소 카운트
 	ipSet := make(map[string]bool)
 	for _, deviceSession := range deviceSessions {
@@ -276,7 +276,7 @@ func (s *RedisSecurityChecker) isIPAddressHopping(ctx context.Context, session *
 			ipSet[deviceSession.DeviceInfo.IPAddress] = true
 		}
 	}
-	
+
 	// 같은 디바이스에서 3개 이상의 다른 IP 사용은 의심
 	return len(ipSet) >= 3
 }
@@ -287,16 +287,16 @@ func (s *RedisSecurityChecker) isBotLikeActivity(session *models.AuthSession) bo
 	if time.Since(session.CreatedAt) < time.Minute {
 		return true
 	}
-	
+
 	// 디바이스 정보가 너무 일반적인 경우
 	if session.DeviceInfo != nil {
-		if session.DeviceInfo.Browser == "Unknown" && 
-		   session.DeviceInfo.OS == "Unknown" && 
-		   session.DeviceInfo.Device == "Unknown" {
+		if session.DeviceInfo.Browser == "Unknown" &&
+			session.DeviceInfo.OS == "Unknown" &&
+			session.DeviceInfo.Device == "Unknown" {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -305,25 +305,25 @@ func (s *RedisSecurityChecker) calculateDistance(loc1, loc2 *models.LocationInfo
 	if loc1 == nil || loc2 == nil {
 		return 0
 	}
-	
+
 	// 좌표가 0,0인 경우 거리를 0으로 반환
-	if (loc1.Latitude == 0 && loc1.Longitude == 0) || 
-	   (loc2.Latitude == 0 && loc2.Longitude == 0) {
+	if (loc1.Latitude == 0 && loc1.Longitude == 0) ||
+		(loc2.Latitude == 0 && loc2.Longitude == 0) {
 		return 0
 	}
-	
+
 	const R = 6371 // 지구 반지름 (km)
-	
+
 	lat1Rad := loc1.Latitude * math.Pi / 180
 	lat2Rad := loc2.Latitude * math.Pi / 180
 	deltaLatRad := (loc2.Latitude - loc1.Latitude) * math.Pi / 180
 	deltaLngRad := (loc2.Longitude - loc1.Longitude) * math.Pi / 180
-	
+
 	a := math.Sin(deltaLatRad/2)*math.Sin(deltaLatRad/2) +
 		math.Cos(lat1Rad)*math.Cos(lat2Rad)*
 			math.Sin(deltaLngRad/2)*math.Sin(deltaLngRad/2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	
+
 	return R * c
 }
 
@@ -331,12 +331,12 @@ func (s *RedisSecurityChecker) calculateDistance(loc1, loc2 *models.LocationInfo
 func (s *RedisSecurityChecker) GetLocationFromIP(ipAddress string) (*models.LocationInfo, error) {
 	// 실제 구현에서는 MaxMind GeoIP2 또는 다른 IP geolocation 서비스 사용
 	// 현재는 간단한 국가 판별만 구현
-	
+
 	ip := net.ParseIP(ipAddress)
 	if ip == nil {
 		return nil, fmt.Errorf("잘못된 IP 주소: %s", ipAddress)
 	}
-	
+
 	// 사설 IP 대역 체크
 	if s.isPrivateIP(ip) {
 		return &models.LocationInfo{
@@ -344,7 +344,7 @@ func (s *RedisSecurityChecker) GetLocationFromIP(ipAddress string) (*models.Loca
 			City:    "Private Network",
 		}, nil
 	}
-	
+
 	// 실제로는 GeoIP 데이터베이스를 사용해야 함
 	// 여기서는 간단한 예시만 제공
 	return &models.LocationInfo{
@@ -361,12 +361,12 @@ func (s *RedisSecurityChecker) isPrivateIP(ip net.IP) bool {
 		{IP: net.IPv4(192, 168, 0, 0), Mask: net.CIDRMask(16, 32)},
 		{IP: net.IPv4(127, 0, 0, 0), Mask: net.CIDRMask(8, 32)},
 	}
-	
+
 	for _, block := range privateBlocks {
 		if block.Contains(ip) {
 			return true
 		}
 	}
-	
+
 	return false
 }

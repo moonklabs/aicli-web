@@ -20,27 +20,27 @@ import (
 type CSRFConfig struct {
 	// Redis 클라이언트 (토큰 저장용)
 	Redis redis.UniversalClient
-	
+
 	// 토큰 설정
-	TokenLength    int           // 토큰 길이 (바이트)
-	TokenHeader    string        // CSRF 토큰 헤더명
-	TokenField     string        // 폼 필드명
-	CookieName     string        // 쿠키명
-	TokenLifetime  time.Duration // 토큰 유효 시간
-	
+	TokenLength   int           // 토큰 길이 (바이트)
+	TokenHeader   string        // CSRF 토큰 헤더명
+	TokenField    string        // 폼 필드명
+	CookieName    string        // 쿠키명
+	TokenLifetime time.Duration // 토큰 유효 시간
+
 	// 보안 설정
-	SecureCookie   bool          // HTTPS 전용 쿠키
-	SameSite       http.SameSite // SameSite 설정
-	CookieDomain   string        // 쿠키 도메인
-	CookiePath     string        // 쿠키 경로
-	
+	SecureCookie bool          // HTTPS 전용 쿠키
+	SameSite     http.SameSite // SameSite 설정
+	CookieDomain string        // 쿠키 도메인
+	CookiePath   string        // 쿠키 경로
+
 	// 검사 설정
-	SkipMethods    []string      // 검사를 건너뛸 HTTP 메서드
-	TrustedOrigins []string      // 신뢰할 수 있는 Origin 목록
-	
+	SkipMethods    []string // 검사를 건너뛸 HTTP 메서드
+	TrustedOrigins []string // 신뢰할 수 있는 Origin 목록
+
 	// 에러 핸들러
 	ErrorHandler func(*gin.Context, error)
-	
+
 	Logger *zap.Logger
 }
 
@@ -64,17 +64,17 @@ type CSRFToken struct {
 // DefaultCSRFConfig는 기본 CSRF 설정을 반환합니다.
 func DefaultCSRFConfig() *CSRFConfig {
 	return &CSRFConfig{
-		TokenLength:   32,
-		TokenHeader:   "X-CSRF-Token",
-		TokenField:    "_csrf_token",
-		CookieName:    "csrf_token",
-		TokenLifetime: 24 * time.Hour,
-		SecureCookie:  true,
-		SameSite:      http.SameSiteStrictMode,
-		CookiePath:    "/",
-		SkipMethods:   []string{"GET", "HEAD", "OPTIONS"},
+		TokenLength:    32,
+		TokenHeader:    "X-CSRF-Token",
+		TokenField:     "_csrf_token",
+		CookieName:     "csrf_token",
+		TokenLifetime:  24 * time.Hour,
+		SecureCookie:   true,
+		SameSite:       http.SameSiteStrictMode,
+		CookiePath:     "/",
+		SkipMethods:    []string{"GET", "HEAD", "OPTIONS"},
 		TrustedOrigins: []string{},
-		ErrorHandler:  defaultCSRFErrorHandler,
+		ErrorHandler:   defaultCSRFErrorHandler,
 	}
 }
 
@@ -83,7 +83,7 @@ func NewCSRFProtection(config *CSRFConfig) *CSRFProtection {
 	if config == nil {
 		config = DefaultCSRFConfig()
 	}
-	
+
 	// 기본값 설정
 	if config.TokenLength == 0 {
 		config.TokenLength = 32
@@ -172,7 +172,7 @@ func (cp *CSRFProtection) checkOrigin(c *gin.Context) bool {
 		if referer == "" {
 			return false
 		}
-		
+
 		// Referer에서 origin 추출
 		if strings.Contains(referer, "://") {
 			parts := strings.SplitN(referer, "://", 2)
@@ -478,7 +478,7 @@ func (cp *CSRFProtection) GetStats(c *gin.Context) map[string]interface{} {
 
 	if cp.redis != nil {
 		ctx := c.Request.Context()
-		
+
 		// 활성 토큰 수
 		pattern := "csrf:token:*"
 		var cursor uint64
@@ -517,7 +517,7 @@ func CSRFTokenGenerator(cp *CSRFProtection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cp.generateAndSetToken(c)
 		token := cp.GetToken(c)
-		
+
 		c.JSON(http.StatusOK, gin.H{
 			"csrf_token": token,
 		})

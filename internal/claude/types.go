@@ -16,33 +16,33 @@ type FormattedMessage struct {
 
 // ExecutionSummary는 Claude 실행 완료 시의 요약 정보입니다.
 type ExecutionSummary struct {
-	Success      bool          `json:"success"`
-	Duration     int64         `json:"duration_ms"`     // 밀리초
-	InputTokens  int           `json:"input_tokens"`
-	OutputTokens int           `json:"output_tokens"`
-	ErrorMessage string        `json:"error_message,omitempty"`
-	SessionID    string        `json:"session_id,omitempty"`
-	StartedAt    time.Time     `json:"started_at"`
-	CompletedAt  time.Time     `json:"completed_at"`
-	TotalSteps   int           `json:"total_steps,omitempty"`
-	FailedSteps  int           `json:"failed_steps,omitempty"`
+	Success      bool      `json:"success"`
+	Duration     int64     `json:"duration_ms"` // 밀리초
+	InputTokens  int       `json:"input_tokens"`
+	OutputTokens int       `json:"output_tokens"`
+	ErrorMessage string    `json:"error_message,omitempty"`
+	SessionID    string    `json:"session_id,omitempty"`
+	StartedAt    time.Time `json:"started_at"`
+	CompletedAt  time.Time `json:"completed_at"`
+	TotalSteps   int       `json:"total_steps,omitempty"`
+	FailedSteps  int       `json:"failed_steps,omitempty"`
 }
 
 // ProgressInfo는 실행 진행 상황을 나타냅니다.
 type ProgressInfo struct {
-	Current     int    `json:"current"`
-	Total       int    `json:"total"`
-	CurrentTask string `json:"current_task,omitempty"`
-	Stage       string `json:"stage,omitempty"`
+	Current     int     `json:"current"`
+	Total       int     `json:"total"`
+	CurrentTask string  `json:"current_task,omitempty"`
+	Stage       string  `json:"stage,omitempty"`
 	Percentage  float64 `json:"percentage"`
 }
 
 // ClaudeError는 Claude CLI에서 발생하는 에러를 나타냅니다.
 type ClaudeError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
 	Details map[string]interface{} `json:"details,omitempty"`
-	Hint    string `json:"hint,omitempty"`
+	Hint    string                 `json:"hint,omitempty"`
 }
 
 func (e *ClaudeError) Error() string {
@@ -62,7 +62,7 @@ func NewFormattedMessage(msg *StreamMessage) *FormattedMessage {
 	if msg == nil {
 		return nil
 	}
-	
+
 	return &FormattedMessage{
 		Type:      msg.Type,
 		Content:   msg.Content,
@@ -76,7 +76,7 @@ func NewFormattedResponse(resp *Response, index int) *FormattedMessage {
 	if resp == nil {
 		return nil
 	}
-	
+
 	return &FormattedMessage{
 		Type:      resp.Type,
 		Content:   resp.Content,
@@ -92,7 +92,7 @@ func NewProgressInfo(current, total int, task string) *ProgressInfo {
 	if total > 0 {
 		percentage = float64(current) / float64(total) * 100
 	}
-	
+
 	return &ProgressInfo{
 		Current:     current,
 		Total:       total,
@@ -105,7 +105,7 @@ func NewProgressInfo(current, total int, task string) *ProgressInfo {
 func NewExecutionSummary(success bool, startTime time.Time) *ExecutionSummary {
 	now := time.Now()
 	duration := now.Sub(startTime)
-	
+
 	return &ExecutionSummary{
 		Success:     success,
 		Duration:    duration.Milliseconds(),
@@ -120,16 +120,16 @@ func NewExecutionSummary(success bool, startTime time.Time) *ExecutionSummary {
 type RecoveryStrategy interface {
 	// 복구 가능 여부 확인
 	CanRecover(ctx context.Context, err error) bool
-	
+
 	// 복구 실행
 	Execute(ctx context.Context, target RecoveryTarget) error
-	
+
 	// 예상 소요 시간
 	GetEstimatedTime() time.Duration
-	
+
 	// 성공률
 	GetSuccessRate() float64
-	
+
 	// 전략명
 	GetName() string
 }

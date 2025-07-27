@@ -39,11 +39,11 @@ func (fl *FileLock) Lock() error {
 	if err != nil {
 		return fmt.Errorf("잠금 파일 생성 실패: %w", err)
 	}
-	
+
 	// PID 기록
 	fmt.Fprintf(lockFile, "%d\n", os.Getpid())
 	lockFile.Close()
-	
+
 	return nil
 }
 
@@ -55,14 +55,14 @@ func (fl *FileLock) Unlock() error {
 // TryLock 은 잠금 획득을 시도하고, timeout 동안 재시도합니다
 func (fl *FileLock) TryLock(timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		if err := fl.Lock(); err == nil {
 			return nil
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	
+
 	return fmt.Errorf("잠금 획득 시간 초과")
 }
 
@@ -72,7 +72,7 @@ func (fl *FileLock) WithLock(fn func() error) error {
 		return err
 	}
 	defer fl.Unlock()
-	
+
 	return fn()
 }
 

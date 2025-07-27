@@ -16,28 +16,28 @@ import (
 type MiddlewareConfig struct {
 	// Manager 트랜잭션 매니저
 	Manager Manager
-	
+
 	// Logger 로거
 	Logger *log.Logger
-	
+
 	// TransactionMethods 트랜잭션을 사용할 HTTP 메서드들
 	TransactionMethods []string
-	
+
 	// SkipPaths 트랜잭션을 스킵할 경로들
 	SkipPaths []string
-	
+
 	// DefaultTimeout 기본 타임아웃
 	DefaultTimeout time.Duration
-	
+
 	// MaxTimeout 최대 타임아웃
 	MaxTimeout time.Duration
-	
+
 	// EnableLogging 로깅 활성화 여부
 	EnableLogging bool
-	
+
 	// EnableMetrics 메트릭 수집 활성화 여부
 	EnableMetrics bool
-	
+
 	// CustomErrorHandler 커스텀 에러 핸들러
 	CustomErrorHandler func(http.ResponseWriter, *http.Request, error)
 }
@@ -66,11 +66,11 @@ type MiddlewareStats struct {
 	TotalRequests       int64
 	TransactionRequests int64
 	SuccessfulCommits   int64
-	Rollbacks          int64
-	Errors             int64
+	Rollbacks           int64
+	Errors              int64
 	AverageResponseTime time.Duration
-	LastError          error
-	LastErrorTime      time.Time
+	LastError           error
+	LastErrorTime       time.Time
 }
 
 // NewTransactionMiddleware 새 트랜잭션 미들웨어 생성
@@ -78,7 +78,7 @@ func NewTransactionMiddleware(config *MiddlewareConfig) *TransactionMiddleware {
 	if config == nil {
 		panic("middleware config cannot be nil")
 	}
-	
+
 	return &TransactionMiddleware{
 		config: config,
 		stats:  &MiddlewareStats{},
@@ -90,40 +90,40 @@ func (tm *TransactionMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		tm.stats.TotalRequests++
-		
+
 		// 트랜잭션이 필요한지 확인
 		if !tm.shouldUseTransaction(r) {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		tm.stats.TransactionRequests++
-		
+
 		// 트랜잭션 옵션 생성
 		opts := tm.createTransactionOptions(r)
-		
+
 		// 트랜잭션 내에서 요청 처리
 		err := tm.config.Manager.RunInTx(r.Context(), func(ctx context.Context) error {
 			// 트랜잭션 컨텍스트로 요청 업데이트
 			r = r.WithContext(ctx)
-			
+
 			// 응답 래퍼 생성
 			responseWrapper := &responseWriter{
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 			}
-			
+
 			// 다음 핸들러 실행
 			next.ServeHTTP(responseWrapper, r)
-			
+
 			// 응답 상태 코드 확인
 			if responseWrapper.statusCode >= 400 {
 				return fmt.Errorf("HTTP 에러 응답: %d", responseWrapper.statusCode)
 			}
-			
+
 			return nil
 		}, opts)
-		
+
 		// 에러 처리
 		duration := time.Since(startTime)
 		if err != nil {
@@ -131,7 +131,7 @@ func (tm *TransactionMiddleware) Handler(next http.Handler) http.Handler {
 		} else {
 			tm.handleSuccess(duration)
 		}
-		
+
 		// 로깅
 		if tm.config.EnableLogging && tm.config.Logger != nil {
 			tm.logRequest(r, err, duration)
@@ -147,7 +147,7 @@ func (tm *TransactionMiddleware) shouldUseTransaction(r *http.Request) bool {
 			return false
 		}
 	}
-	
+
 	// HTTP 메서드 확인
 	method := r.Method
 	for _, txMethod := range tm.config.TransactionMethods {
@@ -155,22 +155,22 @@ func (tm *TransactionMiddleware) shouldUseTransaction(r *http.Request) bool {
 			return true
 		}
 	}
-	
+
 	// 헤더로 강제 트랜잭션 활성화
 	if r.Header.Get("X-Force-Transaction") == "true" {
 		return true
 	}
-	
+
 	return false
 }
 
 // createTransactionOptions 요청에서 트랜잭션 옵션 생성
 func (tm *TransactionMiddleware) createTransactionOptions(r *http.Request) *storage.TransactionOptions {
 	opts := storage.DefaultTransactionOptions()
-	
+
 	// 타임아웃 설정
 	opts.Timeout = tm.config.DefaultTimeout
-	
+
 	// 헤더에서 옵션 읽기
 	if timeoutHeader := r.Header.Get("X-Transaction-Timeout"); timeoutHeader != "" {
 		if timeout, err := time.ParseDuration(timeoutHeader); err == nil {
@@ -179,12 +179,12 @@ func (tm *TransactionMiddleware) createTransactionOptions(r *http.Request) *stor
 			}
 		}
 	}
-	
+
 	// 읽기 전용 모드
 	if r.Header.Get("X-Transaction-ReadOnly") == "true" || r.Method == "GET" {
 		opts.ReadOnly = true
 	}
-	
+
 	// 격리 수준
 	if isolationHeader := r.Header.Get("X-Transaction-Isolation"); isolationHeader != "" {
 		switch strings.ToUpper(isolationHeader) {
@@ -198,14 +198,14 @@ func (tm *TransactionMiddleware) createTransactionOptions(r *http.Request) *stor
 			opts.IsolationLevel = storage.IsolationLevelSerializable
 		}
 	}
-	
+
 	// 재시도 설정
 	if retryHeader := r.Header.Get("X-Transaction-Retry-Count"); retryHeader != "" {
 		if retryCount := parseIntHeader(retryHeader, opts.RetryCount); retryCount >= 0 {
 			opts.RetryCount = retryCount
 		}
 	}
-	
+
 	return &opts
 }
 
@@ -215,22 +215,22 @@ func (tm *TransactionMiddleware) handleError(w http.ResponseWriter, r *http.Requ
 	tm.stats.Rollbacks++
 	tm.stats.LastError = err
 	tm.stats.LastErrorTime = time.Now()
-	
+
 	// 평균 응답 시간 업데이트
 	tm.updateAverageResponseTime(duration)
-	
+
 	// 커스텀 에러 핸들러 사용
 	if tm.config.CustomErrorHandler != nil {
 		tm.config.CustomErrorHandler(w, r, err)
 		return
 	}
-	
+
 	// 기본 에러 응답
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	statusCode := http.StatusInternalServerError
 	errorMessage := "Internal Server Error"
-	
+
 	// 에러 타입에 따른 상태 코드 결정
 	if strings.Contains(err.Error(), "timeout") {
 		statusCode = http.StatusRequestTimeout
@@ -242,15 +242,15 @@ func (tm *TransactionMiddleware) handleError(w http.ResponseWriter, r *http.Requ
 		// 이미 핸들러에서 응답을 보냈으므로 추가 처리 불요
 		return
 	}
-	
+
 	w.WriteHeader(statusCode)
-	
+
 	errorResponse := map[string]interface{}{
 		"error":     errorMessage,
 		"message":   err.Error(),
 		"timestamp": time.Now().Unix(),
 	}
-	
+
 	json.NewEncoder(w).Encode(errorResponse)
 }
 
@@ -275,7 +275,7 @@ func (tm *TransactionMiddleware) logRequest(r *http.Request, err error, duration
 	if err != nil {
 		status = "ERROR"
 	}
-	
+
 	tm.config.Logger.Printf(
 		"Transaction Request: %s %s - Status: %s - Duration: %v - Error: %v",
 		r.Method, r.URL.Path, status, duration, err,
@@ -322,17 +322,17 @@ func (tm *TransactionMiddleware) TransactionInfoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		info := map[string]interface{}{
 			"transaction_middleware_stats": tm.GetStats(),
-			"manager_stats":               tm.config.Manager.GetStats(),
-			"in_transaction":              tm.config.Manager.IsInTransaction(r.Context()),
+			"manager_stats":                tm.config.Manager.GetStats(),
+			"in_transaction":               tm.config.Manager.IsInTransaction(r.Context()),
 		}
-		
+
 		// 현재 트랜잭션 정보
 		if tx, exists := tm.config.Manager.Current(r.Context()); exists {
 			info["current_transaction"] = map[string]interface{}{
 				"closed": tx.IsClosed(),
 			}
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(info)
 	}
@@ -343,12 +343,12 @@ func parseIntHeader(value string, defaultValue int) int {
 	if value == "" {
 		return defaultValue
 	}
-	
+
 	var result int
 	if n, err := fmt.Sscanf(value, "%d", &result); err != nil || n != 1 {
 		return defaultValue
 	}
-	
+
 	return result
 }
 

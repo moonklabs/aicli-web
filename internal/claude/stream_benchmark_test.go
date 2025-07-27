@@ -141,8 +141,8 @@ func BenchmarkStreamMessageRouter(b *testing.B) {
 	logger.SetLevel(logrus.ErrorLevel)
 
 	testCases := []struct {
-		name       string
-		asyncMode  bool
+		name        string
+		asyncMode   bool
 		numHandlers int
 	}{
 		{"Sync_1Handler", false, 1},
@@ -199,8 +199,8 @@ func BenchmarkStreamMessageRouter(b *testing.B) {
 			}
 
 			metrics := router.GetMetrics()
-			b.Logf("Total: %d, Errors: %d", 
-				metrics["total_messages"], 
+			b.Logf("Total: %d, Errors: %d",
+				metrics["total_messages"],
 				metrics["total_errors"])
 		})
 	}
@@ -230,7 +230,7 @@ func BenchmarkJSONParser(b *testing.B) {
 			// 테스트 JSON 생성
 			jsonData := generateJSONData(tc.jsonType, tc.multiline, tc.size)
 			reader := strings.NewReader(strings.Repeat(jsonData+"\n", b.N))
-			
+
 			parser := NewJSONStreamParser(reader, logger)
 			ctx := context.Background()
 
@@ -238,7 +238,7 @@ func BenchmarkJSONParser(b *testing.B) {
 			b.SetBytes(int64(len(jsonData)))
 
 			responseChan, errorChan := parser.ParseStream(ctx)
-			
+
 			count := 0
 			for {
 				select {
@@ -328,7 +328,7 @@ func generateTestMessages(count int, types []MessageType) []StreamMessage {
 			Content: fmt.Sprintf("Test message %d", i),
 			ID:      fmt.Sprintf("msg-%d", i),
 			Meta: map[string]interface{}{
-				"index": i,
+				"index":     i,
 				"timestamp": time.Now(),
 			},
 		}
@@ -338,7 +338,7 @@ func generateTestMessages(count int, types []MessageType) []StreamMessage {
 
 func generateJSONData(jsonType string, multiline bool, size int) string {
 	var builder bytes.Buffer
-	
+
 	if jsonType == "simple" {
 		content := strings.Repeat("x", size)
 		json := fmt.Sprintf(`{"type":"text","content":"%s","message_id":"test-123"}`, content)
@@ -363,7 +363,7 @@ func generateJSONData(jsonType string, multiline bool, size int) string {
 		if multiline {
 			builder.WriteString("\n")
 		}
-		
+
 		// 메타데이터 추가
 		for i := 0; i < 10; i++ {
 			if i > 0 {
@@ -374,7 +374,7 @@ func generateJSONData(jsonType string, multiline bool, size int) string {
 			}
 			builder.WriteString(fmt.Sprintf(`"field%d":"%s"`, i, strings.Repeat("v", size/20)))
 		}
-		
+
 		if multiline {
 			builder.WriteString("\n")
 		}
@@ -390,7 +390,7 @@ func generateJSONData(jsonType string, multiline bool, size int) string {
 		}
 		builder.WriteString("}")
 	}
-	
+
 	return builder.String()
 }
 
@@ -419,7 +419,7 @@ func benchmarkMemoryUsage(b *testing.B, totalBytes int, logger *logrus.Logger) {
 	// 큰 메시지 생성
 	messageSize := 1024 // 1KB per message
 	numMessages := totalBytes / messageSize
-	
+
 	messages := make([]string, numMessages)
 	content := strings.Repeat("x", messageSize-100) // JSON 오버헤드 고려
 	for i := 0; i < numMessages; i++ {

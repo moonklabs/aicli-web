@@ -7,15 +7,15 @@ import (
 	"sort"
 	"strings"
 	"time"
-	
+
 	"github.com/aicli/aicli-web/internal/models"
 )
 
 // RBACManager RBAC 시스템 관리자
 type RBACManager struct {
-	storage     RBACStorage
-	cache       PermissionCache
-	evaluator   PermissionEvaluator
+	storage   RBACStorage
+	cache     PermissionCache
+	evaluator PermissionEvaluator
 }
 
 // RBACStorage RBAC 저장소 인터페이스
@@ -25,16 +25,16 @@ type RBACStorage interface {
 	GetRolesByUserID(ctx context.Context, userID string) ([]models.Role, error)
 	GetRolesByGroupID(ctx context.Context, groupID string) ([]models.Role, error)
 	GetRoleHierarchy(ctx context.Context, roleID string) ([]models.Role, error)
-	
+
 	// Permission 관련
 	GetPermissionsByRoleID(ctx context.Context, roleID string) ([]models.Permission, error)
 	GetAllPermissions(ctx context.Context) ([]models.Permission, error)
-	
+
 	// UserRole 관련
 	GetUserRoles(ctx context.Context, userID string, resourceID *string) ([]models.UserRole, error)
 	GetUserGroups(ctx context.Context, userID string) ([]models.UserGroup, error)
 	GetGroupRoles(ctx context.Context, groupID string, resourceID *string) ([]models.GroupRole, error)
-	
+
 	// Resource 관련
 	GetResourceByID(ctx context.Context, resourceID string) (*models.Resource, error)
 	GetResourceHierarchy(ctx context.Context, resourceID string) ([]models.Resource, error)
@@ -62,8 +62,8 @@ type ConditionEvaluator interface {
 // NewRBACManager RBAC 매니저 생성자
 func NewRBACManager(storage RBACStorage, cache PermissionCache) *RBACManager {
 	return &RBACManager{
-		storage:   storage,
-		cache:     cache,
+		storage: storage,
+		cache:   cache,
 		evaluator: PermissionEvaluator{
 			conditionEvaluator: &JSONConditionEvaluator{},
 		},
@@ -80,17 +80,17 @@ func (rm *RBACManager) CheckPermission(ctx context.Context, req *models.CheckPer
 		if err != nil {
 			return nil, fmt.Errorf("권한 매트릭스 계산 실패: %w", err)
 		}
-		
+
 		// 캐시에 저장 (30분 TTL)
 		if cacheErr := rm.cache.SetUserPermissionMatrix(req.UserID, matrix, 30*time.Minute); cacheErr != nil {
 			// 캐시 저장 실패는 로깅만 하고 계속 진행
 			fmt.Printf("권한 매트릭스 캐시 저장 실패: %v\n", cacheErr)
 		}
 	}
-	
+
 	// 2. 권한 키 생성
 	permKey := rm.buildPermissionKey(req.ResourceType, req.ResourceID, req.Action)
-	
+
 	// 3. 권한 결정 조회 (특정 리소스 ID 먼저 확인)
 	decision, exists := matrix.FinalPermissions[permKey]
 	if !exists {
@@ -112,26 +112,26 @@ func (rm *RBACManager) CheckPermission(ctx context.Context, req *models.CheckPer
 			decision.ResourceID = req.ResourceID
 		}
 	}
-	
+
 	// 4. 조건 평가 (필요한 경우)
 	if decision.Conditions != "" && len(req.Attributes) > 0 {
 		conditionMet, err := rm.evaluator.conditionEvaluator.EvaluateConditions(
-			decision.Conditions, 
+			decision.Conditions,
 			convertAttributesToMap(req.Attributes),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("조건 평가 실패: %w", err)
 		}
-		
+
 		if !conditionMet {
 			decision.Effect = models.PermissionDeny
 			decision.Reason = "조건이 충족되지 않음"
 		}
 	}
-	
+
 	// 5. 평가 과정 기록
 	evaluation := rm.buildEvaluationTrace(matrix, permKey, decision)
-	
+
 	return &models.CheckPermissionResponse{
 		Allowed:    decision.Effect == models.PermissionAllow,
 		Decision:   decision,
@@ -149,30 +149,30 @@ func (rm *RBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID s
 		FinalPermissions: make(map[string]models.PermissionDecision),
 		ComputedAt:       time.Now(),
 	}
-	
+
 	// 1. 직접 할당된 역할 조회
 	directRoles, err := rm.storage.GetRolesByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("사용자 역할 조회 실패: %w", err)
 	}
-	
+
 	for _, role := range directRoles {
 		matrix.DirectRoles = append(matrix.DirectRoles, role.ID)
 	}
-	
+
 	// 2. 그룹을 통한 역할 조회
 	groups, err := rm.storage.GetUserGroups(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("사용자 그룹 조회 실패: %w", err)
 	}
-	
+
 	groupRoleMap := make(map[string]bool)
 	for _, group := range groups {
 		groupRoles, err := rm.storage.GetRolesByGroupID(ctx, group.ID)
 		if err != nil {
 			continue // 에러 발생한 그룹은 건너뛰기
 		}
-		
+
 		for _, role := range groupRoles {
 			if !groupRoleMap[role.ID] {
 				matrix.GroupRoles = append(matrix.GroupRoles, role.ID)
@@ -180,7 +180,7 @@ func (rm *RBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID s
 			}
 		}
 	}
-	
+
 	// 3. 모든 역할에 대해 권한 상속 계산
 	allRoles := append(directRoles, []models.Role{}...)
 	for roleID := range groupRoleMap {
@@ -190,7 +190,7 @@ func (rm *RBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID s
 		}
 		allRoles = append(allRoles, *role)
 	}
-	
+
 	// 4. 역할별 권한 계산 및 병합
 	for _, role := range allRoles {
 		err := rm.processRolePermissions(ctx, &role, matrix, "role")
@@ -198,13 +198,13 @@ func (rm *RBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID s
 			fmt.Printf("역할 %s 권한 처리 실패: %v\n", role.ID, err)
 			continue
 		}
-		
+
 		// 상속된 역할 처리
 		inheritedRoles, err := rm.storage.GetRoleHierarchy(ctx, role.ID)
 		if err != nil {
 			continue
 		}
-		
+
 		for _, inheritedRole := range inheritedRoles {
 			matrix.InheritedRoles = append(matrix.InheritedRoles, inheritedRole.ID)
 			err := rm.processRolePermissions(ctx, &inheritedRole, matrix, "inherited")
@@ -213,12 +213,12 @@ func (rm *RBACManager) ComputeUserPermissionMatrix(ctx context.Context, userID s
 			}
 		}
 	}
-	
+
 	// 5. 중복 제거 및 정렬
 	matrix.DirectRoles = rm.removeDuplicates(matrix.DirectRoles)
 	matrix.InheritedRoles = rm.removeDuplicates(matrix.InheritedRoles)
 	matrix.GroupRoles = rm.removeDuplicates(matrix.GroupRoles)
-	
+
 	return matrix, nil
 }
 
@@ -228,18 +228,18 @@ func (rm *RBACManager) processRolePermissions(ctx context.Context, role *models.
 	if err != nil {
 		return fmt.Errorf("역할 권한 조회 실패: %w", err)
 	}
-	
+
 	for _, perm := range permissions {
 		if !perm.IsActive {
 			continue
 		}
-		
+
 		// 권한 키 생성 (일반적인 형태)
 		permKey := rm.buildPermissionKey(perm.ResourceType, "*", perm.Action)
-		
+
 		// 기존 권한 확인
 		existingDecision, exists := matrix.FinalPermissions[permKey]
-		
+
 		decision := models.PermissionDecision{
 			ResourceType: perm.ResourceType,
 			ResourceID:   "*",
@@ -249,7 +249,7 @@ func (rm *RBACManager) processRolePermissions(ctx context.Context, role *models.
 			Reason:       fmt.Sprintf("역할 '%s'을 통해 부여됨", role.Name),
 			Conditions:   perm.Conditions,
 		}
-		
+
 		// 권한 충돌 해결
 		if exists {
 			// 거부 권한이 허용 권한보다 우선
@@ -260,10 +260,10 @@ func (rm *RBACManager) processRolePermissions(ctx context.Context, role *models.
 				decision.Reason = fmt.Sprintf("거부 권한이 허용 권한을 오버라이드함 (출처: %s)", decision.Source)
 			}
 		}
-		
+
 		matrix.FinalPermissions[permKey] = decision
 	}
-	
+
 	return nil
 }
 
@@ -275,7 +275,7 @@ func (rm *RBACManager) buildPermissionKey(resourceType models.ResourceType, reso
 // buildEvaluationTrace 평가 과정 추적 정보 생성
 func (rm *RBACManager) buildEvaluationTrace(matrix *models.UserPermissionMatrix, permKey string, decision models.PermissionDecision) []string {
 	trace := make([]string, 0)
-	
+
 	trace = append(trace, fmt.Sprintf("사용자 ID: %s", matrix.UserID))
 	trace = append(trace, fmt.Sprintf("직접 역할: [%s]", strings.Join(matrix.DirectRoles, ", ")))
 	trace = append(trace, fmt.Sprintf("상속 역할: [%s]", strings.Join(matrix.InheritedRoles, ", ")))
@@ -283,11 +283,11 @@ func (rm *RBACManager) buildEvaluationTrace(matrix *models.UserPermissionMatrix,
 	trace = append(trace, fmt.Sprintf("권한 키: %s", permKey))
 	trace = append(trace, fmt.Sprintf("최종 결정: %s", decision.Effect))
 	trace = append(trace, fmt.Sprintf("결정 근거: %s", decision.Reason))
-	
+
 	if decision.Conditions != "" {
 		trace = append(trace, fmt.Sprintf("적용 조건: %s", decision.Conditions))
 	}
-	
+
 	return trace
 }
 
@@ -295,14 +295,14 @@ func (rm *RBACManager) buildEvaluationTrace(matrix *models.UserPermissionMatrix,
 func (rm *RBACManager) removeDuplicates(slice []string) []string {
 	keys := make(map[string]bool)
 	result := make([]string, 0)
-	
+
 	for _, item := range slice {
 		if !keys[item] {
 			keys[item] = true
 			result = append(result, item)
 		}
 	}
-	
+
 	sort.Strings(result)
 	return result
 }
@@ -330,12 +330,12 @@ func (jce *JSONConditionEvaluator) EvaluateConditions(conditions string, context
 	if conditions == "" {
 		return true, nil // 조건이 없으면 항상 통과
 	}
-	
+
 	var conditionMap map[string]interface{}
 	if err := json.Unmarshal([]byte(conditions), &conditionMap); err != nil {
 		return false, fmt.Errorf("조건 JSON 파싱 실패: %w", err)
 	}
-	
+
 	// 간단한 조건 평가 구현
 	return jce.evaluateConditionMap(conditionMap, context), nil
 }
@@ -347,13 +347,13 @@ func (jce *JSONConditionEvaluator) evaluateConditionMap(conditions map[string]in
 		if !exists {
 			return false // 컨텍스트에 필요한 값이 없음
 		}
-		
+
 		// 값 비교 (간단한 구현)
 		if fmt.Sprintf("%v", contextValue) != fmt.Sprintf("%v", expectedValue) {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -384,10 +384,10 @@ func (pa *PermissionAggregator) AggregateUserPermissions(ctx context.Context, us
 	if err != nil {
 		return nil, fmt.Errorf("권한 매트릭스 계산 실패: %w", err)
 	}
-	
+
 	// 리소스 타입별 권한 그룹핑
 	groupedPermissions := make(map[string][]models.PermissionDecision)
-	
+
 	for _, decision := range matrix.FinalPermissions {
 		resourceType := string(decision.ResourceType)
 		if _, exists := groupedPermissions[resourceType]; !exists {
@@ -395,7 +395,7 @@ func (pa *PermissionAggregator) AggregateUserPermissions(ctx context.Context, us
 		}
 		groupedPermissions[resourceType] = append(groupedPermissions[resourceType], decision)
 	}
-	
+
 	// 각 그룹 내에서 정렬
 	for resourceType := range groupedPermissions {
 		sort.Slice(groupedPermissions[resourceType], func(i, j int) bool {
@@ -403,7 +403,7 @@ func (pa *PermissionAggregator) AggregateUserPermissions(ctx context.Context, us
 			return string(perms[i].Action) < string(perms[j].Action)
 		})
 	}
-	
+
 	return groupedPermissions, nil
 }
 
@@ -413,12 +413,12 @@ func (pa *PermissionAggregator) GetEffectiveRoles(ctx context.Context, userID st
 	if err != nil {
 		return nil, fmt.Errorf("권한 매트릭스 계산 실패: %w", err)
 	}
-	
+
 	// 모든 역할 ID 수집
 	allRoleIDs := append(matrix.DirectRoles, matrix.InheritedRoles...)
 	allRoleIDs = append(allRoleIDs, matrix.GroupRoles...)
 	allRoleIDs = pa.rbacManager.removeDuplicates(allRoleIDs)
-	
+
 	// 역할 정보 조회
 	roles := make([]models.Role, 0, len(allRoleIDs))
 	for _, roleID := range allRoleIDs {
@@ -428,6 +428,6 @@ func (pa *PermissionAggregator) GetEffectiveRoles(ctx context.Context, userID st
 		}
 		roles = append(roles, *role)
 	}
-	
+
 	return roles, nil
 }

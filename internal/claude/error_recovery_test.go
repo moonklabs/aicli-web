@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-
 func TestErrorClassifier_ClassifyError(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -96,14 +95,14 @@ func TestExponentialBackoff(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		backoff.NextBackoff()
 	}
-	
+
 	duration := backoff.NextBackoff()
 	assert.Equal(t, 10*time.Second, duration) // 최대값에 도달
 
 	// 리셋 테스트
 	backoff.Reset()
 	assert.Equal(t, 0, backoff.GetAttempts())
-	
+
 	durationAfterReset := backoff.NextBackoff()
 	assert.Equal(t, 1*time.Second, durationAfterReset)
 }
@@ -284,7 +283,7 @@ func TestSlidingWindow(t *testing.T) {
 	// 성공 기록
 	window.RecordSuccess()
 	window.RecordSuccess()
-	
+
 	// 실패 기록
 	window.RecordFailure()
 
@@ -321,7 +320,7 @@ func TestRecoveryStats(t *testing.T) {
 	// 재시작 증가
 	beforeRestart := time.Now()
 	stats.IncrementRestart()
-	
+
 	assert.Equal(t, int64(1), stats.RestartCount)
 	assert.True(t, stats.LastRestart.After(beforeRestart))
 

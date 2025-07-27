@@ -21,7 +21,7 @@ func TestAllPublicFunctions(t *testing.T) {
 	// testutil 패키지의 주요 공개 함수들
 	expectedFunctions := []string{
 		"NewCLITestRunner",
-		"CreateTempWorkspace", 
+		"CreateTempWorkspace",
 		"CreateTestConfig",
 		"CreateTestProjectStructure",
 		"AssertFileExists",
@@ -41,7 +41,7 @@ func TestAllPublicFunctions(t *testing.T) {
 	}
 
 	t.Logf("주요 공개 함수 %d개 확인", len(expectedFunctions))
-	
+
 	// 여기서는 함수의 존재성을 간접적으로 테스트
 	// 실제로는 코드 분석 도구를 사용하여 더 정확한 커버리지 측정이 가능
 	for _, funcName := range expectedFunctions {
@@ -55,7 +55,7 @@ func TestAllPublicFunctions(t *testing.T) {
 func TestCLITestRunnerEdgeCases(t *testing.T) {
 	t.Run("명령어 설정 없이 실행", func(t *testing.T) {
 		runner := NewCLITestRunner()
-		
+
 		assert.Panics(t, func() {
 			runner.RunCommand("test")
 		}, "명령어가 설정되지 않았을 때 패닉이 발생해야 함")
@@ -107,88 +107,88 @@ func TestCLITestRunnerEdgeCases(t *testing.T) {
 func TestMockObjectsComprehensive(t *testing.T) {
 	t.Run("MockFileSystem 완전 테스트", func(t *testing.T) {
 		mfs := NewMockFileSystem()
-		
+
 		// Mock 설정 먼저
 		mfs.On("Exists", "test.txt").Return(true)
 		mfs.On("Exists", "testdir").Return(true)
-		
+
 		// 파일 추가/조회
 		mfs.AddFile("test.txt", []byte("test content"))
 		assert.True(t, mfs.Exists("test.txt"))
-		
+
 		// 디렉토리 추가/조회
 		mfs.AddDir("testdir")
 		assert.True(t, mfs.Exists("testdir"))
-		
+
 		// Mock 설정 테스트
 		mfs.On("ReadFile", "mock-file.txt").Return([]byte("mock content"), nil)
 		content, err := mfs.ReadFile("mock-file.txt")
 		assert.NoError(t, err)
 		assert.Equal(t, "mock content", string(content))
-		
+
 		mfs.AssertExpectations(t)
 	})
 
 	t.Run("MockClaudeWrapper 완전 테스트", func(t *testing.T) {
 		mockClaude := &MockClaudeWrapper{}
-		
+
 		// Start 테스트
 		mockClaude.On("Start", mock.Anything, "/test/workspace").Return(nil)
 		err := mockClaude.Start(context.Background(), "/test/workspace")
 		assert.NoError(t, err)
-		
+
 		// Execute 테스트
 		expectedResponse := CreateMockClaudeResponse("test response", "success")
 		mockClaude.On("Execute", mock.Anything, "test command").Return(expectedResponse, nil)
-		
+
 		response, err := mockClaude.Execute(context.Background(), "test command")
 		assert.NoError(t, err)
 		assert.Equal(t, "test response", response.Content)
 		assert.Equal(t, "success", response.Status)
-		
+
 		// IsRunning 테스트
 		mockClaude.On("IsRunning").Return(true)
 		assert.True(t, mockClaude.IsRunning())
-		
+
 		// Stop 테스트
 		mockClaude.On("Stop", mock.Anything).Return(nil)
 		err = mockClaude.Stop(context.Background())
 		assert.NoError(t, err)
-		
+
 		mockClaude.AssertExpectations(t)
 	})
 
 	t.Run("MockWorkspace 완전 테스트", func(t *testing.T) {
 		mockWS := NewMockWorkspace()
-		
+
 		// Create 테스트
 		expectedWS := CreateMockWorkspaceInfo("ws-1", "test-workspace", "/path/to/workspace")
 		mockWS.On("Create", mock.Anything, "test-workspace", "/path/to/workspace").Return(expectedWS, nil)
-		
+
 		ws, err := mockWS.Create(context.Background(), "test-workspace", "/path/to/workspace")
 		assert.NoError(t, err)
 		assert.Equal(t, "test-workspace", ws.Name)
-		
+
 		// List 테스트
 		workspaces := []*WorkspaceInfo{expectedWS}
 		mockWS.On("List", mock.Anything).Return(workspaces, nil)
-		
+
 		list, err := mockWS.List(context.Background())
 		assert.NoError(t, err)
 		assert.Len(t, list, 1)
-		
+
 		// Get 테스트
 		mockWS.On("Get", mock.Anything, "ws-1").Return(expectedWS, nil)
-		
+
 		retrieved, err := mockWS.Get(context.Background(), "ws-1")
 		assert.NoError(t, err)
 		assert.Equal(t, "ws-1", retrieved.ID)
-		
+
 		// Delete 테스트
 		mockWS.On("Delete", mock.Anything, "ws-1").Return(nil)
 		err = mockWS.Delete(context.Background(), "ws-1")
 		assert.NoError(t, err)
-		
+
 		mockWS.AssertExpectations(t)
 	})
 }
@@ -197,29 +197,29 @@ func TestMockObjectsComprehensive(t *testing.T) {
 func TestUtilityFunctionsCoverage(t *testing.T) {
 	t.Run("파일 관련 헬퍼들", func(t *testing.T) {
 		tempDir := CreateTempWorkspace(t)
-		
+
 		// 테스트 파일 생성
 		testFile := filepath.Join(tempDir, "test.txt")
 		err := os.WriteFile(testFile, []byte("test content"), 0644)
 		require.NoError(t, err)
-		
+
 		// AssertFileExists
 		AssertFileExists(t, testFile)
-		
+
 		// AssertFileContent
 		AssertFileContent(t, testFile, "test content")
-		
+
 		// AssertFileContains
 		AssertFileContains(t, testFile, "test")
-		
+
 		// AssertFileNotExists
 		AssertFileNotExists(t, filepath.Join(tempDir, "nonexistent.txt"))
-		
+
 		// 디렉토리 테스트
 		testDir := filepath.Join(tempDir, "testdir")
 		err = os.Mkdir(testDir, 0755)
 		require.NoError(t, err)
-		
+
 		AssertDirExists(t, testDir)
 	})
 
@@ -238,7 +238,7 @@ func TestUtilityFunctionsCoverage(t *testing.T) {
 		}, func() {
 			assert.Equal(t, "test_value", os.Getenv("TEST_VAR"))
 		})
-		
+
 		// 환경 변수가 복원되었는지 확인
 		assert.Equal(t, originalValue, os.Getenv("TEST_VAR"))
 	})
@@ -246,15 +246,15 @@ func TestUtilityFunctionsCoverage(t *testing.T) {
 	t.Run("작업 디렉토리 헬퍼", func(t *testing.T) {
 		originalDir, err := os.Getwd()
 		require.NoError(t, err)
-		
+
 		tempDir := CreateTempWorkspace(t)
-		
+
 		WithWorkingDir(t, tempDir, func() {
 			currentDir, err := os.Getwd()
 			require.NoError(t, err)
 			assert.Equal(t, tempDir, currentDir)
 		})
-		
+
 		// 작업 디렉토리가 복원되었는지 확인
 		currentDir, err := os.Getwd()
 		require.NoError(t, err)
@@ -278,12 +278,12 @@ func TestUtilityFunctionsCoverage(t *testing.T) {
 func TestErrorConditions(t *testing.T) {
 	t.Run("잘못된 설정 파일", func(t *testing.T) {
 		tempDir := CreateTempWorkspace(t)
-		
+
 		// 잘못된 YAML 파일 생성
 		invalidFile := filepath.Join(tempDir, "invalid.yaml")
 		err := os.WriteFile(invalidFile, []byte("invalid: yaml: content: ["), 0644)
 		require.NoError(t, err)
-		
+
 		// 설정 파일 읽기 시도 (실제 구현에서는 에러 처리)
 		t.Logf("잘못된 설정 파일 테스트: %s", invalidFile)
 	})
@@ -293,15 +293,15 @@ func TestErrorConditions(t *testing.T) {
 		if os.Getuid() == 0 {
 			t.Skip("root 사용자는 권한 테스트 건너뛰기")
 		}
-		
+
 		tempDir := CreateTempWorkspace(t)
 		restrictedDir := filepath.Join(tempDir, "restricted")
-		
+
 		err := os.Mkdir(restrictedDir, 0000) // 권한 없음
 		require.NoError(t, err)
-		
+
 		defer os.Chmod(restrictedDir, 0755) // 정리를 위해 권한 복원
-		
+
 		// 권한 없는 디렉토리에 접근 시도
 		restrictedFile := filepath.Join(restrictedDir, "test.txt")
 		err = os.WriteFile(restrictedFile, []byte("test"), 0644)
@@ -322,7 +322,7 @@ func TestPerformanceEdgeCases(t *testing.T) {
 
 		err := runner.RunCommand()
 		assert.NoError(t, err)
-		
+
 		output := runner.GetOutput()
 		assert.Greater(t, len(output), 1000, "대용량 출력이 처리되어야 함")
 	})
@@ -380,7 +380,7 @@ func TestDocumentedExamples(t *testing.T) {
 
 	t.Run("복잡한 테스트 케이스 예제", func(t *testing.T) {
 		cmd := createSimpleTestCommand(t)
-		
+
 		testCases := []CLITestCase{
 			{
 				Name:       "기본 실행",
@@ -404,7 +404,7 @@ func TestCoverageReport(t *testing.T) {
 		// 테스트된 함수들의 목록
 		testedFunctions := []string{
 			"NewCLITestRunner",
-			"SetCommand", 
+			"SetCommand",
 			"SetStdin",
 			"SetEnv",
 			"SetWorkingDir",
@@ -426,7 +426,7 @@ func TestCoverageReport(t *testing.T) {
 		}
 
 		t.Logf("테스트된 함수 수: %d", len(testedFunctions))
-		
+
 		for _, fn := range testedFunctions {
 			t.Logf("✓ %s", fn)
 		}

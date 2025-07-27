@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/google/uuid"
 )
 
 // WorkspaceStorage 메모리 기반 워크스페이스 스토리지
@@ -150,11 +150,11 @@ func (s *WorkspaceStorage) Update(ctx context.Context, id string, updates map[st
 		if existingID, exists := s.nameIndex[nameKey]; exists && existingID != id {
 			return ErrAlreadyExists
 		}
-		
+
 		// 기존 인덱스 삭제
 		oldNameKey := fmt.Sprintf("%s:%s", workspace.OwnerID, workspace.Name)
 		delete(s.nameIndex, oldNameKey)
-		
+
 		// 새 인덱스 추가
 		s.nameIndex[nameKey] = id
 		workspace.Name = name

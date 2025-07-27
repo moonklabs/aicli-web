@@ -25,17 +25,17 @@ func NewStatsCollector(client *Client) *StatsCollector {
 
 // ContainerStats 컨테이너 통계 정보
 type ContainerStats struct {
-	ContainerID  string    `json:"container_id"`
-	CPUPercent   float64   `json:"cpu_percent"`
-	MemoryUsage  int64     `json:"memory_usage"`
-	MemoryLimit  int64     `json:"memory_limit"`
-	MemoryPercent float64  `json:"memory_percent"`
-	NetworkRxMB  float64   `json:"network_rx_mb"`
-	NetworkTxMB  float64   `json:"network_tx_mb"`
-	BlockRead    int64     `json:"block_read"`
-	BlockWrite   int64     `json:"block_write"`
-	PidsCount    int64     `json:"pids_count"`
-	Timestamp    time.Time `json:"timestamp"`
+	ContainerID   string    `json:"container_id"`
+	CPUPercent    float64   `json:"cpu_percent"`
+	MemoryUsage   int64     `json:"memory_usage"`
+	MemoryLimit   int64     `json:"memory_limit"`
+	MemoryPercent float64   `json:"memory_percent"`
+	NetworkRxMB   float64   `json:"network_rx_mb"`
+	NetworkTxMB   float64   `json:"network_tx_mb"`
+	BlockRead     int64     `json:"block_read"`
+	BlockWrite    int64     `json:"block_write"`
+	PidsCount     int64     `json:"pids_count"`
+	Timestamp     time.Time `json:"timestamp"`
 }
 
 // Collect 단일 컨테이너의 통계를 수집합니다.
@@ -243,14 +243,14 @@ func (sc *StatsCollector) MonitorAll(ctx context.Context, interval time.Duration
 
 // SystemStats 시스템 통계 정보
 type SystemStats struct {
-	ContainersTotal   int     `json:"containers_total"`
-	ContainersRunning int     `json:"containers_running"`
-	ContainersStopped int     `json:"containers_stopped"`
-	ImagesTotal       int     `json:"images_total"`
-	MemoryTotal       int64   `json:"memory_total"`
-	MemoryUsed        int64   `json:"memory_used"`
-	CPUCount          int     `json:"cpu_count"`
-	DockerVersion     string  `json:"docker_version"`
+	ContainersTotal   int       `json:"containers_total"`
+	ContainersRunning int       `json:"containers_running"`
+	ContainersStopped int       `json:"containers_stopped"`
+	ImagesTotal       int       `json:"images_total"`
+	MemoryTotal       int64     `json:"memory_total"`
+	MemoryUsed        int64     `json:"memory_used"`
+	CPUCount          int       `json:"cpu_count"`
+	DockerVersion     string    `json:"docker_version"`
 	Timestamp         time.Time `json:"timestamp"`
 }
 
@@ -280,16 +280,16 @@ func (sc *StatsCollector) GetSystemStats(ctx context.Context) (*SystemStats, err
 
 // AggregatedStats 집계된 통계 정보
 type AggregatedStats struct {
-	TotalContainers   int     `json:"total_containers"`
-	RunningContainers int     `json:"running_containers"`
-	TotalCPUUsage     float64 `json:"total_cpu_usage"`
-	TotalMemoryUsage  int64   `json:"total_memory_usage"`
-	TotalMemoryLimit  int64   `json:"total_memory_limit"`
-	TotalNetworkRx    float64 `json:"total_network_rx"`
-	TotalNetworkTx    float64 `json:"total_network_tx"`
-	AverageCPUUsage   float64 `json:"average_cpu_usage"`
-	AverageMemoryUsage float64 `json:"average_memory_usage"`
-	Timestamp         time.Time `json:"timestamp"`
+	TotalContainers    int       `json:"total_containers"`
+	RunningContainers  int       `json:"running_containers"`
+	TotalCPUUsage      float64   `json:"total_cpu_usage"`
+	TotalMemoryUsage   int64     `json:"total_memory_usage"`
+	TotalMemoryLimit   int64     `json:"total_memory_limit"`
+	TotalNetworkRx     float64   `json:"total_network_rx"`
+	TotalNetworkTx     float64   `json:"total_network_tx"`
+	AverageCPUUsage    float64   `json:"average_cpu_usage"`
+	AverageMemoryUsage float64   `json:"average_memory_usage"`
+	Timestamp          time.Time `json:"timestamp"`
 }
 
 // GetAggregatedStats 집계된 통계를 계산합니다.

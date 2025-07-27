@@ -20,29 +20,29 @@ import (
 
 func setupTaskControllerTest() (*gin.Engine, *services.TaskService, *models.Session) {
 	gin.SetMode(gin.TestMode)
-	
+
 	storage := memory.New()
 	projectService := services.NewProjectService(storage)
 	sessionService := services.NewSessionService(storage, projectService, nil)
 	taskService := services.NewTaskService(storage, sessionService, nil)
 	taskController := NewTaskController(taskService)
-	
+
 	// 태스크 서비스 시작
 	ctx := context.Background()
 	_ = taskService.Start(ctx)
-	
+
 	// 테스트용 워크스페이스와 프로젝트, 세션 생성
 	workspace := &models.Workspace{
-		ID:      "ws-123",
-		Name:    "Test Workspace",
-		OwnerID: "user-123",
+		ID:          "ws-123",
+		Name:        "Test Workspace",
+		OwnerID:     "user-123",
 		ProjectPath: "/test/workspace",
-		Status:  models.WorkspaceStatusActive,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Status:      models.WorkspaceStatusActive,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	_ = storage.Workspace().Create(nil, workspace)
-	
+
 	project := &models.Project{
 		ID:          "proj-123",
 		WorkspaceID: workspace.ID,
@@ -54,14 +54,14 @@ func setupTaskControllerTest() (*gin.Engine, *services.TaskService, *models.Sess
 		UpdatedAt:   time.Now(),
 	}
 	_ = storage.Project().Create(nil, project)
-	
+
 	session, _ := sessionService.Create(nil, &models.SessionCreateRequest{
 		ProjectID: project.ID,
 	})
 	_ = sessionService.UpdateStatus(nil, session.ID, models.SessionActive)
-	
+
 	router := gin.New()
-	
+
 	// 라우트 설정
 	router.POST("/sessions/:sessionId/tasks", taskController.Create)
 	router.GET("/tasks", taskController.List)
@@ -69,14 +69,14 @@ func setupTaskControllerTest() (*gin.Engine, *services.TaskService, *models.Sess
 	router.GET("/tasks/stats", taskController.GetStats)
 	router.GET("/tasks/:id", taskController.GetByID)
 	router.DELETE("/tasks/:id", taskController.Cancel)
-	
+
 	return router, taskService, session
 }
 
 func TestTaskController_Create(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	tests := []struct {
 		name       string
 		sessionID  string
@@ -104,9 +104,9 @@ func TestTaskController_Create(t *testing.T) {
 			wantStatus: http.StatusInternalServerError,
 		},
 		{
-			name:      "Invalid body",
-			sessionID: session.ID,
-			body:      "invalid",
+			name:       "Invalid body",
+			sessionID:  session.ID,
+			body:       "invalid",
 			wantStatus: http.StatusBadRequest,
 		},
 		{
@@ -118,18 +118,18 @@ func TestTaskController_Create(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bodyBytes, _ := json.Marshal(tt.body)
 			req := httptest.NewRequest("POST", fmt.Sprintf("/sessions/%s/tasks", tt.sessionID), bytes.NewReader(bodyBytes))
 			req.Header.Set("Content-Type", "application/json")
-			
+
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusCreated {
 				var resp models.TaskResponse
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -144,7 +144,7 @@ func TestTaskController_Create(t *testing.T) {
 func TestTaskController_List(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	tasks := make([]*models.Task, 5)
 	for i := 0; i < 5; i++ {
@@ -155,12 +155,12 @@ func TestTaskController_List(t *testing.T) {
 		require.NoError(t, err)
 		tasks[i] = task
 	}
-	
+
 	tests := []struct {
-		name        string
-		query       string
-		wantStatus  int
-		wantCount   int
+		name       string
+		query      string
+		wantStatus int
+		wantCount  int
 	}{
 		{
 			name:       "All tasks",
@@ -193,15 +193,15 @@ func TestTaskController_List(t *testing.T) {
 			wantCount:  2,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/tasks"+tt.query, nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusOK {
 				var resp models.PaginatedResponse[*models.TaskResponse]
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -215,14 +215,14 @@ func TestTaskController_List(t *testing.T) {
 func TestTaskController_GetByID(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	task, err := taskService.Create(nil, &models.TaskCreateRequest{
 		SessionID: session.ID,
 		Command:   "echo test",
 	})
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name       string
 		taskID     string
@@ -240,15 +240,15 @@ func TestTaskController_GetByID(t *testing.T) {
 		},
 		// Empty task ID 테스트는 제거 (Gin 라우터가 /tasks/를 /tasks로 리다이렉트함)
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", fmt.Sprintf("/tasks/%s", tt.taskID), nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
-			
+
 			if tt.wantStatus == http.StatusOK {
 				var resp models.TaskResponse
 				err := json.Unmarshal(w.Body.Bytes(), &resp)
@@ -262,14 +262,14 @@ func TestTaskController_GetByID(t *testing.T) {
 func TestTaskController_Cancel(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	task, err := taskService.Create(nil, &models.TaskCreateRequest{
 		SessionID: session.ID,
 		Command:   "sleep 10",
 	})
 	require.NoError(t, err)
-	
+
 	tests := []struct {
 		name       string
 		taskID     string
@@ -287,13 +287,13 @@ func TestTaskController_Cancel(t *testing.T) {
 		},
 		// Empty task ID 테스트는 제거 (Gin 라우터가 /tasks/를 /tasks로 리다이렉트함)
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("DELETE", fmt.Sprintf("/tasks/%s", tt.taskID), nil)
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
-			
+
 			assert.Equal(t, tt.wantStatus, w.Code)
 		})
 	}
@@ -302,7 +302,7 @@ func TestTaskController_Cancel(t *testing.T) {
 func TestTaskController_GetActiveTasks(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	activeTasks := make([]*models.Task, 3)
 	for i := 0; i < 3; i++ {
@@ -313,18 +313,18 @@ func TestTaskController_GetActiveTasks(t *testing.T) {
 		require.NoError(t, err)
 		activeTasks[i] = task
 	}
-	
+
 	// 활성 태스크 조회
 	req := httptest.NewRequest("GET", "/tasks/active", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var resp []*models.TaskResponse
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	
+
 	// 모든 응답이 활성 태스크인지 확인
 	for _, task := range resp {
 		assert.True(t, task.Status == models.TaskPending || task.Status == models.TaskRunning)
@@ -334,7 +334,7 @@ func TestTaskController_GetActiveTasks(t *testing.T) {
 func TestTaskController_GetStats(t *testing.T) {
 	router, taskService, session := setupTaskControllerTest()
 	defer taskService.Stop()
-	
+
 	// 테스트 태스크 생성
 	for i := 0; i < 3; i++ {
 		_, err := taskService.Create(nil, &models.TaskCreateRequest{
@@ -343,18 +343,18 @@ func TestTaskController_GetStats(t *testing.T) {
 		})
 		require.NoError(t, err)
 	}
-	
+
 	// 통계 조회
 	req := httptest.NewRequest("GET", "/tasks/stats", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
-	
+
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
-	
+
 	assert.Contains(t, resp, "stats")
 	stats := resp["stats"].(map[string]interface{})
 	assert.Contains(t, stats, "total_tasks")

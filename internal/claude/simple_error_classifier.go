@@ -10,9 +10,9 @@ import (
 
 // SimpleErrorClassifier는 ErrorClassifier의 간단한 구현체입니다
 type SimpleErrorClassifier struct {
-	rules  []ClassificationRule
-	stats  *ErrorStatistics
-	mutex  sync.RWMutex
+	rules []ClassificationRule
+	stats *ErrorStatistics
+	mutex sync.RWMutex
 }
 
 // NewSimpleErrorClassifier는 새로운 SimpleErrorClassifier를 생성합니다
@@ -44,9 +44,9 @@ func (s *SimpleErrorClassifier) ClassifyError(err error) ErrorClass {
 
 	// 기본 분류
 	return ErrorClass{
-		Type:        UnknownError,
-		Severity:    SeverityMedium,
-		RetryAfter:  5 * time.Second,
+		Type:       UnknownError,
+		Severity:   SeverityMedium,
+		RetryAfter: 5 * time.Second,
 	}
 }
 
@@ -59,7 +59,7 @@ func (s *SimpleErrorClassifier) IsRetryable(err error) bool {
 // GetPriority는 에러의 우선순위를 반환합니다
 func (s *SimpleErrorClassifier) GetPriority(err error) ErrorPriority {
 	class := s.ClassifyError(err)
-	
+
 	switch class.Severity {
 	case SeverityCritical:
 		return PriorityHigh
@@ -76,7 +76,7 @@ func (s *SimpleErrorClassifier) GetPriority(err error) ErrorPriority {
 func (s *SimpleErrorClassifier) SuggestRecoveryStrategy(err error) RecoveryStrategy {
 	class := s.ClassifyError(err)
 	isRetryable := s.IsRetryable(err)
-	
+
 	if !isRetryable {
 		return &SimpleRecoveryStrategy{
 			StrategyType: "fail_fast",

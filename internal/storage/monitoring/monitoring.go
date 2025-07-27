@@ -24,7 +24,7 @@ type Monitor struct {
 type IntegratedMonitorConfig struct {
 	QueryMonitorConfig MonitorConfig
 	AnalyzerEnabled    bool
-	Logger            *zap.Logger
+	Logger             *zap.Logger
 }
 
 // DefaultIntegratedMonitorConfig 기본 통합 모니터링 설정
@@ -32,7 +32,7 @@ func DefaultIntegratedMonitorConfig() IntegratedMonitorConfig {
 	return IntegratedMonitorConfig{
 		QueryMonitorConfig: DefaultMonitorConfig(),
 		AnalyzerEnabled:    true,
-		Logger:            zap.NewNop(),
+		Logger:             zap.NewNop(),
 	}
 }
 
@@ -58,7 +58,7 @@ func (m *Monitor) Enable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.enabled = true
-	
+
 	m.logger.Info("모니터링 시스템이 활성화되었습니다")
 }
 
@@ -67,7 +67,7 @@ func (m *Monitor) Disable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.enabled = false
-	
+
 	m.logger.Info("모니터링 시스템이 비활성화되었습니다")
 }
 
@@ -76,7 +76,7 @@ func (m *Monitor) WrapQuery(ctx context.Context, opts WrapOptions, fn func() err
 	if !m.IsEnabled() || m.queryMonitor == nil {
 		return fn()
 	}
-	
+
 	return m.queryMonitor.Wrap(ctx, opts, fn)
 }
 
@@ -85,7 +85,7 @@ func (m *Monitor) AnalyzeQuery(ctx context.Context, db *sql.DB, query string) (*
 	if !m.IsEnabled() || m.analyzer == nil {
 		return nil, ErrMonitoringDisabled
 	}
-	
+
 	return m.analyzer.AnalyzeSQLiteQuery(ctx, db, query)
 }
 
@@ -94,7 +94,7 @@ func (m *Monitor) BenchmarkQuery(ctx context.Context, db *sql.DB, query string, 
 	if !m.IsEnabled() || m.analyzer == nil {
 		return nil, ErrMonitoringDisabled
 	}
-	
+
 	return m.analyzer.BenchmarkQuery(ctx, db, query, iterations)
 }
 
@@ -103,7 +103,7 @@ func (m *Monitor) GetSlowQueries() ([]SlowQuery, error) {
 	if !m.IsEnabled() || m.queryMonitor == nil {
 		return nil, ErrMonitoringDisabled
 	}
-	
+
 	return m.queryMonitor.GetSlowQueries(), nil
 }
 
@@ -112,7 +112,7 @@ func (m *Monitor) ClearSlowQueries() error {
 	if !m.IsEnabled() || m.queryMonitor == nil {
 		return ErrMonitoringDisabled
 	}
-	
+
 	m.queryMonitor.ClearSlowQueries()
 	return nil
 }
@@ -122,12 +122,12 @@ func (m *Monitor) GetStats() (Stats, error) {
 	if !m.IsEnabled() || m.queryMonitor == nil {
 		return Stats{}, ErrMonitoringDisabled
 	}
-	
+
 	queryStats := m.queryMonitor.GetStats()
 	return Stats{
-		TotalQueries:   int64(queryStats.TotalQueries),
-		SlowQueries:    int64(queryStats.SlowQueries),
-		FailedQueries:  int64(queryStats.ErrorQueries),
+		TotalQueries:    int64(queryStats.TotalQueries),
+		SlowQueries:     int64(queryStats.SlowQueries),
+		FailedQueries:   int64(queryStats.ErrorQueries),
 		AverageDuration: queryStats.AverageDuration,
 	}, nil
 }
@@ -137,7 +137,7 @@ func (m *Monitor) UpdateSlowThreshold(threshold time.Duration) error {
 	if !m.IsEnabled() || m.queryMonitor == nil {
 		return ErrMonitoringDisabled
 	}
-	
+
 	m.queryMonitor.UpdateSlowThreshold(threshold)
 	return nil
 }
@@ -167,19 +167,19 @@ func (e *MonitoredExecutor) ExecContext(ctx context.Context, query string, args 
 		Operation:   "exec",
 		Context:     QueryContext{StorageType: e.storage},
 	}
-	
+
 	var result sql.Result
 	var err error
-	
+
 	execErr := e.monitor.WrapQuery(ctx, opts, func() error {
 		result, err = e.db.ExecContext(ctx, query, args...)
 		return err
 	})
-	
+
 	if execErr != nil {
 		return nil, execErr
 	}
-	
+
 	return result, err
 }
 
@@ -192,19 +192,19 @@ func (e *MonitoredExecutor) QueryContext(ctx context.Context, query string, args
 		Operation:   "query",
 		Context:     QueryContext{StorageType: e.storage},
 	}
-	
+
 	var rows *sql.Rows
 	var err error
-	
+
 	execErr := e.monitor.WrapQuery(ctx, opts, func() error {
 		rows, err = e.db.QueryContext(ctx, query, args...)
 		return err
 	})
-	
+
 	if execErr != nil {
 		return nil, execErr
 	}
-	
+
 	return rows, err
 }
 
@@ -217,15 +217,15 @@ func (e *MonitoredExecutor) QueryRowContext(ctx context.Context, query string, a
 		Operation:   "query_row",
 		Context:     QueryContext{StorageType: e.storage},
 	}
-	
+
 	var row *sql.Row
-	
+
 	// QueryRowContext는 항상 row를 반환하므로 에러를 무시
 	_ = e.monitor.WrapQuery(ctx, opts, func() error {
 		row = e.db.QueryRowContext(ctx, query, args...)
 		return nil
 	})
-	
+
 	return row
 }
 
@@ -242,7 +242,7 @@ const (
 // getQueryType 쿼리 타입 추출
 func getQueryType(query string) string {
 	query = strings.TrimSpace(strings.ToLower(query))
-	
+
 	switch {
 	case strings.HasPrefix(query, "select"):
 		return QueryTypeSelect

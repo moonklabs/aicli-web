@@ -218,7 +218,7 @@ func TestProcessManager_Start(t *testing.T) {
 			ResourceLimits: &ResourceLimits{
 				MaxCPU:    1.0,
 				MaxMemory: 1024 * 1024 * 512, // 512MB
-				MaxDiskIO: 1024 * 1024,        // 1MB/s
+				MaxDiskIO: 1024 * 1024,       // 1MB/s
 				Timeout:   5 * time.Second,
 			},
 		}
@@ -559,4 +559,3 @@ func TestProcessManager_ConcurrentOperations(t *testing.T) {
 // 		assert.Nil(t, err.Unwrap())
 // 	})
 // }
-

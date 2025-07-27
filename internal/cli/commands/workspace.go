@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/aicli/aicli-web/internal/cli/errors"
 	"github.com/aicli/aicli-web/internal/cli/output"
+	"github.com/spf13/cobra"
 )
 
 // NewWorkspaceCmd는 workspace 관련 명령어를 생성합니다.
@@ -15,7 +15,7 @@ func NewWorkspaceCmd() *cobra.Command {
 		Use:     "workspace",
 		Aliases: []string{"ws"},
 		Short:   "워크스페이스 관리",
-		Long:    `Claude CLI 실행을 위한 격리된 워크스페이스를 관리합니다.
+		Long: `Claude CLI 실행을 위한 격리된 워크스페이스를 관리합니다.
 
 워크스페이스는 각 프로젝트마다 독립적으로 생성되며, Docker 컨테이너 내에서
 안전하게 격리된 환경을 제공합니다. 각 워크스페이스는 자체 파일 시스템,
@@ -56,7 +56,7 @@ func newWorkspaceListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "워크스페이스 목록 조회",
-		Long:  `현재 생성된 모든 워크스페이스의 목록을 조회합니다.
+		Long: `현재 생성된 모든 워크스페이스의 목록을 조회합니다.
 
 각 워크스페이스의 이름, 상태, 생성 시간, 프로젝트 경로 등의
 정보를 표시합니다. 출력 형식은 전역 --output 플래그로 변경할 수 있습니다.`,
@@ -79,23 +79,23 @@ func newWorkspaceListCmd() *cobra.Command {
 					"path":       "/home/user/projects/alpha",
 				},
 				{
-					"name":       "project-beta", 
+					"name":       "project-beta",
 					"status":     "inactive",
 					"created_at": time.Now().Add(-48 * time.Hour).Format(time.RFC3339),
 					"path":       "/home/user/projects/beta",
 				},
 			}
-			
+
 			// 빈 목록 처리
 			if len(workspaces) == 0 {
 				fmt.Println("No workspaces found")
 				return nil
 			}
-			
+
 			// 출력 포맷터 생성
 			formatter := output.DefaultFormatterManager()
 			formatter.SetHeaders([]string{"name", "status", "created_at", "path"})
-			
+
 			return formatter.Print(workspaces)
 		},
 	}
@@ -112,7 +112,7 @@ func newWorkspaceCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "새 워크스페이스 생성",
-		Long:  `새로운 Claude CLI 워크스페이스를 생성합니다.
+		Long: `새로운 Claude CLI 워크스페이스를 생성합니다.
 
 워크스페이스는 지정된 프로젝트 디렉토리를 Docker 볼륨으로 마운트하여
 격리된 환경에서 Claude CLI를 실행할 수 있게 합니다. Claude API 키는
@@ -161,7 +161,7 @@ func newWorkspaceDeleteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete [workspace-name]",
 		Short: "워크스페이스 삭제",
-		Long:  `지정된 워크스페이스를 삭제합니다.
+		Long: `지정된 워크스페이스를 삭제합니다.
 
 워크스페이스와 관련된 모든 리소스(컨테이너, 볼륨, 로그 등)가 삭제됩니다.
 실행 중인 태스크가 있는 경우 먼저 중지됩니다. --force 플래그를 사용하면
@@ -176,7 +176,7 @@ func newWorkspaceDeleteCmd() *cobra.Command {
   
   # 짧은 별칭 사용
   aicli ws delete myproject -f`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
 			workspaces := []string{
@@ -220,7 +220,7 @@ func newWorkspaceInfoCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "info [workspace-name]",
 		Short: "워크스페이스 정보 조회",
-		Long:  `지정된 워크스페이스의 상세 정보를 조회합니다.
+		Long: `지정된 워크스페이스의 상세 정보를 조회합니다.
 
 표시되는 정보:
   • 워크스페이스 이름 및 ID
@@ -238,7 +238,7 @@ func newWorkspaceInfoCmd() *cobra.Command {
   
   # 짧은 별칭 사용
   aicli ws info myproject`,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			// TODO: 실제 워크스페이스 목록을 가져오는 로직 구현
 			workspaces := []string{
@@ -268,10 +268,10 @@ func newWorkspaceInfoCmd() *cobra.Command {
 				"memory_usage":  "512MB / 2GB",
 				"claude_api":    "configured",
 			}
-			
+
 			// 출력 포맷터 생성
 			formatter := output.DefaultFormatterManager()
-			
+
 			return formatter.Print(info)
 		},
 	}

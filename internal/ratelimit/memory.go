@@ -12,7 +12,7 @@ type MemoryLimiter struct {
 	config   *LimiterConfig
 	limiters map[string]*rateLimiterEntry
 	mu       sync.RWMutex
-	
+
 	// cleanup 관련
 	cleanupInterval time.Duration
 	maxIdleTime     time.Duration
@@ -33,7 +33,7 @@ func NewMemoryLimiter(config *LimiterConfig) *MemoryLimiter {
 	if config == nil {
 		config = DefaultLimiterConfig()
 	}
-	
+
 	ml := &MemoryLimiter{
 		config:          config,
 		limiters:        make(map[string]*rateLimiterEntry),
@@ -41,10 +41,10 @@ func NewMemoryLimiter(config *LimiterConfig) *MemoryLimiter {
 		maxIdleTime:     30 * time.Minute,
 		stopCleanup:     make(chan struct{}),
 	}
-	
+
 	// 백그라운드 정리 작업 시작
 	go ml.cleanupLoop()
-	
+
 	return ml
 }
 
@@ -52,23 +52,23 @@ func NewMemoryLimiter(config *LimiterConfig) *MemoryLimiter {
 func (ml *MemoryLimiter) Allow(key string) bool {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
-	
+
 	entry, exists := ml.limiters[key]
 	now := time.Now()
-	
+
 	if !exists {
 		// 새로운 키에 대한 limiter 생성
 		// Rate limit을 분당 요청 수로 설정
 		ratePerSecond := rate.Limit(float64(ml.config.Rate) / float64(ml.config.Window))
 		limiter := rate.NewLimiter(ratePerSecond, ml.config.Burst)
-		
+
 		// 첫 번째 요청은 허용하고 토큰 감소
 		allowed := limiter.Allow()
 		tokens := ml.config.Burst
 		if allowed {
 			tokens = ml.config.Burst - 1
 		}
-		
+
 		entry = &rateLimiterEntry{
 			limiter:  limiter,
 			lastUsed: now,
@@ -76,11 +76,11 @@ func (ml *MemoryLimiter) Allow(key string) bool {
 			config:   ml.config,
 			tokens:   tokens,
 		}
-		
+
 		ml.limiters[key] = entry
 		return allowed
 	}
-	
+
 	// 시간 윈도우가 지났으면 리셋
 	if now.After(entry.resetAt) {
 		ratePerSecond := rate.Limit(float64(ml.config.Rate) / float64(ml.config.Window))
@@ -88,15 +88,15 @@ func (ml *MemoryLimiter) Allow(key string) bool {
 		entry.resetAt = now.Add(time.Duration(ml.config.Window) * time.Second)
 		entry.tokens = ml.config.Burst
 	}
-	
+
 	entry.lastUsed = now
-	
+
 	// 토큰 사용 가능 여부 확인
 	allowed := entry.limiter.Allow()
 	if allowed && entry.tokens > 0 {
 		entry.tokens--
 	}
-	
+
 	return allowed
 }
 
@@ -104,7 +104,7 @@ func (ml *MemoryLimiter) Allow(key string) bool {
 func (ml *MemoryLimiter) Reset(key string) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
-	
+
 	delete(ml.limiters, key)
 }
 
@@ -112,22 +112,22 @@ func (ml *MemoryLimiter) Reset(key string) {
 func (ml *MemoryLimiter) Remaining(key string) int {
 	ml.mu.RLock()
 	defer ml.mu.RUnlock()
-	
+
 	entry, exists := ml.limiters[key]
 	if !exists {
 		return ml.config.Burst // 아직 사용하지 않은 키는 전체 버스트 반환
 	}
-	
+
 	// 시간이 지났으면 전체 토큰으로 계산
 	if time.Now().After(entry.resetAt) {
 		return ml.config.Burst
 	}
-	
+
 	// 토큰이 0보다 크면 현재 토큰 수 반환
 	if entry.tokens >= 0 {
 		return entry.tokens
 	}
-	
+
 	return 0
 }
 
@@ -140,12 +140,12 @@ func (ml *MemoryLimiter) Limit(key string) int {
 func (ml *MemoryLimiter) ResetTime(key string) time.Time {
 	ml.mu.RLock()
 	defer ml.mu.RUnlock()
-	
+
 	entry, exists := ml.limiters[key]
 	if !exists {
 		return time.Now().Add(time.Duration(ml.config.Window) * time.Second)
 	}
-	
+
 	return entry.resetAt
 }
 
@@ -159,7 +159,7 @@ func (ml *MemoryLimiter) Close() error {
 func (ml *MemoryLimiter) cleanupLoop() {
 	ticker := time.NewTicker(ml.cleanupInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -174,7 +174,7 @@ func (ml *MemoryLimiter) cleanupLoop() {
 func (ml *MemoryLimiter) cleanup() {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
-	
+
 	now := time.Now()
 	for key, entry := range ml.limiters {
 		if now.Sub(entry.lastUsed) > ml.maxIdleTime {
@@ -187,7 +187,7 @@ func (ml *MemoryLimiter) cleanup() {
 func (ml *MemoryLimiter) GetStats() map[string]interface{} {
 	ml.mu.RLock()
 	defer ml.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"total_limiters": len(ml.limiters),
 		"config": map[string]interface{}{

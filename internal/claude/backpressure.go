@@ -31,7 +31,7 @@ type BackpressureHandler struct {
 	metrics           *BackpressureMetrics
 	logger            *logrus.Logger
 	mu                sync.RWMutex
-	
+
 	// 적응형 버퍼 크기 조정
 	adaptiveBuffering  bool
 	minBufferSize      int
@@ -42,12 +42,12 @@ type BackpressureHandler struct {
 
 // BackpressureMetrics는 백프레셔 관련 메트릭을 추적합니다.
 type BackpressureMetrics struct {
-	DroppedMessages   int64
+	DroppedMessages    int64
 	BackpressureEvents int64
-	BufferResizes     int64
-	SlowConsumerCount int64
-	AvgBufferUsage    float64
-	mu                sync.RWMutex
+	BufferResizes      int64
+	SlowConsumerCount  int64
+	AvgBufferUsage     float64
+	mu                 sync.RWMutex
 }
 
 // BackpressureConfig는 백프레셔 핸들러 설정을 정의합니다.
@@ -92,7 +92,7 @@ func NewBackpressureHandler(config BackpressureConfig, logger *logrus.Logger) *B
 // ShouldDrop은 현재 버퍼 상태를 기반으로 메시지를 드롭해야 하는지 결정합니다.
 func (bh *BackpressureHandler) ShouldDrop() bool {
 	currentSize := atomic.LoadInt64(&bh.currentBufferSize)
-	
+
 	bh.mu.RLock()
 	maxSize := int64(bh.maxBufferSize)
 	policy := bh.dropPolicy
@@ -101,7 +101,7 @@ func (bh *BackpressureHandler) ShouldDrop() bool {
 	if currentSize >= maxSize {
 		// 백프레셔 이벤트 기록
 		atomic.AddInt64(&bh.metrics.BackpressureEvents, 1)
-		
+
 		// 느린 소비자 알림
 		select {
 		case bh.slowConsumerCh <- struct{}{}:
@@ -132,7 +132,7 @@ func (bh *BackpressureHandler) WaitForSpace(ctx context.Context) error {
 			bh.mu.RLock()
 			maxSize := int64(bh.maxBufferSize)
 			bh.mu.RUnlock()
-			
+
 			if currentSize < maxSize {
 				return nil
 			}
@@ -229,7 +229,7 @@ func (bh *BackpressureHandler) MonitorSlowConsumers(ctx context.Context) {
 		case <-bh.slowConsumerCh:
 			consecutiveSlowCount++
 			atomic.AddInt64(&bh.metrics.SlowConsumerCount, 1)
-			
+
 			if consecutiveSlowCount >= slowThreshold {
 				bh.logger.Warn("Detected consistently slow consumer")
 				bh.AdjustBufferSize()
@@ -247,7 +247,7 @@ func (bh *BackpressureHandler) MonitorSlowConsumers(ctx context.Context) {
 // updateMetrics는 메트릭을 업데이트합니다.
 func (bh *BackpressureHandler) updateMetrics() {
 	currentSize := atomic.LoadInt64(&bh.currentBufferSize)
-	
+
 	bh.mu.RLock()
 	maxSize := float64(bh.maxBufferSize)
 	bh.mu.RUnlock()
@@ -294,7 +294,7 @@ func (bh *BackpressureHandler) Reset() {
 	atomic.StoreInt64(&bh.metrics.BackpressureEvents, 0)
 	atomic.StoreInt64(&bh.metrics.BufferResizes, 0)
 	atomic.StoreInt64(&bh.metrics.SlowConsumerCount, 0)
-	
+
 	bh.metrics.mu.Lock()
 	bh.metrics.AvgBufferUsage = 0
 	bh.metrics.mu.Unlock()

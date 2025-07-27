@@ -22,7 +22,7 @@ type SQLMigration struct {
 // NewSQLMigration 새 SQL 마이그레이션 생성
 func NewSQLMigration(version, description, upSQL, downSQL string) *SQLMigration {
 	canRollback := strings.TrimSpace(downSQL) != ""
-	
+
 	return &SQLMigration{
 		BaseMigration: NewBaseMigration(version, description, canRollback),
 		upSQL:         upSQL,
@@ -35,16 +35,16 @@ func (m *SQLMigration) Up(ctx context.Context, db interface{}) error {
 	if strings.TrimSpace(m.upSQL) == "" {
 		return fmt.Errorf("UP SQL이 비어있습니다: %s", m.Version())
 	}
-	
+
 	// db는 *sql.DB 또는 *sql.Tx 타입이어야 함
 	execer, ok := db.(interface {
 		ExecContext(ctx context.Context, query string, args ...interface{}) (interface{}, error)
 	})
-	
+
 	if !ok {
 		return fmt.Errorf("데이터베이스 실행기가 지원되지 않는 타입입니다")
 	}
-	
+
 	_, err := execer.ExecContext(ctx, m.upSQL)
 	return err
 }
@@ -54,19 +54,19 @@ func (m *SQLMigration) Down(ctx context.Context, db interface{}) error {
 	if !m.CanRollback() {
 		return fmt.Errorf("마이그레이션 %s는 롤백을 지원하지 않습니다", m.Version())
 	}
-	
+
 	if strings.TrimSpace(m.downSQL) == "" {
 		return fmt.Errorf("DOWN SQL이 비어있습니다: %s", m.Version())
 	}
-	
+
 	execer, ok := db.(interface {
 		ExecContext(ctx context.Context, query string, args ...interface{}) (interface{}, error)
 	})
-	
+
 	if !ok {
 		return fmt.Errorf("데이터베이스 실행기가 지원되지 않는 타입입니다")
 	}
-	
+
 	_, err := execer.ExecContext(ctx, m.downSQL)
 	return err
 }
@@ -99,16 +99,16 @@ type MigrationFile struct {
 
 // FileSystemSource 파일 시스템 마이그레이션 소스
 type FileSystemSource struct {
-	fs        fs.FS
-	pattern   string
+	fs         fs.FS
+	pattern    string
 	migrations map[string]*SQLMigration
 }
 
 // NewFileSystemSource 파일 시스템 소스 생성
 func NewFileSystemSource(filesystem fs.FS, pattern string) *FileSystemSource {
 	return &FileSystemSource{
-		fs:        filesystem,
-		pattern:   pattern,
+		fs:         filesystem,
+		pattern:    pattern,
 		migrations: make(map[string]*SQLMigration),
 	}
 }
@@ -124,13 +124,13 @@ func (s *FileSystemSource) Load() ([]Migration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("마이그레이션 파일 스캔 실패: %w", err)
 	}
-	
+
 	// 버전별로 파일들을 그룹화
 	versionFiles := make(map[string][]MigrationFile)
 	for _, file := range files {
 		versionFiles[file.Version] = append(versionFiles[file.Version], file)
 	}
-	
+
 	// 각 버전에 대해 마이그레이션 생성
 	for version, files := range versionFiles {
 		migration, err := s.createMigration(version, files)
@@ -139,14 +139,14 @@ func (s *FileSystemSource) Load() ([]Migration, error) {
 		}
 		s.migrations[version] = migration
 	}
-	
+
 	// 정렬된 마이그레이션 목록 반환
 	versions := s.getSortedVersions()
 	migrations := make([]Migration, 0, len(versions))
 	for _, version := range versions {
 		migrations = append(migrations, s.migrations[version])
 	}
-	
+
 	return migrations, nil
 }
 
@@ -158,12 +158,12 @@ func (s *FileSystemSource) Get(version string) (Migration, error) {
 			return nil, err
 		}
 	}
-	
+
 	migration, exists := s.migrations[version]
 	if !exists {
 		return nil, fmt.Errorf("마이그레이션 버전 %s를 찾을 수 없습니다", version)
 	}
-	
+
 	return migration, nil
 }
 
@@ -175,57 +175,57 @@ func (s *FileSystemSource) List() ([]string, error) {
 			return nil, err
 		}
 	}
-	
+
 	return s.getSortedVersions(), nil
 }
 
 // scanMigrationFiles 마이그레이션 파일들을 스캔
 func (s *FileSystemSource) scanMigrationFiles() ([]MigrationFile, error) {
 	var files []MigrationFile
-	
+
 	err := fs.WalkDir(s.fs, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if d.IsDir() {
 			return nil
 		}
-		
+
 		// 파일 패턴 매칭
 		matched, err := filepath.Match(s.pattern, filepath.Base(path))
 		if err != nil {
 			return err
 		}
-		
+
 		if !matched && !s.isValidMigrationFile(path) {
 			return nil
 		}
-		
+
 		// 파일 파싱
 		file, err := s.parseMigrationFile(path)
 		if err != nil {
 			return fmt.Errorf("파일 파싱 실패 %s: %w", path, err)
 		}
-		
+
 		files = append(files, *file)
 		return nil
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return files, nil
 }
 
 // isValidMigrationFile 유효한 마이그레이션 파일인지 확인
 func (s *FileSystemSource) isValidMigrationFile(path string) bool {
 	base := filepath.Base(path)
-	
+
 	// SQL 파일 패턴: 001_name.up.sql, 001_name.down.sql
 	sqlPattern := regexp.MustCompile(`^(\d{3,})_(.+)\.(up|down)\.sql$`)
-	
+
 	return sqlPattern.MatchString(base)
 }
 
@@ -236,21 +236,21 @@ func (s *FileSystemSource) parseMigrationFile(path string) (*MigrationFile, erro
 	if err != nil {
 		return nil, fmt.Errorf("파일 읽기 실패: %w", err)
 	}
-	
+
 	base := filepath.Base(path)
-	
+
 	// 파일명 파싱
 	sqlPattern := regexp.MustCompile(`^(\d{3,})_(.+)\.(up|down)\.sql$`)
 	matches := sqlPattern.FindStringSubmatch(base)
-	
+
 	if len(matches) != 4 {
 		return nil, fmt.Errorf("파일명 형식이 잘못되었습니다: %s", base)
 	}
-	
+
 	version := matches[1]
 	description := strings.ReplaceAll(matches[2], "_", " ")
 	directionStr := matches[3]
-	
+
 	var direction Direction
 	switch directionStr {
 	case "up":
@@ -260,7 +260,7 @@ func (s *FileSystemSource) parseMigrationFile(path string) (*MigrationFile, erro
 	default:
 		return nil, fmt.Errorf("지원하지 않는 방향: %s", directionStr)
 	}
-	
+
 	return &MigrationFile{
 		Path:        path,
 		Version:     version,
@@ -274,12 +274,12 @@ func (s *FileSystemSource) parseMigrationFile(path string) (*MigrationFile, erro
 func (s *FileSystemSource) createMigration(version string, files []MigrationFile) (*SQLMigration, error) {
 	var upSQL, downSQL string
 	var description string
-	
+
 	for _, file := range files {
 		if file.Description != "" && description == "" {
 			description = file.Description
 		}
-		
+
 		switch file.Direction {
 		case DirectionUp:
 			upSQL = file.Content
@@ -287,15 +287,15 @@ func (s *FileSystemSource) createMigration(version string, files []MigrationFile
 			downSQL = file.Content
 		}
 	}
-	
+
 	if strings.TrimSpace(upSQL) == "" {
 		return nil, fmt.Errorf("UP SQL이 없습니다 (버전 %s)", version)
 	}
-	
+
 	if description == "" {
 		description = fmt.Sprintf("Migration %s", version)
 	}
-	
+
 	return NewSQLMigration(version, description, upSQL, downSQL), nil
 }
 
@@ -305,7 +305,7 @@ func (s *FileSystemSource) getSortedVersions() []string {
 	for version := range s.migrations {
 		versions = append(versions, version)
 	}
-	
+
 	sort.Strings(versions)
 	return versions
 }
@@ -330,7 +330,7 @@ func (l *MigrationLoader) AddSource(name string, source MigrationSource) {
 // LoadAll 모든 소스에서 마이그레이션 로드
 func (l *MigrationLoader) LoadAll() (map[string][]Migration, error) {
 	result := make(map[string][]Migration)
-	
+
 	for name, source := range l.sources {
 		migrations, err := source.Load()
 		if err != nil {
@@ -338,7 +338,7 @@ func (l *MigrationLoader) LoadAll() (map[string][]Migration, error) {
 		}
 		result[name] = migrations
 	}
-	
+
 	return result, nil
 }
 
@@ -348,7 +348,7 @@ func (l *MigrationLoader) LoadBySource(sourceName string) ([]Migration, error) {
 	if !exists {
 		return nil, fmt.Errorf("소스 %s를 찾을 수 없습니다", sourceName)
 	}
-	
+
 	return source.Load()
 }
 
@@ -358,7 +358,7 @@ func (l *MigrationLoader) GetSources() []string {
 	for name := range l.sources {
 		sources = append(sources, name)
 	}
-	
+
 	sort.Strings(sources)
 	return sources
 }
@@ -369,13 +369,13 @@ func (l *MigrationLoader) ValidateMigrations() error {
 	if err != nil {
 		return err
 	}
-	
+
 	for sourceName, migrations := range allMigrations {
 		if err := l.validateMigrationSequence(sourceName, migrations); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -384,24 +384,24 @@ func (l *MigrationLoader) validateMigrationSequence(sourceName string, migration
 	if len(migrations) == 0 {
 		return nil
 	}
-	
+
 	// 버전 정렬
 	versions := make([]string, len(migrations))
 	for i, migration := range migrations {
 		versions[i] = migration.Version()
 	}
 	sort.Strings(versions)
-	
+
 	// 순서 검증
 	for i := 1; i < len(versions); i++ {
 		current := versions[i]
 		previous := versions[i-1]
-		
+
 		if CompareVersions(current, previous) <= 0 {
-			return fmt.Errorf("소스 %s: 마이그레이션 버전 순서가 잘못되었습니다. %s 다음에 %s", 
+			return fmt.Errorf("소스 %s: 마이그레이션 버전 순서가 잘못되었습니다. %s 다음에 %s",
 				sourceName, previous, current)
 		}
 	}
-	
+
 	return nil
 }

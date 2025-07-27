@@ -9,10 +9,10 @@ import (
 
 // Package level variables
 var (
-	once                sync.Once
-	validationService   *ValidationService
-	validationManager   *ValidationManager
-	messageTranslator   MessageTranslator
+	once              sync.Once
+	validationService *ValidationService
+	validationManager *ValidationManager
+	messageTranslator MessageTranslator
 )
 
 // InitializeValidation 검증 시스템 초기화
@@ -21,10 +21,10 @@ func InitializeValidation() {
 		// 메시지 번역기 초기화
 		messageTranslator = NewDefaultMessageTranslator()
 		GlobalTranslator = messageTranslator
-		
+
 		// 검증 관리자 초기화
 		validationManager = GetGinValidator()
-		
+
 		// 검증 서비스 초기화
 		validationService = NewValidationService()
 	})
@@ -88,27 +88,27 @@ func GetMessageTranslator() MessageTranslator {
 // ValidationConfig 검증 설정
 type ValidationConfig struct {
 	// 리소스 제한 설정
-	MaxWorkspacesPerUser      int
-	MaxProjectsPerWorkspace   int
-	MaxSessionsPerProject     int
-	MaxTasksPerSession        int
-	
+	MaxWorkspacesPerUser    int
+	MaxProjectsPerWorkspace int
+	MaxSessionsPerProject   int
+	MaxTasksPerSession      int
+
 	// 경로 검증 설정
-	MaxPathDepth             int
-	AllowedPathPrefixes      []string
-	ForbiddenPathPrefixes    []string
-	
+	MaxPathDepth          int
+	AllowedPathPrefixes   []string
+	ForbiddenPathPrefixes []string
+
 	// API 키 설정
-	ClaudeAPIKeyMinLength    int
-	ClaudeAPIKeyMaxLength    int
-	
+	ClaudeAPIKeyMinLength int
+	ClaudeAPIKeyMaxLength int
+
 	// 명령어 보안 설정
 	MaxCommandLength         int
 	ForbiddenCommandPatterns []string
-	
+
 	// 국제화 설정
-	DefaultLanguage          Language
-	SupportedLanguages       []Language
+	DefaultLanguage    Language
+	SupportedLanguages []Language
 }
 
 // DefaultValidationConfig 기본 검증 설정
@@ -117,8 +117,8 @@ func DefaultValidationConfig() *ValidationConfig {
 		MaxWorkspacesPerUser:    20,
 		MaxProjectsPerWorkspace: 50,
 		MaxSessionsPerProject:   3,
-		MaxTasksPerSession:     5,
-		
+		MaxTasksPerSession:      5,
+
 		MaxPathDepth: 10,
 		AllowedPathPrefixes: []string{
 			"/home",
@@ -139,10 +139,10 @@ func DefaultValidationConfig() *ValidationConfig {
 			"/usr",
 			"/var",
 		},
-		
+
 		ClaudeAPIKeyMinLength: 50,
 		ClaudeAPIKeyMaxLength: 200,
-		
+
 		MaxCommandLength: 10000,
 		ForbiddenCommandPatterns: []string{
 			"rm -rf /",
@@ -158,7 +158,7 @@ func DefaultValidationConfig() *ValidationConfig {
 			"halt",
 			"poweroff",
 		},
-		
+
 		DefaultLanguage: LanguageKorean,
 		SupportedLanguages: []Language{
 			LanguageKorean,
@@ -172,29 +172,29 @@ func ApplyValidationConfig(config *ValidationConfig) {
 	if messageTranslator == nil {
 		InitializeValidation()
 	}
-	
+
 	// 기본 언어 설정
 	messageTranslator.SetLanguage(config.DefaultLanguage)
 }
 
 // ValidationStats 검증 통계
 type ValidationStats struct {
-	TotalValidations      int64
-	SuccessfulValidations int64
-	FailedValidations     int64
+	TotalValidations       int64
+	SuccessfulValidations  int64
+	FailedValidations      int64
 	BusinessRuleViolations int64
-	MostCommonErrors      map[string]int64
+	MostCommonErrors       map[string]int64
 }
 
 // GetValidationStats 검증 통계 반환 (향후 구현)
 func GetValidationStats() *ValidationStats {
 	return &ValidationStats{
 		// TODO: 실제 통계 수집 구현
-		TotalValidations: 0,
-		SuccessfulValidations: 0,
-		FailedValidations: 0,
+		TotalValidations:       0,
+		SuccessfulValidations:  0,
+		FailedValidations:      0,
 		BusinessRuleViolations: 0,
-		MostCommonErrors: make(map[string]int64),
+		MostCommonErrors:       make(map[string]int64),
 	}
 }
 

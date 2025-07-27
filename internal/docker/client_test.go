@@ -12,7 +12,7 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	config := DefaultConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.NotEmpty(t, config.Host)
 	assert.NotEmpty(t, config.Version)
@@ -68,7 +68,7 @@ func TestConfigValidation(t *testing.T) {
 			if config == nil {
 				config = DefaultConfig()
 			}
-			
+
 			// 설정 검증 로직 (실제 Docker 연결은 건너뜀)
 			assert.NotEmpty(t, config.Host)
 			assert.NotEmpty(t, config.Version)
@@ -121,15 +121,15 @@ func TestClient_WorkspaceLabels(t *testing.T) {
 
 	workspaceID := "ws-12345"
 	name := "test-workspace"
-	
+
 	labels := client.WorkspaceLabels(workspaceID, name)
-	
+
 	assert.NotNil(t, labels)
 	assert.Equal(t, "true", labels["aicli.managed"])
 	assert.Equal(t, workspaceID, labels["aicli.workspace.id"])
 	assert.Equal(t, name, labels["aicli.workspace.name"])
 	assert.NotEmpty(t, labels["aicli.created"])
-	
+
 	// 시간 형식 검증
 	_, err := time.Parse(time.RFC3339, labels["aicli.created"])
 	assert.NoError(t, err)
@@ -216,12 +216,12 @@ func TestClient_NetworkSetup(t *testing.T) {
 	ctx := context.Background()
 	inspect, err := client.cli.NetworkInspect(ctx, client.networkID, types.NetworkInspectOptions{})
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, config.NetworkName, inspect.Name)
 	assert.Equal(t, "bridge", inspect.Driver)
 	assert.True(t, inspect.Attachable)
 	assert.False(t, inspect.Internal)
-	
+
 	// 레이블 확인
 	assert.Equal(t, "true", inspect.Labels[client.labelKey("managed")])
 	assert.NotEmpty(t, inspect.Labels[client.labelKey("created")])

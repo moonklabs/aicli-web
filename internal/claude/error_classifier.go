@@ -13,35 +13,35 @@ import (
 type ErrorClassifier interface {
 	// 에러 분류 및 심각도 평가
 	ClassifyError(err error) ErrorClass
-	
+
 	// 재시도 가능 여부 판단
 	IsRetryable(err error) bool
-	
+
 	// 에러 우선순위 계산
 	GetPriority(err error) ErrorPriority
-	
+
 	// 복구 전략 추천
 	SuggestRecoveryStrategy(err error) RecoveryStrategy
-	
+
 	// 분류 규칙 추가
 	AddClassificationRule(rule ClassificationRule) error
-	
+
 	// 학습된 패턴 추가
 	LearnFromError(err error, actualClass ErrorClass) error
-	
+
 	// 통계 조회
 	GetErrorStatistics() *ErrorStatistics
 }
 
 // ErrorClass는 에러 분류 정보입니다
 type ErrorClass struct {
-	Type        ErrorType     `json:"type"`
-	Severity    ErrorSeverity `json:"severity"`
-	Category    string        `json:"category"`
-	Description string        `json:"description"`
-	RetryAfter  time.Duration `json:"retry_after"`
-	Confidence  float64       `json:"confidence"`
-	Tags        []string      `json:"tags"`
+	Type        ErrorType              `json:"type"`
+	Severity    ErrorSeverity          `json:"severity"`
+	Category    string                 `json:"category"`
+	Description string                 `json:"description"`
+	RetryAfter  time.Duration          `json:"retry_after"`
+	Confidence  float64                `json:"confidence"`
+	Tags        []string               `json:"tags"`
 	Context     map[string]interface{} `json:"context"`
 }
 
@@ -89,69 +89,69 @@ const (
 
 // ClassificationRule은 분류 규칙입니다
 type ClassificationRule struct {
-	ID          string     `json:"id"`
-	Name        string     `json:"name"`
-	Pattern     string     `json:"pattern"`
-	ErrorClass  ErrorClass `json:"error_class"`
-	Weight      float64    `json:"weight"`
-	IsRegex     bool       `json:"is_regex"`
-	Enabled     bool       `json:"enabled"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	Pattern    string     `json:"pattern"`
+	ErrorClass ErrorClass `json:"error_class"`
+	Weight     float64    `json:"weight"`
+	IsRegex    bool       `json:"is_regex"`
+	Enabled    bool       `json:"enabled"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
 }
 
 // ErrorStatistics는 에러 통계입니다
 type ErrorStatistics struct {
-	TotalErrors       int64                    `json:"total_errors"`
-	ErrorsByType      map[ErrorType]int64      `json:"errors_by_type"`
-	ErrorsBySeverity  map[ErrorSeverity]int64  `json:"errors_by_severity"`
-	ErrorsByCategory  map[string]int64         `json:"errors_by_category"`
-	ClassificationAccuracy float64            `json:"classification_accuracy"`
-	TopErrors         []ErrorPattern           `json:"top_errors"`
-	RecentErrors      []ClassifiedError        `json:"recent_errors"`
-	StartTime         time.Time                `json:"start_time"`
-	LastUpdated       time.Time                `json:"last_updated"`
+	TotalErrors            int64                   `json:"total_errors"`
+	ErrorsByType           map[ErrorType]int64     `json:"errors_by_type"`
+	ErrorsBySeverity       map[ErrorSeverity]int64 `json:"errors_by_severity"`
+	ErrorsByCategory       map[string]int64        `json:"errors_by_category"`
+	ClassificationAccuracy float64                 `json:"classification_accuracy"`
+	TopErrors              []ErrorPattern          `json:"top_errors"`
+	RecentErrors           []ClassifiedError       `json:"recent_errors"`
+	StartTime              time.Time               `json:"start_time"`
+	LastUpdated            time.Time               `json:"last_updated"`
 }
 
 // ErrorPattern은 에러 패턴입니다
 type ErrorPattern struct {
-	Pattern     string    `json:"pattern"`
-	Count       int64     `json:"count"`
-	LastSeen    time.Time `json:"last_seen"`
-	ErrorClass  ErrorClass `json:"error_class"`
+	Pattern    string     `json:"pattern"`
+	Count      int64      `json:"count"`
+	LastSeen   time.Time  `json:"last_seen"`
+	ErrorClass ErrorClass `json:"error_class"`
 }
 
 // ClassifiedError는 분류된 에러입니다
 type ClassifiedError struct {
-	Error       string     `json:"error"`
-	ErrorClass  ErrorClass `json:"error_class"`
-	Timestamp   time.Time  `json:"timestamp"`
-	Context     map[string]interface{} `json:"context"`
+	Error      string                 `json:"error"`
+	ErrorClass ErrorClass             `json:"error_class"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Context    map[string]interface{} `json:"context"`
 }
 
 // ErrorClassificationEngine은 에러 분류 엔진 구현체입니다
 type ErrorClassificationEngine struct {
 	// 분류 규칙들
-	rules        []ClassificationRule
-	rulesMutex   sync.RWMutex
-	
+	rules      []ClassificationRule
+	rulesMutex sync.RWMutex
+
 	// 패턴 매칭
-	patterns     map[string]ErrorClass
+	patterns      map[string]ErrorClass
 	patternsMutex sync.RWMutex
-	
+
 	// 학습된 규칙들
 	learnedRules map[string]ErrorClass
 	learnedMutex sync.RWMutex
-	
+
 	// 통계
-	statistics   *ErrorStatistics
-	statsMutex   sync.RWMutex
-	
+	statistics *ErrorStatistics
+	statsMutex sync.RWMutex
+
 	// 캐시
-	cache        map[string]ErrorClass
-	cacheMutex   sync.RWMutex
-	cacheSize    int
-	
+	cache      map[string]ErrorClass
+	cacheMutex sync.RWMutex
+	cacheSize  int
+
 	// 복구 전략 매핑
 	recoveryStrategies map[ErrorType][]RecoveryStrategy
 	strategiesMutex    sync.RWMutex
@@ -160,25 +160,25 @@ type ErrorClassificationEngine struct {
 // NewErrorClassificationEngine은 새로운 에러 분류 엔진을 생성합니다
 func NewErrorClassificationEngine() *ErrorClassificationEngine {
 	engine := &ErrorClassificationEngine{
-		rules:        make([]ClassificationRule, 0),
-		patterns:     make(map[string]ErrorClass),
-		learnedRules: make(map[string]ErrorClass),
-		cache:        make(map[string]ErrorClass),
-		cacheSize:    1000,
+		rules:              make([]ClassificationRule, 0),
+		patterns:           make(map[string]ErrorClass),
+		learnedRules:       make(map[string]ErrorClass),
+		cache:              make(map[string]ErrorClass),
+		cacheSize:          1000,
 		recoveryStrategies: make(map[ErrorType][]RecoveryStrategy),
 		statistics: &ErrorStatistics{
-			ErrorsByType:      make(map[ErrorType]int64),
-			ErrorsBySeverity:  make(map[ErrorSeverity]int64),
-			ErrorsByCategory:  make(map[string]int64),
-			TopErrors:         make([]ErrorPattern, 0),
-			RecentErrors:      make([]ClassifiedError, 0, 100),
-			StartTime:         time.Now(),
+			ErrorsByType:     make(map[ErrorType]int64),
+			ErrorsBySeverity: make(map[ErrorSeverity]int64),
+			ErrorsByCategory: make(map[string]int64),
+			TopErrors:        make([]ErrorPattern, 0),
+			RecentErrors:     make([]ClassifiedError, 0, 100),
+			StartTime:        time.Now(),
 		},
 	}
-	
+
 	// 기본 분류 규칙 초기화
 	engine.initializeDefaultRules()
-	
+
 	return engine
 }
 
@@ -193,33 +193,33 @@ func (e *ErrorClassificationEngine) ClassifyError(err error) ErrorClass {
 			Confidence:  1.0,
 		}
 	}
-	
+
 	errorMsg := err.Error()
-	
+
 	// 캐시 확인
 	if cached, found := e.getCachedClassification(errorMsg); found {
 		return cached
 	}
-	
+
 	// 분류 수행
 	classification := e.performClassification(errorMsg)
-	
+
 	// 캐시에 저장
 	e.cacheClassification(errorMsg, classification)
-	
+
 	// 통계 업데이트
 	e.updateStatistics(classification)
-	
+
 	// 최근 에러에 추가
 	e.addToRecentErrors(errorMsg, classification)
-	
+
 	return classification
 }
 
 // IsRetryable은 에러가 재시도 가능한지 판단합니다
 func (e *ErrorClassificationEngine) IsRetryable(err error) bool {
 	classification := e.ClassifyError(err)
-	
+
 	switch classification.Type {
 	case NetworkError, TimeoutError, ResourceError, QuotaError:
 		return true
@@ -239,7 +239,7 @@ func (e *ErrorClassificationEngine) IsRetryable(err error) bool {
 // GetPriority는 에러의 처리 우선순위를 계산합니다
 func (e *ErrorClassificationEngine) GetPriority(err error) ErrorPriority {
 	classification := e.ClassifyError(err)
-	
+
 	// 심각도 기반 우선순위 계산
 	switch classification.Severity {
 	case SeverityFatal:
@@ -258,19 +258,19 @@ func (e *ErrorClassificationEngine) GetPriority(err error) ErrorPriority {
 // SuggestRecoveryStrategy는 복구 전략을 추천합니다
 func (e *ErrorClassificationEngine) SuggestRecoveryStrategy(err error) RecoveryStrategy {
 	classification := e.ClassifyError(err)
-	
+
 	e.strategiesMutex.RLock()
 	strategies := e.recoveryStrategies[classification.Type]
 	e.strategiesMutex.RUnlock()
-	
+
 	if len(strategies) == 0 {
 		return nil
 	}
-	
+
 	// 가장 성공률이 높은 전략 선택
 	var bestStrategy RecoveryStrategy
 	var bestSuccessRate float64
-	
+
 	for _, strategy := range strategies {
 		if strategy.CanRecover(context.Background(), err) {
 			successRate := strategy.GetSuccessRate()
@@ -280,7 +280,7 @@ func (e *ErrorClassificationEngine) SuggestRecoveryStrategy(err error) RecoveryS
 			}
 		}
 	}
-	
+
 	return bestStrategy
 }
 
@@ -289,22 +289,22 @@ func (e *ErrorClassificationEngine) AddClassificationRule(rule ClassificationRul
 	if rule.Pattern == "" {
 		return fmt.Errorf("rule pattern cannot be empty")
 	}
-	
+
 	// 정규식 유효성 검사
 	if rule.IsRegex {
 		if _, err := regexp.Compile(rule.Pattern); err != nil {
 			return fmt.Errorf("invalid regex pattern: %w", err)
 		}
 	}
-	
+
 	rule.ID = fmt.Sprintf("rule_%d", time.Now().UnixNano())
 	rule.CreatedAt = time.Now()
 	rule.UpdatedAt = time.Now()
-	
+
 	e.rulesMutex.Lock()
 	e.rules = append(e.rules, rule)
 	e.rulesMutex.Unlock()
-	
+
 	return nil
 }
 
@@ -326,18 +326,18 @@ func (e *ErrorClassificationEngine) LearnFromError(err error, actualClass ErrorC
 	if err == nil {
 		return fmt.Errorf("error cannot be nil")
 	}
-	
+
 	errorMsg := err.Error()
-	
+
 	e.learnedMutex.Lock()
 	e.learnedRules[errorMsg] = actualClass
 	e.learnedMutex.Unlock()
-	
+
 	// 캐시 무효화
 	e.cacheMutex.Lock()
 	delete(e.cache, errorMsg)
 	e.cacheMutex.Unlock()
-	
+
 	return nil
 }
 
@@ -345,20 +345,20 @@ func (e *ErrorClassificationEngine) LearnFromError(err error, actualClass ErrorC
 func (e *ErrorClassificationEngine) GetErrorStatistics() *ErrorStatistics {
 	e.statsMutex.RLock()
 	defer e.statsMutex.RUnlock()
-	
+
 	// 복사본 반환
 	stats := &ErrorStatistics{
-		TotalErrors:       e.statistics.TotalErrors,
-		ErrorsByType:      make(map[ErrorType]int64),
-		ErrorsBySeverity:  make(map[ErrorSeverity]int64),
-		ErrorsByCategory:  make(map[string]int64),
+		TotalErrors:            e.statistics.TotalErrors,
+		ErrorsByType:           make(map[ErrorType]int64),
+		ErrorsBySeverity:       make(map[ErrorSeverity]int64),
+		ErrorsByCategory:       make(map[string]int64),
 		ClassificationAccuracy: e.statistics.ClassificationAccuracy,
-		TopErrors:         make([]ErrorPattern, len(e.statistics.TopErrors)),
-		RecentErrors:      make([]ClassifiedError, len(e.statistics.RecentErrors)),
-		StartTime:         e.statistics.StartTime,
-		LastUpdated:       e.statistics.LastUpdated,
+		TopErrors:              make([]ErrorPattern, len(e.statistics.TopErrors)),
+		RecentErrors:           make([]ClassifiedError, len(e.statistics.RecentErrors)),
+		StartTime:              e.statistics.StartTime,
+		LastUpdated:            e.statistics.LastUpdated,
 	}
-	
+
 	// 맵 복사
 	for k, v := range e.statistics.ErrorsByType {
 		stats.ErrorsByType[k] = v
@@ -369,11 +369,11 @@ func (e *ErrorClassificationEngine) GetErrorStatistics() *ErrorStatistics {
 	for k, v := range e.statistics.ErrorsByCategory {
 		stats.ErrorsByCategory[k] = v
 	}
-	
+
 	// 슬라이스 복사
 	copy(stats.TopErrors, e.statistics.TopErrors)
 	copy(stats.RecentErrors, e.statistics.RecentErrors)
-	
+
 	return stats
 }
 
@@ -475,7 +475,7 @@ func (e *ErrorClassificationEngine) initializeDefaultRules() {
 			Enabled: true,
 		},
 	}
-	
+
 	for _, rule := range defaultRules {
 		e.AddClassificationRule(rule)
 	}
@@ -490,17 +490,17 @@ func (e *ErrorClassificationEngine) performClassification(errorMsg string) Error
 		return learned
 	}
 	e.learnedMutex.RUnlock()
-	
+
 	// 2. 분류 규칙 적용
 	e.rulesMutex.RLock()
 	var bestMatch ErrorClass
 	var bestScore float64
-	
+
 	for _, rule := range e.rules {
 		if !rule.Enabled {
 			continue
 		}
-		
+
 		var match bool
 		if rule.IsRegex {
 			if regex, err := regexp.Compile(rule.Pattern); err == nil {
@@ -509,7 +509,7 @@ func (e *ErrorClassificationEngine) performClassification(errorMsg string) Error
 		} else {
 			match = strings.Contains(strings.ToLower(errorMsg), strings.ToLower(rule.Pattern))
 		}
-		
+
 		if match && rule.Weight > bestScore {
 			bestScore = rule.Weight
 			bestMatch = rule.ErrorClass
@@ -517,19 +517,19 @@ func (e *ErrorClassificationEngine) performClassification(errorMsg string) Error
 		}
 	}
 	e.rulesMutex.RUnlock()
-	
+
 	// 3. 매치된 규칙이 있으면 반환
 	if bestScore > 0 {
 		return bestMatch
 	}
-	
+
 	// 4. 기본 분류 (휴리스틱 기반)
 	return e.performHeuristicClassification(errorMsg)
 }
 
 func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg string) ErrorClass {
 	lowerMsg := strings.ToLower(errorMsg)
-	
+
 	// 네트워크 관련
 	if strings.Contains(lowerMsg, "network") || strings.Contains(lowerMsg, "connection") ||
 		strings.Contains(lowerMsg, "socket") || strings.Contains(lowerMsg, "tcp") ||
@@ -543,7 +543,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 			Confidence:  0.7,
 		}
 	}
-	
+
 	// 타임아웃 관련
 	if strings.Contains(lowerMsg, "timeout") || strings.Contains(lowerMsg, "deadline") ||
 		strings.Contains(lowerMsg, "expired") {
@@ -556,7 +556,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 			Confidence:  0.8,
 		}
 	}
-	
+
 	// 리소스 관련
 	if strings.Contains(lowerMsg, "memory") || strings.Contains(lowerMsg, "resource") ||
 		strings.Contains(lowerMsg, "limit") || strings.Contains(lowerMsg, "capacity") {
@@ -569,7 +569,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 			Confidence:  0.6,
 		}
 	}
-	
+
 	// 프로세스 관련
 	if strings.Contains(lowerMsg, "process") || strings.Contains(lowerMsg, "exit") ||
 		strings.Contains(lowerMsg, "signal") || strings.Contains(lowerMsg, "killed") {
@@ -582,7 +582,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 			Confidence:  0.7,
 		}
 	}
-	
+
 	// 인증 관련
 	if strings.Contains(lowerMsg, "auth") || strings.Contains(lowerMsg, "unauthorized") ||
 		strings.Contains(lowerMsg, "forbidden") || strings.Contains(lowerMsg, "permission") {
@@ -595,7 +595,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 			Confidence:  0.8,
 		}
 	}
-	
+
 	// 기본값 (알 수 없는 에러)
 	return ErrorClass{
 		Type:        UnknownError,
@@ -610,7 +610,7 @@ func (e *ErrorClassificationEngine) performHeuristicClassification(errorMsg stri
 func (e *ErrorClassificationEngine) getCachedClassification(errorMsg string) (ErrorClass, bool) {
 	e.cacheMutex.RLock()
 	defer e.cacheMutex.RUnlock()
-	
+
 	classification, found := e.cache[errorMsg]
 	return classification, found
 }
@@ -618,7 +618,7 @@ func (e *ErrorClassificationEngine) getCachedClassification(errorMsg string) (Er
 func (e *ErrorClassificationEngine) cacheClassification(errorMsg string, classification ErrorClass) {
 	e.cacheMutex.Lock()
 	defer e.cacheMutex.Unlock()
-	
+
 	// 캐시 크기 제한
 	if len(e.cache) >= e.cacheSize {
 		// LRU 방식으로 오래된 항목 제거 (간단한 구현)
@@ -627,14 +627,14 @@ func (e *ErrorClassificationEngine) cacheClassification(errorMsg string, classif
 			break
 		}
 	}
-	
+
 	e.cache[errorMsg] = classification
 }
 
 func (e *ErrorClassificationEngine) updateStatistics(classification ErrorClass) {
 	e.statsMutex.Lock()
 	defer e.statsMutex.Unlock()
-	
+
 	e.statistics.TotalErrors++
 	e.statistics.ErrorsByType[classification.Type]++
 	e.statistics.ErrorsBySeverity[classification.Severity]++
@@ -645,14 +645,14 @@ func (e *ErrorClassificationEngine) updateStatistics(classification ErrorClass) 
 func (e *ErrorClassificationEngine) addToRecentErrors(errorMsg string, classification ErrorClass) {
 	e.statsMutex.Lock()
 	defer e.statsMutex.Unlock()
-	
+
 	recentError := ClassifiedError{
 		Error:      errorMsg,
 		ErrorClass: classification,
 		Timestamp:  time.Now(),
 		Context:    make(map[string]interface{}),
 	}
-	
+
 	// 최근 에러 목록에 추가 (최대 100개)
 	e.statistics.RecentErrors = append(e.statistics.RecentErrors, recentError)
 	if len(e.statistics.RecentErrors) > 100 {

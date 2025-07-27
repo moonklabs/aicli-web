@@ -10,16 +10,16 @@ import (
 type Transaction interface {
 	// Commit 트랜잭션 커밋
 	Commit() error
-	
+
 	// Rollback 트랜잭션 롤백
 	Rollback() error
-	
+
 	// Context 트랜잭션 컨텍스트 반환
 	Context() context.Context
-	
+
 	// IsClosed 트랜잭션이 완료되었는지 확인
 	IsClosed() bool
-	
+
 	// 각 스토리지 인터페이스의 트랜잭션 버전
 	Workspace() WorkspaceStorage
 	Project() ProjectStorage
@@ -30,10 +30,10 @@ type Transaction interface {
 // TransactionalStorage 트랜잭션을 지원하는 스토리지 인터페이스
 type TransactionalStorage interface {
 	Storage
-	
+
 	// BeginTx 새 트랜잭션 시작
 	BeginTx(ctx context.Context) (Transaction, error)
-	
+
 	// WithTx 트랜잭션 내에서 작업 실행
 	WithTx(ctx context.Context, fn func(tx Transaction) error) error
 }
@@ -69,9 +69,9 @@ func (tm *TxManager) ExecuteInTx(ctx context.Context, operations ...func(tx Tran
 
 // BaseTx 기본 트랜잭션 구현체 (메모리 스토리지용)
 type BaseTx struct {
-	ctx      context.Context
-	storage  Storage
-	closed   bool
+	ctx        context.Context
+	storage    Storage
+	closed     bool
 	rolledBack bool
 	committed  bool
 }
@@ -90,7 +90,7 @@ func (tx *BaseTx) Commit() error {
 	if tx.closed {
 		return fmt.Errorf("트랜잭션이 이미 완료되었습니다")
 	}
-	
+
 	tx.committed = true
 	tx.closed = true
 	return nil
@@ -101,7 +101,7 @@ func (tx *BaseTx) Rollback() error {
 	if tx.closed {
 		return fmt.Errorf("트랜잭션이 이미 완료되었습니다")
 	}
-	
+
 	tx.rolledBack = true
 	tx.closed = true
 	return nil
@@ -143,16 +143,16 @@ type IsolationLevel int
 const (
 	// IsolationLevelDefault 기본 격리 수준
 	IsolationLevelDefault IsolationLevel = iota
-	
+
 	// IsolationLevelReadUncommitted 읽지 않은 커밋 허용
 	IsolationLevelReadUncommitted
-	
+
 	// IsolationLevelReadCommitted 커밋된 데이터만 읽기 (기본값)
 	IsolationLevelReadCommitted
-	
+
 	// IsolationLevelRepeatableRead 반복 가능한 읽기
 	IsolationLevelRepeatableRead
-	
+
 	// IsolationLevelSerializable 직렬화 가능
 	IsolationLevelSerializable
 )
@@ -193,22 +193,22 @@ func (il IsolationLevel) SQLiteLevel() string {
 type TransactionOptions struct {
 	// ReadOnly 읽기 전용 트랜잭션 여부
 	ReadOnly bool
-	
+
 	// Timeout 트랜잭션 타임아웃 (시간)
 	Timeout time.Duration
-	
+
 	// IsolationLevel 격리 수준
 	IsolationLevel IsolationLevel
-	
+
 	// RetryCount 재시도 횟수 (데드락 처리용)
 	RetryCount int
-	
+
 	// RetryDelay 재시도 지연 시간
 	RetryDelay time.Duration
-	
+
 	// EnableSavepoint Savepoint 사용 여부 (SQLite)
 	EnableSavepoint bool
-	
+
 	// Context 트랜잭션 컨텍스트
 	Context context.Context
 }
@@ -289,7 +289,7 @@ func RunInTx(ctx context.Context, storage TransactionalStorage, fn TxFunc) error
 	if err != nil {
 		return fmt.Errorf("트랜잭션 시작 실패: %w", err)
 	}
-	
+
 	// defer로 트랜잭션 정리
 	defer func() {
 		if !tx.IsClosed() {
@@ -300,12 +300,12 @@ func RunInTx(ctx context.Context, storage TransactionalStorage, fn TxFunc) error
 			}
 		}
 	}()
-	
+
 	// 함수 실행
 	err = fn(tx)
 	if err != nil {
 		return fmt.Errorf("트랜잭션 함수 실행 실패: %w", err)
 	}
-	
+
 	return nil
 }

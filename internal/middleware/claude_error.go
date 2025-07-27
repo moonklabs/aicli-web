@@ -212,7 +212,7 @@ func (r *ClaudeErrorResponder) RateLimitExceeded(c *gin.Context, retryAfter int)
 		TraceID:   getTraceID(c),
 		Timestamp: time.Now(),
 	}
-	
+
 	// Retry-After 헤더 설정
 	c.Header("Retry-After", fmt.Sprintf("%d", retryAfter))
 	c.JSON(http.StatusTooManyRequests, apiErr)

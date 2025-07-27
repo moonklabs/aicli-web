@@ -11,7 +11,7 @@ type Wrapper interface {
 	GetSession(sessionID string) (*Session, error)
 	CloseSession(sessionID string) error
 	ListSessions(filter SessionFilter) ([]*Session, error)
-	
+
 	// Claude 실행
 	Execute(sessionID, prompt string) (interface{}, error)
 }

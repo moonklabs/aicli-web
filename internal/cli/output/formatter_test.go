@@ -74,7 +74,7 @@ func TestDetectColorSupport(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("NO_COLOR", tt.noColor)
 			os.Setenv("TERM", tt.term)
-			
+
 			// 실제 터미널 환경이 아닌 경우 detectColorSupport는 항상 false를 반환할 수 있음
 			// 이 경우 테스트는 환경 변수 확인만 수행
 			got := detectColorSupport()
@@ -148,17 +148,17 @@ func TestTableFormatter_Format(t *testing.T) {
 			if len(tt.headers) > 0 {
 				formatter.SetHeaders(tt.headers)
 			}
-			
+
 			got, err := formatter.Format(tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TableFormatter.Format() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			
+
 			if tt.want != "" && got != tt.want {
 				t.Errorf("TableFormatter.Format() = %v, want %v", got, tt.want)
 			}
-			
+
 			// 출력이 있는지 확인
 			if !tt.wantErr && len(got) == 0 {
 				t.Error("TableFormatter.Format() returned empty output")
@@ -209,7 +209,7 @@ func TestJSONFormatter_Format(t *testing.T) {
 				t.Errorf("JSONFormatter.Format() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			
+
 			// JSON 유효성 검증
 			if !tt.wantErr {
 				var result interface{}
@@ -284,7 +284,7 @@ func TestYAMLFormatter_Format(t *testing.T) {
 				t.Errorf("YAMLFormatter.Format() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			
+
 			// YAML 유효성 검증
 			if !tt.wantErr {
 				var result interface{}
@@ -308,12 +308,12 @@ func TestFormatterManager_PrintTo(t *testing.T) {
 		t.Run(string(format), func(t *testing.T) {
 			fm := NewFormatterManager(format)
 			var buf bytes.Buffer
-			
+
 			err := fm.PrintTo(&buf, data)
 			if err != nil {
 				t.Errorf("FormatterManager.PrintTo() error = %v", err)
 			}
-			
+
 			if buf.Len() == 0 {
 				t.Error("FormatterManager.PrintTo() produced no output")
 			}
@@ -346,9 +346,9 @@ func TestValidateFormat(t *testing.T) {
 
 func TestGetFormatFromString(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		want   Format
+		name  string
+		input string
+		want  Format
 	}{
 		{"Lowercase json", "json", FormatJSON},
 		{"Uppercase JSON", "JSON", FormatJSON},
@@ -373,7 +373,7 @@ func BenchmarkTableFormatter_Format(b *testing.B) {
 	formatter := &TableFormatter{
 		baseFormatter: baseFormatter{colorEnabled: false},
 	}
-	
+
 	// 큰 데이터셋 생성
 	data := make([]map[string]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
@@ -384,7 +384,7 @@ func BenchmarkTableFormatter_Format(b *testing.B) {
 			"value":  i * 100,
 		}
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = formatter.Format(data)
@@ -396,7 +396,7 @@ func BenchmarkJSONFormatter_Format(b *testing.B) {
 		baseFormatter: baseFormatter{colorEnabled: false},
 		indent:        true,
 	}
-	
+
 	data := make([]map[string]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
 		data[i] = map[string]interface{}{
@@ -406,7 +406,7 @@ func BenchmarkJSONFormatter_Format(b *testing.B) {
 			"value":  i * 100,
 		}
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = formatter.Format(data)

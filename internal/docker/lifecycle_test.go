@@ -27,7 +27,7 @@ func TestLifecycleManager_EventMonitoring(t *testing.T) {
 	defer lifecycleManager.Close()
 
 	workspaceID := "test-workspace-lifecycle"
-	
+
 	// 이벤트 수집용 채널
 	events := make(chan ContainerEvent, 10)
 	var eventsMu sync.Mutex
@@ -38,7 +38,7 @@ func TestLifecycleManager_EventMonitoring(t *testing.T) {
 		eventsMu.Lock()
 		collectedEvents = append(collectedEvents, event)
 		eventsMu.Unlock()
-		
+
 		select {
 		case events <- event:
 		default:
@@ -107,9 +107,9 @@ func TestLifecycleManager_EventMonitoring(t *testing.T) {
 	// 수집된 이벤트 확인
 	eventsMu.Lock()
 	defer eventsMu.Unlock()
-	
+
 	assert.GreaterOrEqual(t, len(collectedEvents), 3, "Should have at least 3 events (start, stop/die, destroy)")
-	
+
 	// 모든 이벤트가 올바른 컨테이너와 워크스페이스에 속하는지 확인
 	for _, event := range collectedEvents {
 		assert.Equal(t, container.ID, event.ContainerID)
@@ -265,7 +265,7 @@ func TestLifecycleManager_GetContainerHistory(t *testing.T) {
 	// 이벤트 히스토리 조회
 	history, err := lifecycleManager.GetContainerHistory(ctx, container.ID, startTime)
 	assert.NoError(t, err)
-	
+
 	// 최소한 create, start, stop/die, destroy 이벤트가 있어야 함
 	assert.GreaterOrEqual(t, len(history), 3)
 
@@ -293,14 +293,14 @@ func TestLifecycleManager_MultipleSubscribers(t *testing.T) {
 	defer lifecycleManager.Close()
 
 	workspaceID := "test-workspace-multi"
-	
+
 	// 여러 구독자 생성
 	const numSubscribers = 3
 	events := make([]chan ContainerEvent, numSubscribers)
-	
+
 	for i := 0; i < numSubscribers; i++ {
 		events[i] = make(chan ContainerEvent, 10)
-		
+
 		// 각 구독자를 위한 핸들러
 		func(eventChan chan ContainerEvent) {
 			handler := func(event ContainerEvent) {
@@ -354,8 +354,8 @@ func TestLifecycleManager_StateMapping(t *testing.T) {
 	lifecycleManager := &LifecycleManager{}
 
 	testCases := []struct {
-		dockerStatus   string
-		expectedState  ContainerState
+		dockerStatus  string
+		expectedState ContainerState
 	}{
 		{"create", ContainerStateCreated},
 		{"start", ContainerStateRunning},
@@ -391,7 +391,7 @@ func BenchmarkLifecycleManager_EventProcessing(b *testing.B) {
 	defer lifecycleManager.Close()
 
 	workspaceID := "benchmark-lifecycle"
-	
+
 	// 간단한 핸들러
 	handler := func(event ContainerEvent) {
 		// 최소한의 처리

@@ -264,7 +264,7 @@ func (t *Tracker) createSyncEvent(eventType EventType, workspaceCount, successCo
 	case EventTypeSyncStart:
 		message = fmt.Sprintf("동기화 시작: %d개 워크스페이스", workspaceCount)
 	case EventTypeSyncComplete:
-		message = fmt.Sprintf("동기화 완료: %d개 워크스페이스 (성공: %d, 실패: %d, 소요시간: %v)", 
+		message = fmt.Sprintf("동기화 완료: %d개 워크스페이스 (성공: %d, 실패: %d, 소요시간: %v)",
 			workspaceCount, successCount, errorCount, duration)
 	}
 
@@ -282,28 +282,28 @@ func (t *Tracker) createSyncEvent(eventType EventType, workspaceCount, successCo
 func (t *Tracker) emitEvent(event *Event) {
 	// 이벤트 로깅
 	t.logger.Debug("이벤트 발송: [%s] %s - %s", event.Type, event.WorkspaceID, event.Message)
-	
+
 	// 향후 확장 가능한 부분:
 	// - 이벤트 버스로 전송
 	// - WebSocket으로 실시간 전송
 	// - 이벤트 저장소에 저장
 	// - 외부 시스템 알림
-	
+
 	// 현재는 로깅만 수행
 	if t.logger != nil {
 		switch event.Type {
 		case EventTypeError:
 			if errorData, ok := event.Data.(ErrorEvent); ok {
-				t.logger.Error("이벤트", fmt.Errorf(errorData.Error), 
+				t.logger.Error("이벤트", fmt.Errorf(errorData.Error),
 					"event_id", event.ID,
 					"workspace_id", event.WorkspaceID,
 					"retry_count", errorData.RetryCount)
 			}
 		case EventTypeStatusChanged:
 			if statusData, ok := event.Data.(StatusChangeEvent); ok {
-				t.logger.Info("상태 변경 이벤트: %s [%s -> %s]", 
-					event.WorkspaceID, 
-					statusData.OldStatus, 
+				t.logger.Info("상태 변경 이벤트: %s [%s -> %s]",
+					event.WorkspaceID,
+					statusData.OldStatus,
 					statusData.NewStatus)
 			}
 		default:
@@ -345,9 +345,8 @@ func getErrorCode(err error) string {
 
 // contains 문자열 포함 여부 확인 (대소문자 무시)
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || 
-		len(s) > len(substr) && (
-			s[:len(substr)] == substr || 
+	return len(s) >= len(substr) && (s == substr ||
+		len(s) > len(substr) && (s[:len(substr)] == substr ||
 			s[len(s)-len(substr):] == substr ||
 			containsInner(s, substr)))
 }
@@ -391,7 +390,7 @@ func (eb *EventBus) Subscribe(handler EventHandler) {
 func (eb *EventBus) Publish(event *Event) {
 	eb.mu.RLock()
 	defer eb.mu.RUnlock()
-	
+
 	for _, handler := range eb.handlers {
 		go func(h EventHandler) {
 			defer func() {

@@ -18,9 +18,9 @@ type LogsEntry struct {
 // LogsResponse는 로그 응답 구조체입니다.
 type LogsResponse struct {
 	Logs  []LogsEntry `json:"logs"`
-	Total int        `json:"total"`
-	Since string     `json:"since,omitempty"`
-	Until string     `json:"until,omitempty"`
+	Total int         `json:"total"`
+	Since string      `json:"since,omitempty"`
+	Until string      `json:"until,omitempty"`
 }
 
 // GetWorkspaceLogs는 특정 워크스페이스의 로그를 조회합니다.

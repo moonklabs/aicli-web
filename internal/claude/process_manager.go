@@ -159,7 +159,7 @@ func (pm *claudeProcessManager) Start(ctx context.Context, config *ProcessConfig
 
 	// 명령어 준비
 	pm.cmd = exec.CommandContext(pm.ctx, config.Command, config.Args...)
-	
+
 	// 작업 디렉토리 설정
 	if config.WorkingDir != "" {
 		pm.cmd.Dir = config.WorkingDir
@@ -167,14 +167,14 @@ func (pm *claudeProcessManager) Start(ctx context.Context, config *ProcessConfig
 
 	// 환경 변수 설정
 	env := os.Environ()
-	
+
 	// 기본 환경 변수 설정
 	if len(config.Environment) > 0 {
 		for key, value := range config.Environment {
 			env = append(env, fmt.Sprintf("%s=%s", key, value))
 		}
 	}
-	
+
 	// OAuth 토큰 또는 API 키 설정
 	if config.OAuthToken != "" {
 		env = append(env, fmt.Sprintf("CLAUDE_CODE_OAUTH_TOKEN=%s", config.OAuthToken))
@@ -185,7 +185,7 @@ func (pm *claudeProcessManager) Start(ctx context.Context, config *ProcessConfig
 		// API 키만으로 토큰 관리자 초기화
 		pm.tokenManager = NewTokenManager("", config.APIKey, nil)
 	}
-	
+
 	pm.cmd.Env = env
 
 	// 리소스 제한 설정
@@ -263,7 +263,7 @@ func (pm *claudeProcessManager) monitor() {
 // Stop 프로세스를 정상적으로 중지합니다
 func (pm *claudeProcessManager) Stop(timeout time.Duration) error {
 	pm.mutex.Lock()
-	
+
 	if pm.status != StatusRunning {
 		pm.mutex.Unlock()
 		return fmt.Errorf("프로세스가 실행 중이 아닙니다 (현재 상태: %s)", pm.status)
@@ -379,17 +379,17 @@ func (pm *claudeProcessManager) HealthCheck() error {
 // RestartProcess 프로세스를 재시작합니다
 func (pm *claudeProcessManager) RestartProcess(identifier string) error {
 	pm.logger.WithField("identifier", identifier).Info("프로세스 재시작을 시작합니다")
-	
+
 	// 현재 설정 저장
 	pm.mutex.RLock()
 	config := pm.config
 	ctx := pm.ctx
 	pm.mutex.RUnlock()
-	
+
 	if config == nil {
 		return fmt.Errorf("프로세스 설정이 없습니다")
 	}
-	
+
 	// 프로세스 중지
 	if pm.IsRunning() {
 		if err := pm.Stop(30 * time.Second); err != nil {
@@ -399,15 +399,15 @@ func (pm *claudeProcessManager) RestartProcess(identifier string) error {
 			}
 		}
 	}
-	
+
 	// 잠시 대기
 	time.Sleep(2 * time.Second)
-	
+
 	// 프로세스 재시작
 	if err := pm.Start(ctx, config); err != nil {
 		return fmt.Errorf("프로세스 재시작 실패: %w", err)
 	}
-	
+
 	pm.logger.WithField("identifier", identifier).Info("프로세스가 성공적으로 재시작되었습니다")
 	return nil
 }
@@ -429,7 +429,7 @@ func (pm *claudeProcessManager) applyResourceLimits(limits *ResourceLimits) erro
 		// - CPU 제한: cgroup cpu.cfs_quota_us / cpu.cfs_period_us
 		// - 메모리 제한: cgroup memory.limit_in_bytes 또는 rlimit RLIMIT_AS
 		// - 디스크 I/O 제한: cgroup blkio 컨트롤러
-		
+
 		pm.logger.WithFields(logrus.Fields{
 			"maxCPU":    limits.MaxCPU,
 			"maxMemory": limits.MaxMemory,

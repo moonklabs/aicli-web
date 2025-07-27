@@ -17,19 +17,19 @@ type GoroutineManager interface {
 	// 고루틴 풀 관리
 	SpawnWorker(task Task) error
 	SpawnBoundedWorker(task Task, timeout time.Duration) error
-	
+
 	// 리소스 추적
 	GetActiveGoroutines() int
 	GetGoroutineStats() GoroutineStats
-	
+
 	// 정리 및 최적화
 	CleanupIdleWorkers() error
 	SetMaxGoroutines(max int) error
-	
+
 	// 생명주기
 	Start() error
 	Stop() error
-	
+
 	// 고급 기능
 	GetGoroutinePoolStatus() PoolStatus
 	EnableGoroutineTracking(enabled bool)
@@ -40,73 +40,73 @@ type GoroutineManager interface {
 // GoroutineLifecycleManager 고루틴 생명주기 전용 관리자
 type GoroutineLifecycleManager struct {
 	// 기본 설정
-	config         *GoroutineLifecycleConfig
-	
+	config *GoroutineLifecycleConfig
+
 	// 고루틴 추적
 	activeGoroutines sync.Map // map[int64]*GoroutineInfo
 	nextGoroutineID  int64
-	
+
 	// 메트릭 수집
 	metrics          *GoroutineMetrics
 	metricsCollector *MetricsCollector
-	
+
 	// 생명주기 관리
-	lifecycleHooks   []LifecycleHook
-	shutdownTimeout  time.Duration
-	
+	lifecycleHooks  []LifecycleHook
+	shutdownTimeout time.Duration
+
 	// 모니터링
-	tracker          *GoroutineTracker
-	leakDetector     *LeakDetector
-	
+	tracker      *GoroutineTracker
+	leakDetector *LeakDetector
+
 	// 동기화
-	mu               sync.RWMutex
-	running          atomic.Bool
-	ctx              context.Context
-	cancel           context.CancelFunc
+	mu      sync.RWMutex
+	running atomic.Bool
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 // GoroutineLifecycleConfig 고루틴 생명주기 설정
 type GoroutineLifecycleConfig struct {
 	// 기본 설정
-	MaxGoroutines           int           `yaml:"max_goroutines"`
-	DefaultTimeout          time.Duration `yaml:"default_timeout"`
-	ShutdownTimeout         time.Duration `yaml:"shutdown_timeout"`
-	
+	MaxGoroutines   int           `yaml:"max_goroutines"`
+	DefaultTimeout  time.Duration `yaml:"default_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
+
 	// 추적 설정
-	EnableTracking          bool          `yaml:"enable_tracking"`
-	TrackingInterval        time.Duration `yaml:"tracking_interval"`
-	StackTraceDepth         int           `yaml:"stack_trace_depth"`
-	
+	EnableTracking   bool          `yaml:"enable_tracking"`
+	TrackingInterval time.Duration `yaml:"tracking_interval"`
+	StackTraceDepth  int           `yaml:"stack_trace_depth"`
+
 	// 정리 설정
-	CleanupInterval         time.Duration `yaml:"cleanup_interval"`
-	IdleThreshold           time.Duration `yaml:"idle_threshold"`
-	ForceCleanupAfter       time.Duration `yaml:"force_cleanup_after"`
-	
+	CleanupInterval   time.Duration `yaml:"cleanup_interval"`
+	IdleThreshold     time.Duration `yaml:"idle_threshold"`
+	ForceCleanupAfter time.Duration `yaml:"force_cleanup_after"`
+
 	// 모니터링
-	EnableMetrics           bool          `yaml:"enable_metrics"`
-	MetricsInterval         time.Duration `yaml:"metrics_interval"`
-	EnableLeakDetection     bool          `yaml:"enable_leak_detection"`
-	LeakDetectionThreshold  time.Duration `yaml:"leak_detection_threshold"`
-	
+	EnableMetrics          bool          `yaml:"enable_metrics"`
+	MetricsInterval        time.Duration `yaml:"metrics_interval"`
+	EnableLeakDetection    bool          `yaml:"enable_leak_detection"`
+	LeakDetectionThreshold time.Duration `yaml:"leak_detection_threshold"`
+
 	// 성능 최적화
-	EnableBatching          bool          `yaml:"enable_batching"`
-	BatchSize               int           `yaml:"batch_size"`
-	PreallocateWorkers      int           `yaml:"preallocate_workers"`
+	EnableBatching     bool `yaml:"enable_batching"`
+	BatchSize          int  `yaml:"batch_size"`
+	PreallocateWorkers int  `yaml:"preallocate_workers"`
 }
 
 // GoroutineInfo 고루틴 정보
 type GoroutineInfo struct {
-	ID              int64                 `json:"id"`
-	StartTime       time.Time             `json:"start_time"`
-	LastActive      time.Time             `json:"last_active"`
-	State           GoroutineState        `json:"state"`
-	Task            Task                  `json:"task,omitempty"`
-	StackTrace      []string              `json:"stack_trace,omitempty"`
-	CPU             time.Duration         `json:"cpu_time"`
-	Memory          int64                 `json:"memory_bytes"`
-	Context         context.Context       `json:"-"`
-	Cancel          context.CancelFunc    `json:"-"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	ID         int64                  `json:"id"`
+	StartTime  time.Time              `json:"start_time"`
+	LastActive time.Time              `json:"last_active"`
+	State      GoroutineState         `json:"state"`
+	Task       Task                   `json:"task,omitempty"`
+	StackTrace []string               `json:"stack_trace,omitempty"`
+	CPU        time.Duration          `json:"cpu_time"`
+	Memory     int64                  `json:"memory_bytes"`
+	Context    context.Context        `json:"-"`
+	Cancel     context.CancelFunc     `json:"-"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // GoroutineState 고루틴 상태
@@ -128,70 +128,70 @@ type GoroutineMetrics struct {
 	TotalCompleted  int64 `json:"total_completed"`
 	TotalFailed     int64 `json:"total_failed"`
 	TotalTerminated int64 `json:"total_terminated"`
-	
+
 	// 현재 상태
-	CurrentActive   int64 `json:"current_active"`
-	CurrentIdle     int64 `json:"current_idle"`
-	PeakActive      int64 `json:"peak_active"`
-	
+	CurrentActive int64 `json:"current_active"`
+	CurrentIdle   int64 `json:"current_idle"`
+	PeakActive    int64 `json:"peak_active"`
+
 	// 성능 지표
-	AvgLifetime     time.Duration `json:"avg_lifetime"`
-	AvgCPUTime      time.Duration `json:"avg_cpu_time"`
-	AvgMemoryUsage  int64         `json:"avg_memory_usage"`
-	
+	AvgLifetime    time.Duration `json:"avg_lifetime"`
+	AvgCPUTime     time.Duration `json:"avg_cpu_time"`
+	AvgMemoryUsage int64         `json:"avg_memory_usage"`
+
 	// 리소스 사용량
-	TotalCPUTime    time.Duration `json:"total_cpu_time"`
-	TotalMemory     int64         `json:"total_memory"`
-	
+	TotalCPUTime time.Duration `json:"total_cpu_time"`
+	TotalMemory  int64         `json:"total_memory"`
+
 	// 오류 통계
-	PanicCount      int64         `json:"panic_count"`
-	TimeoutCount    int64         `json:"timeout_count"`
-	LeakCount       int64         `json:"leak_count"`
-	
+	PanicCount   int64 `json:"panic_count"`
+	TimeoutCount int64 `json:"timeout_count"`
+	LeakCount    int64 `json:"leak_count"`
+
 	// 시간 정보
-	LastUpdate      time.Time     `json:"last_update"`
-	CollectionStart time.Time     `json:"collection_start"`
+	LastUpdate      time.Time `json:"last_update"`
+	CollectionStart time.Time `json:"collection_start"`
 }
 
 // PoolStatus 풀 상태
 type PoolStatus struct {
-	Active       int               `json:"active"`
-	Idle         int               `json:"idle"`
-	Total        int               `json:"total"`
-	MaxCapacity  int               `json:"max_capacity"`
-	Utilization  float64           `json:"utilization"`
-	Health       PoolHealth        `json:"health"`
-	LastActivity time.Time         `json:"last_activity"`
+	Active       int        `json:"active"`
+	Idle         int        `json:"idle"`
+	Total        int        `json:"total"`
+	MaxCapacity  int        `json:"max_capacity"`
+	Utilization  float64    `json:"utilization"`
+	Health       PoolHealth `json:"health"`
+	LastActivity time.Time  `json:"last_activity"`
 }
 
 // PoolHealth 풀 건강 상태
 type PoolHealth string
 
 const (
-	PoolHealthy     PoolHealth = "healthy"
-	PoolHealthWarning PoolHealth = "warning"
+	PoolHealthy        PoolHealth = "healthy"
+	PoolHealthWarning  PoolHealth = "warning"
 	PoolHealthCritical PoolHealth = "critical"
 )
 
 // GoroutineLeak 고루틴 누수 정보
 type GoroutineLeak struct {
-	GoroutineID   int64         `json:"goroutine_id"`
-	StartTime     time.Time     `json:"start_time"`
-	Duration      time.Duration `json:"duration"`
-	LastActivity  time.Time     `json:"last_activity"`
-	StackTrace    []string      `json:"stack_trace"`
-	TaskInfo      interface{}   `json:"task_info,omitempty"`
-	MemoryUsage   int64         `json:"memory_usage"`
-	Severity      LeakSeverity  `json:"severity"`
+	GoroutineID  int64         `json:"goroutine_id"`
+	StartTime    time.Time     `json:"start_time"`
+	Duration     time.Duration `json:"duration"`
+	LastActivity time.Time     `json:"last_activity"`
+	StackTrace   []string      `json:"stack_trace"`
+	TaskInfo     interface{}   `json:"task_info,omitempty"`
+	MemoryUsage  int64         `json:"memory_usage"`
+	Severity     LeakSeverity  `json:"severity"`
 }
 
 // LeakSeverity 누수 심각도
 type LeakSeverity string
 
 const (
-	LeakSeverityLow    LeakSeverity = "low"
-	LeakSeverityMedium LeakSeverity = "medium"
-	LeakSeverityHigh   LeakSeverity = "high"
+	LeakSeverityLow      LeakSeverity = "low"
+	LeakSeverityMedium   LeakSeverity = "medium"
+	LeakSeverityHigh     LeakSeverity = "high"
 	LeakSeverityCritical LeakSeverity = "critical"
 )
 
@@ -208,27 +208,27 @@ type WorkerPoolManager struct {
 	workers      map[int]*Worker
 	workersMutex sync.RWMutex
 	nextWorkerID int32
-	
+
 	// 태스크 큐
-	taskQueue    chan TaskWrapper
+	taskQueue     chan TaskWrapper
 	priorityQueue chan TaskWrapper
-	
+
 	// 설정
 	config WorkerPoolConfig
-	
+
 	// 스케일러
-	scaler   *WorkerScaler
-	monitor  *GoroutineMonitor
-	
+	scaler  *WorkerScaler
+	monitor *GoroutineMonitor
+
 	// 통계
-	stats    GoroutineStats
+	stats      GoroutineStats
 	statsMutex sync.RWMutex
-	
+
 	// 생명주기
-	ctx      context.Context
-	cancel   context.CancelFunc
-	wg       sync.WaitGroup
-	running  atomic.Bool
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
+	running atomic.Bool
 }
 
 // Task는 실행할 작업입니다
@@ -270,24 +270,24 @@ const (
 
 // Worker는 작업 실행자입니다
 type Worker struct {
-	ID        int           `json:"id"`
-	State     WorkerState   `json:"state"`
-	TaskQueue chan TaskWrapper `json:"-"`
-	QuitChan  chan bool     `json:"-"`
+	ID        int                `json:"id"`
+	State     WorkerState        `json:"state"`
+	TaskQueue chan TaskWrapper   `json:"-"`
+	QuitChan  chan bool          `json:"-"`
 	Pool      *WorkerPoolManager `json:"-"`
-	
+
 	// 통계
-	TasksProcessed int64     `json:"tasks_processed"`
-	TasksCompleted int64     `json:"tasks_completed"`
-	TasksFailed    int64     `json:"tasks_failed"`
-	LastTaskTime   time.Time `json:"last_task_time"`
-	StartTime      time.Time `json:"start_time"`
+	TasksProcessed int64         `json:"tasks_processed"`
+	TasksCompleted int64         `json:"tasks_completed"`
+	TasksFailed    int64         `json:"tasks_failed"`
+	LastTaskTime   time.Time     `json:"last_task_time"`
+	StartTime      time.Time     `json:"start_time"`
 	IdleTime       time.Duration `json:"idle_time"`
-	
+
 	// 현재 태스크
-	CurrentTask    *TaskWrapper `json:"current_task,omitempty"`
-	currentMutex   sync.RWMutex
-	
+	CurrentTask  *TaskWrapper `json:"current_task,omitempty"`
+	currentMutex sync.RWMutex
+
 	// 생명주기
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -305,90 +305,90 @@ const (
 
 // GoroutineStats는 고루틴 통계입니다
 type GoroutineStats struct {
-	Active       int `json:"active"`
-	Idle         int `json:"idle"`
-	Busy         int `json:"busy"`
-	Total        int `json:"total"`
-	Completed    int64 `json:"completed"`
-	Failed       int64 `json:"failed"`
-	
+	Active    int   `json:"active"`
+	Idle      int   `json:"idle"`
+	Busy      int   `json:"busy"`
+	Total     int   `json:"total"`
+	Completed int64 `json:"completed"`
+	Failed    int64 `json:"failed"`
+
 	// 성능 지표
-	AvgLifetime     time.Duration `json:"avg_lifetime"`
-	AvgTaskDuration time.Duration `json:"avg_task_duration"`
-	ThroughputPerSec float64      `json:"throughput_per_sec"`
-	
+	AvgLifetime      time.Duration `json:"avg_lifetime"`
+	AvgTaskDuration  time.Duration `json:"avg_task_duration"`
+	ThroughputPerSec float64       `json:"throughput_per_sec"`
+
 	// 큐 상태
-	QueuedTasks      int `json:"queued_tasks"`
-	PriorityTasks    int `json:"priority_tasks"`
-	
+	QueuedTasks   int `json:"queued_tasks"`
+	PriorityTasks int `json:"priority_tasks"`
+
 	// 리소스 사용량
-	MemoryUsage      int64   `json:"memory_usage"`
-	CPUUsage         float64 `json:"cpu_usage"`
-	GoroutineCount   int     `json:"goroutine_count"`
-	
+	MemoryUsage    int64   `json:"memory_usage"`
+	CPUUsage       float64 `json:"cpu_usage"`
+	GoroutineCount int     `json:"goroutine_count"`
+
 	// 시간 정보
-	LastUpdate       time.Time `json:"last_update"`
-	UptimeSeconds    int64     `json:"uptime_seconds"`
+	LastUpdate    time.Time `json:"last_update"`
+	UptimeSeconds int64     `json:"uptime_seconds"`
 }
 
 // WorkerPoolConfig는 워커 풀 설정입니다
 type WorkerPoolConfig struct {
-	MinWorkers         int           `json:"min_workers"`
-	MaxWorkers         int           `json:"max_workers"`
-	IdleTimeout        time.Duration `json:"idle_timeout"`
-	TaskTimeout        time.Duration `json:"task_timeout"`
-	QueueSize          int           `json:"queue_size"`
-	PriorityQueueSize  int           `json:"priority_queue_size"`
-	
+	MinWorkers        int           `json:"min_workers"`
+	MaxWorkers        int           `json:"max_workers"`
+	IdleTimeout       time.Duration `json:"idle_timeout"`
+	TaskTimeout       time.Duration `json:"task_timeout"`
+	QueueSize         int           `json:"queue_size"`
+	PriorityQueueSize int           `json:"priority_queue_size"`
+
 	// 스케일링 설정
 	ScaleUpThreshold   float64       `json:"scale_up_threshold"`
 	ScaleDownThreshold float64       `json:"scale_down_threshold"`
 	ScaleInterval      time.Duration `json:"scale_interval"`
-	
+
 	// 모니터링
-	StatsInterval      time.Duration `json:"stats_interval"`
+	StatsInterval       time.Duration `json:"stats_interval"`
 	HealthCheckInterval time.Duration `json:"health_check_interval"`
-	
+
 	// 성능 최적화
-	EnableProfiling    bool `json:"enable_profiling"`
-	GCThreshold        int  `json:"gc_threshold"`
+	EnableProfiling bool `json:"enable_profiling"`
+	GCThreshold     int  `json:"gc_threshold"`
 }
 
 // WorkerScaler는 워커 자동 스케일링을 담당합니다
 type WorkerScaler struct {
-	pool       *WorkerPoolManager
-	config     ScalerConfig
-	
+	pool   *WorkerPoolManager
+	config ScalerConfig
+
 	// 메트릭
-	metrics    ScalerMetrics
+	metrics      ScalerMetrics
 	metricsMutex sync.RWMutex
-	
+
 	// 결정 이력
-	decisions  []GoroutineScalingDecision
+	decisions     []GoroutineScalingDecision
 	decisionMutex sync.RWMutex
-	maxDecisions int
+	maxDecisions  int
 }
 
 // ScalerConfig는 스케일러 설정입니다
 type ScalerConfig struct {
-	Enabled            bool          `json:"enabled"`
-	MinWorkers         int           `json:"min_workers"`
-	MaxWorkers         int           `json:"max_workers"`
-	ScaleUpFactor      float64       `json:"scale_up_factor"`
-	ScaleDownFactor    float64       `json:"scale_down_factor"`
-	CooldownPeriod     time.Duration `json:"cooldown_period"`
-	EvaluationWindow   time.Duration `json:"evaluation_window"`
+	Enabled          bool          `json:"enabled"`
+	MinWorkers       int           `json:"min_workers"`
+	MaxWorkers       int           `json:"max_workers"`
+	ScaleUpFactor    float64       `json:"scale_up_factor"`
+	ScaleDownFactor  float64       `json:"scale_down_factor"`
+	CooldownPeriod   time.Duration `json:"cooldown_period"`
+	EvaluationWindow time.Duration `json:"evaluation_window"`
 }
 
 // ScalerMetrics는 스케일러 메트릭입니다
 type ScalerMetrics struct {
-	LastScaleUp        time.Time     `json:"last_scale_up"`
-	LastScaleDown      time.Time     `json:"last_scale_down"`
-	ScaleUpCount       int64         `json:"scale_up_count"`
-	ScaleDownCount     int64         `json:"scale_down_count"`
-	CurrentUtilization float64       `json:"current_utilization"`
-	TargetUtilization  float64       `json:"target_utilization"`
-	EfficiencyScore    float64       `json:"efficiency_score"`
+	LastScaleUp        time.Time `json:"last_scale_up"`
+	LastScaleDown      time.Time `json:"last_scale_down"`
+	ScaleUpCount       int64     `json:"scale_up_count"`
+	ScaleDownCount     int64     `json:"scale_down_count"`
+	CurrentUtilization float64   `json:"current_utilization"`
+	TargetUtilization  float64   `json:"target_utilization"`
+	EfficiencyScore    float64   `json:"efficiency_score"`
 }
 
 // GoroutineScalingDecision는 스케일링 결정입니다 (고루틴 매니저용)
@@ -403,13 +403,13 @@ type GoroutineScalingDecision struct {
 
 // GoroutineMonitor는 고루틴 모니터링을 담당합니다
 type GoroutineMonitor struct {
-	pool         *WorkerPoolManager
-	
+	pool *WorkerPoolManager
+
 	// 모니터링 데이터
-	snapshots    []MonitoringSnapshot
+	snapshots     []MonitoringSnapshot
 	snapshotMutex sync.RWMutex
-	maxSnapshots int
-	
+	maxSnapshots  int
+
 	// 알림
 	alertManager AlertManager
 	thresholds   MonitoringThresholds
@@ -457,22 +457,22 @@ func DefaultWorkerPoolConfig() WorkerPoolConfig {
 // DefaultGoroutineLifecycleConfig 기본 고루틴 생명주기 설정
 func DefaultGoroutineLifecycleConfig() *GoroutineLifecycleConfig {
 	return &GoroutineLifecycleConfig{
-		MaxGoroutines:           1000,
-		DefaultTimeout:          30 * time.Second,
-		ShutdownTimeout:         60 * time.Second,
-		EnableTracking:          true,
-		TrackingInterval:        10 * time.Second,
-		StackTraceDepth:         10,
-		CleanupInterval:         30 * time.Second,
-		IdleThreshold:           5 * time.Minute,
-		ForceCleanupAfter:       10 * time.Minute,
-		EnableMetrics:           true,
-		MetricsInterval:         15 * time.Second,
-		EnableLeakDetection:     true,
-		LeakDetectionThreshold:  15 * time.Minute,
-		EnableBatching:          true,
+		MaxGoroutines:          1000,
+		DefaultTimeout:         30 * time.Second,
+		ShutdownTimeout:        60 * time.Second,
+		EnableTracking:         true,
+		TrackingInterval:       10 * time.Second,
+		StackTraceDepth:        10,
+		CleanupInterval:        30 * time.Second,
+		IdleThreshold:          5 * time.Minute,
+		ForceCleanupAfter:      10 * time.Minute,
+		EnableMetrics:          true,
+		MetricsInterval:        15 * time.Second,
+		EnableLeakDetection:    true,
+		LeakDetectionThreshold: 15 * time.Minute,
+		EnableBatching:         true,
 		BatchSize:              50,
-		PreallocateWorkers:      runtime.NumCPU(),
+		PreallocateWorkers:     runtime.NumCPU(),
 	}
 }
 
@@ -481,9 +481,9 @@ func NewGoroutineLifecycleManager(config *GoroutineLifecycleConfig) *GoroutineLi
 	if config == nil {
 		config = DefaultGoroutineLifecycleConfig()
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	manager := &GoroutineLifecycleManager{
 		config:          config,
 		nextGoroutineID: 0,
@@ -495,20 +495,20 @@ func NewGoroutineLifecycleManager(config *GoroutineLifecycleConfig) *GoroutineLi
 		ctx:             ctx,
 		cancel:          cancel,
 	}
-	
+
 	// 컴포넌트 초기화
 	if config.EnableMetrics {
 		manager.metricsCollector = NewMetricsCollector(manager)
 	}
-	
+
 	if config.EnableTracking {
 		manager.tracker = NewGoroutineTracker(manager)
 	}
-	
+
 	if config.EnableLeakDetection {
 		manager.leakDetector = NewLeakDetector(manager)
 	}
-	
+
 	return manager
 }
 
@@ -522,17 +522,17 @@ func (glm *GoroutineLifecycleManager) SpawnGoroutineWithTimeout(task Task, timeo
 	if !glm.running.Load() {
 		return nil, fmt.Errorf("goroutine lifecycle manager is not running")
 	}
-	
+
 	// 최대 고루틴 수 확인
 	currentCount := glm.getCurrentGoroutineCount()
 	if currentCount >= glm.config.MaxGoroutines {
 		return nil, fmt.Errorf("maximum goroutines limit reached: %d", glm.config.MaxGoroutines)
 	}
-	
+
 	// 고루틴 정보 생성
 	goroutineID := atomic.AddInt64(&glm.nextGoroutineID, 1)
 	ctx, cancel := context.WithTimeout(glm.ctx, timeout)
-	
+
 	info := &GoroutineInfo{
 		ID:         goroutineID,
 		StartTime:  time.Now(),
@@ -543,15 +543,15 @@ func (glm *GoroutineLifecycleManager) SpawnGoroutineWithTimeout(task Task, timeo
 		Cancel:     cancel,
 		Metadata:   make(map[string]interface{}),
 	}
-	
+
 	// 스택 트레이스 수집 (활성화된 경우)
 	if glm.config.EnableTracking {
 		info.StackTrace = glm.captureStackTrace()
 	}
-	
+
 	// 고루틴 등록
 	glm.activeGoroutines.Store(goroutineID, info)
-	
+
 	// 생명주기 훅 실행
 	for _, hook := range glm.lifecycleHooks {
 		if err := hook.OnGoroutineStart(info); err != nil {
@@ -560,15 +560,15 @@ func (glm *GoroutineLifecycleManager) SpawnGoroutineWithTimeout(task Task, timeo
 			return nil, fmt.Errorf("lifecycle hook failed: %w", err)
 		}
 	}
-	
+
 	// 메트릭 업데이트
 	atomic.AddInt64(&glm.metrics.TotalCreated, 1)
 	atomic.AddInt64(&glm.metrics.CurrentActive, 1)
 	glm.updatePeakActive()
-	
+
 	// 고루틴 시작
 	go glm.executeGoroutine(info)
-	
+
 	return info, nil
 }
 
@@ -579,24 +579,24 @@ func (glm *GoroutineLifecycleManager) executeGoroutine(info *GoroutineInfo) {
 			// 패닉 처리
 			atomic.AddInt64(&glm.metrics.PanicCount, 1)
 			info.State = GoroutineStateFailed
-			
+
 			// 생명주기 훅 실행
 			for _, hook := range glm.lifecycleHooks {
 				hook.OnGoroutinePanic(info, r)
 			}
 		}
-		
+
 		// 정리 작업
 		glm.finalizeGoroutine(info)
 	}()
-	
+
 	// 상태 업데이트
 	info.State = GoroutineStateRunning
 	info.LastActive = time.Now()
-	
+
 	// 태스크 실행
 	err := info.Task.Execute(info.Context)
-	
+
 	// 결과에 따른 상태 설정
 	if err != nil {
 		info.State = GoroutineStateFailed
@@ -611,19 +611,19 @@ func (glm *GoroutineLifecycleManager) executeGoroutine(info *GoroutineInfo) {
 func (glm *GoroutineLifecycleManager) finalizeGoroutine(info *GoroutineInfo) {
 	// 컨텍스트 정리
 	info.Cancel()
-	
+
 	// 생존 시간 계산
 	lifetime := time.Since(info.StartTime)
-	
+
 	// 생명주기 훅 실행
 	for _, hook := range glm.lifecycleHooks {
 		hook.OnGoroutineEnd(info)
 	}
-	
+
 	// 메트릭 업데이트
 	atomic.AddInt64(&glm.metrics.CurrentActive, -1)
 	glm.updateAverageLifetime(lifetime)
-	
+
 	// 고루틴 제거
 	glm.activeGoroutines.Delete(info.ID)
 }
@@ -634,7 +634,7 @@ func (glm *GoroutineLifecycleManager) GetGoroutinePoolStatus() PoolStatus {
 	total := glm.getCurrentGoroutineCount()
 	idle := total - active
 	utilization := float64(active) / float64(glm.config.MaxGoroutines)
-	
+
 	// 건강 상태 판단
 	var health PoolHealth
 	switch {
@@ -645,7 +645,7 @@ func (glm *GoroutineLifecycleManager) GetGoroutinePoolStatus() PoolStatus {
 	default:
 		health = PoolHealthy
 	}
-	
+
 	return PoolStatus{
 		Active:       active,
 		Idle:         idle,
@@ -661,9 +661,9 @@ func (glm *GoroutineLifecycleManager) GetGoroutinePoolStatus() PoolStatus {
 func (glm *GoroutineLifecycleManager) EnableGoroutineTracking(enabled bool) {
 	glm.mu.Lock()
 	defer glm.mu.Unlock()
-	
+
 	glm.config.EnableTracking = enabled
-	
+
 	if enabled && glm.tracker == nil {
 		glm.tracker = NewGoroutineTracker(glm)
 		if glm.running.Load() {
@@ -680,7 +680,7 @@ func (glm *GoroutineLifecycleManager) GetGoroutineLeaks() []GoroutineLeak {
 	if glm.leakDetector == nil {
 		return []GoroutineLeak{}
 	}
-	
+
 	return glm.leakDetector.DetectLeaks()
 }
 
@@ -688,16 +688,16 @@ func (glm *GoroutineLifecycleManager) GetGoroutineLeaks() []GoroutineLeak {
 func (glm *GoroutineLifecycleManager) ForceGarbageCollection() error {
 	runtime.GC()
 	runtime.GC() // 두 번 실행하여 확실히 정리
-	
+
 	// 통계 업데이트
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	
+
 	glm.mu.Lock()
 	glm.metrics.TotalMemory = int64(m.Alloc)
 	glm.metrics.LastUpdate = time.Now()
 	glm.mu.Unlock()
-	
+
 	return nil
 }
 
@@ -706,25 +706,25 @@ func (glm *GoroutineLifecycleManager) Start() error {
 	if !glm.running.CompareAndSwap(false, true) {
 		return fmt.Errorf("goroutine lifecycle manager already running")
 	}
-	
+
 	// 메트릭 수집기 시작
 	if glm.metricsCollector != nil {
 		glm.metricsCollector.Start()
 	}
-	
+
 	// 추적기 시작
 	if glm.tracker != nil {
 		glm.tracker.Start()
 	}
-	
+
 	// 누수 감지기 시작
 	if glm.leakDetector != nil {
 		glm.leakDetector.Start()
 	}
-	
+
 	// 정리 루틴 시작
 	go glm.cleanupRoutine()
-	
+
 	return nil
 }
 
@@ -733,15 +733,15 @@ func (glm *GoroutineLifecycleManager) Stop() error {
 	if !glm.running.CompareAndSwap(true, false) {
 		return nil
 	}
-	
+
 	// 컨텍스트 취소
 	glm.cancel()
-	
+
 	// 모든 활성 고루틴 종료 대기
 	timeout := time.After(glm.shutdownTimeout)
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-timeout:
@@ -786,7 +786,7 @@ func (glm *GoroutineLifecycleManager) updateAverageLifetime(lifetime time.Durati
 	// 이동 평균 계산 (간단한 구현)
 	glm.mu.Lock()
 	defer glm.mu.Unlock()
-	
+
 	if glm.metrics.AvgLifetime == 0 {
 		glm.metrics.AvgLifetime = lifetime
 	} else {
@@ -805,7 +805,7 @@ func (glm *GoroutineLifecycleManager) captureStackTrace() []string {
 func (glm *GoroutineLifecycleManager) cleanupRoutine() {
 	ticker := time.NewTicker(glm.config.CleanupInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-glm.ctx.Done():
@@ -819,10 +819,10 @@ func (glm *GoroutineLifecycleManager) cleanupRoutine() {
 func (glm *GoroutineLifecycleManager) performCleanup() {
 	now := time.Now()
 	var toTerminate []int64
-	
+
 	glm.activeGoroutines.Range(func(key, value interface{}) bool {
 		info := value.(*GoroutineInfo)
-		
+
 		// 유휴 시간 확인
 		if info.State == GoroutineStateWaiting {
 			idleTime := now.Sub(info.LastActive)
@@ -830,15 +830,15 @@ func (glm *GoroutineLifecycleManager) performCleanup() {
 				toTerminate = append(toTerminate, info.ID)
 			}
 		}
-		
+
 		// 강제 정리 시간 확인
 		if now.Sub(info.StartTime) > glm.config.ForceCleanupAfter {
 			toTerminate = append(toTerminate, info.ID)
 		}
-		
+
 		return true
 	})
-	
+
 	// 정리 대상 고루틴들 종료
 	for _, id := range toTerminate {
 		if value, ok := glm.activeGoroutines.Load(id); ok {
@@ -864,11 +864,11 @@ func (glm *GoroutineLifecycleManager) stopComponents() {
 	if glm.metricsCollector != nil {
 		glm.metricsCollector.Stop()
 	}
-	
+
 	if glm.tracker != nil {
 		glm.tracker.Stop()
 	}
-	
+
 	if glm.leakDetector != nil {
 		glm.leakDetector.Stop()
 	}
@@ -877,7 +877,7 @@ func (glm *GoroutineLifecycleManager) stopComponents() {
 // NewWorkerPoolManager는 새로운 워커 풀 관리자를 생성합니다
 func NewWorkerPoolManager(config WorkerPoolConfig) *WorkerPoolManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	manager := &WorkerPoolManager{
 		workers:       make(map[int]*Worker),
 		taskQueue:     make(chan TaskWrapper, config.QueueSize),
@@ -889,7 +889,7 @@ func NewWorkerPoolManager(config WorkerPoolConfig) *WorkerPoolManager {
 			LastUpdate: time.Now(),
 		},
 	}
-	
+
 	// 스케일러 초기화
 	scalerConfig := ScalerConfig{
 		Enabled:          true,
@@ -901,10 +901,10 @@ func NewWorkerPoolManager(config WorkerPoolConfig) *WorkerPoolManager {
 		EvaluationWindow: 5 * time.Minute,
 	}
 	manager.scaler = NewWorkerScaler(manager, scalerConfig)
-	
+
 	// 모니터 초기화
 	manager.monitor = NewGoroutineMonitor(manager)
-	
+
 	return manager
 }
 
@@ -913,30 +913,30 @@ func (wpm *WorkerPoolManager) Start() error {
 	if !wpm.running.CompareAndSwap(false, true) {
 		return fmt.Errorf("worker pool is already running")
 	}
-	
+
 	// 초기 워커들 생성
 	for i := 0; i < wpm.config.MinWorkers; i++ {
 		if err := wpm.createWorker(); err != nil {
 			return fmt.Errorf("failed to create initial worker: %w", err)
 		}
 	}
-	
+
 	// 백그라운드 작업들 시작
 	wpm.wg.Add(3)
 	go wpm.taskDispatcher()
 	go wpm.statisticsCollector()
 	go wpm.healthChecker()
-	
+
 	// 스케일러 시작
 	if wpm.scaler != nil {
 		wpm.scaler.Start()
 	}
-	
+
 	// 모니터 시작
 	if wpm.monitor != nil {
 		wpm.monitor.Start()
 	}
-	
+
 	return nil
 }
 
@@ -945,34 +945,34 @@ func (wpm *WorkerPoolManager) Stop() error {
 	if !wpm.running.CompareAndSwap(true, false) {
 		return nil // 이미 중지됨
 	}
-	
+
 	// 스케일러 중지
 	if wpm.scaler != nil {
 		wpm.scaler.Stop()
 	}
-	
+
 	// 모니터 중지
 	if wpm.monitor != nil {
 		wpm.monitor.Stop()
 	}
-	
+
 	// 모든 워커들 중지
 	wpm.workersMutex.Lock()
 	for _, worker := range wpm.workers {
 		worker.Stop()
 	}
 	wpm.workersMutex.Unlock()
-	
+
 	// 컨텍스트 취소
 	wpm.cancel()
-	
+
 	// 백그라운드 작업들 완료 대기
 	wpm.wg.Wait()
-	
+
 	// 큐 정리
 	close(wpm.taskQueue)
 	close(wpm.priorityQueue)
-	
+
 	return nil
 }
 
@@ -986,9 +986,9 @@ func (wpm *WorkerPoolManager) SpawnBoundedWorker(task Task, timeout time.Duratio
 	if !wpm.running.Load() {
 		return fmt.Errorf("worker pool is not running")
 	}
-	
+
 	ctx, cancel := context.WithTimeout(wpm.ctx, timeout)
-	
+
 	wrapper := TaskWrapper{
 		Task:      task,
 		StartTime: time.Now(),
@@ -997,7 +997,7 @@ func (wpm *WorkerPoolManager) SpawnBoundedWorker(task Task, timeout time.Duratio
 		Ctx:       ctx,
 		Cancel:    cancel,
 	}
-	
+
 	// 우선순위에 따라 큐 선택
 	if task.GetPriority() >= TaskPriorityHigh {
 		select {
@@ -1022,14 +1022,14 @@ func (wpm *WorkerPoolManager) SpawnBoundedWorker(task Task, timeout time.Duratio
 func (wpm *WorkerPoolManager) GetActiveGoroutines() int {
 	wpm.workersMutex.RLock()
 	defer wpm.workersMutex.RUnlock()
-	
+
 	active := 0
 	for _, worker := range wpm.workers {
 		if worker.State == WorkerStateBusy {
 			active++
 		}
 	}
-	
+
 	return active
 }
 
@@ -1037,10 +1037,10 @@ func (wpm *WorkerPoolManager) GetActiveGoroutines() int {
 func (wpm *WorkerPoolManager) GetGoroutineStats() GoroutineStats {
 	wpm.statsMutex.RLock()
 	defer wpm.statsMutex.RUnlock()
-	
+
 	stats := wpm.stats
 	stats.LastUpdate = time.Now()
-	
+
 	return stats
 }
 
@@ -1048,10 +1048,10 @@ func (wpm *WorkerPoolManager) GetGoroutineStats() GoroutineStats {
 func (wpm *WorkerPoolManager) CleanupIdleWorkers() error {
 	wpm.workersMutex.Lock()
 	defer wpm.workersMutex.Unlock()
-	
+
 	now := time.Now()
 	var toRemove []int
-	
+
 	for id, worker := range wpm.workers {
 		if worker.State == WorkerStateIdle {
 			idleTime := now.Sub(worker.LastTaskTime)
@@ -1060,18 +1060,18 @@ func (wpm *WorkerPoolManager) CleanupIdleWorkers() error {
 			}
 		}
 	}
-	
+
 	// 최소 워커 수 유지
 	currentWorkers := len(wpm.workers)
 	maxRemovable := currentWorkers - wpm.config.MinWorkers
 	if maxRemovable < 0 {
 		maxRemovable = 0
 	}
-	
+
 	if len(toRemove) > maxRemovable {
 		toRemove = toRemove[:maxRemovable]
 	}
-	
+
 	// 워커들 제거
 	for _, id := range toRemove {
 		if worker, exists := wpm.workers[id]; exists {
@@ -1079,7 +1079,7 @@ func (wpm *WorkerPoolManager) CleanupIdleWorkers() error {
 			delete(wpm.workers, id)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1088,21 +1088,21 @@ func (wpm *WorkerPoolManager) SetMaxGoroutines(max int) error {
 	if max < wpm.config.MinWorkers {
 		return fmt.Errorf("max goroutines cannot be less than min workers")
 	}
-	
+
 	wpm.config.MaxWorkers = max
-	
+
 	// 현재 워커 수가 새로운 최대값보다 많으면 조정
 	wpm.workersMutex.Lock()
 	currentWorkers := len(wpm.workers)
 	wpm.workersMutex.Unlock()
-	
+
 	if currentWorkers > max {
 		excess := currentWorkers - max
 		for i := 0; i < excess; i++ {
 			wpm.removeWorker()
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1111,14 +1111,14 @@ func (wpm *WorkerPoolManager) SetMaxGoroutines(max int) error {
 func (wpm *WorkerPoolManager) createWorker() error {
 	wpm.workersMutex.Lock()
 	defer wpm.workersMutex.Unlock()
-	
+
 	if len(wpm.workers) >= wpm.config.MaxWorkers {
 		return fmt.Errorf("maximum worker limit reached")
 	}
-	
+
 	workerID := int(atomic.AddInt32(&wpm.nextWorkerID, 1))
 	ctx, cancel := context.WithCancel(wpm.ctx)
-	
+
 	worker := &Worker{
 		ID:        workerID,
 		State:     WorkerStateIdle,
@@ -1129,19 +1129,19 @@ func (wpm *WorkerPoolManager) createWorker() error {
 		ctx:       ctx,
 		cancel:    cancel,
 	}
-	
+
 	wpm.workers[workerID] = worker
-	
+
 	// 워커 고루틴 시작
 	go worker.Run()
-	
+
 	return nil
 }
 
 func (wpm *WorkerPoolManager) removeWorker() error {
 	wpm.workersMutex.Lock()
 	defer wpm.workersMutex.Unlock()
-	
+
 	// 유휴 상태인 워커 찾기
 	for id, worker := range wpm.workers {
 		if worker.State == WorkerStateIdle {
@@ -1150,13 +1150,13 @@ func (wpm *WorkerPoolManager) removeWorker() error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("no idle worker found to remove")
 }
 
 func (wpm *WorkerPoolManager) taskDispatcher() {
 	defer wpm.wg.Done()
-	
+
 	for {
 		select {
 		case <-wpm.ctx.Done():
@@ -1171,7 +1171,7 @@ func (wpm *WorkerPoolManager) taskDispatcher() {
 
 func (wpm *WorkerPoolManager) assignTask(task TaskWrapper) {
 	wpm.workersMutex.RLock()
-	
+
 	// 유휴 워커 찾기
 	var idleWorker *Worker
 	for _, worker := range wpm.workers {
@@ -1181,7 +1181,7 @@ func (wpm *WorkerPoolManager) assignTask(task TaskWrapper) {
 		}
 	}
 	wpm.workersMutex.RUnlock()
-	
+
 	if idleWorker == nil {
 		// 유휴 워커가 없으면 새 워커 생성 시도
 		if err := wpm.createWorker(); err == nil {
@@ -1195,7 +1195,7 @@ func (wpm *WorkerPoolManager) assignTask(task TaskWrapper) {
 			wpm.workersMutex.RUnlock()
 		}
 	}
-	
+
 	if idleWorker != nil {
 		select {
 		case idleWorker.TaskQueue <- task:
@@ -1224,10 +1224,10 @@ func (wpm *WorkerPoolManager) assignTask(task TaskWrapper) {
 
 func (wpm *WorkerPoolManager) statisticsCollector() {
 	defer wpm.wg.Done()
-	
+
 	ticker := time.NewTicker(wpm.config.StatsInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-wpm.ctx.Done():
@@ -1245,7 +1245,7 @@ func (wpm *WorkerPoolManager) updateStatistics() {
 	idleWorkers := 0
 	var totalCompleted, totalFailed int64
 	var totalLifetime time.Duration
-	
+
 	for _, worker := range wpm.workers {
 		switch worker.State {
 		case WorkerStateBusy:
@@ -1253,13 +1253,13 @@ func (wpm *WorkerPoolManager) updateStatistics() {
 		case WorkerStateIdle:
 			idleWorkers++
 		}
-		
+
 		totalCompleted += worker.TasksCompleted
 		totalFailed += worker.TasksFailed
 		totalLifetime += time.Since(worker.StartTime)
 	}
 	wpm.workersMutex.RUnlock()
-	
+
 	wpm.statsMutex.Lock()
 	wpm.stats.Active = activeWorkers
 	wpm.stats.Idle = idleWorkers
@@ -1271,7 +1271,7 @@ func (wpm *WorkerPoolManager) updateStatistics() {
 	wpm.stats.PriorityTasks = len(wpm.priorityQueue)
 	wpm.stats.GoroutineCount = runtime.NumGoroutine()
 	wpm.stats.LastUpdate = time.Now()
-	
+
 	if workerCount > 0 {
 		wpm.stats.AvgLifetime = totalLifetime / time.Duration(workerCount)
 	}
@@ -1280,10 +1280,10 @@ func (wpm *WorkerPoolManager) updateStatistics() {
 
 func (wpm *WorkerPoolManager) healthChecker() {
 	defer wpm.wg.Done()
-	
+
 	ticker := time.NewTicker(wpm.config.HealthCheckInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-wpm.ctx.Done():
@@ -1298,16 +1298,16 @@ func (wpm *WorkerPoolManager) performHealthCheck() {
 	// 메모리 사용량 확인
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	
+
 	wpm.statsMutex.Lock()
 	wpm.stats.MemoryUsage = int64(m.Alloc)
 	wpm.statsMutex.Unlock()
-	
+
 	// GC 임계값 확인
 	if wpm.config.EnableProfiling && wpm.stats.Completed%int64(wpm.config.GCThreshold) == 0 {
 		runtime.GC()
 	}
-	
+
 	// 유휴 워커 정리
 	wpm.CleanupIdleWorkers()
 }
@@ -1323,11 +1323,11 @@ func (w *Worker) Run() {
 			fmt.Printf("Worker %d panicked: %v\n", w.ID, r)
 		}
 	}()
-	
+
 	for {
 		w.State = WorkerStateIdle
 		w.LastTaskTime = time.Now()
-		
+
 		select {
 		case <-w.ctx.Done():
 			return
@@ -1342,16 +1342,16 @@ func (w *Worker) Run() {
 func (w *Worker) executeTask(wrapper TaskWrapper) {
 	w.State = WorkerStateBusy
 	w.TasksProcessed++
-	
+
 	w.currentMutex.Lock()
 	w.CurrentTask = &wrapper
 	w.currentMutex.Unlock()
-	
+
 	startTime := time.Now()
 	err := wrapper.Task.Execute(wrapper.Ctx)
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
-	
+
 	result := TaskResult{
 		Success:   err == nil,
 		Error:     err,
@@ -1359,27 +1359,27 @@ func (w *Worker) executeTask(wrapper TaskWrapper) {
 		StartTime: startTime,
 		EndTime:   endTime,
 	}
-	
+
 	if err == nil {
 		w.TasksCompleted++
 	} else {
 		w.TasksFailed++
 	}
-	
+
 	// 결과 전송
 	select {
 	case wrapper.ResultCh <- result:
 	default:
 		// 채널이 막혀있으면 무시
 	}
-	
+
 	// 컨텍스트 정리
 	wrapper.Cancel()
-	
+
 	w.currentMutex.Lock()
 	w.CurrentTask = nil
 	w.currentMutex.Unlock()
-	
+
 	w.LastTaskTime = time.Now()
 }
 
@@ -1387,14 +1387,14 @@ func (w *Worker) executeTask(wrapper TaskWrapper) {
 func (w *Worker) Stop() {
 	if w.State != WorkerStateStopped {
 		w.State = WorkerStateStopping
-		
+
 		// 현재 실행 중인 태스크 취소
 		w.currentMutex.RLock()
 		if w.CurrentTask != nil {
 			w.CurrentTask.Cancel()
 		}
 		w.currentMutex.RUnlock()
-		
+
 		w.cancel()
 		close(w.QuitChan)
 	}
@@ -1443,12 +1443,12 @@ func (gm *GoroutineMonitor) Stop() {
 
 // MetricsCollector 메트릭 수집기
 type MetricsCollector struct {
-	manager   *GoroutineLifecycleManager
-	interval  time.Duration
-	running   atomic.Bool
-	ctx       context.Context
-	cancel    context.CancelFunc
-	
+	manager  *GoroutineLifecycleManager
+	interval time.Duration
+	running  atomic.Bool
+	ctx      context.Context
+	cancel   context.CancelFunc
+
 	// Prometheus 메트릭스
 	promGoroutinesActive    prometheus.Gauge
 	promGoroutinesTotal     prometheus.Counter
@@ -1461,17 +1461,17 @@ type MetricsCollector struct {
 // NewMetricsCollector 새로운 메트릭 수집기 생성
 func NewMetricsCollector(manager *GoroutineLifecycleManager) *MetricsCollector {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	collector := &MetricsCollector{
 		manager:  manager,
 		interval: manager.config.MetricsInterval,
 		ctx:      ctx,
 		cancel:   cancel,
 	}
-	
+
 	// Prometheus 메트릭스 초기화
 	collector.initPrometheusMetrics()
-	
+
 	return collector
 }
 
@@ -1480,28 +1480,28 @@ func (mc *MetricsCollector) initPrometheusMetrics() {
 		Name: "claude_goroutines_active",
 		Help: "현재 활성 고루틴 수",
 	})
-	
+
 	mc.promGoroutinesTotal = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "claude_goroutines_created_total",
 		Help: "생성된 총 고루틴 수",
 	})
-	
+
 	mc.promGoroutinesCompleted = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "claude_goroutines_completed_total",
 		Help: "완료된 총 고루틴 수",
 	})
-	
+
 	mc.promGoroutinesFailed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "claude_goroutines_failed_total",
 		Help: "실패한 총 고루틴 수",
 	})
-	
+
 	mc.promGoroutinesLifetime = promauto.NewHistogram(prometheus.HistogramOpts{
 		Name:    "claude_goroutines_lifetime_seconds",
 		Help:    "고루틴 생존 시간",
 		Buckets: prometheus.ExponentialBuckets(0.001, 2, 15),
 	})
-	
+
 	mc.promGoroutinesMemory = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "claude_goroutines_memory_bytes",
 		Help: "고루틴 메모리 사용량",
@@ -1512,7 +1512,7 @@ func (mc *MetricsCollector) Start() {
 	if !mc.running.CompareAndSwap(false, true) {
 		return
 	}
-	
+
 	go mc.collectLoop()
 }
 
@@ -1520,14 +1520,14 @@ func (mc *MetricsCollector) Stop() {
 	if !mc.running.CompareAndSwap(true, false) {
 		return
 	}
-	
+
 	mc.cancel()
 }
 
 func (mc *MetricsCollector) collectLoop() {
 	ticker := time.NewTicker(mc.interval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-mc.ctx.Done():
@@ -1540,7 +1540,7 @@ func (mc *MetricsCollector) collectLoop() {
 
 func (mc *MetricsCollector) collectMetrics() {
 	metrics := mc.manager.metrics
-	
+
 	// Prometheus 메트릭스 업데이트
 	mc.promGoroutinesActive.Set(float64(atomic.LoadInt64(&metrics.CurrentActive)))
 	mc.promGoroutinesTotal.Add(float64(atomic.LoadInt64(&metrics.TotalCreated)))
@@ -1551,12 +1551,12 @@ func (mc *MetricsCollector) collectMetrics() {
 
 // GoroutineTracker 고루틴 추적기
 type GoroutineTracker struct {
-	manager   *GoroutineLifecycleManager
-	interval  time.Duration
-	running   atomic.Bool
-	ctx       context.Context
-	cancel    context.CancelFunc
-	
+	manager  *GoroutineLifecycleManager
+	interval time.Duration
+	running  atomic.Bool
+	ctx      context.Context
+	cancel   context.CancelFunc
+
 	// 추적 데이터
 	snapshots []GoroutineSnapshot
 	mu        sync.RWMutex
@@ -1564,18 +1564,18 @@ type GoroutineTracker struct {
 
 // GoroutineSnapshot 고루틴 스냅샷
 type GoroutineSnapshot struct {
-	Timestamp       time.Time                 `json:"timestamp"`
-	ActiveCount     int                       `json:"active_count"`
-	TotalCount      int                       `json:"total_count"`
-	GoroutineStates map[GoroutineState]int    `json:"goroutine_states"`
-	MemoryUsage     int64                     `json:"memory_usage"`
-	Goroutines      []*GoroutineInfo          `json:"goroutines,omitempty"`
+	Timestamp       time.Time              `json:"timestamp"`
+	ActiveCount     int                    `json:"active_count"`
+	TotalCount      int                    `json:"total_count"`
+	GoroutineStates map[GoroutineState]int `json:"goroutine_states"`
+	MemoryUsage     int64                  `json:"memory_usage"`
+	Goroutines      []*GoroutineInfo       `json:"goroutines,omitempty"`
 }
 
 // NewGoroutineTracker 새로운 고루틴 추적기 생성
 func NewGoroutineTracker(manager *GoroutineLifecycleManager) *GoroutineTracker {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &GoroutineTracker{
 		manager:   manager,
 		interval:  manager.config.TrackingInterval,
@@ -1589,7 +1589,7 @@ func (gt *GoroutineTracker) Start() {
 	if !gt.running.CompareAndSwap(false, true) {
 		return
 	}
-	
+
 	go gt.trackLoop()
 }
 
@@ -1597,14 +1597,14 @@ func (gt *GoroutineTracker) Stop() {
 	if !gt.running.CompareAndSwap(true, false) {
 		return
 	}
-	
+
 	gt.cancel()
 }
 
 func (gt *GoroutineTracker) trackLoop() {
 	ticker := time.NewTicker(gt.interval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-gt.ctx.Done():
@@ -1620,37 +1620,37 @@ func (gt *GoroutineTracker) takeSnapshot() {
 		Timestamp:       time.Now(),
 		GoroutineStates: make(map[GoroutineState]int),
 	}
-	
+
 	var goroutines []*GoroutineInfo
-	
+
 	gt.manager.activeGoroutines.Range(func(key, value interface{}) bool {
 		info := value.(*GoroutineInfo)
 		snapshot.GoroutineStates[info.State]++
 		snapshot.TotalCount++
-		
+
 		if info.State == GoroutineStateRunning {
 			snapshot.ActiveCount++
 		}
-		
+
 		// 세부 정보 포함 (옵션)
 		if gt.manager.config.EnableTracking {
 			goroutines = append(goroutines, info)
 		}
-		
+
 		return true
 	})
-	
+
 	snapshot.Goroutines = goroutines
-	
+
 	// 메모리 사용량 수집
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	snapshot.MemoryUsage = int64(m.Alloc)
-	
+
 	// 스냅샷 저장
 	gt.mu.Lock()
 	gt.snapshots = append(gt.snapshots, snapshot)
-	
+
 	// 최대 1000개 스냅샷 유지
 	if len(gt.snapshots) > 1000 {
 		gt.snapshots = gt.snapshots[1:]
@@ -1661,7 +1661,7 @@ func (gt *GoroutineTracker) takeSnapshot() {
 func (gt *GoroutineTracker) GetSnapshots() []GoroutineSnapshot {
 	gt.mu.RLock()
 	defer gt.mu.RUnlock()
-	
+
 	snapshots := make([]GoroutineSnapshot, len(gt.snapshots))
 	copy(snapshots, gt.snapshots)
 	return snapshots
@@ -1674,16 +1674,16 @@ type LeakDetector struct {
 	running   atomic.Bool
 	ctx       context.Context
 	cancel    context.CancelFunc
-	
+
 	// 감지된 누수
-	leaks     []GoroutineLeak
-	leaksMu   sync.RWMutex
+	leaks   []GoroutineLeak
+	leaksMu sync.RWMutex
 }
 
 // NewLeakDetector 새로운 누수 감지기 생성
 func NewLeakDetector(manager *GoroutineLifecycleManager) *LeakDetector {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &LeakDetector{
 		manager:   manager,
 		threshold: manager.config.LeakDetectionThreshold,
@@ -1697,7 +1697,7 @@ func (ld *LeakDetector) Start() {
 	if !ld.running.CompareAndSwap(false, true) {
 		return
 	}
-	
+
 	go ld.detectLoop()
 }
 
@@ -1705,14 +1705,14 @@ func (ld *LeakDetector) Stop() {
 	if !ld.running.CompareAndSwap(true, false) {
 		return
 	}
-	
+
 	ld.cancel()
 }
 
 func (ld *LeakDetector) detectLoop() {
 	ticker := time.NewTicker(ld.threshold / 2) // 임계값의 절반마다 검사
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ld.ctx.Done():
@@ -1726,15 +1726,15 @@ func (ld *LeakDetector) detectLoop() {
 func (ld *LeakDetector) detectLeaks() {
 	now := time.Now()
 	var detectedLeaks []GoroutineLeak
-	
+
 	ld.manager.activeGoroutines.Range(func(key, value interface{}) bool {
 		info := value.(*GoroutineInfo)
-		
+
 		// 오래 실행되고 있는 고루틴 확인
 		lifetime := now.Sub(info.StartTime)
 		if lifetime > ld.threshold {
 			severity := ld.calculateSeverity(lifetime, info)
-			
+
 			leak := GoroutineLeak{
 				GoroutineID:  info.ID,
 				StartTime:    info.StartTime,
@@ -1745,25 +1745,25 @@ func (ld *LeakDetector) detectLeaks() {
 				MemoryUsage:  info.Memory,
 				Severity:     severity,
 			}
-			
+
 			detectedLeaks = append(detectedLeaks, leak)
 		}
-		
+
 		return true
 	})
-	
+
 	// 누수 목록 업데이트
 	ld.leaksMu.Lock()
 	ld.leaks = detectedLeaks
 	ld.leaksMu.Unlock()
-	
+
 	// 메트릭 업데이트
 	atomic.StoreInt64(&ld.manager.metrics.LeakCount, int64(len(detectedLeaks)))
 }
 
 func (ld *LeakDetector) calculateSeverity(lifetime time.Duration, info *GoroutineInfo) LeakSeverity {
 	ratio := float64(lifetime) / float64(ld.threshold)
-	
+
 	switch {
 	case ratio > 5.0:
 		return LeakSeverityCritical
@@ -1779,7 +1779,7 @@ func (ld *LeakDetector) calculateSeverity(lifetime time.Duration, info *Goroutin
 func (ld *LeakDetector) DetectLeaks() []GoroutineLeak {
 	ld.leaksMu.RLock()
 	defer ld.leaksMu.RUnlock()
-	
+
 	leaks := make([]GoroutineLeak, len(ld.leaks))
 	copy(leaks, ld.leaks)
 	return leaks
@@ -1792,11 +1792,11 @@ type GoroutineAlertManager interface {
 
 // Alert 알림
 type Alert struct {
-	Level       GoroutineAlertLevel    `json:"level"`
-	Message     string        `json:"message"`
-	Source      string        `json:"source"`
-	Timestamp   time.Time     `json:"timestamp"`
-	Metadata    interface{}   `json:"metadata,omitempty"`
+	Level     GoroutineAlertLevel `json:"level"`
+	Message   string              `json:"message"`
+	Source    string              `json:"source"`
+	Timestamp time.Time           `json:"timestamp"`
+	Metadata  interface{}         `json:"metadata,omitempty"`
 }
 
 // AlertLevel 알림 레벨

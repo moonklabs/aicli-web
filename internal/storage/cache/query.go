@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-	
+
 	"github.com/aicli/aicli-web/internal/models"
 )
 
@@ -16,7 +16,7 @@ type QueryCache struct {
 	cache  Cache
 	keys   *CacheKey
 	logger *zap.Logger
-	
+
 	// TTL 설정
 	workspaceTTL time.Duration
 	projectTTL   time.Duration
@@ -40,11 +40,11 @@ type QueryCacheConfig struct {
 func DefaultQueryCacheConfig(cache Cache) QueryCacheConfig {
 	return QueryCacheConfig{
 		Cache:        cache,
-		WorkspaceTTL: 10 * time.Minute,  // 워크스페이스는 자주 변경되지 않음
-		ProjectTTL:   5 * time.Minute,   // 프로젝트도 비교적 안정적
-		SessionTTL:   2 * time.Minute,   // 세션은 자주 변경됨
-		TaskTTL:      1 * time.Minute,   // 태스크는 매우 자주 변경됨
-		ListTTL:      30 * time.Second,  // 목록은 짧은 캐시
+		WorkspaceTTL: 10 * time.Minute, // 워크스페이스는 자주 변경되지 않음
+		ProjectTTL:   5 * time.Minute,  // 프로젝트도 비교적 안정적
+		SessionTTL:   2 * time.Minute,  // 세션은 자주 변경됨
+		TaskTTL:      1 * time.Minute,  // 태스크는 매우 자주 변경됨
+		ListTTL:      30 * time.Second, // 목록은 짧은 캐시
 		Logger:       zap.NewNop(),
 	}
 }
@@ -54,7 +54,7 @@ func NewQueryCache(config QueryCacheConfig) *QueryCache {
 	if config.Logger == nil {
 		config.Logger = zap.NewNop()
 	}
-	
+
 	return &QueryCache{
 		cache:        config.Cache,
 		keys:         NewCacheKey("aicli"),
@@ -72,7 +72,7 @@ func NewQueryCache(config QueryCacheConfig) *QueryCache {
 // GetWorkspace 워크스페이스 조회
 func (qc *QueryCache) GetWorkspace(ctx context.Context, id string) (*models.Workspace, error) {
 	key := qc.keys.WorkspaceKey(id)
-	
+
 	var workspace models.Workspace
 	err := qc.cache.Get(ctx, key, &workspace)
 	if err != nil {
@@ -86,7 +86,7 @@ func (qc *QueryCache) GetWorkspace(ctx context.Context, id string) (*models.Work
 		}
 		return nil, err
 	}
-	
+
 	qc.logger.Debug("워크스페이스 캐시 히트", zap.String("id", id))
 	return &workspace, nil
 }
@@ -94,7 +94,7 @@ func (qc *QueryCache) GetWorkspace(ctx context.Context, id string) (*models.Work
 // SetWorkspace 워크스페이스 캐시
 func (qc *QueryCache) SetWorkspace(ctx context.Context, workspace *models.Workspace) error {
 	key := qc.keys.WorkspaceKey(workspace.ID)
-	
+
 	err := qc.cache.Set(ctx, key, workspace, qc.workspaceTTL)
 	if err != nil {
 		qc.logger.Error("워크스페이스 캐시 저장 실패",
@@ -103,7 +103,7 @@ func (qc *QueryCache) SetWorkspace(ctx context.Context, workspace *models.Worksp
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("워크스페이스 캐시됨",
 		zap.String("id", workspace.ID),
 		zap.Duration("ttl", qc.workspaceTTL),
@@ -114,7 +114,7 @@ func (qc *QueryCache) SetWorkspace(ctx context.Context, workspace *models.Worksp
 // InvalidateWorkspace 워크스페이스 캐시 무효화
 func (qc *QueryCache) InvalidateWorkspace(ctx context.Context, id string) error {
 	key := qc.keys.WorkspaceKey(id)
-	
+
 	err := qc.cache.Delete(ctx, key)
 	if err != nil {
 		qc.logger.Error("워크스페이스 캐시 무효화 실패",
@@ -123,7 +123,7 @@ func (qc *QueryCache) InvalidateWorkspace(ctx context.Context, id string) error 
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("워크스페이스 캐시 무효화됨", zap.String("id", id))
 	return nil
 }
@@ -131,7 +131,7 @@ func (qc *QueryCache) InvalidateWorkspace(ctx context.Context, id string) error 
 // GetWorkspaceList 워크스페이스 목록 조회
 func (qc *QueryCache) GetWorkspaceList(ctx context.Context, ownerID string, page, limit int) ([]*models.Workspace, int, error) {
 	key := qc.keys.WorkspaceListKey(ownerID, page, limit)
-	
+
 	var result WorkspaceListResult
 	err := qc.cache.Get(ctx, key, &result)
 	if err != nil {
@@ -144,26 +144,26 @@ func (qc *QueryCache) GetWorkspaceList(ctx context.Context, ownerID string, page
 		}
 		return nil, 0, err
 	}
-	
+
 	qc.logger.Debug("워크스페이스 목록 캐시 히트",
 		zap.String("owner_id", ownerID),
 		zap.Int("page", page),
 		zap.Int("limit", limit),
 		zap.Int("count", len(result.Workspaces)),
 	)
-	
+
 	return result.Workspaces, result.TotalCount, nil
 }
 
 // SetWorkspaceList 워크스페이스 목록 캐시
 func (qc *QueryCache) SetWorkspaceList(ctx context.Context, ownerID string, page, limit int, workspaces []*models.Workspace, totalCount int) error {
 	key := qc.keys.WorkspaceListKey(ownerID, page, limit)
-	
+
 	result := WorkspaceListResult{
 		Workspaces: workspaces,
 		TotalCount: totalCount,
 	}
-	
+
 	err := qc.cache.Set(ctx, key, result, qc.listTTL)
 	if err != nil {
 		qc.logger.Error("워크스페이스 목록 캐시 저장 실패",
@@ -172,7 +172,7 @@ func (qc *QueryCache) SetWorkspaceList(ctx context.Context, ownerID string, page
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("워크스페이스 목록 캐시됨",
 		zap.String("owner_id", ownerID),
 		zap.Int("count", len(workspaces)),
@@ -185,11 +185,11 @@ func (qc *QueryCache) SetWorkspaceList(ctx context.Context, ownerID string, page
 func (qc *QueryCache) InvalidateWorkspaceList(ctx context.Context, ownerID string) error {
 	// 페이지별 캐시를 모두 무효화하는 대신 패턴 기반으로 처리
 	// 실제로는 더 정교한 무효화 전략이 필요함
-	
+
 	qc.logger.Debug("워크스페이스 목록 캐시 무효화 요청",
 		zap.String("owner_id", ownerID),
 	)
-	
+
 	// 여기서는 간단히 전체 캐시에서 관련 키들을 찾아 삭제
 	// 실제 구현에서는 더 효율적인 방법 필요
 	return nil
@@ -200,7 +200,7 @@ func (qc *QueryCache) InvalidateWorkspaceList(ctx context.Context, ownerID strin
 // GetProject 프로젝트 조회
 func (qc *QueryCache) GetProject(ctx context.Context, id string) (*models.Project, error) {
 	key := qc.keys.ProjectKey(id)
-	
+
 	var project models.Project
 	err := qc.cache.Get(ctx, key, &project)
 	if err != nil {
@@ -209,7 +209,7 @@ func (qc *QueryCache) GetProject(ctx context.Context, id string) (*models.Projec
 		}
 		return nil, err
 	}
-	
+
 	qc.logger.Debug("프로젝트 캐시 히트", zap.String("id", id))
 	return &project, nil
 }
@@ -217,7 +217,7 @@ func (qc *QueryCache) GetProject(ctx context.Context, id string) (*models.Projec
 // SetProject 프로젝트 캐시
 func (qc *QueryCache) SetProject(ctx context.Context, project *models.Project) error {
 	key := qc.keys.ProjectKey(project.ID)
-	
+
 	err := qc.cache.Set(ctx, key, project, qc.projectTTL)
 	if err != nil {
 		qc.logger.Error("프로젝트 캐시 저장 실패",
@@ -226,7 +226,7 @@ func (qc *QueryCache) SetProject(ctx context.Context, project *models.Project) e
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("프로젝트 캐시됨",
 		zap.String("id", project.ID),
 		zap.Duration("ttl", qc.projectTTL),
@@ -237,7 +237,7 @@ func (qc *QueryCache) SetProject(ctx context.Context, project *models.Project) e
 // InvalidateProject 프로젝트 캐시 무효화
 func (qc *QueryCache) InvalidateProject(ctx context.Context, id string) error {
 	key := qc.keys.ProjectKey(id)
-	
+
 	err := qc.cache.Delete(ctx, key)
 	if err != nil {
 		qc.logger.Error("프로젝트 캐시 무효화 실패",
@@ -246,7 +246,7 @@ func (qc *QueryCache) InvalidateProject(ctx context.Context, id string) error {
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("프로젝트 캐시 무효화됨", zap.String("id", id))
 	return nil
 }
@@ -256,7 +256,7 @@ func (qc *QueryCache) InvalidateProject(ctx context.Context, id string) error {
 // GetSession 세션 조회
 func (qc *QueryCache) GetSession(ctx context.Context, id string) (*models.Session, error) {
 	key := qc.keys.SessionKey(id)
-	
+
 	var session models.Session
 	err := qc.cache.Get(ctx, key, &session)
 	if err != nil {
@@ -265,7 +265,7 @@ func (qc *QueryCache) GetSession(ctx context.Context, id string) (*models.Sessio
 		}
 		return nil, err
 	}
-	
+
 	qc.logger.Debug("세션 캐시 히트", zap.String("id", id))
 	return &session, nil
 }
@@ -273,7 +273,7 @@ func (qc *QueryCache) GetSession(ctx context.Context, id string) (*models.Sessio
 // SetSession 세션 캐시
 func (qc *QueryCache) SetSession(ctx context.Context, session *models.Session) error {
 	key := qc.keys.SessionKey(session.ID)
-	
+
 	err := qc.cache.Set(ctx, key, session, qc.sessionTTL)
 	if err != nil {
 		qc.logger.Error("세션 캐시 저장 실패",
@@ -282,7 +282,7 @@ func (qc *QueryCache) SetSession(ctx context.Context, session *models.Session) e
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("세션 캐시됨",
 		zap.String("id", session.ID),
 		zap.Duration("ttl", qc.sessionTTL),
@@ -293,7 +293,7 @@ func (qc *QueryCache) SetSession(ctx context.Context, session *models.Session) e
 // InvalidateSession 세션 캐시 무효화
 func (qc *QueryCache) InvalidateSession(ctx context.Context, id string) error {
 	key := qc.keys.SessionKey(id)
-	
+
 	err := qc.cache.Delete(ctx, key)
 	if err != nil {
 		qc.logger.Error("세션 캐시 무효화 실패",
@@ -302,7 +302,7 @@ func (qc *QueryCache) InvalidateSession(ctx context.Context, id string) error {
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("세션 캐시 무효화됨", zap.String("id", id))
 	return nil
 }
@@ -312,7 +312,7 @@ func (qc *QueryCache) InvalidateSession(ctx context.Context, id string) error {
 // GetTask 태스크 조회
 func (qc *QueryCache) GetTask(ctx context.Context, id string) (*models.Task, error) {
 	key := qc.keys.TaskKey(id)
-	
+
 	var task models.Task
 	err := qc.cache.Get(ctx, key, &task)
 	if err != nil {
@@ -321,7 +321,7 @@ func (qc *QueryCache) GetTask(ctx context.Context, id string) (*models.Task, err
 		}
 		return nil, err
 	}
-	
+
 	qc.logger.Debug("태스크 캐시 히트", zap.String("id", id))
 	return &task, nil
 }
@@ -329,7 +329,7 @@ func (qc *QueryCache) GetTask(ctx context.Context, id string) (*models.Task, err
 // SetTask 태스크 캐시
 func (qc *QueryCache) SetTask(ctx context.Context, task *models.Task) error {
 	key := qc.keys.TaskKey(task.ID)
-	
+
 	err := qc.cache.Set(ctx, key, task, qc.taskTTL)
 	if err != nil {
 		qc.logger.Error("태스크 캐시 저장 실패",
@@ -338,7 +338,7 @@ func (qc *QueryCache) SetTask(ctx context.Context, task *models.Task) error {
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("태스크 캐시됨",
 		zap.String("id", task.ID),
 		zap.Duration("ttl", qc.taskTTL),
@@ -349,7 +349,7 @@ func (qc *QueryCache) SetTask(ctx context.Context, task *models.Task) error {
 // InvalidateTask 태스크 캐시 무효화
 func (qc *QueryCache) InvalidateTask(ctx context.Context, id string) error {
 	key := qc.keys.TaskKey(id)
-	
+
 	err := qc.cache.Delete(ctx, key)
 	if err != nil {
 		qc.logger.Error("태스크 캐시 무효화 실패",
@@ -358,7 +358,7 @@ func (qc *QueryCache) InvalidateTask(ctx context.Context, id string) error {
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("태스크 캐시 무효화됨", zap.String("id", id))
 	return nil
 }
@@ -368,7 +368,7 @@ func (qc *QueryCache) InvalidateTask(ctx context.Context, id string) error {
 // GetQueryResult 쿼리 결과 조회
 func (qc *QueryCache) GetQueryResult(ctx context.Context, query string, params []interface{}, dest interface{}) error {
 	key := qc.keys.QueryKey(query, params...)
-	
+
 	err := qc.cache.Get(ctx, key, dest)
 	if err != nil {
 		if err == ErrCacheMiss {
@@ -378,7 +378,7 @@ func (qc *QueryCache) GetQueryResult(ctx context.Context, query string, params [
 		}
 		return err
 	}
-	
+
 	qc.logger.Debug("쿼리 결과 캐시 히트",
 		zap.String("query_hash", key),
 	)
@@ -388,11 +388,11 @@ func (qc *QueryCache) GetQueryResult(ctx context.Context, query string, params [
 // SetQueryResult 쿼리 결과 캐시
 func (qc *QueryCache) SetQueryResult(ctx context.Context, query string, params []interface{}, result interface{}, ttl time.Duration) error {
 	key := qc.keys.QueryKey(query, params...)
-	
+
 	if ttl <= 0 {
 		ttl = qc.listTTL
 	}
-	
+
 	err := qc.cache.Set(ctx, key, result, ttl)
 	if err != nil {
 		qc.logger.Error("쿼리 결과 캐시 저장 실패",
@@ -401,7 +401,7 @@ func (qc *QueryCache) SetQueryResult(ctx context.Context, query string, params [
 		)
 		return err
 	}
-	
+
 	qc.logger.Debug("쿼리 결과 캐시됨",
 		zap.String("query_hash", key),
 		zap.Duration("ttl", ttl),
@@ -466,7 +466,7 @@ func NewCacheMiddleware(queryCache *QueryCache, logger *zap.Logger) *CacheMiddle
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	
+
 	return &CacheMiddleware{
 		queryCache: queryCache,
 		logger:     logger,
@@ -481,20 +481,20 @@ func (cm *CacheMiddleware) WithCache(ctx context.Context, key string, ttl time.D
 		cm.logger.Debug("캐시 미들웨어 히트", zap.String("key", key))
 		return nil
 	}
-	
+
 	if err != ErrCacheMiss {
 		cm.logger.Error("캐시 조회 실패",
 			zap.String("key", key),
 			zap.Error(err),
 		)
 	}
-	
+
 	// 캐시 미스 시 fallback 실행
 	result, err := fallback()
 	if err != nil {
 		return err
 	}
-	
+
 	// 결과를 캐시에 저장
 	cacheErr := cm.queryCache.cache.Set(ctx, key, result, ttl)
 	if cacheErr != nil {
@@ -509,14 +509,14 @@ func (cm *CacheMiddleware) WithCache(ctx context.Context, key string, ttl time.D
 			zap.Duration("ttl", ttl),
 		)
 	}
-	
+
 	// 결과를 dest에 복사
 	if result != nil {
 		if err := copyResult(result, dest); err != nil {
 			return fmt.Errorf("결과 복사 실패: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -527,6 +527,6 @@ func copyResult(src, dest interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	return json.Unmarshal(data, dest)
 }

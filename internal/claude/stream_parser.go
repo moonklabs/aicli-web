@@ -27,7 +27,7 @@ type Response struct {
 	Content   string                 `json:"content"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 	MessageID string                 `json:"message_id,omitempty"`
-	Error     *StreamError          `json:"error,omitempty"`
+	Error     *StreamError           `json:"error,omitempty"`
 }
 
 // StreamError는 스트림 처리 중 발생한 오류를 나타냅니다.
@@ -50,7 +50,7 @@ type JSONStreamParser struct {
 	logger      *logrus.Logger
 	reader      io.Reader
 	maxLineSize int
-	
+
 	// 부분 JSON 처리를 위한 필드
 	partialBuffer   *bytes.Buffer
 	inMultilineJSON bool
@@ -63,7 +63,7 @@ func NewJSONStreamParser(reader io.Reader, logger *logrus.Logger) *JSONStreamPar
 	buffer := &bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024) // 최대 1MB 라인
-	
+
 	return &JSONStreamParser{
 		scanner:       scanner,
 		decoder:       json.NewDecoder(reader),
@@ -217,11 +217,11 @@ func (p *JSONStreamParser) GetStats() map[string]interface{} {
 	defer p.mutex.RUnlock()
 
 	return map[string]interface{}{
-		"buffer_size":        p.buffer.Len(),
+		"buffer_size":         p.buffer.Len(),
 		"partial_buffer_size": p.partialBuffer.Len(),
-		"in_multiline_json":  p.inMultilineJSON,
-		"brace_count":        p.braceCount,
-		"bracket_count":      p.bracketCount,
+		"in_multiline_json":   p.inMultilineJSON,
+		"brace_count":         p.braceCount,
+		"bracket_count":       p.bracketCount,
 	}
 }
 
@@ -262,7 +262,7 @@ func (p *JSONStreamParser) ParseMultilineJSON(line string) (*Response, error) {
 		// 성공적으로 파싱됨
 		p.partialBuffer.Reset()
 		p.inMultilineJSON = false
-		
+
 		p.logger.WithFields(logrus.Fields{
 			"type":       response.Type,
 			"message_id": response.MessageID,
@@ -334,6 +334,6 @@ func (p *JSONStreamParser) RecoverFromError() {
 	p.inMultilineJSON = false
 	p.braceCount = 0
 	p.bracketCount = 0
-	
+
 	p.logger.Info("Parser recovered from error state")
 }

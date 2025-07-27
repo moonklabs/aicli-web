@@ -37,16 +37,16 @@ type OAuthConfig struct {
 type OAuthManager interface {
 	// GetAuthURL 인증 URL 생성 (PKCE 지원)
 	GetAuthURL(provider OAuthProvider, state string) (string, error)
-	
+
 	// ExchangeCode 인증 코드를 액세스 토큰으로 교환
 	ExchangeCode(provider OAuthProvider, code, state string) (*oauth2.Token, error)
-	
+
 	// GetUserInfo 사용자 정보 조회
 	GetUserInfo(provider OAuthProvider, token *oauth2.Token) (*OAuthUserInfo, error)
-	
+
 	// RefreshToken 토큰 갱신
 	RefreshToken(provider OAuthProvider, refreshToken string) (*oauth2.Token, error)
-	
+
 	// ValidateState state 파라미터 검증
 	ValidateState(state string) bool
 }
@@ -83,10 +83,10 @@ func (m *OAuthManagerImpl) GetAuthURL(provider OAuthProvider, state string) (str
 	if err != nil {
 		return "", err
 	}
-	
+
 	// state 저장 (5분 유효)
 	m.stateStore[state] = time.Now().Add(5 * time.Minute)
-	
+
 	// PKCE는 oauth2 라이브러리에서 자동으로 처리
 	return config.AuthCodeURL(state, oauth2.AccessTypeOffline), nil
 }
@@ -97,24 +97,24 @@ func (m *OAuthManagerImpl) ExchangeCode(provider OAuthProvider, code, state stri
 	if !m.ValidateState(state) {
 		return nil, fmt.Errorf("invalid or expired state parameter")
 	}
-	
+
 	config, err := m.getOAuthConfig(provider)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 토큰 교환
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	token, err := config.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
 	}
-	
+
 	// state 정리
 	delete(m.stateStore, state)
-	
+
 	return token, nil
 }
 
@@ -124,12 +124,12 @@ func (m *OAuthManagerImpl) GetUserInfo(provider OAuthProvider, token *oauth2.Tok
 	if err != nil {
 		return nil, err
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	client := config.Client(ctx, token)
-	
+
 	var userInfoURL string
 	switch provider {
 	case ProviderGoogle:
@@ -139,22 +139,22 @@ func (m *OAuthManagerImpl) GetUserInfo(provider OAuthProvider, token *oauth2.Tok
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)
 	}
-	
+
 	resp, err := client.Get(userInfoURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get user info: status %d", resp.StatusCode)
 	}
-	
+
 	var rawUserInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&rawUserInfo); err != nil {
 		return nil, fmt.Errorf("failed to decode user info: %w", err)
 	}
-	
+
 	return m.mapUserInfo(provider, rawUserInfo)
 }
 
@@ -164,18 +164,18 @@ func (m *OAuthManagerImpl) RefreshToken(provider OAuthProvider, refreshToken str
 	if err != nil {
 		return nil, err
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	token := &oauth2.Token{RefreshToken: refreshToken}
 	tokenSource := config.TokenSource(ctx, token)
-	
+
 	newToken, err := tokenSource.Token()
 	if err != nil {
 		return nil, fmt.Errorf("failed to refresh token: %w", err)
 	}
-	
+
 	return newToken, nil
 }
 
@@ -185,12 +185,12 @@ func (m *OAuthManagerImpl) ValidateState(state string) bool {
 	if !exists {
 		return false
 	}
-	
+
 	if time.Now().After(expiry) {
 		delete(m.stateStore, state)
 		return false
 	}
-	
+
 	return true
 }
 
@@ -200,11 +200,11 @@ func (m *OAuthManagerImpl) getOAuthConfig(provider OAuthProvider) (*oauth2.Confi
 	if !exists {
 		return nil, fmt.Errorf("provider %s not configured", provider)
 	}
-	
+
 	if !configData.Enabled {
 		return nil, fmt.Errorf("provider %s is disabled", provider)
 	}
-	
+
 	var endpoint oauth2.Endpoint
 	switch provider {
 	case ProviderGoogle:
@@ -214,7 +214,7 @@ func (m *OAuthManagerImpl) getOAuthConfig(provider OAuthProvider) (*oauth2.Confi
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)
 	}
-	
+
 	return &oauth2.Config{
 		ClientID:     configData.ClientID,
 		ClientSecret: configData.ClientSecret,
@@ -229,7 +229,7 @@ func (m *OAuthManagerImpl) mapUserInfo(provider OAuthProvider, rawInfo map[strin
 	userInfo := &OAuthUserInfo{
 		Provider: string(provider),
 	}
-	
+
 	switch provider {
 	case ProviderGoogle:
 		userInfo.ID = getString(rawInfo, "id")
@@ -237,7 +237,7 @@ func (m *OAuthManagerImpl) mapUserInfo(provider OAuthProvider, rawInfo map[strin
 		userInfo.Name = getString(rawInfo, "name")
 		userInfo.Picture = getString(rawInfo, "picture")
 		userInfo.Verified = getBool(rawInfo, "verified_email")
-		
+
 	case ProviderGitHub:
 		userInfo.ID = fmt.Sprintf("%v", rawInfo["id"]) // GitHub은 숫자 ID
 		userInfo.Email = getString(rawInfo, "email")
@@ -248,11 +248,11 @@ func (m *OAuthManagerImpl) mapUserInfo(provider OAuthProvider, rawInfo map[strin
 		userInfo.Picture = getString(rawInfo, "avatar_url")
 		userInfo.Verified = true // GitHub 계정은 기본적으로 검증됨
 	}
-	
+
 	if userInfo.ID == "" {
 		return nil, fmt.Errorf("failed to get user ID from %s", provider)
 	}
-	
+
 	return userInfo, nil
 }
 

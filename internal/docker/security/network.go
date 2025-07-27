@@ -43,11 +43,11 @@ func (nm *NetworkManager) CreateWorkspaceNetwork(ctx context.Context, workspaceI
 	}
 
 	networkName := fmt.Sprintf("aicli-workspace-%s", workspaceID)
-	
+
 	// CIDR 대역 할당 (172.20.x.0/24 대역 사용)
 	subnet := nm.allocateSubnet(workspaceID)
 	gateway := nm.getGatewayIP(subnet)
-	
+
 	networkConfig := types.NetworkCreate{
 		Driver:     "bridge",
 		Internal:   false, // 외부 인터넷 접근 허용
@@ -62,9 +62,9 @@ func (nm *NetworkManager) CreateWorkspaceNetwork(ctx context.Context, workspaceI
 			},
 		},
 		Options: map[string]string{
-			"com.docker.network.bridge.name":           networkName,
-			"com.docker.network.driver.mtu":           "1500",
-			"com.docker.network.bridge.enable_icc":    "false", // 컨테이너 간 통신 차단
+			"com.docker.network.bridge.name":                 networkName,
+			"com.docker.network.driver.mtu":                  "1500",
+			"com.docker.network.bridge.enable_icc":           "false", // 컨테이너 간 통신 차단
 			"com.docker.network.bridge.enable_ip_masquerade": "true",
 		},
 		Labels: map[string]string{
@@ -74,12 +74,12 @@ func (nm *NetworkManager) CreateWorkspaceNetwork(ctx context.Context, workspaceI
 			"aicli.created_at":   time.Now().Format(time.RFC3339),
 		},
 	}
-	
+
 	// Docker 클라이언트를 통해 네트워크 생성
 	// 실제 구현에서는 client.NetworkCreate를 호출
 	// 현재는 모의 구현
 	networkID := fmt.Sprintf("net_%s_%d", workspaceID, time.Now().Unix())
-	
+
 	return &NetworkInfo{
 		ID:          networkID,
 		Name:        networkName,
@@ -101,7 +101,7 @@ func (nm *NetworkManager) GetWorkspaceNetwork(ctx context.Context, workspaceID s
 	}
 
 	networkName := fmt.Sprintf("aicli-workspace-%s", workspaceID)
-	
+
 	// 실제 구현에서는 Docker API를 통해 네트워크 조회
 	// 현재는 모의 구현
 	return &NetworkInfo{
@@ -150,7 +150,7 @@ func (nm *NetworkManager) getGatewayIP(subnet string) string {
 	if err != nil {
 		return "" // 에러 처리
 	}
-	
+
 	// 게이트웨이는 네트워크의 첫 번째 IP (.1)
 	ip := network.IP
 	ip[len(ip)-1] = 1
@@ -178,28 +178,28 @@ func (nm *NetworkManager) ValidatePortMapping(portMap map[string]string) error {
 		if err != nil {
 			return fmt.Errorf("invalid host port %s: %w", hostPort, err)
 		}
-		
+
 		// 차단된 포트 검사
 		if nm.isPortBlocked(hostPortNum) {
 			return fmt.Errorf("port %s is blocked by security policy", hostPort)
 		}
-		
+
 		// 포트 범위 검증 (1-65535)
 		if hostPortNum < 1 || hostPortNum > 65535 {
 			return fmt.Errorf("host port %d is out of valid range (1-65535)", hostPortNum)
 		}
-		
+
 		// 컨테이너 포트 검증
 		containerPortNum, err := strconv.Atoi(strings.Split(containerPort, "/")[0])
 		if err != nil {
 			return fmt.Errorf("invalid container port %s: %w", containerPort, err)
 		}
-		
+
 		if containerPortNum < 1 || containerPortNum > 65535 {
 			return fmt.Errorf("container port %d is out of valid range (1-65535)", containerPortNum)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -258,10 +258,10 @@ func (nm *NetworkManager) MonitorNetworkUsage(ctx context.Context, networkID str
 	}
 
 	statsChan := make(chan *NetworkStats, 10)
-	
+
 	go func() {
 		defer close(statsChan)
-		
+
 		// 첫 번째 통계를 즉시 전송
 		stats := &NetworkStats{
 			NetworkID:       networkID,
@@ -272,16 +272,16 @@ func (nm *NetworkManager) MonitorNetworkUsage(ctx context.Context, networkID str
 			ConnectionCount: 5, // 모의 연결 수
 			Timestamp:       time.Now(),
 		}
-		
+
 		select {
 		case statsChan <- stats:
 		case <-ctx.Done():
 			return
 		}
-		
+
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -298,7 +298,7 @@ func (nm *NetworkManager) MonitorNetworkUsage(ctx context.Context, networkID str
 					ConnectionCount: 5, // 모의 연결 수
 					Timestamp:       time.Now(),
 				}
-				
+
 				select {
 				case statsChan <- stats:
 				case <-ctx.Done():
@@ -307,7 +307,7 @@ func (nm *NetworkManager) MonitorNetworkUsage(ctx context.Context, networkID str
 			}
 		}
 	}()
-	
+
 	return statsChan, nil
 }
 
@@ -331,24 +331,24 @@ func (nm *NetworkManager) validateNetworkSecurityPolicy(policy *NetworkSecurityP
 	if policy.MaxBandwidth < 0 {
 		return fmt.Errorf("max bandwidth cannot be negative")
 	}
-	
+
 	if policy.MaxConnections < 0 {
 		return fmt.Errorf("max connections cannot be negative")
 	}
-	
+
 	// 허용/차단 규칙 검증
 	for _, rule := range policy.AllowRules {
 		if err := nm.validateFirewallRule(rule); err != nil {
 			return fmt.Errorf("invalid allow rule: %w", err)
 		}
 	}
-	
+
 	for _, rule := range policy.BlockRules {
 		if err := nm.validateFirewallRule(rule); err != nil {
 			return fmt.Errorf("invalid block rule: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -358,7 +358,7 @@ func (nm *NetworkManager) validateFirewallRule(rule FirewallRule) error {
 	if rule.Protocol != "tcp" && rule.Protocol != "udp" && rule.Protocol != "icmp" {
 		return fmt.Errorf("invalid protocol: %s", rule.Protocol)
 	}
-	
+
 	// 포트 범위 검증
 	if rule.Port != "" {
 		port, err := strconv.Atoi(rule.Port)
@@ -369,7 +369,7 @@ func (nm *NetworkManager) validateFirewallRule(rule FirewallRule) error {
 			return fmt.Errorf("port out of range: %d", port)
 		}
 	}
-	
+
 	// IP 주소/CIDR 검증
 	if rule.Source != "" {
 		if strings.Contains(rule.Source, "/") {
@@ -383,7 +383,7 @@ func (nm *NetworkManager) validateFirewallRule(rule FirewallRule) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 

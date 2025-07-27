@@ -12,18 +12,18 @@ func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 요청 헤더에서 기존 ID 확인
 		requestID := c.GetHeader("X-Request-ID")
-		
+
 		// 없으면 새로 생성
 		if requestID == "" {
 			requestID = generateRequestID()
 		}
-		
+
 		// 컨텍스트에 저장
 		c.Set("request_id", requestID)
-		
+
 		// 응답 헤더에 추가
 		c.Header("X-Request-ID", requestID)
-		
+
 		c.Next()
 	}
 }
@@ -34,11 +34,11 @@ func GetRequestID(c *gin.Context) string {
 	if !exists {
 		return "unknown"
 	}
-	
+
 	if id, ok := requestID.(string); ok {
 		return id
 	}
-	
+
 	return "unknown"
 }
 

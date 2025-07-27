@@ -145,7 +145,6 @@ func (v *WorkspaceBusinessValidator) validateProjectPath(path string) error {
 
 	// 시스템 보호 경로 확인
 	protectedPaths := []string{
-		"/",
 		"/bin",
 		"/boot",
 		"/dev",
@@ -154,13 +153,26 @@ func (v *WorkspaceBusinessValidator) validateProjectPath(path string) error {
 		"/proc",
 		"/root",
 		"/sys",
-		"/usr",
-		"/var",
+		"/usr/bin",
+		"/usr/lib",
+		"/usr/sbin",
+		"/var/lib",
+		"/var/log",
 	}
 
 	absPath, _ := filepath.Abs(path)
+
+	// 루트 디렉토리 자체는 허용하지 않음
+	if absPath == "/" {
+		return NewBusinessValidationError(
+			ErrCodePathNotAccessible,
+			"루트 디렉토리는 사용할 수 없습니다",
+			"project_path",
+		)
+	}
+
 	for _, protected := range protectedPaths {
-		if strings.HasPrefix(absPath, protected) {
+		if absPath == protected || strings.HasPrefix(absPath, protected+"/") {
 			return NewBusinessValidationError(
 				ErrCodePathNotAccessible,
 				"시스템 보호 경로는 사용할 수 없습니다",

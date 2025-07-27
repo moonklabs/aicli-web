@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
+	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
-	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 // RBACController RBAC 관리 컨트롤러
@@ -206,9 +206,9 @@ func (rc *RBACController) ListRoles(c *gin.Context) {
 		"data": gin.H{
 			"roles": roles,
 			"pagination": gin.H{
-				"page":       page,
-				"limit":      limit,
-				"total":      total,
+				"page":        page,
+				"limit":       limit,
+				"total":       total,
 				"total_pages": (total + int64(limit) - 1) / int64(limit),
 			},
 		},
@@ -256,7 +256,7 @@ func (rc *RBACController) UpdateRole(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	
+
 	// 기존 역할 조회
 	role, err := rc.storage.RBAC().GetRoleByID(ctx, roleID)
 	if err != nil {
@@ -363,7 +363,7 @@ func (rc *RBACController) DeleteRole(c *gin.Context) {
 	}
 
 	ctx := context.Background()
-	
+
 	// 기존 역할 조회
 	role, err := rc.storage.RBAC().GetRoleByID(ctx, roleID)
 	if err != nil {
@@ -552,9 +552,9 @@ func (rc *RBACController) ListPermissions(c *gin.Context) {
 		"data": gin.H{
 			"permissions": permissions,
 			"pagination": gin.H{
-				"page":       page,
-				"limit":      limit,
-				"total":      total,
+				"page":        page,
+				"limit":       limit,
+				"total":       total,
 				"total_pages": (total + int64(limit) - 1) / int64(limit),
 			},
 		},

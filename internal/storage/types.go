@@ -9,7 +9,7 @@ import (
 type Serializer interface {
 	// Marshal 객체를 바이트 슬라이스로 직렬화
 	Marshal(v interface{}) ([]byte, error)
-	
+
 	// Unmarshal 바이트 슬라이스를 객체로 역직렬화
 	Unmarshal(data []byte, v interface{}) error
 }
@@ -37,7 +37,7 @@ type PagingRequest struct {
 
 // PagingResponse 페이징 응답
 type PagingResponse struct {
-	Data       interface{} `json:"data"`
+	Data       interface{}     `json:"data"`
 	Pagination *PaginationMeta `json:"pagination"`
 }
 
@@ -53,7 +53,7 @@ type PaginationMeta struct {
 type QueryMonitor interface {
 	// RecordQuery 쿼리 실행 기록
 	RecordQuery(query string, duration int64, error error)
-	
+
 	// GetStats 쿼리 통계 반환
 	GetStats() map[string]interface{}
 }
@@ -90,13 +90,13 @@ type TransactionFunc func() error
 type Transactioner interface {
 	// Begin 트랜잭션 시작
 	Begin() error
-	
+
 	// Commit 트랜잭션 커밋
 	Commit() error
-	
+
 	// Rollback 트랜잭션 롤백
 	Rollback() error
-	
+
 	// RunInTransaction 트랜잭션 내에서 함수 실행
 	RunInTransaction(fn TransactionFunc) error
 }
@@ -111,4 +111,3 @@ type NotFoundError struct {
 func (e NotFoundError) Error() string {
 	return fmt.Sprintf("%s not found: %s", e.Resource, e.ID)
 }
-

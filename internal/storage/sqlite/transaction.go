@@ -15,7 +15,7 @@ type transaction struct {
 	tx      *sql.Tx
 	storage *Storage
 	closed  bool
-	
+
 	// 트랜잭션 스토리지들
 	workspace *transactionWorkspaceStorage
 	project   *transactionProjectStorage
@@ -30,13 +30,13 @@ func newTransaction(tx *sql.Tx, storage *Storage) *transaction {
 		storage: storage,
 		closed:  false,
 	}
-	
+
 	// 트랜잭션용 스토리지 생성
 	t.workspace = &transactionWorkspaceStorage{tx: tx, storage: storage}
 	t.project = &transactionProjectStorage{tx: tx, storage: storage}
 	t.session = &transactionSessionStorage{tx: tx, storage: storage}
 	t.task = &transactionTaskStorage{tx: tx, storage: storage}
-	
+
 	return t
 }
 
@@ -45,13 +45,13 @@ func (t *transaction) Commit() error {
 	if t.closed {
 		return fmt.Errorf("transaction is already closed")
 	}
-	
+
 	t.closed = true
 	err := t.tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -60,13 +60,13 @@ func (t *transaction) Rollback() error {
 	if t.closed {
 		return fmt.Errorf("transaction is already closed")
 	}
-	
+
 	t.closed = true
 	err := t.tx.Rollback()
 	if err != nil {
 		return fmt.Errorf("failed to rollback transaction: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -115,12 +115,12 @@ func (t *transactionWorkspaceStorage) execContext(ctx context.Context, query str
 		return nil, fmt.Errorf("prepare statement: %w", err)
 	}
 	defer stmt.Close()
-	
+
 	result, err := stmt.ExecContext(ctx, args...)
 	if err != nil {
 		return nil, storage.ConvertError(err, "exec in transaction", "sqlite")
 	}
-	
+
 	return result, nil
 }
 
@@ -131,12 +131,12 @@ func (t *transactionWorkspaceStorage) queryContext(ctx context.Context, query st
 		return nil, fmt.Errorf("prepare statement: %w", err)
 	}
 	defer stmt.Close()
-	
+
 	rows, err := stmt.QueryContext(ctx, args...)
 	if err != nil {
 		return nil, storage.ConvertError(err, "query in transaction", "sqlite")
 	}
-	
+
 	return rows, nil
 }
 
@@ -152,7 +152,7 @@ func (t *transactionWorkspaceStorage) queryRowContext(ctx context.Context, query
 func (t *transactionWorkspaceStorage) Create(ctx context.Context, workspace *models.Workspace) error {
 	// 트랜잭션용 임시 워크스페이스 스토리지 생성
 	tempStorage := &workspaceStorage{storage: t.storage}
-	
+
 	// 실행 메서드를 트랜잭션용으로 오버라이드
 	return t.createInTx(ctx, workspace, tempStorage)
 }
@@ -161,13 +161,13 @@ func (t *transactionWorkspaceStorage) Create(ctx context.Context, workspace *mod
 func (t *transactionWorkspaceStorage) createInTx(ctx context.Context, workspace *models.Workspace, ws *workspaceStorage) error {
 	// 원본 workspaceStorage의 Create 로직을 복사하되, tx를 사용
 	now := time.Now()
-	
+
 	if workspace.Status == "" {
 		workspace.Status = models.WorkspaceStatusActive
 	}
 	workspace.CreatedAt = now
 	workspace.UpdatedAt = now
-	
+
 	_, err := t.execContext(ctx, insertWorkspaceQuery,
 		workspace.ID,
 		workspace.Name,
@@ -179,16 +179,16 @@ func (t *transactionWorkspaceStorage) createInTx(ctx context.Context, workspace 
 		workspace.CreatedAt,
 		workspace.UpdatedAt,
 	)
-	
+
 	return err
 }
 
 // GetByID ID로 워크스페이스 조회 (트랜잭션 내)
 func (t *transactionWorkspaceStorage) GetByID(ctx context.Context, id string) (*models.Workspace, error) {
 	query := selectWorkspaceQuery + ` WHERE id = ? AND deleted_at IS NULL`
-	
+
 	row := t.queryRowContext(ctx, query, id)
-	
+
 	workspace, err := t.scanWorkspace(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -196,7 +196,7 @@ func (t *transactionWorkspaceStorage) GetByID(ctx context.Context, id string) (*
 		}
 		return nil, storage.ConvertError(err, "get workspace by id in tx", "sqlite")
 	}
-	
+
 	return workspace, nil
 }
 
@@ -205,7 +205,7 @@ func (t *transactionWorkspaceStorage) scanWorkspace(row *sql.Row) (*models.Works
 	workspace := &models.Workspace{}
 	var deletedAt sql.NullTime
 	var claudeKey sql.NullString
-	
+
 	err := row.Scan(
 		&workspace.ID,
 		&workspace.Name,
@@ -218,11 +218,11 @@ func (t *transactionWorkspaceStorage) scanWorkspace(row *sql.Row) (*models.Works
 		&workspace.UpdatedAt,
 		&deletedAt,
 	)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// NULL 값 처리
 	if claudeKey.Valid {
 		workspace.ClaudeKey = claudeKey.String
@@ -230,7 +230,7 @@ func (t *transactionWorkspaceStorage) scanWorkspace(row *sql.Row) (*models.Works
 	if deletedAt.Valid {
 		workspace.DeletedAt = &deletedAt.Time
 	}
-	
+
 	return workspace, nil
 }
 
@@ -266,36 +266,36 @@ func (t *transactionWorkspaceStorage) List(ctx context.Context, pagination *mode
 func (t *transactionWorkspaceStorage) ExistsByName(ctx context.Context, ownerID, name string) (bool, error) {
 	var exists int
 	err := t.queryRowContext(ctx, existsWorkspaceByNameQuery, ownerID, name).Scan(&exists)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
 		return false, storage.ConvertError(err, "check workspace exists by name in tx", "sqlite")
 	}
-	
+
 	return exists == 1, nil
 }
 
 // CountByOwner 소유자별 워크스페이스 개수 조회 (트랜잭션 내)
 func (t *transactionWorkspaceStorage) CountByOwner(ctx context.Context, ownerID string) (int, error) {
 	query := countWorkspacesQuery + ` WHERE owner_id = ? AND deleted_at IS NULL`
-	
+
 	var count int
 	err := t.queryRowContext(ctx, query, ownerID).Scan(&count)
 	if err != nil {
 		return 0, storage.ConvertError(err, "count workspaces by owner in tx", "sqlite")
 	}
-	
+
 	return count, nil
 }
 
 // GetByName 이름으로 워크스페이스 조회 (트랜잭션 내)
 func (t *transactionWorkspaceStorage) GetByName(ctx context.Context, ownerID, name string) (*models.Workspace, error) {
 	query := selectWorkspaceQuery + ` WHERE owner_id = ? AND name = ? AND deleted_at IS NULL`
-	
+
 	row := t.queryRowContext(ctx, query, ownerID, name)
-	
+
 	workspace, err := t.scanWorkspace(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -303,7 +303,7 @@ func (t *transactionWorkspaceStorage) GetByName(ctx context.Context, ownerID, na
 		}
 		return nil, storage.ConvertError(err, "get workspace by name in tx", "sqlite")
 	}
-	
+
 	return workspace, nil
 }
 
@@ -374,7 +374,7 @@ func (t *transactionSessionStorage) GetActiveCount(ctx context.Context, projectI
 	return 0, fmt.Errorf("session transaction methods not implemented yet")
 }
 
-// transactionTaskStorage 트랜잭션용 태스크 스토리지 (기본 구현)  
+// transactionTaskStorage 트랜잭션용 태스크 스토리지 (기본 구현)
 type transactionTaskStorage struct {
 	tx      *sql.Tx
 	storage *Storage

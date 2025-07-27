@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 	"time"
-	
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	
+
 	"github.com/aicli/aicli-web/internal/storage"
 	"github.com/aicli/aicli-web/internal/storage/memory"
 )
@@ -15,7 +15,7 @@ import (
 // TestDefaultStorageConfig 기본 스토리지 설정 테스트
 func TestDefaultStorageConfig(t *testing.T) {
 	config := storage.DefaultStorageConfig()
-	
+
 	assert.Equal(t, storage.StorageTypeMemory, config.Type)
 	assert.Empty(t, config.DataSource)
 	assert.Equal(t, 10, config.MaxConns)
@@ -35,17 +35,17 @@ func TestValidateStorageConfig(t *testing.T) {
 		errMsg  string
 	}{
 		{
-			name:   "유효한 메모리 설정",
-			config: storage.StorageConfig{Type: storage.StorageTypeMemory, MaxConns: 5, Timeout: time.Second, RetryInterval: time.Second},
+			name:    "유효한 메모리 설정",
+			config:  storage.StorageConfig{Type: storage.StorageTypeMemory, MaxConns: 5, Timeout: time.Second, RetryInterval: time.Second},
 			wantErr: false,
 		},
 		{
 			name: "유효한 SQLite 설정",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeSQLite, 
-				DataSource: "/tmp/test.db", 
-				MaxConns: 5, 
-				Timeout: time.Second,
+				Type:          storage.StorageTypeSQLite,
+				DataSource:    "/tmp/test.db",
+				MaxConns:      5,
+				Timeout:       time.Second,
 				RetryInterval: time.Second,
 			},
 			wantErr: false,
@@ -65,9 +65,9 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "SQLite 데이터 소스 누락",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeSQLite, 
-				MaxConns: 5, 
-				Timeout: time.Second,
+				Type:          storage.StorageTypeSQLite,
+				MaxConns:      5,
+				Timeout:       time.Second,
 				RetryInterval: time.Second,
 			},
 			wantErr: true,
@@ -76,9 +76,9 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "잘못된 최대 연결 수",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeMemory, 
-				MaxConns: 0, 
-				Timeout: time.Second,
+				Type:          storage.StorageTypeMemory,
+				MaxConns:      0,
+				Timeout:       time.Second,
 				RetryInterval: time.Second,
 			},
 			wantErr: true,
@@ -87,10 +87,10 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "유휴 연결 수 초과",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeMemory, 
-				MaxConns: 5, 
-				MaxIdleConns: 10, 
-				Timeout: time.Second,
+				Type:          storage.StorageTypeMemory,
+				MaxConns:      5,
+				MaxIdleConns:  10,
+				Timeout:       time.Second,
 				RetryInterval: time.Second,
 			},
 			wantErr: true,
@@ -99,9 +99,9 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "잘못된 타임아웃",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeMemory, 
-				MaxConns: 5, 
-				Timeout: 0,
+				Type:          storage.StorageTypeMemory,
+				MaxConns:      5,
+				Timeout:       0,
 				RetryInterval: time.Second,
 			},
 			wantErr: true,
@@ -110,10 +110,10 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "잘못된 재시도 횟수",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeMemory, 
-				MaxConns: 5, 
-				Timeout: time.Second, 
-				RetryCount: -1,
+				Type:          storage.StorageTypeMemory,
+				MaxConns:      5,
+				Timeout:       time.Second,
+				RetryCount:    -1,
 				RetryInterval: time.Second,
 			},
 			wantErr: true,
@@ -122,20 +122,20 @@ func TestValidateStorageConfig(t *testing.T) {
 		{
 			name: "잘못된 재시도 간격",
 			config: storage.StorageConfig{
-				Type: storage.StorageTypeMemory, 
-				MaxConns: 5, 
-				Timeout: time.Second, 
+				Type:          storage.StorageTypeMemory,
+				MaxConns:      5,
+				Timeout:       time.Second,
 				RetryInterval: 0,
 			},
 			wantErr: true,
 			errMsg:  "재시도 간격은 0보다 커야 합니다",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := storage.ValidateStorageConfig(tt.config)
-			
+
 			if tt.wantErr {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errMsg)
@@ -156,12 +156,12 @@ func TestDefaultStorageFactory(t *testing.T) {
 func TestDefaultStorageFactoryCreateMemory(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:     storage.StorageTypeMemory,
-		MaxConns: 5,
-		Timeout:  time.Second * 10,
+		Type:          storage.StorageTypeMemory,
+		MaxConns:      5,
+		Timeout:       time.Second * 10,
 		RetryInterval: time.Second,
 	}
-	
+
 	// 메모리 스토리지는 factory에서 직접 생성하지 않음
 	storage, err := factory.Create(config)
 	require.Error(t, err)
@@ -173,13 +173,13 @@ func TestDefaultStorageFactoryCreateMemory(t *testing.T) {
 func TestDefaultStorageFactoryCreateSQLite(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:       storage.StorageTypeSQLite,
-		DataSource: "/tmp/test.db",
-		MaxConns:   5,
-		Timeout:    time.Second * 10,
+		Type:          storage.StorageTypeSQLite,
+		DataSource:    "/tmp/test.db",
+		MaxConns:      5,
+		Timeout:       time.Second * 10,
 		RetryInterval: time.Second,
 	}
-	
+
 	storage, err := factory.Create(config)
 	assert.Error(t, err)
 	assert.Nil(t, storage)
@@ -190,13 +190,13 @@ func TestDefaultStorageFactoryCreateSQLite(t *testing.T) {
 func TestDefaultStorageFactoryCreateBoltDB(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:       storage.StorageTypeBoltDB,
-		DataSource: "/tmp/test.boltdb",
-		MaxConns:   5,
-		Timeout:    time.Second * 10,
+		Type:          storage.StorageTypeBoltDB,
+		DataSource:    "/tmp/test.boltdb",
+		MaxConns:      5,
+		Timeout:       time.Second * 10,
 		RetryInterval: time.Second,
 	}
-	
+
 	storage, err := factory.Create(config)
 	assert.Error(t, err)
 	assert.Nil(t, storage)
@@ -207,12 +207,12 @@ func TestDefaultStorageFactoryCreateBoltDB(t *testing.T) {
 func TestDefaultStorageFactoryCreateInvalidType(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:     "invalid",
-		MaxConns: 5,
-		Timeout:  time.Second * 10,
+		Type:          "invalid",
+		MaxConns:      5,
+		Timeout:       time.Second * 10,
 		RetryInterval: time.Second,
 	}
-	
+
 	storage, err := factory.Create(config)
 	assert.Error(t, err)
 	assert.Nil(t, storage)
@@ -222,33 +222,33 @@ func TestDefaultStorageFactoryCreateInvalidType(t *testing.T) {
 // TestDefaultStorageFactoryHealthCheck 헬스체크 테스트
 func TestDefaultStorageFactoryHealthCheck(t *testing.T) {
 	factory := storage.NewDefaultStorageFactory()
-	
+
 	t.Run("nil 스토리지", func(t *testing.T) {
 		err := factory.HealthCheck(context.Background(), nil)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "스토리지가 nil입니다")
 	})
-	
+
 	t.Run("정상 스토리지", func(t *testing.T) {
 		// 메모리 스토리지 직접 생성
 		memStorage := memory.New()
 		defer memStorage.Close()
-		
+
 		err := factory.HealthCheck(context.Background(), memStorage)
 		assert.NoError(t, err)
 	})
-	
+
 	t.Run("타임아웃 컨텍스트", func(t *testing.T) {
 		// 메모리 스토리지 직접 생성
 		memStorage := memory.New()
 		defer memStorage.Close()
-		
+
 		ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
 		defer cancel()
-		
+
 		// 매우 짧은 타임아웃으로 인해 컨텍스트가 취소될 가능성이 높음
 		time.Sleep(time.Millisecond) // 타임아웃 발생을 위한 대기
-		
+
 		_ = factory.HealthCheck(ctx, memStorage)
 		// 타임아웃이나 정상 완료 모두 허용 (컨텍스트 타이밍에 따라 다름)
 		// context deadline exceeded 오류가 발생할 수 있음
@@ -259,12 +259,12 @@ func TestDefaultStorageFactoryHealthCheck(t *testing.T) {
 func BenchmarkStorageFactoryCreate(b *testing.B) {
 	factory := storage.NewDefaultStorageFactory()
 	config := storage.StorageConfig{
-		Type:     storage.StorageTypeMemory,
-		MaxConns: 5,
-		Timeout:  time.Second * 10,
+		Type:          storage.StorageTypeMemory,
+		MaxConns:      5,
+		Timeout:       time.Second * 10,
 		RetryInterval: time.Second,
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		storage, err := factory.Create(config)
@@ -277,7 +277,7 @@ func BenchmarkStorageFactoryCreate(b *testing.B) {
 
 func BenchmarkValidateStorageConfig(b *testing.B) {
 	config := storage.DefaultStorageConfig()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = storage.ValidateStorageConfig(config)

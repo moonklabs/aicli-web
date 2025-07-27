@@ -44,21 +44,21 @@ func NewTokenManager(token string, apiKey string, refreshFunc TokenRefreshFunc) 
 // GetToken 유효한 토큰을 반환합니다
 func (tm *tokenManager) GetToken(ctx context.Context) (string, error) {
 	tm.mu.RLock()
-	
+
 	// OAuth 토큰이 있고 유효한 경우
 	if tm.token != "" && time.Now().Before(tm.expiresAt) {
 		token := tm.token
 		tm.mu.RUnlock()
 		return token, nil
 	}
-	
+
 	// API 키가 있는 경우 (fallback)
 	if tm.apiKey != "" {
 		apiKey := tm.apiKey
 		tm.mu.RUnlock()
 		return apiKey, nil
 	}
-	
+
 	tm.mu.RUnlock()
 
 	// 토큰 갱신 시도
@@ -125,7 +125,7 @@ func (tm *tokenManager) ValidateToken(token string) error {
 func (tm *tokenManager) SetToken(token string, expiresAt time.Time) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
-	
+
 	tm.token = token
 	tm.expiresAt = expiresAt
 }

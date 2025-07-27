@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/pkg/version"
+	"github.com/gin-gonic/gin"
 )
 
 // HealthResponse는 헬스체크 응답 구조체입니다.

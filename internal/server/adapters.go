@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	
+
 	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/websocket"
 )
@@ -24,7 +24,7 @@ func (adapter *MessageBroadcasterAdapter) Broadcast(message interface{}) {
 	if adapter.hub == nil {
 		return
 	}
-	
+
 	// interface{}를 websocket.Message로 변환
 	wsMessage := adapter.convertToWebSocketMessage(message)
 	if wsMessage != nil {
@@ -37,7 +37,7 @@ func (adapter *MessageBroadcasterAdapter) BroadcastToWorkspace(workspaceID strin
 	if adapter.hub == nil {
 		return
 	}
-	
+
 	// interface{}를 websocket.Message로 변환
 	wsMessage := adapter.convertToWebSocketMessage(message)
 	if wsMessage != nil {
@@ -54,7 +54,7 @@ func (adapter *MessageBroadcasterAdapter) convertToWebSocketMessage(message inte
 	if err != nil {
 		return nil
 	}
-	
+
 	// websocket.Message 생성
 	return &websocket.Message{
 		Type: "claude_execution",

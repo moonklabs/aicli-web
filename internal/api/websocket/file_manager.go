@@ -19,15 +19,15 @@ type FileManager struct {
 	storage     storage.Storage
 	uploadsPath string
 	mutex       sync.RWMutex
-	
+
 	// 파일 캐시 및 메타데이터
-	fileCache    map[string]*FileMetadata
-	cacheMutex   sync.RWMutex
-	
+	fileCache  map[string]*FileMetadata
+	cacheMutex sync.RWMutex
+
 	// 업로드 진행 상태 추적
 	uploadProgress map[string]*UploadProgress
 	progressMutex  sync.RWMutex
-	
+
 	// 설정
 	config FileManagerConfig
 }
@@ -55,31 +55,31 @@ type FileMetadata struct {
 
 // UploadProgress는 업로드 진행 상태입니다
 type UploadProgress struct {
-	FileID         string    `json:"file_id"`
-	SessionID      string    `json:"session_id"`
-	UserID         string    `json:"user_id"`
-	FileName       string    `json:"file_name"`
-	TotalSize      int64     `json:"total_size"`
-	UploadedSize   int64     `json:"uploaded_size"`
-	Progress       float64   `json:"progress"`
-	Status         string    `json:"status"`
-	StartTime      time.Time `json:"start_time"`
-	LastUpdate     time.Time `json:"last_update"`
-	EstimatedTime  time.Duration `json:"estimated_time"`
-	Error          string    `json:"error,omitempty"`
+	FileID        string        `json:"file_id"`
+	SessionID     string        `json:"session_id"`
+	UserID        string        `json:"user_id"`
+	FileName      string        `json:"file_name"`
+	TotalSize     int64         `json:"total_size"`
+	UploadedSize  int64         `json:"uploaded_size"`
+	Progress      float64       `json:"progress"`
+	Status        string        `json:"status"`
+	StartTime     time.Time     `json:"start_time"`
+	LastUpdate    time.Time     `json:"last_update"`
+	EstimatedTime time.Duration `json:"estimated_time"`
+	Error         string        `json:"error,omitempty"`
 }
 
 // FileManagerConfig는 파일 매니저 설정입니다
 type FileManagerConfig struct {
-	UploadsPath       string            `json:"uploads_path"`
-	MaxFileSize       int64             `json:"max_file_size"`
-	MaxFilesPerSession int              `json:"max_files_per_session"`
-	AllowedMimeTypes  []string          `json:"allowed_mime_types"`
-	BlockedExtensions []string          `json:"blocked_extensions"`
-	EnableVirusScanning bool            `json:"enable_virus_scanning"`
-	EnableCompression bool              `json:"enable_compression"`
-	CleanupInterval   time.Duration     `json:"cleanup_interval"`
-	TempFileExpiry    time.Duration     `json:"temp_file_expiry"`
+	UploadsPath         string        `json:"uploads_path"`
+	MaxFileSize         int64         `json:"max_file_size"`
+	MaxFilesPerSession  int           `json:"max_files_per_session"`
+	AllowedMimeTypes    []string      `json:"allowed_mime_types"`
+	BlockedExtensions   []string      `json:"blocked_extensions"`
+	EnableVirusScanning bool          `json:"enable_virus_scanning"`
+	EnableCompression   bool          `json:"enable_compression"`
+	CleanupInterval     time.Duration `json:"cleanup_interval"`
+	TempFileExpiry      time.Duration `json:"temp_file_expiry"`
 }
 
 // FileStatus는 파일 상태입니다
@@ -96,22 +96,22 @@ const (
 
 // FileUploadRequest는 파일 업로드 요청입니다
 type FileUploadRequest struct {
-	SessionID   string            `json:"session_id"`
-	FileName    string            `json:"file_name"`
-	FileSize    int64             `json:"file_size"`
-	MimeType    string            `json:"mime_type"`
-	Checksum    string            `json:"checksum,omitempty"`
-	IsTemporary bool              `json:"is_temporary,omitempty"`
-	Tags        []string          `json:"tags,omitempty"`
+	SessionID   string                 `json:"session_id"`
+	FileName    string                 `json:"file_name"`
+	FileSize    int64                  `json:"file_size"`
+	MimeType    string                 `json:"mime_type"`
+	Checksum    string                 `json:"checksum,omitempty"`
+	IsTemporary bool                   `json:"is_temporary,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // FileUploadResponse는 파일 업로드 응답입니다
 type FileUploadResponse struct {
-	FileID      string `json:"file_id"`
-	UploadURL   string `json:"upload_url"`
-	Message     string `json:"message"`
-	MaxChunkSize int   `json:"max_chunk_size"`
+	FileID       string `json:"file_id"`
+	UploadURL    string `json:"upload_url"`
+	Message      string `json:"message"`
+	MaxChunkSize int    `json:"max_chunk_size"`
 }
 
 // FileDownloadRequest는 파일 다운로드 요청입니다
@@ -123,13 +123,13 @@ type FileDownloadRequest struct {
 
 // FileListRequest는 파일 목록 요청입니다
 type FileListRequest struct {
-	SessionID    string   `json:"session_id"`
-	FileTypes    []string `json:"file_types,omitempty"`
-	Tags         []string `json:"tags,omitempty"`
-	SortBy       string   `json:"sort_by,omitempty"`
-	SortOrder    string   `json:"sort_order,omitempty"`
-	Limit        int      `json:"limit,omitempty"`
-	Offset       int      `json:"offset,omitempty"`
+	SessionID string   `json:"session_id"`
+	FileTypes []string `json:"file_types,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+	SortBy    string   `json:"sort_by,omitempty"`
+	SortOrder string   `json:"sort_order,omitempty"`
+	Limit     int      `json:"limit,omitempty"`
+	Offset    int      `json:"offset,omitempty"`
 }
 
 // ChunkUploadRequest는 청크 업로드 요청입니다
@@ -237,14 +237,14 @@ func (fm *FileManager) InitiateUpload(request FileUploadRequest, userID, userNam
 
 	// 업로드 진행 상태 초기화
 	progress := &UploadProgress{
-		FileID:      fileID,
-		SessionID:   request.SessionID,
-		UserID:      userID,
-		FileName:    request.FileName,
-		TotalSize:   request.FileSize,
-		Status:      "initiated",
-		StartTime:   time.Now(),
-		LastUpdate:  time.Now(),
+		FileID:     fileID,
+		SessionID:  request.SessionID,
+		UserID:     userID,
+		FileName:   request.FileName,
+		TotalSize:  request.FileSize,
+		Status:     "initiated",
+		StartTime:  time.Now(),
+		LastUpdate: time.Now(),
 	}
 
 	// 캐시에 저장
@@ -308,7 +308,7 @@ func (fm *FileManager) UploadChunk(fileID string, chunkIndex int, chunkData []by
 	progress.UploadedSize += int64(len(chunkData))
 	progress.Progress = float64(progress.UploadedSize) / float64(progress.TotalSize) * 100
 	progress.LastUpdate = time.Now()
-	
+
 	elapsed := time.Since(progress.StartTime)
 	if progress.UploadedSize > 0 {
 		estimatedTotal := elapsed * time.Duration(progress.TotalSize) / time.Duration(progress.UploadedSize)
@@ -336,12 +336,12 @@ func (fm *FileManager) GetFile(fileID, sessionID string) (*FileMetadata, error) 
 	fm.cacheMutex.RLock()
 	if metadata, exists := fm.fileCache[fileID]; exists {
 		fm.cacheMutex.RUnlock()
-		
+
 		// 세션 접근 권한 확인
 		if metadata.SessionID != sessionID {
 			return nil, fmt.Errorf("access denied to file")
 		}
-		
+
 		// 마지막 접근 시간 업데이트
 		metadata.LastAccessed = time.Now()
 		return metadata, nil
@@ -546,7 +546,7 @@ func (fm *FileManager) assembleFile(fileID string, metadata *FileMetadata) error
 	chunkIndex := 0
 	for {
 		chunkPath := filepath.Join(tempDir, fmt.Sprintf("%s_chunk_%d", fileID, chunkIndex))
-		
+
 		chunkFile, err := os.Open(chunkPath)
 		if err != nil {
 			if os.IsNotExist(err) {

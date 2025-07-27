@@ -192,15 +192,14 @@ func (fm *FileManager) RestoreBackup() error {
 func (fm *FileManager) RemoveConfig() error {
 	fm.mutex.Lock()
 	defer fm.mutex.Unlock()
-	
+
 	if !fm.configExists() {
 		return nil
 	}
-	
+
 	if err := os.Remove(fm.configPath); err != nil {
 		return fmt.Errorf("failed to remove config file: %w", err)
 	}
-	
+
 	return nil
 }
-

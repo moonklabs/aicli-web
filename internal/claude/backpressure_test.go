@@ -168,7 +168,7 @@ func TestBackpressureHandler(t *testing.T) {
 
 		// 메트릭 확인
 		metrics := handler.GetMetrics()
-		assert.NotNil(t, metrics)
+		assert.NotNil(t, &metrics)
 	})
 
 	t.Run("Metrics Accuracy", func(t *testing.T) {
@@ -265,9 +265,9 @@ func TestBackpressureIntegration(t *testing.T) {
 		// 검증
 		producedCount := atomic.LoadInt64(&produced)
 		consumedCount := atomic.LoadInt64(&consumed)
-		
+
 		t.Logf("Produced: %d, Consumed: %d", producedCount, consumedCount)
-		
+
 		// 버퍼 크기를 고려한 차이 검증
 		diff := producedCount - consumedCount
 		assert.True(t, diff >= 0 && diff <= 100, "Buffer overflow detected")
@@ -384,7 +384,7 @@ func TestBackpressureReset(t *testing.T) {
 
 	// 검증
 	assert.Equal(t, int64(0), handler.GetCurrentBufferSize())
-	
+
 	metrics := handler.GetMetrics()
 	assert.Equal(t, int64(0), metrics.DroppedMessages)
 	assert.Equal(t, int64(0), metrics.BackpressureEvents)

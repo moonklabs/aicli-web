@@ -37,7 +37,7 @@ type ValidationManager struct {
 // NewValidationManager 새로운 검증 관리자 생성
 func NewValidationManager() *ValidationManager {
 	v := validator.New()
-	
+
 	// JSON 태그를 필드명으로 사용
 	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
@@ -61,13 +61,13 @@ func NewValidationManager() *ValidationManager {
 // GetGinValidator Gin의 validator를 반환하고 커스텀 검증자 등록
 func GetGinValidator() *ValidationManager {
 	manager := NewValidationManager()
-	
+
 	// Gin의 기본 validator에 커스텀 함수들 등록
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		// 기존 utils의 함수들과 통합
 		v.RegisterValidation("dir", validateDirectory)
 		v.RegisterValidation("safepath", validateSafePath)
-		
+
 		// 새로운 검증 함수들 추가
 		v.RegisterValidation("workspace_status", validateWorkspaceStatus)
 		v.RegisterValidation("project_status", validateProjectStatus)
@@ -123,11 +123,11 @@ func (vm *ValidationManager) ValidateBusinessCreate(ctx context.Context, model i
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
 	}
-	
+
 	if businessValidator, exists := vm.business[modelType]; exists {
 		return businessValidator.ValidateCreate(ctx, model)
 	}
-	
+
 	return nil
 }
 
@@ -137,11 +137,11 @@ func (vm *ValidationManager) ValidateBusinessUpdate(ctx context.Context, model i
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
 	}
-	
+
 	if businessValidator, exists := vm.business[modelType]; exists {
 		return businessValidator.ValidateUpdate(ctx, model)
 	}
-	
+
 	return nil
 }
 
@@ -151,11 +151,11 @@ func (vm *ValidationManager) ValidateBusinessDelete(ctx context.Context, model i
 	if modelType.Kind() == reflect.Ptr {
 		modelType = modelType.Elem()
 	}
-	
+
 	if businessValidator, exists := vm.business[modelType]; exists {
 		return businessValidator.ValidateDelete(ctx, id)
 	}
-	
+
 	return nil
 }
 
@@ -227,13 +227,13 @@ func validateNoSpecialChars(fl validator.FieldLevel) bool {
 
 	// 허용되지 않는 특수문자들
 	dangerousChars := []rune{'<', '>', '&', '"', '\'', '/', '\\', '|', '?', '*', ':', ';'}
-	
+
 	for _, char := range str {
 		// 제어 문자 검사
 		if unicode.IsControl(char) {
 			return false
 		}
-		
+
 		// 위험한 특수문자 검사
 		for _, dangerous := range dangerousChars {
 			if char == dangerous {
@@ -241,7 +241,7 @@ func validateNoSpecialChars(fl validator.FieldLevel) bool {
 			}
 		}
 	}
-	
+
 	return true
 }
 

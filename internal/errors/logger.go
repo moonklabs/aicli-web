@@ -83,15 +83,15 @@ func NewFileErrorLogger(logPath string, level LogLevel) (*FileErrorLogger, error
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return nil, fmt.Errorf("로그 디렉토리 생성 실패: %w", err)
 	}
-	
+
 	// 로그 파일 열기 (append 모드)
 	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("로그 파일 열기 실패: %w", err)
 	}
-	
+
 	logger := log.New(file, "", 0) // 커스텀 포맷 사용을 위해 플래그 제거
-	
+
 	return &FileErrorLogger{
 		level:     level,
 		output:    file,
@@ -105,7 +105,7 @@ func NewFileErrorLogger(logPath string, level LogLevel) (*FileErrorLogger, error
 func NewConsoleErrorLogger(level LogLevel, colorEnabled bool) *FileErrorLogger {
 	formatter := NewHumanErrorFormatter(colorEnabled, true)
 	logger := log.New(os.Stderr, "", 0)
-	
+
 	return &FileErrorLogger{
 		level:     level,
 		output:    os.Stderr,
@@ -124,19 +124,19 @@ func (l *FileErrorLogger) LogErrorWithLevel(level LogLevel, err *CLIError) {
 	if l.level == LogLevelSilent || level > l.level {
 		return
 	}
-	
+
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	
+
 	// 로그 엔트리 생성
 	var logEntry strings.Builder
 	logEntry.WriteString(fmt.Sprintf("[%s] %s: ", timestamp, level.String()))
-	
+
 	// 에러 포맷팅
 	if l.formatter != nil {
 		// 상세 정보는 DEBUG 레벨에서만 출력
 		verbose := l.level >= LogLevelDebug
 		formatted := l.formatter.FormatWithDetails(err, verbose)
-		
+
 		// 멀티라인 로그를 위해 각 줄에 접두사 추가
 		lines := strings.Split(strings.TrimSpace(formatted), "\n")
 		for i, line := range lines {
@@ -149,12 +149,12 @@ func (l *FileErrorLogger) LogErrorWithLevel(level LogLevel, err *CLIError) {
 	} else {
 		logEntry.WriteString(err.Error())
 	}
-	
+
 	// 구분선 추가 (DEBUG 레벨에서만)
 	if l.level >= LogLevelDebug {
 		logEntry.WriteString(fmt.Sprintf("\n[%s] %s: ---", timestamp, level.String()))
 	}
-	
+
 	// 로그 출력
 	l.logger.Println(logEntry.String())
 }
@@ -243,7 +243,7 @@ func (m *MultiErrorLogger) Close() error {
 			errors = append(errors, err.Error())
 		}
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("로거 종료 중 오류 발생: %s", strings.Join(errors, ", "))
 	}
@@ -256,7 +256,7 @@ var GlobalErrorLogger ErrorLogger
 // InitializeGlobalLogger는 전역 로거를 초기화합니다.
 func InitializeGlobalLogger(logPath string, level LogLevel, enableConsole bool) error {
 	var loggers []ErrorLogger
-	
+
 	// 파일 로거 추가 (항상)
 	if logPath != "" {
 		fileLogger, err := NewFileErrorLogger(logPath, level)
@@ -265,14 +265,14 @@ func InitializeGlobalLogger(logPath string, level LogLevel, enableConsole bool) 
 		}
 		loggers = append(loggers, fileLogger)
 	}
-	
+
 	// 콘솔 로거 추가 (선택적)
 	if enableConsole {
 		colorEnabled := os.Getenv("NO_COLOR") == ""
 		consoleLogger := NewConsoleErrorLogger(level, colorEnabled)
 		loggers = append(loggers, consoleLogger)
 	}
-	
+
 	if len(loggers) == 1 {
 		GlobalErrorLogger = loggers[0]
 	} else if len(loggers) > 1 {
@@ -281,7 +281,7 @@ func InitializeGlobalLogger(logPath string, level LogLevel, enableConsole bool) 
 		// 로거가 없으면 콘솔 로거 사용
 		GlobalErrorLogger = NewConsoleErrorLogger(LogLevelError, false)
 	}
-	
+
 	return nil
 }
 

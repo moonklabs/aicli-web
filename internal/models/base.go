@@ -11,13 +11,13 @@ type Base = BaseModel
 type BaseModel struct {
 	// 고유 식별자 (UUID v4)
 	ID string `json:"id" gorm:"primaryKey;type:char(36)" validate:"omitempty,uuid"`
-	
+
 	// 레코드 생성 시간
 	CreatedAt time.Time `json:"created_at" gorm:"not null" validate:"-"`
-	
+
 	// 레코드 업데이트 시간
 	UpdatedAt time.Time `json:"updated_at" gorm:"not null" validate:"-"`
-	
+
 	// 버전 번호 (낙관적 잠금용)
 	Version int `json:"version" gorm:"default:1" validate:"min=1"`
 }

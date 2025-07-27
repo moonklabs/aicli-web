@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/aicli/aicli-web/internal/cli/commands"
 	"github.com/aicli/aicli-web/pkg/version"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 	cfgFile string
 	verbose bool
 	output  string
-	
+
 	// rootCmd는 CLI의 기본 명령어를 나타냅니다
 	rootCmd = &cobra.Command{
 		Use:   "aicli",
@@ -88,7 +88,7 @@ func init() {
 	rootCmd.AddCommand(commands.NewVersionCmd())
 	rootCmd.AddCommand(commands.NewDBCmd())
 	// rootCmd.AddCommand(commands.NewClaudeCommand()) // claude 패키지 중복 오류로 임시 비활성화
-	
+
 	// 자동 완성 명령어 추가
 	addCompletionCmd()
 }

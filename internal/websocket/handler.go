@@ -23,17 +23,17 @@ type WebSocketHandler struct {
 type HandlerConfig struct {
 	// CORS 설정
 	CheckOrigin func(r *http.Request) bool
-	
+
 	// WebSocket 설정
 	ReadBufferSize  int
 	WriteBufferSize int
-	
+
 	// 타임아웃 설정
 	HandshakeTimeout time.Duration
-	
+
 	// 압축 설정
 	EnableCompression bool
-	
+
 	// 서브프로토콜
 	Subprotocols []string
 }
@@ -59,10 +59,10 @@ func NewWebSocketHandler(hub *Hub, jwtManager *auth.JWTManager, blacklist *auth.
 	if config == nil {
 		config = DefaultHandlerConfig()
 	}
-	
+
 	// JWT 인증기 생성
 	authenticator := NewJWTAuthenticator(jwtManager, blacklist)
-	
+
 	// WebSocket 업그레이더 설정
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:    config.ReadBufferSize,
@@ -72,7 +72,7 @@ func NewWebSocketHandler(hub *Hub, jwtManager *auth.JWTManager, blacklist *auth.
 		Subprotocols:      config.Subprotocols,
 		CheckOrigin:       config.CheckOrigin,
 	}
-	
+
 	return &WebSocketHandler{
 		hub:           hub,
 		authenticator: authenticator,
@@ -93,7 +93,7 @@ func (wsh *WebSocketHandler) HandleConnection(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// 연결 처리
 	wsh.handleNewConnection(c.Request, conn)
 }
@@ -107,7 +107,7 @@ func (wsh *WebSocketHandler) HandleConnectionHTTP(w http.ResponseWriter, r *http
 		http.Error(w, "WebSocket upgrade failed: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	// 연결 처리
 	wsh.handleNewConnection(r, conn)
 }
@@ -116,7 +116,7 @@ func (wsh *WebSocketHandler) HandleConnectionHTTP(w http.ResponseWriter, r *http
 func (wsh *WebSocketHandler) handleNewConnection(r *http.Request, conn *websocket.Conn) {
 	// 클라이언트 ID 생성
 	clientID := GenerateClientID()
-	
+
 	// 연결 시점에서 사용자 추출 시도 (선택적)
 	userID := "anonymous"
 	if authInfo, err := wsh.authenticator.AuthenticateConnection(r); err == nil {
@@ -125,10 +125,10 @@ func (wsh *WebSocketHandler) handleNewConnection(r *http.Request, conn *websocke
 	} else {
 		log.Printf("WebSocket 연결 (인증 대기): %s", clientID)
 	}
-	
+
 	// 클라이언트 생성
 	client := NewClient(clientID, userID, conn, wsh.hub, nil)
-	
+
 	// 허브에 등록
 	if err := wsh.hub.Register(client); err != nil {
 		log.Printf("클라이언트 등록 실패: %v", err)
@@ -136,8 +136,8 @@ func (wsh *WebSocketHandler) handleNewConnection(r *http.Request, conn *websocke
 		conn.Close()
 		return
 	}
-	
-	log.Printf("새 WebSocket 연결: %s (사용자: %s, IP: %s)", 
+
+	log.Printf("새 WebSocket 연결: %s (사용자: %s, IP: %s)",
 		clientID, userID, getClientIP(r))
 }
 
@@ -193,13 +193,13 @@ func (bm *BroadcastManager) BroadcastSystemMessage(level, message, source string
 type EventHandler interface {
 	// HandleTaskUpdate 태스크 업데이트 이벤트 처리
 	HandleTaskUpdate(taskID, sessionID, status, output, error string)
-	
+
 	// HandleSessionUpdate 세션 업데이트 이벤트 처리
 	HandleSessionUpdate(sessionID, projectID, status string, data map[string]interface{})
-	
+
 	// HandleLogStream 로그 스트림 이벤트 처리
 	HandleLogStream(level, message, source, sessionID, taskID string)
-	
+
 	// HandleSystemEvent 시스템 이벤트 처리
 	HandleSystemEvent(eventType, source string, data map[string]interface{})
 }
@@ -220,13 +220,13 @@ func NewDefaultEventHandler(broadcastManager *BroadcastManager) *DefaultEventHan
 func (eh *DefaultEventHandler) HandleTaskUpdate(taskID, sessionID, status, output, error string) {
 	// 태스크 업데이트 메시지 생성
 	taskMsg := NewTaskMessage(taskID, sessionID, status, output, error, nil)
-	
+
 	// 세션 채널에 브로드캐스트
 	eh.broadcastManager.BroadcastToSession(sessionID, taskMsg)
-	
+
 	// 태스크 채널에 브로드캐스트
 	eh.broadcastManager.BroadcastToTask(taskID, taskMsg)
-	
+
 	log.Printf("태스크 업데이트 브로드캐스트: %s (상태: %s)", taskID, status)
 }
 
@@ -234,10 +234,10 @@ func (eh *DefaultEventHandler) HandleTaskUpdate(taskID, sessionID, status, outpu
 func (eh *DefaultEventHandler) HandleSessionUpdate(sessionID, projectID, status string, data map[string]interface{}) {
 	// 세션 업데이트 메시지 생성
 	sessionMsg := NewSessionMessage(sessionID, projectID, status, data)
-	
+
 	// 세션 채널에 브로드캐스트
 	eh.broadcastManager.BroadcastToSession(sessionID, sessionMsg)
-	
+
 	log.Printf("세션 업데이트 브로드캐스트: %s (상태: %s)", sessionID, status)
 }
 
@@ -245,16 +245,16 @@ func (eh *DefaultEventHandler) HandleSessionUpdate(sessionID, projectID, status 
 func (eh *DefaultEventHandler) HandleLogStream(level, message, source, sessionID, taskID string) {
 	// 로그 메시지 생성
 	logMsg := NewLogMessage(level, message, source, sessionID, taskID)
-	
+
 	// 관련 채널들에 브로드캐스트
 	if sessionID != "" {
 		eh.broadcastManager.BroadcastToSession(sessionID, logMsg)
 	}
-	
+
 	if taskID != "" {
 		eh.broadcastManager.BroadcastToTask(taskID, logMsg)
 	}
-	
+
 	// 시스템 로그는 시스템 채널에도 브로드캐스트
 	if source == "system" {
 		eh.broadcastManager.hub.Broadcast(logMsg, ChannelSystem)
@@ -269,10 +269,10 @@ func (eh *DefaultEventHandler) HandleSystemEvent(eventType, source string, data 
 		Source: source,
 		Data:   data,
 	})
-	
+
 	// 시스템 채널에 브로드캐스트
 	eh.broadcastManager.hub.Broadcast(eventMsg, ChannelSystem)
-	
+
 	log.Printf("시스템 이벤트 브로드캐스트: %s (출처: %s)", eventType, source)
 }
 
@@ -291,18 +291,18 @@ func NewMetricsCollector(hub *Hub) *MetricsCollector {
 // GetConnectionMetrics 연결 메트릭 조회
 func (mc *MetricsCollector) GetConnectionMetrics() map[string]interface{} {
 	stats := mc.hub.GetStats()
-	
+
 	return map[string]interface{}{
-		"connected_clients":      stats.ConnectedClients,
-		"authenticated_clients":  stats.AuthenticatedClients,
-		"total_connections":      stats.TotalConnections,
-		"total_disconnections":   stats.TotalDisconnections,
-		"messages_sent":          stats.MessagesSent,
-		"messages_received":      stats.MessagesReceived,
-		"channel_subscriptions":  stats.ChannelSubscriptions,
-		"clients_by_user":        stats.ClientsByUser,
-		"uptime":                 time.Since(stats.StartTime).String(),
-		"last_update":            stats.LastUpdate,
+		"connected_clients":     stats.ConnectedClients,
+		"authenticated_clients": stats.AuthenticatedClients,
+		"total_connections":     stats.TotalConnections,
+		"total_disconnections":  stats.TotalDisconnections,
+		"messages_sent":         stats.MessagesSent,
+		"messages_received":     stats.MessagesReceived,
+		"channel_subscriptions": stats.ChannelSubscriptions,
+		"clients_by_user":       stats.ClientsByUser,
+		"uptime":                time.Since(stats.StartTime).String(),
+		"last_update":           stats.LastUpdate,
 	}
 }
 
@@ -315,15 +315,15 @@ func (mc *MetricsCollector) GetClientMetrics(clientID string) (map[string]interf
 			Message: "클라이언트를 찾을 수 없습니다",
 		}
 	}
-	
+
 	return client.GetStats(), nil
 }
 
 // HealthChecker 헬스 체커
 type HealthChecker struct {
-	hub           *Hub
-	maxClients    int
-	maxMemoryMB   int64
+	hub         *Hub
+	maxClients  int
+	maxMemoryMB int64
 }
 
 // NewHealthChecker 새 헬스 체커 생성
@@ -338,18 +338,18 @@ func NewHealthChecker(hub *Hub, maxClients int, maxMemoryMB int64) *HealthChecke
 // CheckHealth 헬스 체크
 func (hc *HealthChecker) CheckHealth() map[string]interface{} {
 	stats := hc.hub.GetStats()
-	
+
 	status := "healthy"
 	issues := []string{}
-	
+
 	// 클라이언트 수 확인
 	if stats.ConnectedClients > hc.maxClients {
 		status = "warning"
 		issues = append(issues, "너무 많은 클라이언트 연결됨")
 	}
-	
+
 	// TODO: 메모리 사용량 확인
-	
+
 	return map[string]interface{}{
 		"status":            status,
 		"issues":            issues,
@@ -381,7 +381,7 @@ func NewConnectionLimiter(maxConnections, maxPerUser int) *ConnectionLimiter {
 func (cl *ConnectionLimiter) CanConnect(userID string, totalConnections int) error {
 	cl.connectionCountsMu.RLock()
 	defer cl.connectionCountsMu.RUnlock()
-	
+
 	// 전체 연결 수 확인
 	if totalConnections >= cl.maxConnections {
 		return &HubError{
@@ -389,7 +389,7 @@ func (cl *ConnectionLimiter) CanConnect(userID string, totalConnections int) err
 			Message: "최대 연결 수 초과",
 		}
 	}
-	
+
 	// 사용자별 연결 수 확인
 	userConnections := cl.connectionCounts[userID]
 	if userConnections >= cl.maxPerUser {
@@ -398,7 +398,7 @@ func (cl *ConnectionLimiter) CanConnect(userID string, totalConnections int) err
 			Message: "사용자별 최대 연결 수 초과",
 		}
 	}
-	
+
 	return nil
 }
 
@@ -406,7 +406,7 @@ func (cl *ConnectionLimiter) CanConnect(userID string, totalConnections int) err
 func (cl *ConnectionLimiter) AddConnection(userID string) {
 	cl.connectionCountsMu.Lock()
 	defer cl.connectionCountsMu.Unlock()
-	
+
 	cl.connectionCounts[userID]++
 }
 
@@ -414,7 +414,7 @@ func (cl *ConnectionLimiter) AddConnection(userID string) {
 func (cl *ConnectionLimiter) RemoveConnection(userID string) {
 	cl.connectionCountsMu.Lock()
 	defer cl.connectionCountsMu.Unlock()
-	
+
 	if cl.connectionCounts[userID] > 0 {
 		cl.connectionCounts[userID]--
 		if cl.connectionCounts[userID] == 0 {
@@ -427,7 +427,7 @@ func (cl *ConnectionLimiter) RemoveConnection(userID string) {
 func (cl *ConnectionLimiter) GetConnectionCounts() map[string]int {
 	cl.connectionCountsMu.RLock()
 	defer cl.connectionCountsMu.RUnlock()
-	
+
 	counts := make(map[string]int)
 	for userID, count := range cl.connectionCounts {
 		counts[userID] = count

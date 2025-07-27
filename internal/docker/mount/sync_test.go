@@ -139,13 +139,13 @@ func TestSyncer_GetFileStats(t *testing.T) {
 		fullPath := filepath.Join(tempDir, filePath)
 		err := os.MkdirAll(filepath.Dir(fullPath), 0755)
 		require.NoError(t, err)
-		
+
 		err = os.WriteFile(fullPath, []byte(content), 0644)
 		require.NoError(t, err)
-		
+
 		info, err := os.Stat(fullPath)
 		require.NoError(t, err)
-		
+
 		totalSize += info.Size()
 		if info.ModTime().After(latestModTime) {
 			latestModTime = info.ModTime()
@@ -170,8 +170,8 @@ func TestSyncer_GetFileStats(t *testing.T) {
 		stats, err := syncer.GetFileStats(ctx, tempDir, excludePatterns)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, stats.FileCount)      // .tmp와 subdir/* 제외하면 2개
-		assert.Equal(t, 1, stats.DirectoryCount) // subdir 제외하면 1개
+		assert.Equal(t, 2, stats.FileCount)        // .tmp와 subdir/* 제외하면 2개
+		assert.Equal(t, 1, stats.DirectoryCount)   // subdir 제외하면 1개
 		assert.Less(t, stats.TotalSize, totalSize) // 제외된 파일들로 인해 더 작음
 	})
 }
@@ -262,7 +262,7 @@ func TestSyncer_StopWatch(t *testing.T) {
 
 func TestSyncer_StopAll(t *testing.T) {
 	syncer := NewSyncer()
-	
+
 	tempDirs := []string{t.TempDir(), t.TempDir()}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -368,7 +368,7 @@ func TestFileWatcher_addError(t *testing.T) {
 		watcher.addError(fmt.Sprintf("test error %d", i))
 	}
 
-	assert.Len(t, watcher.errors, 10) // 최대 10개로 제한
-	assert.Contains(t, watcher.errors[0], "test error 3") // 첫 번째가 제거되고 3번부터 시작
+	assert.Len(t, watcher.errors, 10)                      // 최대 10개로 제한
+	assert.Contains(t, watcher.errors[0], "test error 3")  // 첫 번째가 제거되고 3번부터 시작
 	assert.Contains(t, watcher.errors[9], "test error 12") // 마지막이 12번
 }

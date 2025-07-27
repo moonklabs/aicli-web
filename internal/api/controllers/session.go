@@ -71,14 +71,14 @@ func (c *SessionController) Create(ctx *gin.Context) {
 			zap.String("project_id", projectID),
 			zap.Error(err),
 		)
-		
+
 		statusCode := http.StatusInternalServerError
 		if err.Error() == "프로젝트를 찾을 수 없습니다" {
 			statusCode = http.StatusNotFound
 		} else if err.Error() == "최대 동시 세션 수 초과" {
 			statusCode = http.StatusTooManyRequests
 		}
-		
+
 		ctx.JSON(statusCode, models.ErrorResponse{
 			Error: models.ErrorDetail{
 				Code:    "SESSION_CREATE_FAILED",
@@ -110,31 +110,31 @@ func (c *SessionController) List(ctx *gin.Context) {
 	filter := &models.SessionFilter{
 		ProjectID: ctx.Query("project_id"),
 	}
-	
+
 	if status := ctx.Query("status"); status != "" {
 		filter.Status = models.SessionStatus(status)
 	}
-	
+
 	if activeStr := ctx.Query("active"); activeStr != "" {
 		active, err := strconv.ParseBool(activeStr)
 		if err == nil {
 			filter.Active = &active
 		}
 	}
-	
+
 	paging := &models.PagingRequest{
 		Page:  1,
 		Limit: 20,
 	}
-	
+
 	if page, err := strconv.Atoi(ctx.Query("page")); err == nil && page > 0 {
 		paging.Page = page
 	}
-	
+
 	if limit, err := strconv.Atoi(ctx.Query("limit")); err == nil && limit > 0 && limit <= 100 {
 		paging.Limit = limit
 	}
-	
+
 	result, err := c.sessionService.List(ctx, filter, paging)
 	if err != nil {
 		c.logger.Error("세션 목록 조회 실패", zap.Error(err))
@@ -147,14 +147,14 @@ func (c *SessionController) List(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	// Response 변환
 	sessions := result.Data.([]*models.Session)
 	responses := make([]*models.SessionResponse, len(sessions))
 	for i, session := range sessions {
 		responses[i] = session.ToResponse()
 	}
-	
+
 	ctx.JSON(http.StatusOK, models.PaginationResponse{
 		Data: responses,
 		Meta: result.Meta,
@@ -183,7 +183,7 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	session, err := c.sessionService.GetByID(ctx, id)
 	if err != nil {
 		if err.Error() == "not found" {
@@ -195,7 +195,7 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.logger.Error("세션 조회 실패",
 			zap.String("session_id", id),
 			zap.Error(err),
@@ -209,7 +209,7 @@ func (c *SessionController) GetByID(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	ctx.JSON(http.StatusOK, session.ToResponse())
 }
 
@@ -235,7 +235,7 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	err := c.sessionService.Terminate(ctx, id)
 	if err != nil {
 		if err.Error() == "not found" {
@@ -247,7 +247,7 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.logger.Error("세션 종료 실패",
 			zap.String("session_id", id),
 			zap.Error(err),
@@ -261,7 +261,7 @@ func (c *SessionController) Terminate(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	ctx.Status(http.StatusNoContent)
 }
 
@@ -287,7 +287,7 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	err := c.sessionService.UpdateActivity(ctx, id)
 	if err != nil {
 		if err.Error() == "세션을 찾을 수 없습니다" {
@@ -299,7 +299,7 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 			})
 			return
 		}
-		
+
 		c.logger.Error("세션 활동 업데이트 실패",
 			zap.String("session_id", id),
 			zap.Error(err),
@@ -313,7 +313,7 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 		})
 		return
 	}
-	
+
 	ctx.Status(http.StatusNoContent)
 }
 
@@ -328,11 +328,11 @@ func (c *SessionController) UpdateActivity(ctx *gin.Context) {
 // @Router /sessions/active [get]
 func (c *SessionController) GetActiveSessions(ctx *gin.Context) {
 	sessions := c.sessionService.GetActiveSessions()
-	
+
 	responses := make([]*models.SessionResponse, len(sessions))
 	for i, session := range sessions {
 		responses[i] = session.ToResponse()
 	}
-	
+
 	ctx.JSON(http.StatusOK, responses)
 }

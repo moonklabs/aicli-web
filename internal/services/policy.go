@@ -75,10 +75,10 @@ func (ps *policyService) CreatePolicy(ctx context.Context, req *security.CreateP
 
 	// 감사 로그 생성
 	ps.createAuditEntry(ctx, policy.ID, "create", "", policy.Version, map[string]interface{}{
-		"name":        policy.Name,
-		"category":    policy.Category,
-		"priority":    policy.Priority,
-		"apply_now":   req.ApplyNow,
+		"name":      policy.Name,
+		"category":  policy.Category,
+		"priority":  policy.Priority,
+		"apply_now": req.ApplyNow,
 	}, "", "", "")
 
 	// 즉시 적용 요청 시
@@ -237,7 +237,7 @@ func (ps *policyService) ListPolicies(ctx context.Context, filter *security.Poli
 	for i, policy := range filteredPolicies {
 		policyPtrs[i] = &policy
 	}
-	
+
 	return &models.PaginatedResponse[*security.SecurityPolicy]{
 		Data: policyPtrs,
 		Pagination: models.PaginationMeta{
@@ -245,7 +245,7 @@ func (ps *policyService) ListPolicies(ctx context.Context, filter *security.Poli
 			PerPage:     filter.Limit,
 			Total:       len(policyPtrs),
 			TotalPages:  (len(policyPtrs) + filter.Limit - 1) / filter.Limit,
-			HasNext:     filter.Page < (len(policyPtrs) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(policyPtrs)+filter.Limit-1)/filter.Limit,
 			HasPrev:     filter.Page > 1,
 		},
 	}, nil
@@ -445,7 +445,7 @@ func (ps *policyService) GetPolicyAuditLog(ctx context.Context, filter *security
 	for i := range filteredEntries {
 		entryPtrs[i] = &filteredEntries[i]
 	}
-	
+
 	return &models.PaginatedResponse[*security.PolicyAuditEntry]{
 		Data: entryPtrs,
 		Pagination: models.PaginationMeta{
@@ -453,7 +453,7 @@ func (ps *policyService) GetPolicyAuditLog(ctx context.Context, filter *security
 			PerPage:     filter.Limit,
 			Total:       len(filteredEntries),
 			TotalPages:  (len(filteredEntries) + filter.Limit - 1) / filter.Limit,
-			HasNext:     filter.Page < (len(filteredEntries) + filter.Limit - 1) / filter.Limit,
+			HasNext:     filter.Page < (len(filteredEntries)+filter.Limit-1)/filter.Limit,
 			HasPrev:     filter.Page > 1,
 		},
 	}, nil
@@ -506,7 +506,7 @@ func (ps *policyService) ListTemplates(ctx context.Context) ([]*security.PolicyT
 
 	// 내장 템플릿 추가
 	builtInTemplates := security.GetBuiltInTemplates()
-	
+
 	// 포인터 슬라이스로 변환 및 병합
 	result := make([]*security.PolicyTemplate, len(templates)+len(builtInTemplates))
 	for i := range templates {

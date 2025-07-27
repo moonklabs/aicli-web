@@ -14,49 +14,49 @@ import (
 
 // AttackPattern은 공격 패턴을 정의합니다.
 type AttackPattern struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Type        string    `json:"type"`
-	Pattern     string    `json:"pattern"`
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Type        string         `json:"type"`
+	Pattern     string         `json:"pattern"`
 	Regex       *regexp.Regexp `json:"-"`
-	Severity    Severity  `json:"severity"`
-	Confidence  float64   `json:"confidence"` // 0.0 ~ 1.0
-	Description string    `json:"description"`
-	IsActive    bool      `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Severity    Severity       `json:"severity"`
+	Confidence  float64        `json:"confidence"` // 0.0 ~ 1.0
+	Description string         `json:"description"`
+	IsActive    bool           `json:"is_active"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 // AttackDetectionResult는 공격 탐지 결과를 나타냅니다.
 type AttackDetectionResult struct {
-	IsAttack      bool               `json:"is_attack"`
-	AttackType    string             `json:"attack_type,omitempty"`
-	Patterns      []*AttackPattern   `json:"patterns,omitempty"`
-	Confidence    float64            `json:"confidence"`
-	Risk          Severity           `json:"risk"`
-	Evidence      []string           `json:"evidence,omitempty"`
+	IsAttack        bool             `json:"is_attack"`
+	AttackType      string           `json:"attack_type,omitempty"`
+	Patterns        []*AttackPattern `json:"patterns,omitempty"`
+	Confidence      float64          `json:"confidence"`
+	Risk            Severity         `json:"risk"`
+	Evidence        []string         `json:"evidence,omitempty"`
 	Recommendations []string         `json:"recommendations,omitempty"`
 }
 
 // AttackDetectorConfig는 공격 탐지기 설정입니다.
 type AttackDetectorConfig struct {
-	Redis               redis.UniversalClient
-	EventTracker        *EventTracker
-	
+	Redis        redis.UniversalClient
+	EventTracker *EventTracker
+
 	// 탐지 설정
 	MinConfidence       float64       // 최소 신뢰도
 	BruteForceThreshold int           // 무차별 공격 임계값
 	BruteForceWindow    time.Duration // 무차별 공격 시간 윈도우
 	AnomalyThreshold    float64       // 이상 행동 임계값
-	
+
 	// 자동 차단 설정
-	AutoBlockEnabled    bool          // 자동 차단 활성화
-	BlockDuration       time.Duration // 차단 지속 시간
-	
+	AutoBlockEnabled bool          // 자동 차단 활성화
+	BlockDuration    time.Duration // 차단 지속 시간
+
 	// 알림 설정
-	AlertEnabled        bool          // 알림 활성화
-	AlertThreshold      Severity      // 알림 최소 심각도
-	
+	AlertEnabled   bool     // 알림 활성화
+	AlertThreshold Severity // 알림 최소 심각도
+
 	Logger *zap.Logger
 }
 
@@ -137,7 +137,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "주석을 이용한 SQL Injection",
 			IsActive:    true,
 		},
-		
+
 		// XSS 패턴들
 		{
 			ID:          "xss_001",
@@ -169,7 +169,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "JavaScript URI를 이용한 XSS 공격",
 			IsActive:    true,
 		},
-		
+
 		// Command Injection 패턴들
 		{
 			ID:          "cmdi_001",
@@ -191,7 +191,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "일반적인 시스템 명령어",
 			IsActive:    true,
 		},
-		
+
 		// Directory Traversal 패턴들
 		{
 			ID:          "dt_001",
@@ -203,7 +203,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "디렉토리 순회 공격",
 			IsActive:    true,
 		},
-		
+
 		// File Upload 공격 패턴들
 		{
 			ID:          "fu_001",
@@ -215,7 +215,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "악성 실행파일 업로드",
 			IsActive:    true,
 		},
-		
+
 		// LDAP Injection 패턴들
 		{
 			ID:          "ldapi_001",
@@ -227,7 +227,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "LDAP Injection 공격",
 			IsActive:    true,
 		},
-		
+
 		// XXE (XML External Entity) 패턴들
 		{
 			ID:          "xxe_001",
@@ -239,7 +239,7 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "XXE (XML External Entity) 공격",
 			IsActive:    true,
 		},
-		
+
 		// Server-Side Template Injection 패턴들
 		{
 			ID:          "ssti_001",
@@ -276,7 +276,7 @@ func (ad *AttackDetector) DetectAttacks(ctx context.Context, request *AttackDete
 		IsAttack:        false,
 		Patterns:        make([]*AttackPattern, 0),
 		Confidence:      0.0,
-		Risk:           SeverityLow,
+		Risk:            SeverityLow,
 		Evidence:        make([]string, 0),
 		Recommendations: make([]string, 0),
 	}
@@ -306,17 +306,17 @@ func (ad *AttackDetector) DetectAttacks(ctx context.Context, request *AttackDete
 
 // AttackDetectionRequest는 공격 탐지 요청을 나타냅니다.
 type AttackDetectionRequest struct {
-	UserID      string            `json:"user_id,omitempty"`
-	SessionID   string            `json:"session_id,omitempty"`
-	IPAddress   string            `json:"ip_address"`
-	UserAgent   string            `json:"user_agent"`
-	Method      string            `json:"method"`
-	URL         string            `json:"url"`
-	Path        string            `json:"path"`
-	Query       string            `json:"query,omitempty"`
-	Headers     map[string]string `json:"headers,omitempty"`
-	Body        string            `json:"body,omitempty"`
-	Timestamp   time.Time         `json:"timestamp"`
+	UserID    string            `json:"user_id,omitempty"`
+	SessionID string            `json:"session_id,omitempty"`
+	IPAddress string            `json:"ip_address"`
+	UserAgent string            `json:"user_agent"`
+	Method    string            `json:"method"`
+	URL       string            `json:"url"`
+	Path      string            `json:"path"`
+	Query     string            `json:"query,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	Body      string            `json:"body,omitempty"`
+	Timestamp time.Time         `json:"timestamp"`
 }
 
 // detectPatternBasedAttacks는 패턴 기반 공격을 탐지합니다.
@@ -327,7 +327,7 @@ func (ad *AttackDetector) detectPatternBasedAttacks(request *AttackDetectionRequ
 		request.Query,
 		request.Body,
 	}
-	
+
 	// 헤더도 검사 대상에 추가
 	for _, value := range request.Headers {
 		targets = append(targets, value)
@@ -346,12 +346,12 @@ func (ad *AttackDetector) detectPatternBasedAttacks(request *AttackDetectionRequ
 
 			if pattern.Regex.MatchString(target) {
 				result.Patterns = append(result.Patterns, pattern)
-				result.Evidence = append(result.Evidence, 
+				result.Evidence = append(result.Evidence,
 					fmt.Sprintf("Pattern %s matched: %s", pattern.Name, ad.truncateString(target, 100)))
-				
+
 				// 신뢰도 누적
 				result.Confidence = ad.combineConfidence(result.Confidence, pattern.Confidence)
-				
+
 				ad.logger.Debug("공격 패턴 탐지됨",
 					zap.String("pattern_id", pattern.ID),
 					zap.String("pattern_name", pattern.Name),
@@ -477,10 +477,10 @@ func (ad *AttackDetector) handleDetectedAttack(ctx context.Context, request *Att
 			RequestPath: request.Path,
 			Method:      request.Method,
 			Details: map[string]interface{}{
-				"attack_type":   result.AttackType,
-				"confidence":    result.Confidence,
-				"patterns":      len(result.Patterns),
-				"evidence":      result.Evidence,
+				"attack_type": result.AttackType,
+				"confidence":  result.Confidence,
+				"patterns":    len(result.Patterns),
+				"evidence":    result.Evidence,
 			},
 		}
 
@@ -699,7 +699,7 @@ func (ad *AttackDetector) blockIP(ctx context.Context, ipAddress string, duratio
 		return
 	}
 
-	ad.logger.Warn("IP 자동 차단됨", 
+	ad.logger.Warn("IP 자동 차단됨",
 		zap.String("ip", ipAddress),
 		zap.Duration("duration", duration))
 }

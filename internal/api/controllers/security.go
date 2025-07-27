@@ -371,9 +371,9 @@ func (sc *SecurityController) DetectAttack(c *gin.Context) {
 		"is_attack":       result.IsAttack,
 		"attack_type":     result.AttackType,
 		"confidence":      result.Confidence,
-		"risk":           result.Risk,
-		"patterns":       len(result.Patterns),
-		"evidence":       result.Evidence,
+		"risk":            result.Risk,
+		"patterns":        len(result.Patterns),
+		"evidence":        result.Evidence,
 		"recommendations": result.Recommendations,
 	})
 }
@@ -389,7 +389,7 @@ func (sc *SecurityController) DetectAttack(c *gin.Context) {
 // @Router /api/v1/security/attack-patterns [get]
 func (sc *SecurityController) GetAttackPatterns(c *gin.Context) {
 	patterns := sc.attackDetector.GetPatterns()
-	
+
 	response := make([]*AttackPatternResponse, len(patterns))
 	for i, pattern := range patterns {
 		response[i] = convertToAttackPatternResponse(pattern)
@@ -464,7 +464,7 @@ func (sc *SecurityController) CreateAttackPattern(c *gin.Context) {
 // @Router /api/v1/security/attack-patterns/{id} [put]
 func (sc *SecurityController) UpdateAttackPattern(c *gin.Context) {
 	patternID := c.Param("id")
-	
+
 	var req AttackPatternRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -486,8 +486,8 @@ func (sc *SecurityController) UpdateAttackPattern(c *gin.Context) {
 
 	err := sc.attackDetector.UpdatePattern(patternID, updates)
 	if err != nil {
-		sc.logger.Error("공격 패턴 업데이트 실패", 
-			zap.String("pattern_id", patternID), 
+		sc.logger.Error("공격 패턴 업데이트 실패",
+			zap.String("pattern_id", patternID),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Internal Server Error",
@@ -517,8 +517,8 @@ func (sc *SecurityController) DeleteAttackPattern(c *gin.Context) {
 
 	err := sc.attackDetector.RemovePattern(patternID)
 	if err != nil {
-		sc.logger.Error("공격 패턴 삭제 실패", 
-			zap.String("pattern_id", patternID), 
+		sc.logger.Error("공격 패턴 삭제 실패",
+			zap.String("pattern_id", patternID),
 			zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Internal Server Error",

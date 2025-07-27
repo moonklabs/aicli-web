@@ -8,13 +8,13 @@ import (
 type PaginationRequest struct {
 	// 페이지 번호 (1부터 시작)
 	Page int `form:"page,default=1" binding:"min=1"`
-	
+
 	// 페이지당 항목 수
 	Limit int `form:"limit,default=20" binding:"min=1,max=100"`
-	
+
 	// 정렬 필드
 	Sort string `form:"sort,default=created_at"`
-	
+
 	// 정렬 순서 (asc, desc)
 	Order string `form:"order,default=desc" binding:"oneof=asc desc"`
 }
@@ -25,7 +25,7 @@ type PaginationRequest struct {
 type PaginationResponse struct {
 	// 데이터 배열
 	Data interface{} `json:"data"`
-	
+
 	// 페이지네이션 메타 정보
 	Meta PaginationMeta `json:"meta"`
 }
@@ -57,7 +57,7 @@ func (p *PaginationRequest) Normalize() {
 // NewPaginationMeta 페이지네이션 메타 정보 생성
 func NewPaginationMeta(page, limit, total int) PaginationMeta {
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
-	
+
 	return PaginationMeta{
 		CurrentPage: page,
 		PerPage:     limit,
@@ -79,6 +79,6 @@ type PagingResponse = PaginationResponse
 
 // PaginatedResponse 페이지네이션된 응답을 위한 제네릭 구조체
 type PaginatedResponse[T any] struct {
-	Data       []T             `json:"data"`
-	Pagination PaginationMeta  `json:"pagination"`
+	Data       []T            `json:"data"`
+	Pagination PaginationMeta `json:"pagination"`
 }

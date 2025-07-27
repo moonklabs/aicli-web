@@ -58,7 +58,7 @@ type MessageRouter struct {
 	logger         *logrus.Logger
 	metrics        *RouterMetrics
 	errorHandler   func(error, StreamMessage)
-	
+
 	// 비동기 처리를 위한 워커 풀
 	workerPool     *WorkerPool
 	asyncMode      bool
@@ -67,12 +67,12 @@ type MessageRouter struct {
 
 // RouterMetrics는 라우터 메트릭을 추적합니다.
 type RouterMetrics struct {
-	MessagesRouted   map[MessageType]int64
-	HandleErrors     map[MessageType]int64
-	AvgHandleTime    map[MessageType]time.Duration
-	TotalMessages    int64
-	TotalErrors      int64
-	mu               sync.RWMutex
+	MessagesRouted map[MessageType]int64
+	HandleErrors   map[MessageType]int64
+	AvgHandleTime  map[MessageType]time.Duration
+	TotalMessages  int64
+	TotalErrors    int64
+	mu             sync.RWMutex
 }
 
 // RouterConfig는 메시지 라우터 설정을 정의합니다.
@@ -89,9 +89,9 @@ func NewMessageRouter(config RouterConfig, logger *logrus.Logger) *MessageRouter
 	}
 
 	router := &MessageRouter{
-		handlers:       make(map[MessageType][]MessageHandler),
-		logger:         logger,
-		metrics:        &RouterMetrics{
+		handlers: make(map[MessageType][]MessageHandler),
+		logger:   logger,
+		metrics: &RouterMetrics{
 			MessagesRouted: make(map[MessageType]int64),
 			HandleErrors:   make(map[MessageType]int64),
 			AvgHandleTime:  make(map[MessageType]time.Duration),
@@ -119,7 +119,7 @@ func (r *MessageRouter) RegisterHandler(msgType MessageType, handler MessageHand
 	defer r.mu.Unlock()
 
 	r.handlers[msgType] = append(r.handlers[msgType], handler)
-	
+
 	// 우선순위 순으로 정렬 (높은 우선순위가 먼저)
 	sort.Slice(r.handlers[msgType], func(i, j int) bool {
 		return r.handlers[msgType][i].Priority() > r.handlers[msgType][j].Priority()
@@ -144,7 +144,7 @@ func (r *MessageRouter) SetDefaultHandler(handler MessageHandler) {
 // Route는 메시지를 적절한 핸들러로 라우팅합니다.
 func (r *MessageRouter) Route(ctx context.Context, msg StreamMessage) error {
 	msgType := MessageType(msg.Type)
-	
+
 	// 메트릭 업데이트
 	atomic.AddInt64(&r.metrics.TotalMessages, 1)
 	r.incrementMessageCount(msgType)
@@ -185,7 +185,7 @@ func (r *MessageRouter) routeSync(ctx context.Context, msg StreamMessage, handle
 				"handler":      handler.Name(),
 				"message_type": msgType,
 			}).Error("Handler failed")
-			
+
 			// 에러 핸들러 호출
 			if r.errorHandler != nil {
 				r.errorHandler(err, msg)
@@ -281,7 +281,7 @@ func (r *MessageRouter) GetHandlers(msgType MessageType) []MessageHandler {
 func (r *MessageRouter) incrementMessageCount(msgType MessageType) {
 	r.metrics.mu.Lock()
 	defer r.metrics.mu.Unlock()
-	
+
 	if r.metrics.MessagesRouted == nil {
 		r.metrics.MessagesRouted = make(map[MessageType]int64)
 	}
@@ -292,7 +292,7 @@ func (r *MessageRouter) incrementMessageCount(msgType MessageType) {
 func (r *MessageRouter) incrementErrorCount(msgType MessageType) {
 	r.metrics.mu.Lock()
 	defer r.metrics.mu.Unlock()
-	
+
 	if r.metrics.HandleErrors == nil {
 		r.metrics.HandleErrors = make(map[MessageType]int64)
 	}
@@ -304,11 +304,11 @@ func (r *MessageRouter) incrementErrorCount(msgType MessageType) {
 func (r *MessageRouter) updateHandleTime(msgType MessageType, duration time.Duration) {
 	r.metrics.mu.Lock()
 	defer r.metrics.mu.Unlock()
-	
+
 	if r.metrics.AvgHandleTime == nil {
 		r.metrics.AvgHandleTime = make(map[MessageType]time.Duration)
 	}
-	
+
 	// 이동 평균 계산
 	alpha := 0.1
 	current := r.metrics.AvgHandleTime[msgType]
@@ -325,7 +325,7 @@ func (r *MessageRouter) GetMetrics() map[string]interface{} {
 	metrics := make(map[string]interface{})
 	metrics["total_messages"] = atomic.LoadInt64(&r.metrics.TotalMessages)
 	metrics["total_errors"] = atomic.LoadInt64(&r.metrics.TotalErrors)
-	
+
 	// 메시지 타입별 통계
 	messageStats := make(map[string]map[string]interface{})
 	for msgType, count := range r.metrics.MessagesRouted {
@@ -373,7 +373,7 @@ func (t *RouterTask) Execute() error {
 				"handler":      handler.Name(),
 				"message_type": t.msgType,
 			}).Error("Handler failed in async mode")
-			
+
 			// 에러 핸들러 호출
 			if t.router.errorHandler != nil {
 				t.router.errorHandler(err, t.msg)
@@ -387,12 +387,12 @@ func (t *RouterTask) Execute() error {
 
 // WorkerPool은 비동기 태스크 처리를 위한 워커 풀입니다.
 type WorkerPool struct {
-	workers    int
-	taskQueue  chan MessageRouterTask
-	wg         sync.WaitGroup
-	stopCh     chan struct{}
-	logger     *logrus.Logger
-	stats      *WorkerPoolStats
+	workers   int
+	taskQueue chan MessageRouterTask
+	wg        sync.WaitGroup
+	stopCh    chan struct{}
+	logger    *logrus.Logger
+	stats     *WorkerPoolStats
 }
 
 // MessageRouterTask는 워커 풀에서 실행할 태스크 인터페이스입니다.

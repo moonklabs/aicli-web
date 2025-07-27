@@ -1,3 +1,4 @@
+//go:build standalone
 // +build standalone
 
 package status
@@ -246,7 +247,7 @@ func TestStandalone_ErrorHandling(t *testing.T) {
 	for _, tc := range testCases {
 		code := getErrorCode(&TestError{msg: tc.error})
 		if code != tc.expected {
-			t.Errorf("Expected error code %s for error '%s', got %s", 
+			t.Errorf("Expected error code %s for error '%s', got %s",
 				tc.expected, tc.error, code)
 		}
 	}

@@ -20,24 +20,24 @@ type MessageBroadcaster interface {
 
 // ExecutionTracker는 Claude 실행 상태를 추적합니다.
 type ExecutionTracker struct {
-	executions map[string]*ExecutionStatus
-	mu         sync.RWMutex
+	executions  map[string]*ExecutionStatus
+	mu          sync.RWMutex
 	broadcaster MessageBroadcaster
 }
 
 // ExecutionStatus는 실행 상태를 나타냅니다.
 type ExecutionStatus struct {
-	ID           string                 `json:"id"`
-	SessionID    string                 `json:"session_id"`
-	WorkspaceID  string                 `json:"workspace_id"`
-	Status       string                 `json:"status"` // pending, running, completed, failed, cancelled
-	Progress     float64                `json:"progress"`
-	StartTime    time.Time              `json:"start_time"`
-	EndTime      *time.Time             `json:"end_time,omitempty"`
-	Messages     int                    `json:"messages"`
-	Errors       []ExecutionError       `json:"errors,omitempty"`
-	Result       interface{}            `json:"result,omitempty"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ID          string                 `json:"id"`
+	SessionID   string                 `json:"session_id"`
+	WorkspaceID string                 `json:"workspace_id"`
+	Status      string                 `json:"status"` // pending, running, completed, failed, cancelled
+	Progress    float64                `json:"progress"`
+	StartTime   time.Time              `json:"start_time"`
+	EndTime     *time.Time             `json:"end_time,omitempty"`
+	Messages    int                    `json:"messages"`
+	Errors      []ExecutionError       `json:"errors,omitempty"`
+	Result      interface{}            `json:"result,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ExecutionError는 실행 중 발생한 에러 정보입니다.
@@ -61,7 +61,7 @@ type ProgressUpdate struct {
 // NewExecutionTracker는 새로운 실행 추적기를 생성합니다.
 func NewExecutionTracker(broadcaster MessageBroadcaster) *ExecutionTracker {
 	return &ExecutionTracker{
-		executions: make(map[string]*ExecutionStatus),
+		executions:  make(map[string]*ExecutionStatus),
 		broadcaster: broadcaster,
 	}
 }
@@ -271,11 +271,11 @@ func (t *ExecutionTracker) GetExecutionStats(workspaceID string) ExecutionStats 
 	defer t.mu.RUnlock()
 
 	stats := ExecutionStats{
-		Total:      0,
-		Running:    0,
-		Completed:  0,
-		Failed:     0,
-		Cancelled:  0,
+		Total:       0,
+		Running:     0,
+		Completed:   0,
+		Failed:      0,
+		Cancelled:   0,
 		AvgDuration: 0,
 	}
 

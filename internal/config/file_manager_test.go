@@ -25,10 +25,10 @@ func TestFileManager(t *testing.T) {
 		fm, err := NewFileManager()
 		assert.NoError(t, err)
 		assert.NotNil(t, fm)
-		
+
 		expectedDir := filepath.Join(tempDir, ConfigDirName)
 		assert.Equal(t, expectedDir, fm.configDir)
-		
+
 		expectedPath := filepath.Join(expectedDir, ConfigFileName)
 		assert.Equal(t, expectedPath, fm.GetConfigPath())
 	})
@@ -45,7 +45,7 @@ func TestFileManager(t *testing.T) {
 		info, err := os.Stat(fm.GetConfigDir())
 		assert.NoError(t, err)
 		assert.True(t, info.IsDir())
-		
+
 		// 권한 확인 (0700)
 		assert.Equal(t, os.FileMode(0700), info.Mode().Perm())
 
@@ -64,7 +64,7 @@ func TestFileManager(t *testing.T) {
 		// 설정 파일 생성
 		err = fm.EnsureConfigDir()
 		require.NoError(t, err)
-		
+
 		err = os.WriteFile(fm.GetConfigPath(), []byte("test"), 0600)
 		require.NoError(t, err)
 
@@ -80,7 +80,7 @@ func TestFileManager(t *testing.T) {
 		config, err := fm.ReadConfig()
 		assert.NoError(t, err)
 		assert.NotNil(t, config)
-		
+
 		// 기본값 확인
 		assert.Equal(t, DefaultClaudeModel, config.Claude.Model)
 		assert.Equal(t, DefaultClaudeTemperature, config.Claude.Temperature)
@@ -122,7 +122,7 @@ func TestFileManager(t *testing.T) {
 		config1 := &Config{}
 		config1.Claude.APIKey = "original-key"
 		config1.Claude.Model = "claude-3-opus"
-		
+
 		err = fm.WriteConfig(config1)
 		require.NoError(t, err)
 
@@ -135,7 +135,7 @@ func TestFileManager(t *testing.T) {
 		config2 := &Config{}
 		config2.Claude.APIKey = "new-key"
 		config2.Claude.Model = "claude-3-sonnet"
-		
+
 		err = fm.WriteConfig(config2)
 		require.NoError(t, err)
 

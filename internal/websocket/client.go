@@ -15,27 +15,27 @@ type Client struct {
 	ID     string          `json:"id"`
 	UserID string          `json:"user_id"`
 	Conn   *websocket.Conn `json:"-"`
-	
+
 	// 채널 관리
 	channels   map[string]bool `json:"-"`
 	channelsMu sync.RWMutex    `json:"-"`
-	
+
 	// 메시지 전송
 	send chan []byte
-	
+
 	// 상태 관리
 	isAuthenticated bool
 	lastPing        time.Time
 	lastPong        time.Time
-	
+
 	// 제어
 	ctx    context.Context
 	cancel context.CancelFunc
 	done   chan struct{}
-	
+
 	// 허브 참조
 	hub *Hub
-	
+
 	// 통계
 	messagesReceived int64
 	messagesSent     int64
@@ -46,13 +46,13 @@ type Client struct {
 type ClientConfig struct {
 	// 메시지 버퍼 크기
 	SendBufferSize int
-	
+
 	// 타임아웃 설정
 	WriteTimeout time.Duration
 	ReadTimeout  time.Duration
 	PingInterval time.Duration
 	PongTimeout  time.Duration
-	
+
 	// 메시지 크기 제한
 	MaxMessageSize int64
 }
@@ -74,9 +74,9 @@ func NewClient(id, userID string, conn *websocket.Conn, hub *Hub, config *Client
 	if config == nil {
 		config = DefaultClientConfig()
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	client := &Client{
 		ID:              id,
 		UserID:          userID,
@@ -92,7 +92,7 @@ func NewClient(id, userID string, conn *websocket.Conn, hub *Hub, config *Client
 		hub:             hub,
 		connectedAt:     time.Now(),
 	}
-	
+
 	// WebSocket 설정
 	if conn != nil {
 		conn.SetReadLimit(config.MaxMessageSize)
@@ -103,7 +103,7 @@ func NewClient(id, userID string, conn *websocket.Conn, hub *Hub, config *Client
 			return nil
 		})
 	}
-	
+
 	return client
 }
 
@@ -145,7 +145,7 @@ func (c *Client) SetAuthenticated(authenticated bool) {
 func (c *Client) Subscribe(channels ...string) {
 	c.channelsMu.Lock()
 	defer c.channelsMu.Unlock()
-	
+
 	for _, channel := range channels {
 		c.channels[channel] = true
 	}
@@ -155,7 +155,7 @@ func (c *Client) Subscribe(channels ...string) {
 func (c *Client) Unsubscribe(channels ...string) {
 	c.channelsMu.Lock()
 	defer c.channelsMu.Unlock()
-	
+
 	for _, channel := range channels {
 		delete(c.channels, channel)
 	}
@@ -165,7 +165,7 @@ func (c *Client) Unsubscribe(channels ...string) {
 func (c *Client) IsSubscribed(channel string) bool {
 	c.channelsMu.RLock()
 	defer c.channelsMu.RUnlock()
-	
+
 	return c.channels[channel]
 }
 
@@ -173,7 +173,7 @@ func (c *Client) IsSubscribed(channel string) bool {
 func (c *Client) GetChannels() []string {
 	c.channelsMu.RLock()
 	defer c.channelsMu.RUnlock()
-	
+
 	channels := make([]string, 0, len(c.channels))
 	for channel := range c.channels {
 		channels = append(channels, channel)
@@ -183,10 +183,10 @@ func (c *Client) GetChannels() []string {
 
 // Send 메시지 전송
 func (c *Client) Send(message []byte) bool {
-	if !c.IsConnected() {
+	if !c.IsConnected() || c.Conn == nil {
 		return false
 	}
-	
+
 	select {
 	case c.send <- message:
 		return true
@@ -227,7 +227,7 @@ func (c *Client) readPump() {
 		c.Conn.Close()
 		close(c.done)
 	}()
-	
+
 	for {
 		select {
 		case <-c.ctx.Done():
@@ -240,9 +240,9 @@ func (c *Client) readPump() {
 				}
 				return
 			}
-			
+
 			c.messagesReceived++
-			
+
 			// 메시지 처리
 			if err := c.handleMessage(message); err != nil {
 				log.Printf("메시지 처리 에러 (클라이언트 %s): %v", c.ID, err)
@@ -259,7 +259,7 @@ func (c *Client) writePump() {
 		ticker.Stop()
 		c.Conn.Close()
 	}()
-	
+
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -268,21 +268,21 @@ func (c *Client) writePump() {
 				c.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			
+
 			if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				log.Printf("WebSocket 쓰기 에러: %v", err)
 				return
 			}
-			
+
 			c.messagesSent++
-			
+
 		case <-ticker.C:
 			c.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 			c.lastPing = time.Now()
-			
+
 		case <-c.ctx.Done():
 			return
 		}
@@ -293,7 +293,7 @@ func (c *Client) writePump() {
 func (c *Client) pingPump() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -303,7 +303,7 @@ func (c *Client) pingPump() {
 				c.Stop()
 				return
 			}
-			
+
 		case <-c.ctx.Done():
 			return
 		}
@@ -316,7 +316,7 @@ func (c *Client) handleMessage(data []byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// 메시지 타입별 처리
 	switch msg.Type {
 	case MessageTypeAuth:
@@ -337,7 +337,7 @@ func (c *Client) handleMessage(data []byte) error {
 			c.SendError("NOT_AUTHENTICATED", "인증이 필요합니다", "")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -347,7 +347,7 @@ func (c *Client) handleAuthMessage(msg *Message) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// TODO: JWT 토큰 검증 로직 구현
 	// 현재는 토큰이 있으면 인증된 것으로 처리
 	if auth.Token != "" {
@@ -356,13 +356,13 @@ func (c *Client) handleAuthMessage(msg *Message) error {
 			"client_id": c.ID,
 			"user_id":   c.UserID,
 		})
-		
+
 		// 사용자별 채널 자동 구독
 		c.Subscribe(GetUserChannel(c.UserID))
 	} else {
 		c.SendError("INVALID_TOKEN", "유효하지 않은 토큰입니다", "")
 	}
-	
+
 	return nil
 }
 
@@ -381,18 +381,18 @@ func (c *Client) handleSubscribeMessage(msg *Message) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if !c.isAuthenticated {
 		c.SendError("NOT_AUTHENTICATED", "인증이 필요합니다", "")
 		return nil
 	}
-	
+
 	// TODO: 채널별 권한 확인 로직 추가
 	c.Subscribe(sub.Channels...)
 	c.SendSuccess("채널 구독 완료", map[string]interface{}{
 		"channels": sub.Channels,
 	})
-	
+
 	return nil
 }
 
@@ -402,12 +402,12 @@ func (c *Client) handleUnsubscribeMessage(msg *Message) error {
 	if err != nil {
 		return err
 	}
-	
+
 	c.Unsubscribe(unsub.Channels...)
 	c.SendSuccess("채널 구독 취소 완료", map[string]interface{}{
 		"channels": unsub.Channels,
 	})
-	
+
 	return nil
 }
 
@@ -417,36 +417,36 @@ func (c *Client) handleCommandMessage(msg *Message) error {
 		c.SendError("NOT_AUTHENTICATED", "인증이 필요합니다", "")
 		return nil
 	}
-	
+
 	cmd, err := msg.ParseCommandMessage()
 	if err != nil {
 		return err
 	}
-	
+
 	// TODO: 명령 처리 로직 구현
 	log.Printf("명령 수신 (클라이언트 %s): %s", c.ID, cmd.Command)
-	
+
 	// 현재는 단순히 성공 응답 전송
 	c.SendSuccess("명령 수신됨", map[string]interface{}{
 		"command":    cmd.Command,
 		"session_id": cmd.SessionID,
 	})
-	
+
 	return nil
 }
 
 // GetStats 클라이언트 통계 반환
 func (c *Client) GetStats() map[string]interface{} {
 	return map[string]interface{}{
-		"id":                 c.ID,
-		"user_id":            c.UserID,
-		"connected_at":       c.connectedAt,
-		"is_authenticated":   c.isAuthenticated,
-		"channels":           c.GetChannels(),
-		"messages_received":  c.messagesReceived,
-		"messages_sent":      c.messagesSent,
-		"last_ping":          c.lastPing,
-		"last_pong":          c.lastPong,
-		"uptime":             time.Since(c.connectedAt).String(),
+		"id":                c.ID,
+		"user_id":           c.UserID,
+		"connected_at":      c.connectedAt,
+		"is_authenticated":  c.isAuthenticated,
+		"channels":          c.GetChannels(),
+		"messages_received": c.messagesReceived,
+		"messages_sent":     c.messagesSent,
+		"last_ping":         c.lastPing,
+		"last_pong":         c.lastPong,
+		"uptime":            time.Since(c.connectedAt).String(),
 	}
 }

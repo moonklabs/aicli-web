@@ -38,24 +38,24 @@ func NewStateMachine() *StateMachine {
 		current: StatusStopped,
 		transitions: map[ProcessStateTransition]bool{
 			// 정상적인 생명주기 전환
-			{From: StatusStopped, To: StatusStarting}:  true,
-			{From: StatusStarting, To: StatusRunning}:  true,
-			{From: StatusRunning, To: StatusStopping}:  true,
-			{From: StatusStopping, To: StatusStopped}:  true,
-			
+			{From: StatusStopped, To: StatusStarting}: true,
+			{From: StatusStarting, To: StatusRunning}: true,
+			{From: StatusRunning, To: StatusStopping}: true,
+			{From: StatusStopping, To: StatusStopped}: true,
+
 			// 에러 상태로의 전환
-			{From: StatusStarting, To: StatusError}:    true,
-			{From: StatusRunning, To: StatusError}:     true,
-			{From: StatusStopping, To: StatusError}:    true,
-			
+			{From: StatusStarting, To: StatusError}: true,
+			{From: StatusRunning, To: StatusError}:  true,
+			{From: StatusStopping, To: StatusError}: true,
+
 			// 에러 상태에서의 전환
-			{From: StatusError, To: StatusStopped}:     true,
-			{From: StatusError, To: StatusStarting}:    true,
-			
+			{From: StatusError, To: StatusStopped}:  true,
+			{From: StatusError, To: StatusStarting}: true,
+
 			// 강제 종료
-			{From: StatusStarting, To: StatusStopped}:  true,
-			{From: StatusRunning, To: StatusStopped}:   true,
-			{From: StatusError, To: StatusStopped}:     true,
+			{From: StatusStarting, To: StatusStopped}: true,
+			{From: StatusRunning, To: StatusStopped}:  true,
+			{From: StatusError, To: StatusStopped}:    true,
 		},
 		listeners: make([]StateChangeListener, 0),
 	}
@@ -72,30 +72,30 @@ func (sm *StateMachine) GetState() ProcessStatus {
 // TransitionTo 지정된 상태로 전환을 시도합니다
 func (sm *StateMachine) TransitionTo(newState ProcessStatus) error {
 	sm.mutex.Lock()
-	
+
 	transition := ProcessStateTransition{
 		From: sm.current,
 		To:   newState,
 	}
-	
+
 	// 전환 가능 여부 확인
 	if !sm.transitions[transition] {
 		sm.mutex.Unlock()
 		return fmt.Errorf("잘못된 상태 전환: %s -> %s", sm.current, newState)
 	}
-	
+
 	oldState := sm.current
 	sm.current = newState
 	listeners := make([]StateChangeListener, len(sm.listeners))
 	copy(listeners, sm.listeners)
-	
+
 	sm.mutex.Unlock()
-	
+
 	// 리스너들에게 알림 (락 밖에서 실행)
 	for _, listener := range listeners {
 		listener.OnStateChange(oldState, newState)
 	}
-	
+
 	return nil
 }
 
@@ -110,12 +110,12 @@ func (sm *StateMachine) MustTransitionTo(newState ProcessStatus) {
 func (sm *StateMachine) CanTransitionTo(newState ProcessStatus) bool {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
-	
+
 	transition := ProcessStateTransition{
 		From: sm.current,
 		To:   newState,
 	}
-	
+
 	return sm.transitions[transition]
 }
 
@@ -130,7 +130,7 @@ func (sm *StateMachine) AddListener(listener StateChangeListener) {
 func (sm *StateMachine) RemoveListener(listener StateChangeListener) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	for i, l := range sm.listeners {
 		if l == listener {
 			sm.listeners = append(sm.listeners[:i], sm.listeners[i+1:]...)
@@ -143,7 +143,7 @@ func (sm *StateMachine) RemoveListener(listener StateChangeListener) {
 func (sm *StateMachine) IsTerminal() bool {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
-	
+
 	return sm.current == StatusStopped || sm.current == StatusError
 }
 
@@ -151,7 +151,7 @@ func (sm *StateMachine) IsTerminal() bool {
 func (sm *StateMachine) IsRunning() bool {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
-	
+
 	return sm.current == StatusRunning
 }
 
@@ -159,7 +159,7 @@ func (sm *StateMachine) IsRunning() bool {
 func (sm *StateMachine) Reset() {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
-	
+
 	sm.current = StatusStopped
 }
 
@@ -167,10 +167,10 @@ func (sm *StateMachine) Reset() {
 func (sm *StateMachine) ValidateTransitions() error {
 	// 각 상태에서 최소 하나의 전환이 가능한지 확인
 	states := []ProcessStatus{
-		StatusStopped, StatusStarting, StatusRunning, 
+		StatusStopped, StatusStarting, StatusRunning,
 		StatusStopping, StatusError,
 	}
-	
+
 	for _, state := range states {
 		hasTransition := false
 		for transition := range sm.transitions {
@@ -183,6 +183,6 @@ func (sm *StateMachine) ValidateTransitions() error {
 			return fmt.Errorf("상태 %s에서 전환 가능한 상태가 없습니다", state)
 		}
 	}
-	
+
 	return nil
 }

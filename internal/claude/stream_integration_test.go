@@ -307,7 +307,7 @@ func TestJSONStreamParser_RealTimeStreaming(t *testing.T) {
 		for i, resp := range testResponses {
 			data, _ := json.Marshal(resp)
 			writer.Write(data)
-			
+
 			// 스트리밍 시뮬레이션을 위한 지연
 			if i < len(testResponses)-1 {
 				time.Sleep(100 * time.Millisecond)

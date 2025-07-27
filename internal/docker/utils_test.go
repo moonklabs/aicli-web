@@ -255,18 +255,18 @@ func TestMergeLabels(t *testing.T) {
 		"key1": "value1",
 		"key2": "value2",
 	}
-	
+
 	labels2 := map[string]string{
 		"key2": "updated_value2", // override
 		"key3": "value3",
 	}
-	
+
 	labels3 := map[string]string{
 		"key4": "value4",
 	}
 
 	result := MergeLabels(labels1, labels2, labels3)
-	
+
 	expected := map[string]string{
 		"key1": "value1",
 		"key2": "updated_value2", // overridden value
@@ -355,7 +355,7 @@ func TestParseResourceLimits(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cpu, memory, err := ParseResourceLimits(tt.cpu, tt.memory)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
@@ -378,16 +378,16 @@ func TestClient_FilterByLabels(t *testing.T) {
 	}
 
 	filters := client.FilterByLabels(labels)
-	
+
 	assert.NotNil(t, filters)
 	assert.Contains(t, filters, "label")
 	assert.Len(t, filters["label"], 2)
-	
+
 	expectedFilters := []string{
 		"label=aicli.managed=true",
 		"label=aicli.workspace.id=ws-123",
 	}
-	
+
 	for _, expected := range expectedFilters {
 		assert.Contains(t, filters["label"], expected)
 	}
@@ -399,7 +399,7 @@ func TestClient_GetManagedResourceFilter(t *testing.T) {
 	}
 
 	filters := client.GetManagedResourceFilter()
-	
+
 	assert.NotNil(t, filters)
 	assert.Contains(t, filters, "label")
 	assert.Len(t, filters["label"], 1)
@@ -408,7 +408,7 @@ func TestClient_GetManagedResourceFilter(t *testing.T) {
 
 func BenchmarkSanitizeName(b *testing.B) {
 	testName := "My_Test@Workspace#2023!"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = SanitizeName(testName)
@@ -417,7 +417,7 @@ func BenchmarkSanitizeName(b *testing.B) {
 
 func BenchmarkFormatBytes(b *testing.B) {
 	testBytes := int64(1536 * 1024 * 1024) // 1.5GB
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = FormatBytes(testBytes)
@@ -429,12 +429,12 @@ func BenchmarkMergeLabels(b *testing.B) {
 		"key1": "value1",
 		"key2": "value2",
 	}
-	
+
 	labels2 := map[string]string{
 		"key3": "value3",
 		"key4": "value4",
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = MergeLabels(labels1, labels2)

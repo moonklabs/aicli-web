@@ -49,14 +49,14 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 		return
 	}
 	userClaims := claims.(*auth.Claims)
-	
+
 	// 워크스페이스 ID 가져오기
 	workspaceID := c.Param("id")
 	if workspaceID == "" {
 		middleware.ValidationError(c, "워크스페이스 ID가 필요합니다", nil)
 		return
 	}
-	
+
 	// 워크스페이스 소유권 확인
 	workspace, err := pc.storage.Workspace().GetByID(c, workspaceID)
 	if err != nil {
@@ -67,19 +67,19 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 		middleware.InternalError(c, "워크스페이스 조회 실패", err)
 		return
 	}
-	
+
 	if workspace.OwnerID != userClaims.UserID {
 		middleware.ForbiddenError(c, "워크스페이스에 프로젝트를 생성할 권한이 없습니다")
 		return
 	}
-	
+
 	// 요청 데이터 파싱
 	var req models.CreateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
-	
+
 	// 프로젝트 모델 생성
 	project := models.Project{
 		WorkspaceID: workspaceID,
@@ -91,13 +91,13 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 		Language:    req.Language,
 		Status:      models.ProjectStatusActive,
 	}
-	
+
 	// 프로젝트 경로 유효성 검사
 	if err := utils.IsValidProjectPath(project.Path); err != nil {
 		middleware.ValidationError(c, "프로젝트 경로가 유효하지 않습니다", err.Error())
 		return
 	}
-	
+
 	// 프로젝트 생성
 	if err := pc.projectService.CreateProject(c, &project); err != nil {
 		if err.Error() == "project name already exists in workspace" {
@@ -111,14 +111,14 @@ func (pc *ProjectController) CreateProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 생성 실패", err)
 		return
 	}
-	
+
 	// 성공 응답
 	response := models.SuccessResponse{
 		Success: true,
 		Message: "프로젝트가 생성되었습니다",
 		Data:    project,
 	}
-	
+
 	c.JSON(http.StatusCreated, response)
 }
 
@@ -146,14 +146,14 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 		return
 	}
 	userClaims := claims.(*auth.Claims)
-	
+
 	// 워크스페이스 ID 가져오기
 	workspaceID := c.Param("id")
 	if workspaceID == "" {
 		middleware.ValidationError(c, "워크스페이스 ID가 필요합니다", nil)
 		return
 	}
-	
+
 	// 워크스페이스 소유권 확인
 	workspace, err := pc.storage.Workspace().GetByID(c, workspaceID)
 	if err != nil {
@@ -164,19 +164,19 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 		middleware.InternalError(c, "워크스페이스 조회 실패", err)
 		return
 	}
-	
+
 	if workspace.OwnerID != userClaims.UserID {
 		middleware.ForbiddenError(c, "워크스페이스의 프로젝트를 조회할 권한이 없습니다")
 		return
 	}
-	
+
 	// 페이지네이션 요청 처리
 	var req models.PaginationRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		middleware.ValidationError(c, "잘못된 요청 파라미터", err.Error())
 		return
 	}
-	
+
 	// 기본값 설정
 	if req.Page < 1 {
 		req.Page = 1
@@ -190,14 +190,14 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 	if req.Order == "" {
 		req.Order = "desc"
 	}
-	
+
 	// 프로젝트 목록 조회
 	projects, total, err := pc.projectService.GetProjectsByWorkspace(c, workspaceID, &req)
 	if err != nil {
 		middleware.InternalError(c, "프로젝트 목록 조회 실패", err)
 		return
 	}
-	
+
 	// 응답 생성
 	response := models.PaginationResponse{
 		Data: projects,
@@ -210,7 +210,7 @@ func (pc *ProjectController) ListProjects(c *gin.Context) {
 			HasPrev:     req.Page > 1,
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -235,13 +235,13 @@ func (pc *ProjectController) GetProject(c *gin.Context) {
 		return
 	}
 	userClaims := claims.(*auth.Claims)
-	
+
 	id := c.Param("id")
 	if id == "" {
 		middleware.ValidationError(c, "프로젝트 ID가 필요합니다", nil)
 		return
 	}
-	
+
 	// 프로젝트 조회
 	project, err := pc.projectService.GetProject(c, id)
 	if err != nil {
@@ -252,25 +252,25 @@ func (pc *ProjectController) GetProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 조회 실패", err)
 		return
 	}
-	
+
 	// 워크스페이스 소유권 확인
 	workspace, err := pc.storage.Workspace().GetByID(c, project.WorkspaceID)
 	if err != nil {
 		middleware.InternalError(c, "워크스페이스 조회 실패", err)
 		return
 	}
-	
+
 	if workspace.OwnerID != userClaims.UserID {
 		middleware.ForbiddenError(c, "프로젝트에 접근할 권한이 없습니다")
 		return
 	}
-	
+
 	// 성공 응답
 	response := models.SuccessResponse{
 		Success: true,
 		Data:    project,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -297,13 +297,13 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 		return
 	}
 	userClaims := claims.(*auth.Claims)
-	
+
 	id := c.Param("id")
 	if id == "" {
 		middleware.ValidationError(c, "프로젝트 ID가 필요합니다", nil)
 		return
 	}
-	
+
 	// 프로젝트 존재 및 권한 확인
 	project, err := pc.storage.Project().GetByID(c, id)
 	if err != nil {
@@ -314,26 +314,26 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 조회 실패", err)
 		return
 	}
-	
+
 	// 워크스페이스 소유권 확인
 	workspace, err := pc.storage.Workspace().GetByID(c, project.WorkspaceID)
 	if err != nil {
 		middleware.InternalError(c, "워크스페이스 조회 실패", err)
 		return
 	}
-	
+
 	if workspace.OwnerID != userClaims.UserID {
 		middleware.ForbiddenError(c, "프로젝트를 수정할 권한이 없습니다")
 		return
 	}
-	
+
 	// 요청 데이터 파싱
 	var req models.UpdateProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.ValidationError(c, "요청 데이터가 올바르지 않습니다", err.Error())
 		return
 	}
-	
+
 	// 프로젝트 경로 유효성 검사 (변경되는 경우)
 	if req.Path != nil {
 		if err := utils.IsValidProjectPath(*req.Path); err != nil {
@@ -341,7 +341,7 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	// map[string]interface{}로 변환
 	updates := make(map[string]interface{})
 	if req.Name != nil {
@@ -362,7 +362,7 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 	if req.Language != nil {
 		updates["language"] = *req.Language
 	}
-	
+
 	// 프로젝트 업데이트
 	if err := pc.projectService.UpdateProject(c, id, updates); err != nil {
 		if err.Error() == "project name already exists in workspace" {
@@ -376,21 +376,21 @@ func (pc *ProjectController) UpdateProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 수정 실패", err)
 		return
 	}
-	
+
 	// 수정된 프로젝트 조회
 	updatedProject, err := pc.projectService.GetProject(c, id)
 	if err != nil {
 		middleware.InternalError(c, "수정된 프로젝트 조회 실패", err)
 		return
 	}
-	
+
 	// 성공 응답
 	response := models.SuccessResponse{
 		Success: true,
 		Message: "프로젝트가 수정되었습니다",
 		Data:    updatedProject,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -415,13 +415,13 @@ func (pc *ProjectController) DeleteProject(c *gin.Context) {
 		return
 	}
 	userClaims := claims.(*auth.Claims)
-	
+
 	id := c.Param("id")
 	if id == "" {
 		middleware.ValidationError(c, "프로젝트 ID가 필요합니다", nil)
 		return
 	}
-	
+
 	// 프로젝트 존재 및 권한 확인
 	project, err := pc.storage.Project().GetByID(c, id)
 	if err != nil {
@@ -432,19 +432,19 @@ func (pc *ProjectController) DeleteProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 조회 실패", err)
 		return
 	}
-	
+
 	// 워크스페이스 소유권 확인
 	workspace, err := pc.storage.Workspace().GetByID(c, project.WorkspaceID)
 	if err != nil {
 		middleware.InternalError(c, "워크스페이스 조회 실패", err)
 		return
 	}
-	
+
 	if workspace.OwnerID != userClaims.UserID {
 		middleware.ForbiddenError(c, "프로젝트를 삭제할 권한이 없습니다")
 		return
 	}
-	
+
 	// 프로젝트 삭제
 	if err := pc.projectService.DeleteProject(c, id); err != nil {
 		if err == storage.ErrNotFound {
@@ -454,7 +454,7 @@ func (pc *ProjectController) DeleteProject(c *gin.Context) {
 		middleware.InternalError(c, "프로젝트 삭제 실패", err)
 		return
 	}
-	
+
 	// 성공 응답
 	response := models.SuccessResponse{
 		Success: true,
@@ -463,6 +463,6 @@ func (pc *ProjectController) DeleteProject(c *gin.Context) {
 			"id": id,
 		},
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }

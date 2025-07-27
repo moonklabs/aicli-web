@@ -28,7 +28,7 @@ type MockClaudeResponse struct {
 func (m *MockClaudeWrapper) Start(ctx context.Context, workspaceDir string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called(ctx, workspaceDir)
 	return args.Error(0)
 }
@@ -37,7 +37,7 @@ func (m *MockClaudeWrapper) Start(ctx context.Context, workspaceDir string) erro
 func (m *MockClaudeWrapper) Stop(ctx context.Context) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called(ctx)
 	return args.Error(0)
 }
@@ -46,7 +46,7 @@ func (m *MockClaudeWrapper) Stop(ctx context.Context) error {
 func (m *MockClaudeWrapper) Execute(ctx context.Context, command string) (*MockClaudeResponse, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called(ctx, command)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -58,7 +58,7 @@ func (m *MockClaudeWrapper) Execute(ctx context.Context, command string) (*MockC
 func (m *MockClaudeWrapper) IsRunning() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.Bool(0)
 }
@@ -67,7 +67,7 @@ func (m *MockClaudeWrapper) IsRunning() bool {
 func (m *MockClaudeWrapper) GetStatus() string {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.String(0)
 }
@@ -103,7 +103,7 @@ const (
 func (m *MockProcessManager) Start(ctx context.Context, config *ProcessConfig) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called(ctx, config)
 	return args.Error(0)
 }
@@ -112,7 +112,7 @@ func (m *MockProcessManager) Start(ctx context.Context, config *ProcessConfig) e
 func (m *MockProcessManager) Stop(timeout time.Duration) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called(timeout)
 	return args.Error(0)
 }
@@ -121,7 +121,7 @@ func (m *MockProcessManager) Stop(timeout time.Duration) error {
 func (m *MockProcessManager) Kill() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called()
 	return args.Error(0)
 }
@@ -130,7 +130,7 @@ func (m *MockProcessManager) Kill() error {
 func (m *MockProcessManager) IsRunning() bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.Bool(0)
 }
@@ -139,7 +139,7 @@ func (m *MockProcessManager) IsRunning() bool {
 func (m *MockProcessManager) GetStatus() ProcessStatus {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.Get(0).(ProcessStatus)
 }
@@ -148,7 +148,7 @@ func (m *MockProcessManager) GetStatus() ProcessStatus {
 func (m *MockProcessManager) GetPID() int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.Int(0)
 }
@@ -157,7 +157,7 @@ func (m *MockProcessManager) GetPID() int {
 func (m *MockProcessManager) Wait() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	
+
 	args := m.Called()
 	return args.Error(0)
 }
@@ -166,7 +166,7 @@ func (m *MockProcessManager) Wait() error {
 func (m *MockProcessManager) HealthCheck() error {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	
+
 	args := m.Called()
 	return args.Error(0)
 }
@@ -191,15 +191,15 @@ func NewMockFileSystem() *MockFileSystem {
 func (mfs *MockFileSystem) ReadFile(filename string) ([]byte, error) {
 	mfs.mutex.RLock()
 	defer mfs.mutex.RUnlock()
-	
+
 	// Mock 호출 기록
 	args := mfs.Called(filename)
-	
+
 	// 실제 파일 데이터 반환 (있는 경우)
 	if data, exists := mfs.files[filename]; exists {
 		return data, nil
 	}
-	
+
 	// Mock에서 설정된 반환값 사용
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -211,13 +211,13 @@ func (mfs *MockFileSystem) ReadFile(filename string) ([]byte, error) {
 func (mfs *MockFileSystem) WriteFile(filename string, data []byte, perm int) error {
 	mfs.mutex.Lock()
 	defer mfs.mutex.Unlock()
-	
+
 	args := mfs.Called(filename, data, perm)
-	
+
 	// 실제 파일 데이터 저장
 	mfs.files[filename] = make([]byte, len(data))
 	copy(mfs.files[filename], data)
-	
+
 	return args.Error(0)
 }
 
@@ -225,9 +225,9 @@ func (mfs *MockFileSystem) WriteFile(filename string, data []byte, perm int) err
 func (mfs *MockFileSystem) Exists(path string) bool {
 	mfs.mutex.RLock()
 	defer mfs.mutex.RUnlock()
-	
+
 	args := mfs.Called(path)
-	
+
 	// 실제 데이터 확인
 	if _, exists := mfs.files[path]; exists {
 		return true
@@ -235,7 +235,7 @@ func (mfs *MockFileSystem) Exists(path string) bool {
 	if _, exists := mfs.dirs[path]; exists {
 		return true
 	}
-	
+
 	return args.Bool(0)
 }
 
@@ -243,12 +243,12 @@ func (mfs *MockFileSystem) Exists(path string) bool {
 func (mfs *MockFileSystem) MkdirAll(path string, perm int) error {
 	mfs.mutex.Lock()
 	defer mfs.mutex.Unlock()
-	
+
 	args := mfs.Called(path, perm)
-	
+
 	// 실제 디렉토리 생성 시뮬레이션
 	mfs.dirs[path] = true
-	
+
 	return args.Error(0)
 }
 
@@ -256,13 +256,13 @@ func (mfs *MockFileSystem) MkdirAll(path string, perm int) error {
 func (mfs *MockFileSystem) Remove(path string) error {
 	mfs.mutex.Lock()
 	defer mfs.mutex.Unlock()
-	
+
 	args := mfs.Called(path)
-	
+
 	// 실제 데이터 삭제
 	delete(mfs.files, path)
 	delete(mfs.dirs, path)
-	
+
 	return args.Error(0)
 }
 
@@ -270,7 +270,7 @@ func (mfs *MockFileSystem) Remove(path string) error {
 func (mfs *MockFileSystem) AddFile(filename string, content []byte) {
 	mfs.mutex.Lock()
 	defer mfs.mutex.Unlock()
-	
+
 	mfs.files[filename] = make([]byte, len(content))
 	copy(mfs.files[filename], content)
 }
@@ -279,7 +279,7 @@ func (mfs *MockFileSystem) AddFile(filename string, content []byte) {
 func (mfs *MockFileSystem) AddDir(dirname string) {
 	mfs.mutex.Lock()
 	defer mfs.mutex.Unlock()
-	
+
 	mfs.dirs[dirname] = true
 }
 
@@ -311,17 +311,17 @@ func NewMockCommand() *MockCommand {
 func (mc *MockCommand) Start(name string, args ...string) (*MockProcess, error) {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
-	
+
 	mockArgs := mc.Called(name, args)
-	
+
 	if mockArgs.Get(0) == nil {
 		return nil, mockArgs.Error(1)
 	}
-	
+
 	process := mockArgs.Get(0).(*MockProcess)
 	process.running = true
 	mc.processes[name] = process
-	
+
 	return process, mockArgs.Error(1)
 }
 
@@ -329,13 +329,13 @@ func (mc *MockCommand) Start(name string, args ...string) (*MockProcess, error) 
 func (mc *MockCommand) Stop(name string) error {
 	mc.mutex.Lock()
 	defer mc.mutex.Unlock()
-	
+
 	args := mc.Called(name)
-	
+
 	if process, exists := mc.processes[name]; exists {
 		process.running = false
 	}
-	
+
 	return args.Error(0)
 }
 
@@ -343,13 +343,13 @@ func (mc *MockCommand) Stop(name string) error {
 func (mc *MockCommand) IsRunning(name string) bool {
 	mc.mutex.RLock()
 	defer mc.mutex.RUnlock()
-	
+
 	args := mc.Called(name)
-	
+
 	if process, exists := mc.processes[name]; exists {
 		return process.running
 	}
-	
+
 	return args.Bool(0)
 }
 
@@ -381,13 +381,13 @@ type MockWorkspace struct {
 
 // WorkspaceInfo 워크스페이스 정보
 type WorkspaceInfo struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Path        string            `json:"path"`
-	Status      string            `json:"status"`
-	CreatedAt   time.Time         `json:"created_at"`
-	LastAccess  time.Time         `json:"last_access"`
-	Metadata    map[string]string `json:"metadata"`
+	ID         string            `json:"id"`
+	Name       string            `json:"name"`
+	Path       string            `json:"path"`
+	Status     string            `json:"status"`
+	CreatedAt  time.Time         `json:"created_at"`
+	LastAccess time.Time         `json:"last_access"`
+	Metadata   map[string]string `json:"metadata"`
 }
 
 // NewMockWorkspace 새로운 모의 워크스페이스 생성
@@ -401,16 +401,16 @@ func NewMockWorkspace() *MockWorkspace {
 func (mw *MockWorkspace) Create(ctx context.Context, name, path string) (*WorkspaceInfo, error) {
 	mw.mutex.Lock()
 	defer mw.mutex.Unlock()
-	
+
 	args := mw.Called(ctx, name, path)
-	
+
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	
+
 	workspace := args.Get(0).(*WorkspaceInfo)
 	mw.workspaces[workspace.ID] = workspace
-	
+
 	return workspace, args.Error(1)
 }
 
@@ -418,11 +418,11 @@ func (mw *MockWorkspace) Create(ctx context.Context, name, path string) (*Worksp
 func (mw *MockWorkspace) Delete(ctx context.Context, id string) error {
 	mw.mutex.Lock()
 	defer mw.mutex.Unlock()
-	
+
 	args := mw.Called(ctx, id)
-	
+
 	delete(mw.workspaces, id)
-	
+
 	return args.Error(0)
 }
 
@@ -430,13 +430,13 @@ func (mw *MockWorkspace) Delete(ctx context.Context, id string) error {
 func (mw *MockWorkspace) List(ctx context.Context) ([]*WorkspaceInfo, error) {
 	mw.mutex.RLock()
 	defer mw.mutex.RUnlock()
-	
+
 	args := mw.Called(ctx)
-	
+
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	
+
 	return args.Get(0).([]*WorkspaceInfo), args.Error(1)
 }
 
@@ -444,17 +444,17 @@ func (mw *MockWorkspace) List(ctx context.Context) ([]*WorkspaceInfo, error) {
 func (mw *MockWorkspace) Get(ctx context.Context, id string) (*WorkspaceInfo, error) {
 	mw.mutex.RLock()
 	defer mw.mutex.RUnlock()
-	
+
 	args := mw.Called(ctx, id)
-	
+
 	if workspace, exists := mw.workspaces[id]; exists {
 		return workspace, nil
 	}
-	
+
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	
+
 	return args.Get(0).(*WorkspaceInfo), args.Error(1)
 }
 
@@ -462,6 +462,6 @@ func (mw *MockWorkspace) Get(ctx context.Context, id string) (*WorkspaceInfo, er
 func (mw *MockWorkspace) AddWorkspace(workspace *WorkspaceInfo) {
 	mw.mutex.Lock()
 	defer mw.mutex.Unlock()
-	
+
 	mw.workspaces[workspace.ID] = workspace
 }

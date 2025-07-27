@@ -113,9 +113,9 @@ func (m *mockMonitor) RecordSuspiciousActivity(ctx context.Context, event *Sessi
 func TestNewRedisSecurityChecker(t *testing.T) {
 	store := &mockStore{}
 	monitor := &mockMonitor{}
-	
+
 	checker := NewRedisSecurityChecker(store, monitor)
-	
+
 	assert.NotNil(t, checker)
 	assert.Equal(t, store, checker.store)
 	assert.Equal(t, monitor, checker.monitor)
@@ -126,10 +126,10 @@ func TestNewRedisSecurityChecker(t *testing.T) {
 
 func TestRedisSecurityChecker_SetThresholds(t *testing.T) {
 	checker := NewRedisSecurityChecker(&mockStore{}, &mockMonitor{})
-	
+
 	checker.SetLocationDistanceThreshold(500.0)
 	assert.Equal(t, 500.0, checker.maxLocationDistance)
-	
+
 	checker.SetSuspiciousThreshold(0.7)
 	assert.Equal(t, 0.7, checker.suspiciousThreshold)
 }
@@ -139,14 +139,14 @@ func TestRedisSecurityChecker_CheckDeviceFingerprint(t *testing.T) {
 	monitor := &mockMonitor{}
 	checker := NewRedisSecurityChecker(store, monitor)
 	ctx := context.Background()
-	
+
 	tests := []struct {
-		name           string
-		userID         string
-		deviceInfo     *models.DeviceFingerprint
+		name             string
+		userID           string
+		deviceInfo       *models.DeviceFingerprint
 		existingSessions []*models.AuthSession
-		expectError    error
-		shouldRecord   bool
+		expectError      error
+		shouldRecord     bool
 	}{
 		{
 			name:             "nil device info",
@@ -187,7 +187,7 @@ func TestRedisSecurityChecker_CheckDeviceFingerprint(t *testing.T) {
 					DeviceInfo: &models.DeviceFingerprint{
 						UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0",
 						IPAddress:   "192.168.1.101",
-						Browser:     "Chrome", 
+						Browser:     "Chrome",
 						OS:          "Windows",
 						Device:      "Desktop",
 						Fingerprint: "existing_device",
@@ -216,7 +216,7 @@ func TestRedisSecurityChecker_CheckDeviceFingerprint(t *testing.T) {
 						UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0",
 						IPAddress:   "192.168.1.100",
 						Browser:     "Chrome",
-						OS:          "Windows", 
+						OS:          "Windows",
 						Device:      "Desktop",
 						Fingerprint: "existing_device",
 					},
@@ -226,22 +226,22 @@ func TestRedisSecurityChecker_CheckDeviceFingerprint(t *testing.T) {
 			shouldRecord: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks
 			store.ExpectedCalls = nil
 			monitor.ExpectedCalls = nil
-			
+
 			store.On("GetUserSessions", ctx, tt.userID).Return(tt.existingSessions, nil)
-			
+
 			if tt.shouldRecord {
 				monitor.On("RecordSuspiciousActivity", ctx, mock.AnythingOfType("*session.SessionEvent")).Return(nil)
 			}
-			
+
 			// Execute
 			err := checker.CheckDeviceFingerprint(ctx, tt.userID, tt.deviceInfo)
-			
+
 			// Verify
 			if tt.expectError != nil {
 				if tt.expectError == assert.AnError {
@@ -252,7 +252,7 @@ func TestRedisSecurityChecker_CheckDeviceFingerprint(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			
+
 			// Verify mock calls
 			store.AssertExpectations(t)
 			monitor.AssertExpectations(t)
@@ -266,14 +266,14 @@ func TestRedisSecurityChecker_CheckLocationChange(t *testing.T) {
 	checker := NewRedisSecurityChecker(store, monitor)
 	checker.SetLocationDistanceThreshold(100.0) // 100km threshold
 	ctx := context.Background()
-	
+
 	tests := []struct {
-		name         string
-		sessionID    string
-		newLocation  *models.LocationInfo
+		name            string
+		sessionID       string
+		newLocation     *models.LocationInfo
 		existingSession *models.AuthSession
-		expectError  error
-		shouldRecord bool
+		expectError     error
+		shouldRecord    bool
 	}{
 		{
 			name:        "nil location - skip check",
@@ -348,32 +348,32 @@ func TestRedisSecurityChecker_CheckLocationChange(t *testing.T) {
 			shouldRecord: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks
 			store.ExpectedCalls = nil
 			monitor.ExpectedCalls = nil
-			
+
 			if tt.newLocation != nil {
 				store.On("Get", ctx, tt.sessionID).Return(tt.existingSession, nil)
 				store.On("Update", ctx, mock.AnythingOfType("*models.AuthSession")).Return(nil)
 			}
-			
+
 			if tt.shouldRecord {
 				monitor.On("RecordSuspiciousActivity", ctx, mock.AnythingOfType("*session.SessionEvent")).Return(nil)
 			}
-			
+
 			// Execute
 			err := checker.CheckLocationChange(ctx, tt.sessionID, tt.newLocation)
-			
+
 			// Verify
 			if tt.expectError != nil {
 				assert.Equal(t, tt.expectError, err)
 			} else {
 				assert.NoError(t, err)
 			}
-			
+
 			// Verify mock calls
 			store.AssertExpectations(t)
 			monitor.AssertExpectations(t)
@@ -386,7 +386,7 @@ func TestRedisSecurityChecker_ValidateConcurrentSessions(t *testing.T) {
 	monitor := &mockMonitor{}
 	checker := NewRedisSecurityChecker(store, monitor)
 	ctx := context.Background()
-	
+
 	tests := []struct {
 		name        string
 		userID      string
@@ -403,7 +403,7 @@ func TestRedisSecurityChecker_ValidateConcurrentSessions(t *testing.T) {
 		},
 		{
 			name:        "at limit",
-			userID:      "user1", 
+			userID:      "user1",
 			maxSessions: 3,
 			activeCount: 3,
 			expectError: ErrConcurrentSessionLimitExceeded,
@@ -416,23 +416,23 @@ func TestRedisSecurityChecker_ValidateConcurrentSessions(t *testing.T) {
 			expectError: ErrConcurrentSessionLimitExceeded,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks
 			store.ExpectedCalls = nil
 			store.On("CountUserActiveSessions", ctx, tt.userID).Return(tt.activeCount, nil)
-			
+
 			// Execute
 			err := checker.ValidateConcurrentSessions(ctx, tt.userID, tt.maxSessions)
-			
+
 			// Verify
 			if tt.expectError != nil {
 				assert.Equal(t, tt.expectError, err)
 			} else {
 				assert.NoError(t, err)
 			}
-			
+
 			store.AssertExpectations(t)
 		})
 	}
@@ -443,10 +443,10 @@ func TestRedisSecurityChecker_DetectSuspiciousActivity(t *testing.T) {
 	monitor := &mockMonitor{}
 	checker := NewRedisSecurityChecker(store, monitor)
 	ctx := context.Background()
-	
+
 	tests := []struct {
-		name            string
-		session         *models.AuthSession
+		name             string
+		session          *models.AuthSession
 		existingSessions []*models.AuthSession
 		expectSuspicious bool
 		expectedReasons  []string
@@ -522,20 +522,20 @@ func TestRedisSecurityChecker_DetectSuspiciousActivity(t *testing.T) {
 			expectedReasons:  []string{"의심스러운 사용자 에이전트", "봇과 유사한 활동 패턴"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup mocks for high frequency access check
 			store.ExpectedCalls = nil
 			store.On("GetUserSessions", ctx, tt.session.UserID).Return(tt.existingSessions, nil)
-			
+
 			if tt.session.DeviceInfo != nil && tt.session.DeviceInfo.Fingerprint != "" {
 				store.On("GetDeviceSessions", ctx, tt.session.DeviceInfo.Fingerprint).Return([]*models.AuthSession{tt.session}, nil)
 			}
-			
+
 			// Execute
 			suspicious, reasons := checker.DetectSuspiciousActivity(ctx, tt.session)
-			
+
 			// Verify
 			assert.Equal(t, tt.expectSuspicious, suspicious)
 			if tt.expectSuspicious {
@@ -547,7 +547,7 @@ func TestRedisSecurityChecker_DetectSuspiciousActivity(t *testing.T) {
 			} else {
 				assert.Empty(t, reasons)
 			}
-			
+
 			store.AssertExpectations(t)
 		})
 	}
@@ -555,7 +555,7 @@ func TestRedisSecurityChecker_DetectSuspiciousActivity(t *testing.T) {
 
 func TestRedisSecurityChecker_CalculateDistance(t *testing.T) {
 	checker := NewRedisSecurityChecker(&mockStore{}, &mockMonitor{})
-	
+
 	tests := []struct {
 		name      string
 		loc1      *models.LocationInfo
@@ -613,7 +613,7 @@ func TestRedisSecurityChecker_CalculateDistance(t *testing.T) {
 			tolerance: 0.1,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			distance := checker.calculateDistance(tt.loc1, tt.loc2)
@@ -624,7 +624,7 @@ func TestRedisSecurityChecker_CalculateDistance(t *testing.T) {
 
 func TestRedisSecurityChecker_IsPrivateIP(t *testing.T) {
 	checker := NewRedisSecurityChecker(&mockStore{}, &mockMonitor{})
-	
+
 	tests := []struct {
 		name     string
 		ip       string
@@ -661,12 +661,12 @@ func TestRedisSecurityChecker_IsPrivateIP(t *testing.T) {
 			expected: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ip := parseIP(tt.ip)
 			require.NotNil(t, ip)
-			
+
 			result := checker.isPrivateIP(ip)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -684,7 +684,7 @@ func BenchmarkSecurityChecker_CheckDeviceFingerprint(b *testing.B) {
 	monitor := &mockMonitor{}
 	checker := NewRedisSecurityChecker(store, monitor)
 	ctx := context.Background()
-	
+
 	deviceInfo := &models.DeviceFingerprint{
 		UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0",
 		IPAddress:   "192.168.1.100",
@@ -693,7 +693,7 @@ func BenchmarkSecurityChecker_CheckDeviceFingerprint(b *testing.B) {
 		Device:      "Desktop",
 		Fingerprint: "test_device",
 	}
-	
+
 	existingSessions := []*models.AuthSession{
 		{
 			ID:         "existing",
@@ -701,9 +701,9 @@ func BenchmarkSecurityChecker_CheckDeviceFingerprint(b *testing.B) {
 			DeviceInfo: deviceInfo,
 		},
 	}
-	
+
 	store.On("GetUserSessions", ctx, "user1").Return(existingSessions, nil)
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		checker.CheckDeviceFingerprint(ctx, "user1", deviceInfo)
@@ -715,7 +715,7 @@ func BenchmarkSecurityChecker_DetectSuspiciousActivity(b *testing.B) {
 	monitor := &mockMonitor{}
 	checker := NewRedisSecurityChecker(store, monitor)
 	ctx := context.Background()
-	
+
 	session := &models.AuthSession{
 		ID:        "test_session",
 		UserID:    "user1",
@@ -728,10 +728,10 @@ func BenchmarkSecurityChecker_DetectSuspiciousActivity(b *testing.B) {
 			Fingerprint: "test_device",
 		},
 	}
-	
+
 	store.On("GetUserSessions", ctx, "user1").Return([]*models.AuthSession{session}, nil)
 	store.On("GetDeviceSessions", ctx, "test_device").Return([]*models.AuthSession{session}, nil)
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		checker.DetectSuspiciousActivity(ctx, session)

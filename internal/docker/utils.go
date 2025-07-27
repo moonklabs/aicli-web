@@ -6,12 +6,10 @@ import (
 	"time"
 )
 
-
 // GenerateImageTag 워크스페이스용 이미지 태그를 생성합니다.
 func (c *Client) GenerateImageTag(workspaceID string) string {
 	return fmt.Sprintf("aicli-workspace:%s", workspaceID)
 }
-
 
 // GenerateNetworkName 네트워크 이름을 생성합니다.
 func (c *Client) GenerateNetworkName(suffix string) string {

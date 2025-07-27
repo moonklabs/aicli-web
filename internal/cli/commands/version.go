@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/spf13/cobra"
 	"github.com/aicli/aicli-web/pkg/version"
+	"github.com/spf13/cobra"
 )
 
 // NewVersionCmd는 version 명령어를 생성합니다.
@@ -31,12 +31,12 @@ func NewVersionCmd() *cobra.Command {
   aicli version --output json`,
 		Run: func(cmd *cobra.Command, args []string) {
 			short, _ := cmd.Flags().GetBool("short")
-			
+
 			if short {
 				fmt.Println(version.Version)
 				return
 			}
-			
+
 			// 상세 버전 정보
 			fmt.Printf("AICLI - AI-powered Code Management CLI\n")
 			fmt.Printf("Version:      %s\n", version.Version)
@@ -44,21 +44,21 @@ func NewVersionCmd() *cobra.Command {
 			fmt.Printf("Built:        %s\n", version.BuildTime)
 			fmt.Printf("Go Version:   %s\n", runtime.Version())
 			fmt.Printf("OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
-			
+
 			// 추가 정보
 			fmt.Printf("\nClaude CLI Integration: Enabled\n")
 			fmt.Printf("Docker Support:         Enabled\n")
 			fmt.Printf("API Version:            v1\n")
-			
+
 			// 라이센스 정보
 			fmt.Printf("\nLicense: MIT\n")
 			fmt.Printf("Documentation: https://github.com/aicli/aicli-web\n")
 			fmt.Printf("Report Issues: https://github.com/aicli/aicli-web/issues\n")
 		},
 	}
-	
+
 	// 플래그 정의
 	cmd.Flags().BoolP("short", "s", false, "짧은 버전 정보만 표시")
-	
+
 	return cmd
 }

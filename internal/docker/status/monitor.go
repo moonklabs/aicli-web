@@ -17,19 +17,19 @@ type ResourceMonitor struct {
 	dockerManager    docker.DockerManager
 
 	// 캐시
-	statsCache     map[string]*docker.ContainerStats
-	cacheMutex     sync.RWMutex
-	cacheExpiry    time.Duration
+	statsCache  map[string]*docker.ContainerStats
+	cacheMutex  sync.RWMutex
+	cacheExpiry time.Duration
 
 	// 설정
 	collectInterval time.Duration
 	retentionPeriod time.Duration
 
 	// 제어
-	ctx     context.Context
-	cancel  context.CancelFunc
-	wg      sync.WaitGroup
-	logger  Logger
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
+	logger Logger
 
 	// 모니터링 채널들
 	activeMonitors map[string]chan *WorkspaceMetrics
@@ -71,20 +71,20 @@ func (rm *ResourceMonitor) SetCollectInterval(interval time.Duration) {
 // Start 리소스 모니터링 시작
 func (rm *ResourceMonitor) Start() error {
 	rm.logger.Info("리소스 모니터 시작 - 수집 간격: %v", rm.collectInterval)
-	
+
 	rm.wg.Add(1)
 	go rm.cleanupLoop()
-	
+
 	return nil
 }
 
 // Stop 리소스 모니터링 중지
 func (rm *ResourceMonitor) Stop() error {
 	rm.logger.Info("리소스 모니터 중지 중...")
-	
+
 	rm.cancel()
 	rm.wg.Wait()
-	
+
 	// 활성 모니터들 정리
 	rm.monitorsMutex.Lock()
 	for workspaceID, ch := range rm.activeMonitors {
@@ -92,7 +92,7 @@ func (rm *ResourceMonitor) Stop() error {
 		delete(rm.activeMonitors, workspaceID)
 	}
 	rm.monitorsMutex.Unlock()
-	
+
 	rm.logger.Info("리소스 모니터 중지 완료")
 	return nil
 }
@@ -100,9 +100,9 @@ func (rm *ResourceMonitor) Stop() error {
 // StartMonitoring 특정 워크스페이스 모니터링 시작
 func (rm *ResourceMonitor) StartMonitoring(ctx context.Context, workspaceID string) (<-chan *WorkspaceMetrics, error) {
 	rm.logger.Debug("워크스페이스 모니터링 시작: %s", workspaceID)
-	
+
 	metricsChan := make(chan *WorkspaceMetrics, 10)
-	
+
 	// 활성 모니터에 추가
 	rm.monitorsMutex.Lock()
 	if existingCh, exists := rm.activeMonitors[workspaceID]; exists {
@@ -162,7 +162,7 @@ func (rm *ResourceMonitor) StartMonitoring(ctx context.Context, workspaceID stri
 // StopMonitoring 특정 워크스페이스 모니터링 중지
 func (rm *ResourceMonitor) StopMonitoring(workspaceID string) {
 	rm.logger.Debug("워크스페이스 모니터링 중지: %s", workspaceID)
-	
+
 	rm.monitorsMutex.Lock()
 	if ch, exists := rm.activeMonitors[workspaceID]; exists {
 		close(ch)
@@ -198,8 +198,8 @@ func (rm *ResourceMonitor) collectMetrics(ctx context.Context, workspaceID strin
 	// 새로운 통계 수집
 	stats, err := rm.statsCollector.Collect(ctx, container.GetID())
 	if err != nil {
-		rm.logger.Error("컨테이너 통계 수집 실패", err, 
-			"workspace_id", workspaceID, 
+		rm.logger.Error("컨테이너 통계 수집 실패", err,
+			"workspace_id", workspaceID,
 			"container_id", container.GetID())
 		return nil
 	}
@@ -228,7 +228,7 @@ func (rm *ResourceMonitor) collectMetrics(ctx context.Context, workspaceID strin
 
 	// CPU 사용률 이상 감지
 	if stats.CPUPercent > 80.0 {
-		rm.logger.Warn("높은 CPU 사용률 감지: %.2f%% (워크스페이스: %s)", 
+		rm.logger.Warn("높은 CPU 사용률 감지: %.2f%% (워크스페이스: %s)",
 			stats.CPUPercent, workspaceID)
 	}
 
@@ -236,7 +236,7 @@ func (rm *ResourceMonitor) collectMetrics(ctx context.Context, workspaceID strin
 	if stats.MemoryLimit > 0 {
 		memoryPercent := float64(stats.MemoryUsage) / float64(stats.MemoryLimit) * 100
 		if memoryPercent > 85.0 {
-			rm.logger.Warn("높은 메모리 사용률 감지: %.2f%% (워크스페이스: %s)", 
+			rm.logger.Warn("높은 메모리 사용률 감지: %.2f%% (워크스페이스: %s)",
 				memoryPercent, workspaceID)
 		}
 	}
@@ -245,7 +245,7 @@ func (rm *ResourceMonitor) collectMetrics(ctx context.Context, workspaceID strin
 	if hasCached && cachedStats != nil {
 		rxDelta := stats.NetworkRxMB - cachedStats.NetworkRxMB
 		txDelta := stats.NetworkTxMB - cachedStats.NetworkTxMB
-		
+
 		if rxDelta > 100 || txDelta > 100 { // 100MB 이상 변화
 			rm.logger.Debug("높은 네트워크 활동 감지: RX +%.2fMB, TX +%.2fMB (워크스페이스: %s)",
 				rxDelta, txDelta, workspaceID)
@@ -286,7 +286,7 @@ func (rm *ResourceMonitor) GetResourceSummary(ctx context.Context) (*ResourceSum
 			totalMemory += stats.MemoryUsage
 			totalNetworkIO += stats.NetworkRxMB + stats.NetworkTxMB
 		}
-		rm.logger.Debug("컨테이너 %s: CPU=%.2f%%, MEM=%dMB", 
+		rm.logger.Debug("컨테이너 %s: CPU=%.2f%%, MEM=%dMB",
 			containerID[:12], stats.CPUPercent, stats.MemoryUsage/(1024*1024))
 	}
 
@@ -399,11 +399,11 @@ type CacheStats struct {
 
 // MonitorStats 모니터 통계
 type MonitorStats struct {
-	ActiveMonitors   int           `json:"active_monitors"`
-	CollectInterval  time.Duration `json:"collect_interval"`
-	CacheStats       CacheStats    `json:"cache_stats"`
-	TotalCollections int64         `json:"total_collections"`
-	FailedCollections int64        `json:"failed_collections"`
+	ActiveMonitors    int           `json:"active_monitors"`
+	CollectInterval   time.Duration `json:"collect_interval"`
+	CacheStats        CacheStats    `json:"cache_stats"`
+	TotalCollections  int64         `json:"total_collections"`
+	FailedCollections int64         `json:"failed_collections"`
 }
 
 // GetMonitorStats 모니터 통계 조회

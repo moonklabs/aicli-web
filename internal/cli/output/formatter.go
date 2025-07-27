@@ -71,7 +71,7 @@ func NewFormatterManager(format Format) *FormatterManager {
 		format:       format,
 		colorEnabled: detectColorSupport(),
 	}
-	
+
 	// 포맷에 따라 적절한 포맷터 생성
 	switch format {
 	case FormatJSON:
@@ -90,7 +90,7 @@ func NewFormatterManager(format Format) *FormatterManager {
 			baseFormatter: baseFormatter{colorEnabled: fm.colorEnabled},
 		}
 	}
-	
+
 	return fm
 }
 
@@ -135,18 +135,18 @@ func detectColorSupport() bool {
 	if os.Getenv("NO_COLOR") != "" {
 		return false
 	}
-	
+
 	// 터미널인지 확인
 	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
 		return false
 	}
-	
+
 	// TERM 환경 변수 확인
 	term := os.Getenv("TERM")
 	if term == "dumb" {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -164,19 +164,19 @@ func (f *baseFormatter) SetColorEnabled(enabled bool) {
 func (tf *TableFormatter) Format(data interface{}) (string, error) {
 	var output strings.Builder
 	table := NewWriter(&output)
-	
+
 	// 테이블 스타일 설정
 	table.SetBorders(Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
 	table.SetAlignment(ALIGN_LEFT)
-	
+
 	// 데이터 타입에 따라 처리
 	switch v := data.(type) {
 	case []map[string]interface{}:
 		if len(v) == 0 {
 			return "No data to display.\n", nil
 		}
-		
+
 		// 헤더 설정
 		if len(tf.headers) == 0 {
 			// 헤더가 설정되지 않은 경우 첫 번째 항목에서 추출
@@ -185,7 +185,7 @@ func (tf *TableFormatter) Format(data interface{}) (string, error) {
 			}
 		}
 		table.SetHeader(tf.headers)
-		
+
 		// 데이터 추가
 		for _, row := range v {
 			rowData := make([]string, len(tf.headers))
@@ -198,14 +198,14 @@ func (tf *TableFormatter) Format(data interface{}) (string, error) {
 			}
 			table.Append(rowData)
 		}
-		
+
 	case map[string]interface{}:
 		// 키-값 형식의 2열 테이블
 		table.SetHeader([]string{"Key", "Value"})
 		for key, value := range v {
 			table.Append([]string{key, fmt.Sprintf("%v", value)})
 		}
-		
+
 	case [][]string:
 		// 이미 문자열 슬라이스 형태인 경우
 		if len(tf.headers) > 0 {
@@ -214,12 +214,12 @@ func (tf *TableFormatter) Format(data interface{}) (string, error) {
 		for _, row := range v {
 			table.Append(row)
 		}
-		
+
 	default:
 		// 리플렉션을 사용하여 구조체 슬라이스 처리
 		return tf.formatStructSlice(data)
 	}
-	
+
 	table.Render()
 	return output.String(), nil
 }
@@ -230,33 +230,33 @@ func (tf *TableFormatter) formatStructSlice(data interface{}) (string, error) {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
-	
+
 	if value.Kind() != reflect.Slice {
 		// 단일 객체인 경우
 		return tf.formatSingleStruct(data)
 	}
-	
+
 	if value.Len() == 0 {
 		return "No data to display.\n", nil
 	}
-	
+
 	var output strings.Builder
 	table := NewWriter(&output)
 	table.SetBorder(false)
 	table.SetAlignment(ALIGN_LEFT)
 	table.SetHeaderAlignment(ALIGN_LEFT)
-	
+
 	// 첫 번째 요소에서 필드 이름 추출
 	firstElem := value.Index(0)
 	if firstElem.Kind() == reflect.Ptr {
 		firstElem = firstElem.Elem()
 	}
-	
+
 	if firstElem.Kind() != reflect.Struct {
 		// 구조체가 아닌 경우 기본 문자열 출력
 		return fmt.Sprintf("%v\n", data), nil
 	}
-	
+
 	// 헤더 설정
 	elemType := firstElem.Type()
 	headers := make([]string, 0, elemType.NumField())
@@ -271,21 +271,21 @@ func (tf *TableFormatter) formatStructSlice(data interface{}) (string, error) {
 			headers = append(headers, field.Name)
 		}
 	}
-	
+
 	if tf.colorEnabled {
 		// 색상 설정 (스텁에서는 무시됨)
 		table.SetHeaderColor()
 	}
-	
+
 	table.SetHeader(headers)
-	
+
 	// 데이터 추가
 	for i := 0; i < value.Len(); i++ {
 		elem := value.Index(i)
 		if elem.Kind() == reflect.Ptr {
 			elem = elem.Elem()
 		}
-		
+
 		row := make([]string, 0, len(headers))
 		for j := 0; j < elemType.NumField(); j++ {
 			field := elemType.Field(j)
@@ -293,13 +293,13 @@ func (tf *TableFormatter) formatStructSlice(data interface{}) (string, error) {
 			if (tag == "-") || (!field.IsExported() && tag == "") {
 				continue
 			}
-			
+
 			fieldValue := elem.Field(j)
 			row = append(row, fmt.Sprintf("%v", fieldValue.Interface()))
 		}
 		table.Append(row)
 	}
-	
+
 	table.Render()
 	return output.String(), nil
 }
@@ -310,42 +310,42 @@ func (tf *TableFormatter) formatSingleStruct(data interface{}) (string, error) {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
-	
+
 	if value.Kind() != reflect.Struct {
 		return fmt.Sprintf("%v\n", data), nil
 	}
-	
+
 	var output strings.Builder
 	table := NewWriter(&output)
 	table.SetBorder(false)
 	table.SetAlignment(ALIGN_LEFT)
 	table.SetHeaderAlignment(ALIGN_LEFT)
-	
+
 	if tf.colorEnabled {
 		// 색상 설정 (스텁에서는 무시됨)
 		table.SetHeaderColor()
 	}
-	
+
 	table.SetHeader([]string{"Field", "Value"})
-	
+
 	valueType := value.Type()
 	for i := 0; i < value.NumField(); i++ {
 		field := valueType.Field(i)
 		tag := field.Tag.Get("json")
-		
+
 		if tag == "-" || (!field.IsExported() && tag == "") {
 			continue
 		}
-		
+
 		fieldName := field.Name
 		if tag != "" {
 			fieldName = strings.Split(tag, ",")[0]
 		}
-		
+
 		fieldValue := value.Field(i)
 		table.Append([]string{fieldName, fmt.Sprintf("%v", fieldValue.Interface())})
 	}
-	
+
 	table.Render()
 	return output.String(), nil
 }
@@ -354,22 +354,22 @@ func (tf *TableFormatter) formatSingleStruct(data interface{}) (string, error) {
 func (jf *JSONFormatter) Format(data interface{}) (string, error) {
 	var output strings.Builder
 	encoder := json.NewEncoder(&output)
-	
+
 	if jf.indent {
 		encoder.SetIndent("", "  ")
 	}
-	
+
 	if err := encoder.Encode(data); err != nil {
 		return "", err
 	}
-	
+
 	result := output.String()
-	
+
 	// 색상 지원이 활성화된 경우 문법 하이라이팅 적용
 	if jf.colorEnabled {
 		result = jf.highlightJSON(result)
 	}
-	
+
 	return result, nil
 }
 
@@ -394,11 +394,11 @@ func (jf *JSONFormatter) highlightJSON(jsonStr string) string {
 				}
 			}
 		}
-		
+
 		// 숫자 하이라이팅
 		// 문자열 하이라이팅 등 추가 가능
 	}
-	
+
 	return strings.Join(lines, "\n")
 }
 
@@ -408,14 +408,14 @@ func (yf *YAMLFormatter) Format(data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	result := string(yamlBytes)
-	
+
 	// 색상 지원이 활성화된 경우 문법 하이라이팅 적용
 	if yf.colorEnabled {
 		result = yf.highlightYAML(result)
 	}
-	
+
 	return result, nil
 }
 
@@ -435,7 +435,7 @@ func (yf *YAMLFormatter) highlightYAML(yamlStr string) string {
 				lines[i] = strings.Repeat(" ", indent) + coloredKey + ":" + parts[1]
 			}
 		}
-		
+
 		// 주석 하이라이팅
 		if strings.Contains(line, "#") {
 			commentStart := strings.Index(line, "#")
@@ -446,7 +446,7 @@ func (yf *YAMLFormatter) highlightYAML(yamlStr string) string {
 			}
 		}
 	}
-	
+
 	return strings.Join(lines, "\n")
 }
 

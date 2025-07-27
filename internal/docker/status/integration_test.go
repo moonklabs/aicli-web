@@ -35,12 +35,12 @@ func TestIntegration_TrackerAndMonitor(t *testing.T) {
 	mockContainer.AddContainer("ws-integration-test", container)
 
 	stats := &docker.ContainerStats{
-		CPUPercent:   45.0,
-		MemoryUsage:  512 * 1024 * 1024, // 512MB
-		MemoryLimit:  2048 * 1024 * 1024, // 2GB
-		NetworkRxMB:  120.0,
-		NetworkTxMB:  80.0,
-		Timestamp:    time.Now(),
+		CPUPercent:  45.0,
+		MemoryUsage: 512 * 1024 * 1024,  // 512MB
+		MemoryLimit: 2048 * 1024 * 1024, // 2GB
+		NetworkRxMB: 120.0,
+		NetworkTxMB: 80.0,
+		Timestamp:   time.Now(),
 	}
 	mockFactory.statsCollector.AddStats("container-integration-test", stats)
 
@@ -196,12 +196,12 @@ func TestIntegration_MultipleWorkspaces(t *testing.T) {
 		mockContainer.AddContainer(workspaceID, containers[i])
 
 		stats := &docker.ContainerStats{
-			CPUPercent:   float64(10 + i*10), // 10, 20, 30, 40, 50
-			MemoryUsage:  int64((100 + i*100) * 1024 * 1024), // 100MB, 200MB, ...
-			MemoryLimit:  1024 * 1024 * 1024, // 1GB
-			NetworkRxMB:  float64(50 + i*10),
-			NetworkTxMB:  float64(25 + i*5),
-			Timestamp:    time.Now(),
+			CPUPercent:  float64(10 + i*10),                 // 10, 20, 30, 40, 50
+			MemoryUsage: int64((100 + i*100) * 1024 * 1024), // 100MB, 200MB, ...
+			MemoryLimit: 1024 * 1024 * 1024,                 // 1GB
+			NetworkRxMB: float64(50 + i*10),
+			NetworkTxMB: float64(25 + i*5),
+			Timestamp:   time.Now(),
 		}
 		mockFactory.statsCollector.AddStats(containerID, stats)
 	}
@@ -253,7 +253,7 @@ func TestIntegration_MultipleWorkspaces(t *testing.T) {
 		}
 
 		if state.ContainerID != containers[i].id {
-			t.Errorf("Workspace %s expected container %s, got %s", 
+			t.Errorf("Workspace %s expected container %s, got %s",
 				workspace.ID, containers[i].id, state.ContainerID)
 		}
 	}
@@ -304,13 +304,13 @@ func TestIntegration_StateTransitions(t *testing.T) {
 		stateChangesMutex.Lock()
 		defer stateChangesMutex.Unlock()
 		if workspaceID == "ws-transition-test" {
-			transition := fmt.Sprintf("%s->%s", 
+			transition := fmt.Sprintf("%s->%s",
 				func() string {
 					if oldState != nil {
 						return string(oldState.Status)
 					}
 					return "nil"
-				}(), 
+				}(),
 				newState.Status)
 			stateChanges = append(stateChanges, transition)
 		}
@@ -508,11 +508,11 @@ func TestIntegration_Performance(t *testing.T) {
 		mockContainer.AddContainer(workspaceID, container)
 
 		stats := &docker.ContainerStats{
-			CPUPercent:   float64(i % 100),
-			MemoryUsage:  int64(i * 10 * 1024 * 1024),
-			NetworkRxMB:  float64(i),
-			NetworkTxMB:  float64(i / 2),
-			Timestamp:    time.Now(),
+			CPUPercent:  float64(i % 100),
+			MemoryUsage: int64(i * 10 * 1024 * 1024),
+			NetworkRxMB: float64(i),
+			NetworkTxMB: float64(i / 2),
+			Timestamp:   time.Now(),
 		}
 		mockFactory.statsCollector.AddStats(containerID, stats)
 	}

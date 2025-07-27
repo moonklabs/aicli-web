@@ -29,7 +29,7 @@ func TestContainerManager_FullWorkflow(t *testing.T) {
 	defer lifecycleManager.Close()
 
 	workspaceID := "integration-test-workspace"
-	
+
 	// 이벤트 추적
 	var events []ContainerEvent
 	var eventsMu sync.Mutex
@@ -124,7 +124,7 @@ func TestContainerManager_FullWorkflow(t *testing.T) {
 
 	t.Logf("Collected %d events", len(events))
 	for i, event := range events {
-		t.Logf("Event %d: Type=%s, Status=%s, Container=%s", 
+		t.Logf("Event %d: Type=%s, Status=%s, Container=%s",
 			i, event.Type, event.Status, event.ContainerID[:12])
 	}
 
@@ -338,7 +338,7 @@ func TestContainerManager_ErrorRecovery(t *testing.T) {
 	t.Log("Creating second container with same workspace ID...")
 	container2, err := manager.CreateWorkspaceContainer(ctx, req)
 	require.NoError(t, err)
-	
+
 	// 두 번째 컨테이너는 새로운 ID를 가져야 함 (기존 컨테이너가 정리됨)
 	assert.NotEqual(t, container1.ID, container2.ID)
 
@@ -352,7 +352,7 @@ func TestContainerManager_ErrorRecovery(t *testing.T) {
 
 	// 3. 존재하지 않는 컨테이너 조작
 	nonExistentID := "non-existent-container-id"
-	
+
 	err = manager.StartContainer(ctx, nonExistentID)
 	assert.Error(t, err)
 

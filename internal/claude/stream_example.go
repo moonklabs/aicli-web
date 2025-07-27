@@ -31,7 +31,7 @@ func NewStreamExample() *StreamExample {
 func (se *StreamExample) BasicUsage() error {
 	// Claude CLI 프로세스 시뮬레이션 (실제로는 외부 프로세스)
 	cmd := exec.Command("echo", `{"type":"response","content":"Hello from Claude!","message_id":"test-123"}`)
-	
+
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return fmt.Errorf("failed to create stdin pipe: %w", err)
@@ -154,7 +154,7 @@ func (se *StreamExample) EventHandlingExample() error {
 	go func() {
 		defer stdoutWriter.Close()
 		time.Sleep(100 * time.Millisecond)
-		
+
 		response := `{"type":"response","content":"Event handling example response","message_id":"event-test"}`
 		stdoutWriter.Write([]byte(response))
 	}()
@@ -163,7 +163,7 @@ func (se *StreamExample) EventHandlingExample() error {
 	go func() {
 		defer stderrWriter.Close()
 		time.Sleep(200 * time.Millisecond)
-		
+
 		stderrWriter.Write([]byte("Warning: This is a simulated error message"))
 	}()
 
@@ -228,7 +228,7 @@ func (se *StreamExample) HighThroughputExample() error {
 	// 백그라운드에서 응답 시뮬레이션
 	go func() {
 		defer stdoutWriter.Close()
-		
+
 		for i := 0; i < 50; i++ {
 			response := fmt.Sprintf(`{"type":"response","content":"Response %d","message_id":"batch-%d"}`, i, i)
 			stdoutWriter.Write([]byte(response))
@@ -277,11 +277,11 @@ func (se *StreamExample) HighThroughputExample() error {
 				continue
 			}
 			receivedResponses++
-			
+
 			if receivedResponses%10 == 0 {
 				se.logger.WithField("received", receivedResponses).Info("Progress update")
 			}
-			
+
 			_ = response // 응답 처리
 		}
 	}
@@ -319,8 +319,8 @@ func (se *StreamExample) StreamStatsExample() error {
 				"running":           stats["is_running"],
 				"messages_sent":     stats["messages_sent"],
 				"messages_received": stats["messages_received"],
-				"errors":           stats["errors"],
-				"uptime":           stats["uptime_seconds"],
+				"errors":            stats["errors"],
+				"uptime":            stats["uptime_seconds"],
 			}).Info("Stream handler statistics")
 
 			// 버퍼 통계
@@ -347,7 +347,7 @@ func (se *StreamExample) StreamStatsExample() error {
 	// 백그라운드 작업 시뮬레이션
 	go func() {
 		defer stdoutWriter.Close()
-		
+
 		for i := 0; i < 5; i++ {
 			time.Sleep(1 * time.Second)
 			response := fmt.Sprintf(`{"type":"response","content":"Stats example response %d","message_id":"stats-%d"}`, i, i)
@@ -398,13 +398,13 @@ func (se *StreamExample) RunAllExamples() {
 
 	for _, example := range examples {
 		se.logger.WithField("example", example.name).Info("Running example")
-		
+
 		if err := example.fn(); err != nil {
 			se.logger.WithError(err).WithField("example", example.name).Error("Example failed")
 		} else {
 			se.logger.WithField("example", example.name).Info("Example completed successfully")
 		}
-		
+
 		time.Sleep(1 * time.Second) // 예제 간 간격
 	}
 }
@@ -412,10 +412,10 @@ func (se *StreamExample) RunAllExamples() {
 // main 함수는 예제 실행을 위한 것입니다.
 func main() {
 	example := NewStreamExample()
-	
+
 	// 특정 예제만 실행하려면:
 	// example.BasicUsage()
-	
+
 	// 모든 예제 실행:
 	example.RunAllExamples()
 }

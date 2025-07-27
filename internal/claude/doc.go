@@ -26,23 +26,23 @@
 //
 //	logger := logrus.New()
 //	pm := claude.NewProcessManagerV2(logger)
-//	
+//
 //	config := &claude.ProcessConfig{
 //	    Command:    "claude",
 //	    Args:       []string{"chat", "--no-stream"},
 //	    WorkingDir: "/workspace",
 //	}
-//	
+//
 //	err := pm.Start(context.Background(), config)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-//	
+//
 //	// 프로세스 상태 확인
 //	if pm.IsRunning() {
 //	    fmt.Printf("Claude CLI 실행 중 (PID: %d)\n", pm.GetPID())
 //	}
-//	
+//
 //	// 정상 종료
 //	err = pm.Stop(30 * time.Second)
 package claude

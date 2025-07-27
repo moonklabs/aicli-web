@@ -9,16 +9,16 @@ import (
 
 // Factory Docker 클라이언트와 관련 매니저들을 생성하고 관리합니다.
 type Factory struct {
-	config            *Config
-	client            *Client
-	networkManager    *NetworkManager
-	statsCollector    *StatsCollector
-	healthChecker     *HealthChecker
-	containerManager  *ContainerManager
-	lifecycleManager  *LifecycleManager
-	mountManager      *MountManager
-	metricsCollector  *MetricsCollector
-	mu                sync.RWMutex
+	config           *Config
+	client           *Client
+	networkManager   *NetworkManager
+	statsCollector   *StatsCollector
+	healthChecker    *HealthChecker
+	containerManager *ContainerManager
+	lifecycleManager *LifecycleManager
+	mountManager     *MountManager
+	metricsCollector *MetricsCollector
+	mu               sync.RWMutex
 }
 
 // NewFactory 새로운 Docker 팩토리를 생성합니다.
@@ -29,7 +29,7 @@ func NewFactory(config *Config) (*Factory, error) {
 	}
 
 	statsCollector := NewStatsCollector(client)
-	
+
 	factory := &Factory{
 		config:           config,
 		client:           client,
@@ -118,7 +118,7 @@ func (f *Factory) Ping(ctx context.Context) error {
 	f.mu.RLock()
 	client := f.client
 	f.mu.RUnlock()
-	
+
 	return client.Ping(ctx)
 }
 
@@ -165,7 +165,7 @@ func (f *Factory) Reinitialize(ctx context.Context) error {
 	f.statsCollector = NewStatsCollector(client)
 	f.healthChecker = NewHealthChecker(client, 30*time.Second)
 	f.containerManager = NewContainerManager(client)
-	
+
 	// 기존 생명주기 매니저 정리
 	if f.lifecycleManager != nil {
 		f.lifecycleManager.Close()
@@ -208,10 +208,10 @@ func (f *Factory) Close() error {
 
 // Manager Docker 리소스를 통합 관리하는 매니저
 type Manager struct {
-	factory  *Factory
-	ctx      context.Context
-	cancel   context.CancelFunc
-	mu       sync.RWMutex
+	factory *Factory
+	ctx     context.Context
+	cancel  context.CancelFunc
+	mu      sync.RWMutex
 }
 
 // NewManager 새로운 Docker 매니저를 생성합니다.

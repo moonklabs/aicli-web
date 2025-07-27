@@ -14,12 +14,12 @@ type TestData struct {
 
 // TestProject 테스트용 프로젝트 데이터
 type TestProject struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Path        string   `json:"path"`
-	Status      string   `json:"status"`
-	ClaudeAPIKey string  `json:"claude_api_key,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Path         string   `json:"path"`
+	Status       string   `json:"status"`
+	ClaudeAPIKey string   `json:"claude_api_key,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
 }
 
 // TestUser 테스트용 사용자 데이터
@@ -39,7 +39,7 @@ type TestConfig struct {
 // LoadTestData 테스트 데이터 로드
 func LoadTestData(t *testing.T) *TestData {
 	t.Helper()
-	
+
 	return &TestData{
 		Projects: []TestProject{
 			{
@@ -87,12 +87,12 @@ func LoadTestData(t *testing.T) *TestData {
 // CreateTestDataFile 테스트 데이터 파일 생성
 func CreateTestDataFile(t *testing.T, dir string, data interface{}) string {
 	t.Helper()
-	
+
 	content, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		t.Fatalf("테스트 데이터 마샬링 실패: %v", err)
 	}
-	
+
 	return TempFile(t, dir, "testdata-*.json", string(content))
 }
 

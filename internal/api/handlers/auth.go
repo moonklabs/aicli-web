@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/config"
+	"github.com/gin-gonic/gin"
 )
 
 // LoginRequest 로그인 요청 구조체

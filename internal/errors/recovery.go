@@ -72,9 +72,9 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 	if policy == nil {
 		policy = DefaultRetryPolicy()
 	}
-	
+
 	var lastError error
-	
+
 	for attempt := 1; attempt <= policy.MaxAttempts; attempt++ {
 		// 컨텍스트 취소 확인
 		select {
@@ -82,20 +82,20 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 			return NewInternalError("retry", ctx.Err())
 		default:
 		}
-		
+
 		// 작업 실행
 		err := operation(ctx, attempt)
 		if err == nil {
 			return nil // 성공
 		}
-		
+
 		lastError = err
-		
+
 		// 마지막 시도인 경우 바로 반환
 		if attempt >= policy.MaxAttempts {
 			break
 		}
-		
+
 		// 재시도 가능 여부 확인
 		if policy.RetryableFunc != nil && !policy.RetryableFunc(err) {
 			// CLIError에 재시도 불가 정보 추가
@@ -106,15 +106,15 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 			}
 			return err
 		}
-		
+
 		// 지연 시간 계산
 		delay := policy.calculateDelay(attempt)
-		
+
 		// 로그 기록
-		LogErrorWithLevel(LogLevelWarn, NewInternalError("retry", 
-			fmt.Errorf("작업 실패 (시도 %d/%d), %v 후 재시도: %v", 
+		LogErrorWithLevel(LogLevelWarn, NewInternalError("retry",
+			fmt.Errorf("작업 실패 (시도 %d/%d), %v 후 재시도: %v",
 				attempt, policy.MaxAttempts, delay, err)))
-		
+
 		// 지연
 		select {
 		case <-ctx.Done():
@@ -122,7 +122,7 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 		case <-time.After(delay):
 		}
 	}
-	
+
 	// 모든 시도 실패
 	if cliErr, ok := lastError.(*CLIError); ok {
 		cliErr.AddContext("max_attempts_reached", true)
@@ -130,8 +130,8 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 		cliErr.AddSuggestion(fmt.Sprintf("%d번 재시도했지만 실패했습니다", policy.MaxAttempts))
 		return cliErr
 	}
-	
-	return NewInternalError("retry", 
+
+	return NewInternalError("retry",
 		fmt.Errorf("%d번 재시도 후에도 실패: %w", policy.MaxAttempts, lastError))
 }
 
@@ -139,12 +139,12 @@ func RetryWithPolicy(ctx context.Context, policy *RetryPolicy, operation Retryab
 func (p *RetryPolicy) calculateDelay(attempt int) time.Duration {
 	// 지수 백오프 계산
 	delay := time.Duration(float64(p.BaseDelay) * math.Pow(p.Multiplier, float64(attempt-1)))
-	
+
 	// 최대 지연 시간 제한
 	if delay > p.MaxDelay {
 		delay = p.MaxDelay
 	}
-	
+
 	// 지터 적용
 	if p.Jitter {
 		jitter := time.Duration(rand.Float64() * float64(delay) * 0.1) // 10% 지터
@@ -154,12 +154,12 @@ func (p *RetryPolicy) calculateDelay(attempt int) time.Duration {
 			delay -= jitter
 		}
 	}
-	
+
 	// 최소값 보장
 	if delay < 0 {
 		delay = p.BaseDelay
 	}
-	
+
 	return delay
 }
 
@@ -167,10 +167,10 @@ func (p *RetryPolicy) calculateDelay(attempt int) time.Duration {
 type RecoveryStrategy interface {
 	// CanRecover는 에러가 복구 가능한지 확인합니다.
 	CanRecover(err error) bool
-	
+
 	// Recover는 에러를 복구합니다.
 	Recover(ctx context.Context, err error) error
-	
+
 	// Name은 복구 전략의 이름을 반환합니다.
 	Name() string
 }
@@ -185,12 +185,12 @@ func (s *ConfigRecoveryStrategy) CanRecover(err error) bool {
 
 // Recover는 설정 에러를 복구합니다.
 func (s *ConfigRecoveryStrategy) Recover(ctx context.Context, err error) error {
-	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery", 
+	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery",
 		fmt.Errorf("설정 에러 복구 시도: %v", err)))
-	
+
 	// 설정 파일 백업 및 기본값으로 재설정
 	// 실제 구현은 config 패키지와 연동 필요
-	
+
 	return NewConfigError(fmt.Errorf("설정 복구 시도됨"), "config")
 }
 
@@ -209,12 +209,12 @@ func (s *NetworkRecoveryStrategy) CanRecover(err error) bool {
 
 // Recover는 네트워크 에러를 복구합니다.
 func (s *NetworkRecoveryStrategy) Recover(ctx context.Context, err error) error {
-	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery", 
+	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery",
 		fmt.Errorf("네트워크 에러 복구 시도: %v", err)))
-	
+
 	// 네트워크 연결 상태 확인 및 재연결 시도
 	// 실제 구현은 네트워크 모듈과 연동 필요
-	
+
 	return nil // 복구 성공으로 가정
 }
 
@@ -233,12 +233,12 @@ func (s *ProcessRecoveryStrategy) CanRecover(err error) bool {
 
 // Recover는 프로세스 에러를 복구합니다.
 func (s *ProcessRecoveryStrategy) Recover(ctx context.Context, err error) error {
-	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery", 
+	LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery",
 		fmt.Errorf("프로세스 에러 복구 시도: %v", err)))
-	
+
 	// 프로세스 재시작 시도
 	// 실제 구현은 프로세스 관리자와 연동 필요
-	
+
 	return nil // 복구 성공으로 가정
 }
 
@@ -272,20 +272,20 @@ func (m *RecoveryManager) AddStrategy(strategy RecoveryStrategy) {
 func (m *RecoveryManager) TryRecover(ctx context.Context, err error) error {
 	for _, strategy := range m.strategies {
 		if strategy.CanRecover(err) {
-			LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery", 
+			LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery",
 				fmt.Errorf("%s 전략으로 복구 시도", strategy.Name())))
-			
+
 			if recoveryErr := strategy.Recover(ctx, err); recoveryErr == nil {
-				LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery", 
+				LogErrorWithLevel(LogLevelInfo, NewInternalError("recovery",
 					fmt.Errorf("%s 전략으로 복구 성공", strategy.Name())))
 				return nil
 			} else {
-				LogErrorWithLevel(LogLevelWarn, NewInternalError("recovery", 
+				LogErrorWithLevel(LogLevelWarn, NewInternalError("recovery",
 					fmt.Errorf("%s 전략으로 복구 실패: %v", strategy.Name(), recoveryErr)))
 			}
 		}
 	}
-	
+
 	// 복구 불가능
 	if cliErr, ok := err.(*CLIError); ok {
 		cliErr.AddContext("recovery_attempted", true)
@@ -293,7 +293,7 @@ func (m *RecoveryManager) TryRecover(ctx context.Context, err error) error {
 		cliErr.AddSuggestion("자동 복구가 불가능합니다. 수동으로 문제를 해결해주세요")
 		return cliErr
 	}
-	
+
 	return NewInternalError("recovery", fmt.Errorf("복구 불가능: %w", err))
 }
 
@@ -304,7 +304,7 @@ func RetryWithRecovery(ctx context.Context, policy *RetryPolicy, manager *Recove
 		if err == nil {
 			return nil
 		}
-		
+
 		// 첫 번째 시도에서만 복구 시도
 		if attempt == 1 && manager != nil {
 			if recoveryErr := manager.TryRecover(ctx, err); recoveryErr == nil {
@@ -312,7 +312,7 @@ func RetryWithRecovery(ctx context.Context, policy *RetryPolicy, manager *Recove
 				return operation(ctx, attempt)
 			}
 		}
-		
+
 		return err
 	})
 }

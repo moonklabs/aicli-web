@@ -231,8 +231,8 @@ func TestValidator_calculateDirSize(t *testing.T) {
 
 	// 테스트 파일들 생성
 	files := map[string]string{
-		"file1.txt": "Hello",
-		"file2.txt": "World",
+		"file1.txt":        "Hello",
+		"file2.txt":        "World",
 		"subdir/file3.txt": "Test",
 	}
 

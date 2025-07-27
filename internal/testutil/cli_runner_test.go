@@ -26,7 +26,7 @@ func TestCLITestRunner_Basic(t *testing.T) {
 
 	// 명령어 실행
 	err := runner.RunCommand("world")
-	
+
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello world", runner.GetOutput())
 	assert.Empty(t, runner.GetError())
@@ -45,7 +45,7 @@ func TestCLITestRunner_WithError(t *testing.T) {
 	runner.SetCommand(testCmd)
 
 	err := runner.RunCommand()
-	
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "test error")
 }
@@ -67,7 +67,7 @@ func TestCLITestRunner_WithStdin(t *testing.T) {
 	runner.SetStdin(strings.NewReader("test input"))
 
 	err := runner.RunCommand()
-	
+
 	assert.NoError(t, err)
 	assert.Equal(t, "stdin processed", runner.GetOutput())
 }
@@ -88,7 +88,7 @@ func TestCLITestRunner_WithEnvironment(t *testing.T) {
 	runner.SetEnv("TEST_VAR", "test_value")
 
 	err := runner.RunCommand()
-	
+
 	assert.NoError(t, err)
 	assert.Equal(t, "env command executed", runner.GetOutput())
 }
@@ -109,7 +109,7 @@ func TestCLITestRunner_WithTimeout(t *testing.T) {
 	runner.SetTimeout(1 * time.Second)
 
 	err := runner.RunCommand()
-	
+
 	assert.NoError(t, err)
 	assert.Equal(t, "completed", runner.GetOutput())
 }
@@ -141,7 +141,7 @@ func TestCLITestRunner_Reset(t *testing.T) {
 		cmd.Print("second run")
 		return nil
 	}
-	
+
 	err = runner.RunCommand()
 	assert.NoError(t, err)
 	assert.Equal(t, "second run", runner.GetOutput())
@@ -211,7 +211,7 @@ func TestAssertHelpers(t *testing.T) {
 func TestCLITestRunner_WorkingDirectory(t *testing.T) {
 	// 임시 작업 디렉토리 생성
 	tempDir := CreateTempWorkspace(t)
-	
+
 	testCmd := &cobra.Command{
 		Use: "pwd",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -225,7 +225,7 @@ func TestCLITestRunner_WorkingDirectory(t *testing.T) {
 	runner.SetWorkingDir(tempDir)
 
 	err := runner.RunCommand()
-	
+
 	assert.NoError(t, err)
 	assert.Equal(t, "directory command executed", runner.GetOutput())
 }
@@ -262,18 +262,18 @@ func TestCLITestRunner_Concurrent(t *testing.T) {
 
 	// 여러 goroutine에서 동시에 실행
 	results := make(chan string, 10)
-	
+
 	for i := 0; i < 10; i++ {
 		go func(id int) {
 			runner := NewCLITestRunner()
 			runner.SetCommand(testCmd)
-			
+
 			err := runner.RunCommand(string(rune('0' + id)))
 			if err != nil {
 				results <- "error"
 				return
 			}
-			
+
 			results <- runner.GetOutput()
 		}(i)
 	}
@@ -322,12 +322,12 @@ func TestCLITestCase_WithSetupAndCleanup(t *testing.T) {
 func TestCLITestRunner_ComplexCommand(t *testing.T) {
 	// 하위 명령어들이 있는 복잡한 명령어 구조
 	rootCmd := &cobra.Command{Use: "app"}
-	
+
 	configCmd := &cobra.Command{
-		Use: "config",
+		Use:   "config",
 		Short: "Configuration commands",
 	}
-	
+
 	getCmd := &cobra.Command{
 		Use: "get",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -338,7 +338,7 @@ func TestCLITestRunner_ComplexCommand(t *testing.T) {
 			return nil
 		},
 	}
-	
+
 	setCmd := &cobra.Command{
 		Use: "set",
 		RunE: func(cmd *cobra.Command, args []string) error {

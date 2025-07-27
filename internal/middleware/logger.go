@@ -32,7 +32,7 @@ func RequestLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 요청 시작 시간 기록
 		start := time.Now()
-		
+
 		// 요청 ID 가져오기 (request_id 미들웨어가 먼저 실행되어야 함)
 		requestID := c.GetString("request_id")
 		if requestID == "" {

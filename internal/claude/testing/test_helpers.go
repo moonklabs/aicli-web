@@ -20,11 +20,11 @@ import (
 
 // TestEnvironment는 통합 테스트를 위한 환경을 제공합니다.
 type TestEnvironment struct {
-	TempDir      string
-	MockClaude   *MockClaudeServer
-	RealClaude   bool // 실제 Claude CLI 사용 여부
-	TestData     *TestDataProvider
-	cleanup      []func()
+	TempDir    string
+	MockClaude *MockClaudeServer
+	RealClaude bool // 실제 Claude CLI 사용 여부
+	TestData   *TestDataProvider
+	cleanup    []func()
 }
 
 // NewTestEnvironment는 새로운 테스트 환경을 생성합니다.
@@ -139,7 +139,7 @@ func (m *MockClaudeServer) SetResponse(pattern string, response []byte) {
 func (m *MockClaudeServer) GetRequests() []MockRequest {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	requests := make([]MockRequest, len(m.requests))
 	copy(requests, m.requests)
 	return requests
@@ -178,7 +178,7 @@ func (m *MockClaudeServer) createChatResponse(content string) []byte {
 			"model":     "claude-3-sonnet-mock",
 		},
 	}
-	
+
 	data, _ := json.Marshal(response)
 	return data
 }
@@ -194,7 +194,7 @@ func (m *MockClaudeServer) createStatusResponse() []byte {
 			"total":  0,
 		},
 	}
-	
+
 	data, _ := json.Marshal(response)
 	return data
 }
@@ -209,10 +209,10 @@ func NewTestDataProvider() *TestDataProvider {
 	provider := &TestDataProvider{
 		streamData: make(map[string][]byte),
 	}
-	
+
 	// 미리 정의된 테스트 데이터 로드
 	provider.loadStreamData()
-	
+
 	return provider
 }
 
@@ -227,14 +227,14 @@ func (tdp *TestDataProvider) loadStreamData() {
 {"type":"system","content":"Task completed successfully","id":"msg6"}`
 
 	tdp.streamData["complex_response.jsonl"] = []byte(complexResponse)
-	
+
 	// 에러 시나리오
 	errorResponse := `{"type":"text","content":"Starting task...","id":"msg1"}
 {"type":"error","content":"Permission denied","id":"msg2","meta":{"error_code":403}}
 {"type":"system","content":"Task failed","id":"msg3"}`
 
 	tdp.streamData["error_response.jsonl"] = []byte(errorResponse)
-	
+
 	// 대용량 응답
 	var largeBuilder strings.Builder
 	for i := 0; i < 100; i++ {
@@ -280,7 +280,7 @@ func (ah *AssertionHelpers) AssertMessageTypes(messages []claude.Message, expect
 		ah.t.Errorf("Expected %d messages, got %d", len(expected), len(messages))
 		return
 	}
-	
+
 	for i, msg := range messages {
 		if msg.Type != expected[i] {
 			ah.t.Errorf("Message %d: expected type %s, got %s", i, expected[i], msg.Type)
@@ -313,7 +313,7 @@ func (ah *AssertionHelpers) AssertGeneratedCode(messages []claude.Message, expec
 // WaitForResponse는 응답을 기다리는 헬퍼 함수입니다.
 func WaitForResponse(t *testing.T, ctx context.Context, messageChan <-chan claude.Message) string {
 	var response strings.Builder
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -352,18 +352,18 @@ type TestProcess struct {
 // SendPrompt는 프롬프트를 전송합니다 (시뮬레이션).
 func (tp *TestProcess) SendPrompt(prompt string) error {
 	tp.state = "processing"
-	
+
 	// 시뮬레이션 응답 생성
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		
+
 		// 응답 메시지들 전송
 		responses := []claude.Message{
 			{Type: "text", Content: "I understand your request.", ID: "sim1"},
 			{Type: "text", Content: "Processing...", ID: "sim2"},
 			{Type: "text", Content: "Task completed.", ID: "sim3"},
 		}
-		
+
 		for _, msg := range responses {
 			select {
 			case tp.messages <- msg:
@@ -372,11 +372,11 @@ func (tp *TestProcess) SendPrompt(prompt string) error {
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
-		
+
 		close(tp.messages)
 		tp.state = "completed"
 	}()
-	
+
 	return nil
 }
 
@@ -421,7 +421,7 @@ type MockPipe struct {
 func (mp *MockPipe) Read(p []byte) (n int, err error) {
 	mp.mu.Lock()
 	defer mp.mu.Unlock()
-	
+
 	select {
 	case <-mp.closed:
 		return 0, io.EOF
@@ -434,7 +434,7 @@ func (mp *MockPipe) Read(p []byte) (n int, err error) {
 func (mp *MockPipe) Write(p []byte) (n int, err error) {
 	mp.mu.Lock()
 	defer mp.mu.Unlock()
-	
+
 	select {
 	case <-mp.closed:
 		return 0, io.ErrClosedPipe

@@ -151,12 +151,12 @@ func TestClassifyError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ClassifyError(tt.err)
-			
+
 			if tt.err == nil {
 				assert.Nil(t, result)
 				return
 			}
-			
+
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedType, result.Type)
 			assert.Equal(t, tt.expectedCode, result.Code)
@@ -303,7 +303,7 @@ func TestPredefinedErrors(t *testing.T) {
 
 func BenchmarkClassifyError(b *testing.B) {
 	testError := errors.New("connection refused by docker daemon")
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = ClassifyError(testError)
@@ -312,7 +312,7 @@ func BenchmarkClassifyError(b *testing.B) {
 
 func BenchmarkIsRetryableError(b *testing.B) {
 	testError := NewDockerError(ErrorTypeConnection, "CONNECTION_FAILED", "connection failed", nil)
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = IsRetryableError(testError)

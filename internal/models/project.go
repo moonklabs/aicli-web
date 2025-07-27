@@ -15,21 +15,21 @@ const (
 
 // Project 프로젝트 모델
 type Project struct {
-	ID           string         `json:"id" validate:"omitempty,uuid"`
-	WorkspaceID  string         `json:"workspace_id" binding:"required" validate:"required,uuid"`
-	Name         string         `json:"name" binding:"required,min=1,max=100" validate:"required,min=1,max=100,no_special_chars"`
-	Path         string         `json:"path" binding:"required,dir" validate:"required,dir,safepath"` // 커스텀 validator 사용
-	Description  string         `json:"description" binding:"max=500" validate:"max=500"`
-	GitURL       string         `json:"git_url,omitempty" validate:"omitempty,url"`
-	GitBranch    string         `json:"git_branch,omitempty" validate:"omitempty,min=1,max=100"`
-	Language     string         `json:"language,omitempty" validate:"omitempty,min=1,max=50"`
-	Status       ProjectStatus  `json:"status" validate:"omitempty,project_status"`
-	Config       ProjectConfig  `json:"config" validate:"-"`
-	GitInfo      *GitInfo       `json:"git_info,omitempty" validate:"-"`
-	Version      int            `json:"version,omitempty" validate:"min=0"`
-	CreatedAt    time.Time      `json:"created_at" validate:"-"`
-	UpdatedAt    time.Time      `json:"updated_at" validate:"-"`
-	DeletedAt    *time.Time     `json:"deleted_at,omitempty" validate:"-"`
+	ID          string        `json:"id" validate:"omitempty,uuid"`
+	WorkspaceID string        `json:"workspace_id" binding:"required" validate:"required,uuid"`
+	Name        string        `json:"name" binding:"required,min=1,max=100" validate:"required,min=1,max=100,no_special_chars"`
+	Path        string        `json:"path" binding:"required,dir" validate:"required,dir,safepath"` // 커스텀 validator 사용
+	Description string        `json:"description" binding:"max=500" validate:"max=500"`
+	GitURL      string        `json:"git_url,omitempty" validate:"omitempty,url"`
+	GitBranch   string        `json:"git_branch,omitempty" validate:"omitempty,min=1,max=100"`
+	Language    string        `json:"language,omitempty" validate:"omitempty,min=1,max=50"`
+	Status      ProjectStatus `json:"status" validate:"omitempty,project_status"`
+	Config      ProjectConfig `json:"config" validate:"-"`
+	GitInfo     *GitInfo      `json:"git_info,omitempty" validate:"-"`
+	Version     int           `json:"version,omitempty" validate:"min=0"`
+	CreatedAt   time.Time     `json:"created_at" validate:"-"`
+	UpdatedAt   time.Time     `json:"updated_at" validate:"-"`
+	DeletedAt   *time.Time    `json:"deleted_at,omitempty" validate:"-"`
 }
 
 // ProjectConfig 프로젝트 설정
@@ -40,25 +40,31 @@ type ProjectConfig struct {
 	ClaudeOptions   ClaudeOptions     `json:"claude_options" validate:"-"`
 	BuildCommands   []string          `json:"build_commands,omitempty" validate:"dive,min=1"`
 	TestCommands    []string          `json:"test_commands,omitempty" validate:"dive,min=1"`
+
+	// 단일 명령어 (레거시 호환성)
+	BuildCommand string `json:"build_command,omitempty" validate:"omitempty,min=1"`
+	TestCommand  string `json:"test_command,omitempty" validate:"omitempty,min=1"`
+	AutoSave     bool   `json:"auto_save,omitempty" validate:"-"`
 }
 
 // ClaudeOptions Claude CLI 옵션
 type ClaudeOptions struct {
-	Model           string   `json:"model,omitempty" validate:"omitempty,min=1,max=100"`
-	MaxTokens       int      `json:"max_tokens,omitempty" validate:"omitempty,min=1,max=200000"`
-	Temperature     float32  `json:"temperature,omitempty" validate:"omitempty,min=0,max=1"`
-	SystemPrompt    string   `json:"system_prompt,omitempty" validate:"omitempty,max=10000"`
-	ExcludePaths    []string `json:"exclude_paths,omitempty" validate:"dive,min=1"`
-	IncludePaths    []string `json:"include_paths,omitempty" validate:"dive,min=1"`
+	Model        string   `json:"model,omitempty" validate:"omitempty,min=1,max=100"`
+	MaxTokens    int      `json:"max_tokens,omitempty" validate:"omitempty,min=1,max=200000"`
+	Temperature  float32  `json:"temperature,omitempty" validate:"omitempty,min=0,max=1"`
+	SystemPrompt string   `json:"system_prompt,omitempty" validate:"omitempty,max=10000"`
+	ExcludePaths []string `json:"exclude_paths,omitempty" validate:"dive,min=1"`
+	IncludePaths []string `json:"include_paths,omitempty" validate:"dive,min=1"`
 }
 
 // GitInfo Git 리포지토리 정보
 type GitInfo struct {
-	RemoteURL     string       `json:"remote_url"`
-	CurrentBranch string       `json:"current_branch"`
-	IsClean       bool         `json:"is_clean"`
-	LastCommit    *CommitInfo  `json:"last_commit,omitempty"`
-	Status        *GitStatus   `json:"status,omitempty"`
+	RemoteURL     string      `json:"remote_url"`
+	CurrentBranch string      `json:"current_branch"`
+	Branch        string      `json:"branch"` // 레거시 호환성
+	IsClean       bool        `json:"is_clean"`
+	LastCommit    *CommitInfo `json:"last_commit,omitempty"`
+	Status        *GitStatus  `json:"status,omitempty"`
 }
 
 // CommitInfo 커밋 정보

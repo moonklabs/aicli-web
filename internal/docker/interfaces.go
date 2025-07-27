@@ -9,10 +9,10 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	
-	"github.com/aicli/aicli-web/internal/models"
+
 	mountpkg "github.com/aicli/aicli-web/internal/docker/mount"
 	securitypkg "github.com/aicli/aicli-web/internal/docker/security"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // DockerClient Docker 클라이언트 인터페이스
@@ -20,7 +20,7 @@ type DockerClient interface {
 	// 기본 연결
 	Ping(ctx context.Context) error
 	Close() error
-	
+
 	// 설정 관리
 	GetConfig() *Config
 	GetNetworkID() string
@@ -137,7 +137,7 @@ type ClientInterface interface {
 	NetworkManagement
 	HealthMonitoring
 	StatsCollection
-	
+
 	// Docker API 메서드 추가
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
 	ContainerKill(ctx context.Context, containerID string, signal string) error
@@ -256,7 +256,6 @@ type ImageManager interface {
 	RemoveImage(ctx context.Context, imageID string, force bool) error
 	InspectImage(ctx context.Context, imageID string) (*ImageInfo, error)
 }
-
 
 // BuildImageRequest 이미지 빌드 요청 (향후 구현)
 type BuildImageRequest struct {

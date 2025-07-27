@@ -27,7 +27,7 @@ func setupTestEnvironment(t *testing.T) (*Client, *ContainerManager, func()) {
 	config := DefaultConfig()
 	config.NetworkName = "aicli-test-network"
 	config.DefaultImage = "alpine:latest"
-	
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -43,7 +43,7 @@ func setupTestEnvironment(t *testing.T) (*Client, *ContainerManager, func()) {
 				filters.Arg("label", client.labelKey("managed")),
 			),
 		})
-		
+
 		for _, container := range containers {
 			client.cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{
 				Force:         true,
@@ -65,7 +65,7 @@ func createTestProjectDir(t *testing.T) (string, func()) {
 
 	tempDir := t.TempDir()
 	projectDir := filepath.Join(tempDir, "test-project")
-	
+
 	err := os.MkdirAll(projectDir, 0755)
 	require.NoError(t, err)
 
@@ -132,7 +132,7 @@ func TestContainerManager_CreateWorkspaceContainer(t *testing.T) {
 	assert.True(t, envFound, "Environment variable not found")
 
 	// 리소스 제한 확인
-	assert.Equal(t, int64(50000), inspect.HostConfig.CPUQuota)    // 0.5 CPU
+	assert.Equal(t, int64(50000), inspect.HostConfig.CPUQuota)       // 0.5 CPU
 	assert.Equal(t, int64(128*1024*1024), inspect.HostConfig.Memory) // 128MB
 
 	// 정리
@@ -195,7 +195,7 @@ func TestContainerManager_ContainerLifecycle(t *testing.T) {
 	// 5. 컨테이너 삭제
 	err = manager.StopContainer(ctx, container.ID, 5*time.Second)
 	assert.NoError(t, err)
-	
+
 	err = manager.RemoveContainer(ctx, container.ID, false)
 	assert.NoError(t, err)
 
@@ -347,8 +347,8 @@ func TestContainerManager_ResourceLimits(t *testing.T) {
 		WorkspaceID: "test-workspace-006",
 		Name:        "resource-test",
 		ProjectPath: projectDir,
-		CPULimit:    0.25,                    // 25% CPU
-		MemoryLimit: 64 * 1024 * 1024,       // 64MB
+		CPULimit:    0.25,             // 25% CPU
+		MemoryLimit: 64 * 1024 * 1024, // 64MB
 		Command:     []string{"sh", "-c", "sleep 30"},
 	}
 
@@ -362,7 +362,7 @@ func TestContainerManager_ResourceLimits(t *testing.T) {
 	inspect, err := client.cli.ContainerInspect(ctx, container.ID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, int64(25000), inspect.HostConfig.CPUQuota)    // 0.25 * 100000
+	assert.Equal(t, int64(25000), inspect.HostConfig.CPUQuota) // 0.25 * 100000
 	assert.Equal(t, int64(100000), inspect.HostConfig.CPUPeriod)
 	assert.Equal(t, int64(64*1024*1024), inspect.HostConfig.Memory)
 	assert.Equal(t, int64(64*1024*1024), inspect.HostConfig.MemorySwap)

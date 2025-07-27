@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"os"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -43,7 +43,6 @@ func newCompletionCmd() *cobra.Command {
 			}
 		},
 	}
-	
+
 	return cmd
 }
-

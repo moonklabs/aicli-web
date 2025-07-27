@@ -9,9 +9,9 @@ import (
 
 // MessageRouter는 WebSocket 메시지를 라우팅합니다
 type MessageRouter struct {
-	handler     *ClaudeStreamHandler
-	routes      map[string][]RouteHandler
-	middleware  []MiddlewareFunc
+	handler      *ClaudeStreamHandler
+	routes       map[string][]RouteHandler
+	middleware   []MiddlewareFunc
 	errorHandler ErrorHandler
 }
 
@@ -26,31 +26,31 @@ type ErrorHandler func(ctx *MessageContext, err error)
 
 // MessageContext는 메시지 처리 컨텍스트입니다
 type MessageContext struct {
-	Client     *ClientConnection   `json:"client"`
-	Message    *WebSocketMessage   `json:"message"`
-	SessionID  string              `json:"session_id"`
-	UserID     string              `json:"user_id"`
-	Permission Permission          `json:"permission"`
+	Client     *ClientConnection      `json:"client"`
+	Message    *WebSocketMessage      `json:"message"`
+	SessionID  string                 `json:"session_id"`
+	UserID     string                 `json:"user_id"`
+	Permission Permission             `json:"permission"`
 	Data       map[string]interface{} `json:"data"`
-	Response   *WebSocketMessage   `json:"response"`
+	Response   *WebSocketMessage      `json:"response"`
 	router     *MessageRouter
 }
 
 // MessageType 상수들
 const (
-	MessageTypeConnect        = "session.connect"
-	MessageTypeDisconnect     = "session.disconnect"
-	MessageTypeMessage        = "session.message"
-	MessageTypeExecute        = "session.execute"
-	MessageTypeStatus         = "session.status"
-	MessageTypeUsers          = "session.users"
-	MessageTypeShare          = "session.share"
-	MessageTypeJoin           = "session.join"
-	MessageTypeFileUpload     = "file.upload"
-	MessageTypeFileDownload   = "file.download"
-	MessageTypeFileList       = "file.list"
-	MessageTypePing           = "ping"
-	MessageTypeError          = "error"
+	MessageTypeConnect      = "session.connect"
+	MessageTypeDisconnect   = "session.disconnect"
+	MessageTypeMessage      = "session.message"
+	MessageTypeExecute      = "session.execute"
+	MessageTypeStatus       = "session.status"
+	MessageTypeUsers        = "session.users"
+	MessageTypeShare        = "session.share"
+	MessageTypeJoin         = "session.join"
+	MessageTypeFileUpload   = "file.upload"
+	MessageTypeFileDownload = "file.download"
+	MessageTypeFileList     = "file.list"
+	MessageTypePing         = "ping"
+	MessageTypeError        = "error"
 )
 
 // NewMessageRouter는 새로운 메시지 라우터를 생성합니다
@@ -66,7 +66,7 @@ func NewMessageRouter(handler *ClaudeStreamHandler) *MessageRouter {
 
 	// 기본 라우트 등록
 	router.setupDefaultRoutes()
-	
+
 	return router
 }
 
@@ -84,7 +84,7 @@ func (r *MessageRouter) RouteMessage(client *ClientConnection, message *WebSocke
 
 	// 미들웨어 체인 구성
 	handler := r.buildHandlerChain(message.Type)
-	
+
 	// 에러 처리
 	if err := handler(ctx); err != nil {
 		r.errorHandler(ctx, err)
@@ -142,10 +142,10 @@ func (r *MessageRouter) loggingMiddleware(next RouteHandler) RouteHandler {
 		start := time.Now()
 		err := next(ctx)
 		duration := time.Since(start)
-		
+
 		log.Printf("WebSocket message handled: type=%s, user=%s, session=%s, duration=%v, error=%v",
 			ctx.Message.Type, ctx.UserID, ctx.SessionID, duration, err)
-		
+
 		return err
 	}
 }
@@ -249,7 +249,7 @@ func (r *MessageRouter) handleSessionExecute(ctx *MessageContext) error {
 
 	// 명령어 실행 (실제 구현 필요)
 	result := fmt.Sprintf("Executed command: %s", command)
-	
+
 	ctx.SendSuccess(map[string]interface{}{
 		"command": command,
 		"result":  result,
@@ -283,7 +283,7 @@ func (r *MessageRouter) handleSessionUsers(ctx *MessageContext) error {
 	}
 
 	users := r.handler.GetSessionUsers(sessionID)
-	
+
 	ctx.SendSuccess(map[string]interface{}{
 		"session_id": sessionID,
 		"users":      users,
@@ -361,7 +361,7 @@ func (r *MessageRouter) handleFileUpload(ctx *MessageContext) error {
 
 	// 파일 업로드 처리 (실제 구현 필요)
 	fileID := fmt.Sprintf("file_%d", time.Now().UnixNano())
-	
+
 	ctx.SendSuccess(map[string]interface{}{
 		"file_id":   fileID,
 		"filename":  fileName,
@@ -402,16 +402,16 @@ func (r *MessageRouter) handleFileList(ctx *MessageContext) error {
 	// 파일 목록 조회 (실제 구현 필요)
 	files := []map[string]interface{}{
 		{
-			"file_id":    "file_1",
-			"filename":   "example.txt",
-			"size":       1024,
+			"file_id":     "file_1",
+			"filename":    "example.txt",
+			"size":        1024,
 			"uploaded_by": "user1",
 			"uploaded_at": time.Now().Add(-time.Hour),
 		},
 		{
-			"file_id":    "file_2",
-			"filename":   "data.json",
-			"size":       2048,
+			"file_id":     "file_2",
+			"filename":    "data.json",
+			"size":        2048,
 			"uploaded_by": "user2",
 			"uploaded_at": time.Now().Add(-30 * time.Minute),
 		},

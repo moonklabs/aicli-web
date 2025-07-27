@@ -17,14 +17,14 @@ const (
 	DefaultClaudeRetryDelay  = 2 * time.Second
 
 	// 워크스페이스 기본값
-	DefaultMaxProjects    = 10
-	DefaultIsolationMode  = "docker"
+	DefaultMaxProjects   = 10
+	DefaultIsolationMode = "docker"
 
 	// 출력 기본값
-	DefaultOutputFormat   = "table"
-	DefaultColorMode      = "auto"
-	DefaultOutputWidth    = 120
-	DefaultVerbosity      = 1
+	DefaultOutputFormat = "table"
+	DefaultColorMode    = "auto"
+	DefaultOutputWidth  = 120
+	DefaultVerbosity    = 1
 
 	// 로깅 기본값
 	DefaultLogLevel      = "info"
@@ -33,22 +33,22 @@ const (
 	DefaultLogMaxAge     = 30 // days
 
 	// Docker 기본값
-	DefaultDockerSocketPath    = "/var/run/docker.sock"
-	DefaultDockerImage         = "aicli-workspace:latest"
-	DefaultDockerMemoryLimit   = 2048 // MB
-	DefaultDockerCPULimit      = 2.0
-	DefaultDockerNetworkMode   = "bridge"
-	DefaultContainerPrefix     = "aicli"
+	DefaultDockerSocketPath  = "/var/run/docker.sock"
+	DefaultDockerImage       = "aicli-workspace:latest"
+	DefaultDockerMemoryLimit = 2048 // MB
+	DefaultDockerCPULimit    = 2.0
+	DefaultDockerNetworkMode = "bridge"
+	DefaultContainerPrefix   = "aicli"
 
 	// API 기본값
-	DefaultAPIAddress     = "localhost:8080"
-	DefaultRateLimit      = 100 // requests per minute
-	DefaultJWTExpiration  = 24 * time.Hour
-	
+	DefaultAPIAddress    = "localhost:8080"
+	DefaultRateLimit     = 100 // requests per minute
+	DefaultJWTExpiration = 24 * time.Hour
+
 	// JWT 기본값
 	DefaultAccessTokenExpiry  = 15 * time.Minute
 	DefaultRefreshTokenExpiry = 7 * 24 * time.Hour
-	DefaultJWTSecretKey      = "default-secret-key-change-in-production"
+	DefaultJWTSecretKey       = "default-secret-key-change-in-production"
 )
 
 // GetDefaultConfig는 기본 설정을 반환합니다
@@ -67,11 +67,11 @@ func GetDefaultConfig() *Config {
 			RetryDelay:  DefaultClaudeRetryDelay,
 		},
 		Workspace: WorkspaceConfig{
-			DefaultPath:     defaultWorkspacePath,
-			AutoSync:        true,
-			MaxProjects:     DefaultMaxProjects,
-			IsolationMode:   DefaultIsolationMode,
-			WatchFiles:      true,
+			DefaultPath:   defaultWorkspacePath,
+			AutoSync:      true,
+			MaxProjects:   DefaultMaxProjects,
+			IsolationMode: DefaultIsolationMode,
+			WatchFiles:    true,
 			ExcludePatterns: []string{
 				"*.tmp",
 				"*.log",
@@ -119,7 +119,7 @@ func GetDefaultConfig() *Config {
 			AccessTokenExpiry:  DefaultAccessTokenExpiry,
 			RefreshTokenExpiry: DefaultRefreshTokenExpiry,
 		},
-		
+
 		Storage: StorageConfig{
 			Type:            "memory",
 			DataSource:      "",
@@ -138,7 +138,7 @@ func GetConfigDir() string {
 	if configDir := os.Getenv("AICLI_CONFIG_DIR"); configDir != "" {
 		return configDir
 	}
-	
+
 	homeDir, _ := os.UserHomeDir()
 	return filepath.Join(homeDir, ".aicli")
 }

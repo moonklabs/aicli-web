@@ -29,9 +29,9 @@ func NewSecurityMonitor(config *IsolationConfig) *SecurityMonitor {
 	if config == nil {
 		config = DefaultIsolationConfig()
 	}
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &SecurityMonitor{
 		config:      config,
 		alertChan:   make(chan SecurityAlert, 100),
@@ -46,14 +46,14 @@ func NewSecurityMonitor(config *IsolationConfig) *SecurityMonitor {
 func (sm *SecurityMonitor) StartMonitoring() <-chan SecurityAlert {
 	sm.runningMutex.Lock()
 	defer sm.runningMutex.Unlock()
-	
+
 	if sm.running {
 		return sm.alertChan
 	}
-	
+
 	sm.running = true
 	go sm.monitoringLoop()
-	
+
 	return sm.alertChan
 }
 
@@ -61,11 +61,11 @@ func (sm *SecurityMonitor) StartMonitoring() <-chan SecurityAlert {
 func (sm *SecurityMonitor) StopMonitoring() {
 	sm.runningMutex.Lock()
 	defer sm.runningMutex.Unlock()
-	
+
 	if !sm.running {
 		return
 	}
-	
+
 	sm.running = false
 	sm.cancel()
 	close(sm.alertChan)
@@ -75,7 +75,7 @@ func (sm *SecurityMonitor) StopMonitoring() {
 func (sm *SecurityMonitor) monitoringLoop() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-sm.ctx.Done():
@@ -90,13 +90,13 @@ func (sm *SecurityMonitor) monitoringLoop() {
 func (sm *SecurityMonitor) performSecurityCheck() {
 	// 리소스 사용량 검사
 	sm.checkResourceUsage()
-	
+
 	// 네트워크 활동 감시
 	sm.monitorNetworkActivity()
-	
+
 	// 비정상 프로세스 감지
 	sm.detectAnomalousProcesses()
-	
+
 	// 파일 시스템 접근 모니터링
 	if sm.config.EnableAuditLog {
 		sm.monitorFileSystemAccess()
@@ -108,24 +108,24 @@ func (sm *SecurityMonitor) checkResourceUsage() {
 	// 실제 구현에서는 활성 워크스페이스들의 메트릭 수집 및 분석
 	// 현재는 모의 구현
 	workspaces := []string{"workspace-1", "workspace-2"} // 모의 워크스페이스 목록
-	
+
 	for _, workspaceID := range workspaces {
 		// 모의 메트릭 데이터
 		metrics := &WorkspaceMetrics{
 			WorkspaceID:  workspaceID,
 			CPUPercent:   75.5,
-			MemoryUsage:  800 * 1024 * 1024, // 800MB
+			MemoryUsage:  800 * 1024 * 1024,  // 800MB
 			MemoryLimit:  1024 * 1024 * 1024, // 1GB
 			NetworkRx:    50 * 1024 * 1024,   // 50MB/s
 			NetworkTx:    30 * 1024 * 1024,   // 30MB/s
 			ProcessCount: 25,
 			Timestamp:    time.Now(),
 		}
-		
+
 		// ResourceManager를 통한 위반 검사
 		rm := NewResourceManager(sm.config)
 		violations := rm.ValidateResourceUsage(metrics)
-		
+
 		// 위반사항 처리
 		for _, violation := range violations {
 			sm.ReportViolation(workspaceID, violation)
@@ -137,7 +137,7 @@ func (sm *SecurityMonitor) checkResourceUsage() {
 func (sm *SecurityMonitor) monitorNetworkActivity() {
 	// 실제 구현에서는 네트워크 트래픽 분석
 	// 현재는 모의 구현으로 의심스러운 활동 시뮬레이션
-	
+
 	suspiciousActivity := false // 모의 플래그
 	if suspiciousActivity {
 		alert := SecurityAlert{
@@ -160,7 +160,7 @@ func (sm *SecurityMonitor) monitorNetworkActivity() {
 func (sm *SecurityMonitor) detectAnomalousProcesses() {
 	// 실제 구현에서는 컨테이너 내부 프로세스 모니터링
 	// 현재는 모의 구현
-	
+
 	anomalousProcess := false // 모의 플래그
 	if anomalousProcess {
 		alert := SecurityAlert{
@@ -185,7 +185,7 @@ func (sm *SecurityMonitor) detectAnomalousProcesses() {
 func (sm *SecurityMonitor) monitorFileSystemAccess() {
 	// 실제 구현에서는 auditd 또는 파일 시스템 이벤트 모니터링
 	// 현재는 모의 구현
-	
+
 	unauthorizedAccess := false // 모의 플래그
 	if unauthorizedAccess {
 		alert := SecurityAlert{
@@ -210,7 +210,7 @@ func (sm *SecurityMonitor) ReportViolation(workspaceID string, violation Resourc
 	sm.violationsMutex.Lock()
 	sm.violations[workspaceID] = append(sm.violations[workspaceID], violation)
 	sm.violationsMutex.Unlock()
-	
+
 	alert := SecurityAlert{
 		Type:        AlertTypeResourceViolation,
 		WorkspaceID: workspaceID,
@@ -219,7 +219,7 @@ func (sm *SecurityMonitor) ReportViolation(workspaceID string, violation Resourc
 		Timestamp:   time.Now(),
 		Data:        violation,
 	}
-	
+
 	sm.sendAlert(alert)
 }
 
@@ -233,7 +233,7 @@ func (sm *SecurityMonitor) ReportSecurityBreach(workspaceID string, breach Secur
 		Timestamp:   time.Now(),
 		Data:        breach,
 	}
-	
+
 	sm.sendAlert(alert)
 	sm.HandleSecurityBreach(workspaceID, breach)
 }
@@ -256,12 +256,12 @@ func (sm *SecurityMonitor) notifySubscribers(alert SecurityAlert) {
 	handlers := append([]AlertHandler{}, sm.subscribers[alert.WorkspaceID]...)
 	globalHandlers := append([]AlertHandler{}, sm.subscribers["*"]...)
 	sm.subscribersMutex.RUnlock()
-	
+
 	// 워크스페이스별 핸들러 실행
 	for _, handler := range handlers {
 		go handler(alert)
 	}
-	
+
 	// 글로벌 핸들러 실행
 	for _, handler := range globalHandlers {
 		go handler(alert)
@@ -272,7 +272,7 @@ func (sm *SecurityMonitor) notifySubscribers(alert SecurityAlert) {
 func (sm *SecurityMonitor) Subscribe(workspaceID string, handler AlertHandler) {
 	sm.subscribersMutex.Lock()
 	defer sm.subscribersMutex.Unlock()
-	
+
 	sm.subscribers[workspaceID] = append(sm.subscribers[workspaceID], handler)
 }
 
@@ -280,7 +280,7 @@ func (sm *SecurityMonitor) Subscribe(workspaceID string, handler AlertHandler) {
 func (sm *SecurityMonitor) Unsubscribe(workspaceID string) {
 	sm.subscribersMutex.Lock()
 	defer sm.subscribersMutex.Unlock()
-	
+
 	delete(sm.subscribers, workspaceID)
 }
 
@@ -304,7 +304,7 @@ func (sm *SecurityMonitor) HandleSecurityBreach(workspaceID string, breach Secur
 func (sm *SecurityMonitor) handlePrivilegeEscalation(workspaceID string, breach SecurityBreach) {
 	// 1. 컨테이너 일시 중지 (실제 구현에서는 Docker API 호출)
 	fmt.Printf("Pausing container for workspace %s due to privilege escalation\n", workspaceID)
-	
+
 	// 2. 관리자 알림
 	adminAlert := SecurityAlert{
 		Type:        AlertTypeSecurityBreach,
@@ -315,7 +315,7 @@ func (sm *SecurityMonitor) handlePrivilegeEscalation(workspaceID string, breach 
 		Data:        breach,
 	}
 	sm.sendAlert(adminAlert)
-	
+
 	// 3. 보안 로그 기록
 	sm.logSecurityEvent(workspaceID, "privilege_escalation", breach)
 }
@@ -324,7 +324,7 @@ func (sm *SecurityMonitor) handlePrivilegeEscalation(workspaceID string, breach 
 func (sm *SecurityMonitor) handleNetworkAnomaly(workspaceID string, breach SecurityBreach) {
 	// 네트워크 트래픽 제한 (실제 구현에서는 iptables 규칙 적용)
 	fmt.Printf("Applying network restrictions for workspace %s\n", workspaceID)
-	
+
 	// 모니터링 강화
 	sm.increaseMonitoringFrequency(workspaceID)
 }
@@ -333,7 +333,7 @@ func (sm *SecurityMonitor) handleNetworkAnomaly(workspaceID string, breach Secur
 func (sm *SecurityMonitor) handleFileAccessViolation(workspaceID string, breach SecurityBreach) {
 	// 파일 시스템 감시 강화
 	fmt.Printf("Increasing file system monitoring for workspace %s\n", workspaceID)
-	
+
 	// 접근 로그 상세 기록
 	sm.enableDetailedAuditLog(workspaceID)
 }
@@ -342,7 +342,7 @@ func (sm *SecurityMonitor) handleFileAccessViolation(workspaceID string, breach 
 func (sm *SecurityMonitor) handleResourceExhaustion(workspaceID string, breach SecurityBreach) {
 	// 리소스 제한 강화
 	fmt.Printf("Applying stricter resource limits for workspace %s\n", workspaceID)
-	
+
 	// 프로세스 모니터링 강화
 	sm.increaseProcessMonitoring(workspaceID)
 }
@@ -351,7 +351,7 @@ func (sm *SecurityMonitor) handleResourceExhaustion(workspaceID string, breach S
 func (sm *SecurityMonitor) handleGenericBreach(workspaceID string, breach SecurityBreach) {
 	// 기본 대응: 로깅 및 알림
 	sm.logSecurityEvent(workspaceID, "generic_breach", breach)
-	
+
 	// 모니터링 레벨 증가
 	sm.increaseMonitoringFrequency(workspaceID)
 }
@@ -384,12 +384,12 @@ func (sm *SecurityMonitor) increaseProcessMonitoring(workspaceID string) {
 func (sm *SecurityMonitor) GetSecurityDashboard() *SecurityDashboard {
 	sm.violationsMutex.RLock()
 	defer sm.violationsMutex.RUnlock()
-	
+
 	totalAlerts := len(sm.alertChan)
 	criticalAlerts := sm.countAlertsBySeverity("critical")
 	warningAlerts := sm.countAlertsBySeverity("warning")
 	violationSummary := sm.getViolationSummary()
-	
+
 	return &SecurityDashboard{
 		TotalAlerts:      totalAlerts,
 		CriticalAlerts:   criticalAlerts,
@@ -432,7 +432,7 @@ func (sm *SecurityMonitor) getViolationSummary() map[string]int {
 func (sm *SecurityMonitor) getMonitoringStatus() string {
 	sm.runningMutex.RLock()
 	defer sm.runningMutex.RUnlock()
-	
+
 	if sm.running {
 		return "active"
 	}
@@ -443,7 +443,7 @@ func (sm *SecurityMonitor) getMonitoringStatus() string {
 func (sm *SecurityMonitor) getActiveWorkspaces() []string {
 	sm.violationsMutex.RLock()
 	defer sm.violationsMutex.RUnlock()
-	
+
 	var workspaces []string
 	for workspaceID := range sm.violations {
 		workspaces = append(workspaces, workspaceID)
@@ -455,7 +455,7 @@ func (sm *SecurityMonitor) getActiveWorkspaces() []string {
 func (sm *SecurityMonitor) GetWorkspaceViolations(workspaceID string) []ResourceViolation {
 	sm.violationsMutex.RLock()
 	defer sm.violationsMutex.RUnlock()
-	
+
 	return sm.violations[workspaceID]
 }
 
@@ -463,7 +463,7 @@ func (sm *SecurityMonitor) GetWorkspaceViolations(workspaceID string) []Resource
 func (sm *SecurityMonitor) ClearViolations(workspaceID string) {
 	sm.violationsMutex.Lock()
 	defer sm.violationsMutex.Unlock()
-	
+
 	if workspaceID == "" {
 		// 모든 워크스페이스 정리
 		sm.violations = make(map[string][]ResourceViolation)

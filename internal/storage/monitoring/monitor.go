@@ -15,12 +15,12 @@ import (
 // QueryMonitor 쿼리 모니터링 시스템
 type QueryMonitor struct {
 	slowQueryThreshold time.Duration
-	logger            *logrus.Logger
-	mu                sync.RWMutex
-	metrics           *QueryMetrics
-	queryLog          []QueryLog
-	maxLogSize        int
-	enabled           bool
+	logger             *logrus.Logger
+	mu                 sync.RWMutex
+	metrics            *QueryMetrics
+	queryLog           []QueryLog
+	maxLogSize         int
+	enabled            bool
 }
 
 // QueryMetrics Prometheus 메트릭
@@ -33,15 +33,15 @@ type QueryMetrics struct {
 
 // QueryLog 쿼리 로그 엔트리
 type QueryLog struct {
-	ID          string        `json:"id"`
-	Operation   string        `json:"operation"`
-	Table       string        `json:"table"`
-	Query       string        `json:"query"`
-	Duration    time.Duration `json:"duration"`
-	Error       string        `json:"error,omitempty"`
-	Timestamp   time.Time     `json:"timestamp"`
-	Context     QueryContext  `json:"context"`
-	IsSlow      bool          `json:"is_slow"`
+	ID        string        `json:"id"`
+	Operation string        `json:"operation"`
+	Table     string        `json:"table"`
+	Query     string        `json:"query"`
+	Duration  time.Duration `json:"duration"`
+	Error     string        `json:"error,omitempty"`
+	Timestamp time.Time     `json:"timestamp"`
+	Context   QueryContext  `json:"context"`
+	IsSlow    bool          `json:"is_slow"`
 }
 
 // QueryContext 쿼리 실행 컨텍스트
@@ -75,9 +75,9 @@ type SlowQuery struct {
 
 // Stats 통계 정보
 type Stats struct {
-	TotalQueries   int64
-	SlowQueries    int64
-	FailedQueries  int64
+	TotalQueries    int64
+	SlowQueries     int64
+	FailedQueries   int64
 	AverageDuration time.Duration
 }
 
@@ -145,11 +145,11 @@ func NewQueryMonitor(config MonitorConfig) *QueryMonitor {
 
 	return &QueryMonitor{
 		slowQueryThreshold: config.SlowQueryThreshold,
-		logger:            logger,
-		metrics:           metrics,
-		queryLog:          make([]QueryLog, 0, config.MaxLogSize),
-		maxLogSize:        config.MaxLogSize,
-		enabled:           config.EnableLogging,
+		logger:             logger,
+		metrics:            metrics,
+		queryLog:           make([]QueryLog, 0, config.MaxLogSize),
+		maxLogSize:         config.MaxLogSize,
+		enabled:            config.EnableLogging,
 	}
 }
 
@@ -291,7 +291,7 @@ func (qm *QueryMonitor) logQuery(queryLog QueryLog) {
 func (qm *QueryMonitor) alertSlowQuery(queryLog QueryLog) {
 	// 여기에 슬로우 쿼리 알림 로직 추가 (이메일, Slack, PagerDuty 등)
 	// 현재는 로그만 남김
-	log.Printf("SLOW QUERY ALERT: %s on %s took %v", 
+	log.Printf("SLOW QUERY ALERT: %s on %s took %v",
 		queryLog.Operation, queryLog.Table, queryLog.Duration)
 }
 
@@ -299,15 +299,15 @@ func (qm *QueryMonitor) alertSlowQuery(queryLog QueryLog) {
 func (qm *QueryMonitor) Wrap(ctx context.Context, opts WrapOptions, fn func() error) error {
 	// 쿼리 추적 시작
 	tracker := qm.StartQuery(ctx, opts.Operation, opts.Table, opts.Query, opts.Context)
-	
+
 	// 실행
 	err := fn()
-	
+
 	// 완료 처리
 	if tracker != nil {
 		tracker.End(err)
 	}
-	
+
 	return err
 }
 
@@ -315,7 +315,7 @@ func (qm *QueryMonitor) Wrap(ctx context.Context, opts WrapOptions, fn func() er
 func (qm *QueryMonitor) GetSlowQueries() []SlowQuery {
 	qm.mu.RLock()
 	defer qm.mu.RUnlock()
-	
+
 	var slowQueries []SlowQuery
 	for _, log := range qm.queryLog {
 		if log.IsSlow {
@@ -329,7 +329,7 @@ func (qm *QueryMonitor) GetSlowQueries() []SlowQuery {
 			})
 		}
 	}
-	
+
 	return slowQueries
 }
 
@@ -337,7 +337,7 @@ func (qm *QueryMonitor) GetSlowQueries() []SlowQuery {
 func (qm *QueryMonitor) ClearSlowQueries() {
 	qm.mu.Lock()
 	defer qm.mu.Unlock()
-	
+
 	// 느린 쿼리만 제거
 	var newLog []QueryLog
 	for _, log := range qm.queryLog {
@@ -415,8 +415,8 @@ type QueryStats struct {
 
 // generateQueryID 쿼리 ID 생성
 func generateQueryID() string {
-	return fmt.Sprintf("q_%d_%d", 
-		time.Now().Unix(), 
+	return fmt.Sprintf("q_%d_%d",
+		time.Now().Unix(),
 		time.Now().Nanosecond()%1000000)
 }
 

@@ -281,7 +281,7 @@ func runClaude(ctx context.Context, opts *ClaudeOptions, prompt string) error {
 	}()
 
 	fmt.Printf("Claude 실행 중... (세션: %s)\n", sessionID)
-	
+
 	if opts.Stream {
 		return executeWithStreaming(ctx, session, prompt, formatter)
 	} else {
@@ -500,7 +500,7 @@ func createFormatter(format string) (output.ClaudeFormatter, error) {
 func executeWithStreaming(ctx context.Context, session *claude.Session, prompt string, formatter output.ClaudeFormatter) error {
 	// 실제 Claude CLI 통합을 위한 시뮬레이션
 	// TODO: 실제 ProcessManager와 통합 후 이 코드를 대체
-	
+
 	messages := []claude.Message{
 		{
 			Type:    "system",
@@ -515,7 +515,7 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 			Meta:    map[string]interface{}{"timestamp": time.Now()},
 		},
 		{
-			Type:    "text", 
+			Type:    "text",
 			Content: "코드를 분석하고 있습니다...",
 			ID:      "msg_2",
 			Meta:    map[string]interface{}{"progress": 0.3},
@@ -523,7 +523,7 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 		{
 			Type:    "text",
 			Content: "구현 방안을 검토 중입니다.",
-			ID:      "msg_3", 
+			ID:      "msg_3",
 			Meta:    map[string]interface{}{"progress": 0.7},
 		},
 		{
@@ -547,17 +547,17 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 		default:
 			// 시뮬레이션 지연
 			time.Sleep(500 * time.Millisecond)
-			
+
 			// 메시지 출력
 			output := formatter.FormatMessage(&msg)
 			fmt.Print(output)
-			
+
 			if i < len(messages)-1 {
 				fmt.Print("\n")
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -565,7 +565,7 @@ func executeWithStreaming(ctx context.Context, session *claude.Session, prompt s
 func executeWithoutStreaming(ctx context.Context, session *claude.Session, prompt string, formatter output.ClaudeFormatter) error {
 	// 스트리밍과 동일한 메시지를 생성하되, 모든 메시지를 수집한 후 출력
 	// TODO: 실제 ProcessManager와 통합 후 이 코드를 대체
-	
+
 	messages := []claude.Message{
 		{
 			Type:    "system",
@@ -580,7 +580,7 @@ func executeWithoutStreaming(ctx context.Context, session *claude.Session, promp
 			Meta:    map[string]interface{}{"timestamp": time.Now()},
 		},
 		{
-			Type:    "text", 
+			Type:    "text",
 			Content: "코드를 분석하고 있습니다...",
 			ID:      "msg_2",
 			Meta:    map[string]interface{}{"progress": 0.3},
@@ -588,7 +588,7 @@ func executeWithoutStreaming(ctx context.Context, session *claude.Session, promp
 		{
 			Type:    "text",
 			Content: "구현 방안을 검토 중입니다.",
-			ID:      "msg_3", 
+			ID:      "msg_3",
 			Meta:    map[string]interface{}{"progress": 0.7},
 		},
 		{
@@ -608,17 +608,17 @@ func executeWithoutStreaming(ctx context.Context, session *claude.Session, promp
 	// 일괄 처리 시뮬레이션 (지연 없이 모든 메시지 처리)
 	fmt.Println("비스트리밍 모드로 Claude 실행 중...")
 	time.Sleep(2 * time.Second) // 전체 실행 시뮬레이션
-	
+
 	// 모든 메시지를 일괄 출력
 	for i, msg := range messages {
 		output := formatter.FormatMessage(&msg)
 		fmt.Print(output)
-		
+
 		if i < len(messages)-1 {
 			fmt.Print("\n")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -656,8 +656,8 @@ func listSessions(ctx context.Context) error {
 		if len(sessionID) > 12 {
 			sessionID = sessionID[:12] + "..."
 		}
-		
-		fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n", 
+
+		fmt.Printf("%-20s %-15s %-10s %-20s %-15s\n",
 			sessionID,
 			session.WorkspaceID,
 			session.State.String(),

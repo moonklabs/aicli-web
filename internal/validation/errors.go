@@ -186,7 +186,7 @@ func TranslateValidatorError(err error, model string) ValidationErrors {
 func getJSONFieldName(fe validator.FieldError) string {
 	// validator에서 제공하는 네임스페이스를 파싱
 	fieldName := fe.Field()
-	
+
 	// JSON 태그명으로 변환하는 로직 (간단한 변환)
 	// 실제로는 리플렉션을 사용해서 더 정확하게 할 수 있음
 	return strings.ToLower(strings.ReplaceAll(fieldName, ".", "_"))

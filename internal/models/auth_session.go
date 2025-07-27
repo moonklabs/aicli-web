@@ -76,14 +76,14 @@ type SessionSecurityEvent struct {
 
 // SessionStatistics 세션 통계
 type SessionStatistics struct {
-	TotalSessions     int                    `json:"total_sessions"`
-	ActiveSessions    int                    `json:"active_sessions"`
-	ExpiredSessions   int                    `json:"expired_sessions"`
-	DeviceBreakdown   map[string]int         `json:"device_breakdown"`
-	LocationBreakdown map[string]int         `json:"location_breakdown"`
-	BrowserBreakdown  map[string]int         `json:"browser_breakdown"`
-	HourlyDistribution map[int]int           `json:"hourly_distribution"`
-	SecurityEvents    []SessionSecurityEvent `json:"security_events"`
+	TotalSessions      int                    `json:"total_sessions"`
+	ActiveSessions     int                    `json:"active_sessions"`
+	ExpiredSessions    int                    `json:"expired_sessions"`
+	DeviceBreakdown    map[string]int         `json:"device_breakdown"`
+	LocationBreakdown  map[string]int         `json:"location_breakdown"`
+	BrowserBreakdown   map[string]int         `json:"browser_breakdown"`
+	HourlyDistribution map[int]int            `json:"hourly_distribution"`
+	SecurityEvents     []SessionSecurityEvent `json:"security_events"`
 }
 
 // AuthSessionCreateRequest 인증 세션 생성 요청
@@ -104,11 +104,11 @@ type SessionUpdateRequest struct {
 
 // AuthSessionFilter 인증 세션 필터
 type AuthSessionFilter struct {
-	UserID      string     `json:"user_id,omitempty"`
-	IsActive    *bool      `json:"is_active,omitempty"`
-	DeviceType  string     `json:"device_type,omitempty"`
-	Country     string     `json:"country,omitempty"`
-	CreatedAfter *time.Time `json:"created_after,omitempty"`
+	UserID        string     `json:"user_id,omitempty"`
+	IsActive      *bool      `json:"is_active,omitempty"`
+	DeviceType    string     `json:"device_type,omitempty"`
+	Country       string     `json:"country,omitempty"`
+	CreatedAfter  *time.Time `json:"created_after,omitempty"`
 	CreatedBefore *time.Time `json:"created_before,omitempty"`
 }
 
@@ -119,4 +119,3 @@ type SessionListResponse struct {
 	Statistics *SessionStatistics `json:"statistics,omitempty"`
 	Pagination *PaginationMeta    `json:"pagination,omitempty"`
 }
-

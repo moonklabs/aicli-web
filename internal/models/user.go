@@ -7,43 +7,43 @@ import (
 // User 사용자 모델
 type User struct {
 	Base
-	Username         string           `json:"username" db:"username"`
-	Email            string           `json:"email" db:"email"`
-	PasswordHash     *string          `json:"-" db:"password_hash"` // 포인터로 nullable 처리
-	DisplayName      string           `json:"display_name" db:"display_name"`
-	FirstName        *string          `json:"first_name" db:"first_name"`
-	LastName         *string          `json:"last_name" db:"last_name"`
-	ProfilePicture   string           `json:"profile_picture" db:"profile_picture"`
-	Avatar           *string          `json:"avatar" db:"avatar"` // 별도 아바타 URL
-	Bio              *string          `json:"bio" db:"bio"`
-	Location         *string          `json:"location" db:"location"`
-	Website          *string          `json:"website" db:"website"`
-	Role             string           `json:"role" db:"role"`
-	IsActive         bool             `json:"is_active" db:"is_active"`
-	LastLoginAt      *time.Time       `json:"last_login_at" db:"last_login_at"`
-	EmailVerified    bool             `json:"email_verified" db:"email_verified"`
-	TwoFactorEnabled bool             `json:"two_factor_enabled" db:"two_factor_enabled"`
-	
+	Username         string     `json:"username" db:"username"`
+	Email            string     `json:"email" db:"email"`
+	PasswordHash     *string    `json:"-" db:"password_hash"` // 포인터로 nullable 처리
+	DisplayName      string     `json:"display_name" db:"display_name"`
+	FirstName        *string    `json:"first_name" db:"first_name"`
+	LastName         *string    `json:"last_name" db:"last_name"`
+	ProfilePicture   string     `json:"profile_picture" db:"profile_picture"`
+	Avatar           *string    `json:"avatar" db:"avatar"` // 별도 아바타 URL
+	Bio              *string    `json:"bio" db:"bio"`
+	Location         *string    `json:"location" db:"location"`
+	Website          *string    `json:"website" db:"website"`
+	Role             string     `json:"role" db:"role"`
+	IsActive         bool       `json:"is_active" db:"is_active"`
+	LastLoginAt      *time.Time `json:"last_login_at" db:"last_login_at"`
+	EmailVerified    bool       `json:"email_verified" db:"email_verified"`
+	TwoFactorEnabled bool       `json:"two_factor_enabled" db:"two_factor_enabled"`
+
 	// OAuth 관련 필드들
-	OAuthAccounts    []OAuthAccount   `json:"oauth_accounts,omitempty"`
-	
+	OAuthAccounts []OAuthAccount `json:"oauth_accounts,omitempty"`
+
 	// RBAC 관련 필드들
-	UserRoles        []UserRole       `json:"user_roles,omitempty"`
-	Groups           []UserGroup      `json:"groups,omitempty"`
+	UserRoles []UserRole  `json:"user_roles,omitempty"`
+	Groups    []UserGroup `json:"groups,omitempty"`
 }
 
 // OAuthAccount OAuth 계정 연결 정보
 type OAuthAccount struct {
 	Base
-	UserID       string    `json:"user_id" db:"user_id"`
-	Provider     string    `json:"provider" db:"provider"`
-	ProviderID   string    `json:"provider_id" db:"provider_id"`
-	AccessToken  *string   `json:"-" db:"access_token"` // 보안상 JSON에서 제외
-	RefreshToken *string   `json:"-" db:"refresh_token"`
+	UserID       string     `json:"user_id" db:"user_id"`
+	Provider     string     `json:"provider" db:"provider"`
+	ProviderID   string     `json:"provider_id" db:"provider_id"`
+	AccessToken  *string    `json:"-" db:"access_token"` // 보안상 JSON에서 제외
+	RefreshToken *string    `json:"-" db:"refresh_token"`
 	TokenExpiry  *time.Time `json:"-" db:"token_expiry"`
-	ProfileData  string    `json:"profile_data" db:"profile_data"` // JSON 형태로 저장
-	IsActive     bool      `json:"is_active" db:"is_active"`
-	
+	ProfileData  string     `json:"profile_data" db:"profile_data"` // JSON 형태로 저장
+	IsActive     bool       `json:"is_active" db:"is_active"`
+
 	// 관계
 	User *User `json:"user,omitempty"`
 }
@@ -115,25 +115,25 @@ type ConfirmResetPasswordRequest struct {
 
 // UserResponse 사용자 응답 (비밀번호 제외)
 type UserResponse struct {
-	ID               string         `json:"id"`
-	Username         string         `json:"username"`
-	Email            string         `json:"email"`
-	DisplayName      string         `json:"display_name"`
-	FirstName        *string        `json:"first_name"`
-	LastName         *string        `json:"last_name"`
-	ProfilePicture   string         `json:"profile_picture"`
-	Avatar           *string        `json:"avatar"`
-	Bio              *string        `json:"bio"`
-	Location         *string        `json:"location"`
-	Website          *string        `json:"website"`
-	Role             string         `json:"role"`
-	IsActive         bool           `json:"is_active"`
-	LastLoginAt      *time.Time     `json:"last_login_at"`
-	EmailVerified    bool           `json:"email_verified"`
-	TwoFactorEnabled bool           `json:"two_factor_enabled"`
-	OAuthProviders   []string       `json:"oauth_providers,omitempty"`
-	CreatedAt        time.Time      `json:"created_at"`
-	UpdatedAt        time.Time      `json:"updated_at"`
+	ID               string     `json:"id"`
+	Username         string     `json:"username"`
+	Email            string     `json:"email"`
+	DisplayName      string     `json:"display_name"`
+	FirstName        *string    `json:"first_name"`
+	LastName         *string    `json:"last_name"`
+	ProfilePicture   string     `json:"profile_picture"`
+	Avatar           *string    `json:"avatar"`
+	Bio              *string    `json:"bio"`
+	Location         *string    `json:"location"`
+	Website          *string    `json:"website"`
+	Role             string     `json:"role"`
+	IsActive         bool       `json:"is_active"`
+	LastLoginAt      *time.Time `json:"last_login_at"`
+	EmailVerified    bool       `json:"email_verified"`
+	TwoFactorEnabled bool       `json:"two_factor_enabled"`
+	OAuthProviders   []string   `json:"oauth_providers,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 // ToResponse User 모델을 UserResponse로 변환
@@ -190,11 +190,11 @@ func (u *User) GetOAuthAccount(provider string) *OAuthAccount {
 
 // UserFilter 사용자 필터링 조건
 type UserFilter struct {
-	Search     string   `json:"search,omitempty"`
-	Role       string   `json:"role,omitempty"`
-	IsActive   *bool    `json:"is_active,omitempty"`
-	Provider   string   `json:"provider,omitempty"` // OAuth 제공자로 필터링
-	Verified   *bool    `json:"verified,omitempty"` // 이메일 검증 상태
+	Search   string `json:"search,omitempty"`
+	Role     string `json:"role,omitempty"`
+	IsActive *bool  `json:"is_active,omitempty"`
+	Provider string `json:"provider,omitempty"` // OAuth 제공자로 필터링
+	Verified *bool  `json:"verified,omitempty"` // 이메일 검증 상태
 	PaginationRequest
 }
 
@@ -211,13 +211,13 @@ type UserStats struct {
 // UserActivity 사용자 활동 로그
 type UserActivity struct {
 	Base
-	UserID    string    `json:"user_id" db:"user_id"`
-	Action    string    `json:"action" db:"action"`       // 액션 타입 (login, logout, profile_update 등)
-	Resource  string    `json:"resource" db:"resource"`   // 대상 리소스
-	Details   string    `json:"details" db:"details"`     // 세부 정보 (JSON 형태)
-	IPAddress string    `json:"ip_address" db:"ip_address"`
-	UserAgent string    `json:"user_agent" db:"user_agent"`
-	
+	UserID    string `json:"user_id" db:"user_id"`
+	Action    string `json:"action" db:"action"`     // 액션 타입 (login, logout, profile_update 등)
+	Resource  string `json:"resource" db:"resource"` // 대상 리소스
+	Details   string `json:"details" db:"details"`   // 세부 정보 (JSON 형태)
+	IPAddress string `json:"ip_address" db:"ip_address"`
+	UserAgent string `json:"user_agent" db:"user_agent"`
+
 	// 관계
 	User *User `json:"user,omitempty"`
 }
@@ -229,7 +229,7 @@ type PasswordResetToken struct {
 	UserID    string     `json:"user_id" db:"user_id"`
 	ExpiresAt time.Time  `json:"expires_at" db:"expires_at"`
 	UsedAt    *time.Time `json:"used_at" db:"used_at"`
-	
+
 	// 관계
 	User *User `json:"user,omitempty"`
 }
@@ -237,11 +237,11 @@ type PasswordResetToken struct {
 // TwoFactorSecret 2FA 비밀키 정보
 type TwoFactorSecret struct {
 	Base
-	UserID    string    `json:"user_id" db:"user_id"`
-	Secret    string    `json:"-" db:"secret"` // 보안상 JSON 응답에서 제외
+	UserID      string   `json:"user_id" db:"user_id"`
+	Secret      string   `json:"-" db:"secret"`       // 보안상 JSON 응답에서 제외
 	BackupCodes []string `json:"-" db:"backup_codes"` // JSON 배열로 저장
-	IsActive  bool      `json:"is_active" db:"is_active"`
-	
+	IsActive    bool     `json:"is_active" db:"is_active"`
+
 	// 관계
 	User *User `json:"user,omitempty"`
 }

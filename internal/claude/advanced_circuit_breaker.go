@@ -13,28 +13,28 @@ type AdvancedCircuitBreaker interface {
 	// 상태별 세밀한 제어
 	GetState() CircuitState
 	SetThresholds(thresholds CircuitThresholds) error
-	
+
 	// 부분적 실패 처리
 	HandlePartialFailure(success int, failure int) error
-	
+
 	// 동적 임계값 조정
 	AdjustThresholds(load float64) error
-	
+
 	// 복구 전략 실행
 	ExecuteRecovery() error
-	
+
 	// 작업 실행
 	Execute(ctx context.Context, operation CircuitOperation) error
-	
+
 	// 메트릭 조회
 	GetMetrics() CircuitMetrics
-	
+
 	// 상태 변화 리스너 등록
 	RegisterStateListener(listener StateChangeListener)
-	
+
 	// 수동 상태 변경
 	ForceState(state CircuitState) error
-	
+
 	// 리셋
 	Reset() error
 }
@@ -58,14 +58,14 @@ type CircuitStateChangeListener func(oldState, newState CircuitState, metrics Ci
 
 // CircuitThresholds는 Circuit Breaker 임계값입니다
 type CircuitThresholds struct {
-	FailureRate      float64       `json:"failure_rate"`      // 실패율 임계값 (0.0-1.0)
-	SlowCallRate     float64       `json:"slow_call_rate"`    // 느린 호출 비율 임계값
-	MinCalls         int           `json:"min_calls"`         // 최소 호출 수
-	SlidingWindow    time.Duration `json:"sliding_window"`    // 슬라이딩 윈도우 크기
+	FailureRate      float64       `json:"failure_rate"`        // 실패율 임계값 (0.0-1.0)
+	SlowCallRate     float64       `json:"slow_call_rate"`      // 느린 호출 비율 임계값
+	MinCalls         int           `json:"min_calls"`           // 최소 호출 수
+	SlidingWindow    time.Duration `json:"sliding_window"`      // 슬라이딩 윈도우 크기
 	HalfOpenMaxCalls int           `json:"half_open_max_calls"` // Half-open 상태 최대 호출 수
-	SlowCallTimeout  time.Duration `json:"slow_call_timeout"` // 느린 호출 타임아웃
-	OpenTimeout      time.Duration `json:"open_timeout"`      // Open 상태 유지 시간
-	
+	SlowCallTimeout  time.Duration `json:"slow_call_timeout"`   // 느린 호출 타임아웃
+	OpenTimeout      time.Duration `json:"open_timeout"`        // Open 상태 유지 시간
+
 	// 동적 조정 설정
 	DynamicAdjustment bool    `json:"dynamic_adjustment"`
 	LoadThreshold     float64 `json:"load_threshold"`
@@ -74,90 +74,90 @@ type CircuitThresholds struct {
 
 // CircuitMetrics는 Circuit Breaker 메트릭입니다
 type CircuitMetrics struct {
-	TotalCalls       int64     `json:"total_calls"`
-	SuccessCalls     int64     `json:"success_calls"`
-	FailureCalls     int64     `json:"failure_calls"`
-	SlowCalls        int64     `json:"slow_calls"`
-	RejectedCalls    int64     `json:"rejected_calls"`
-	
-	FailureRate      float64   `json:"failure_rate"`
-	SlowCallRate     float64   `json:"slow_call_rate"`
-	
-	LastFailure      time.Time `json:"last_failure"`
-	LastSuccess      time.Time `json:"last_success"`
-	LastStateChange  time.Time `json:"last_state_change"`
-	
-	WindowStart      time.Time `json:"window_start"`
-	WindowCalls      int64     `json:"window_calls"`
-	WindowFailures   int64     `json:"window_failures"`
-	WindowSlowCalls  int64     `json:"window_slow_calls"`
-	
+	TotalCalls    int64 `json:"total_calls"`
+	SuccessCalls  int64 `json:"success_calls"`
+	FailureCalls  int64 `json:"failure_calls"`
+	SlowCalls     int64 `json:"slow_calls"`
+	RejectedCalls int64 `json:"rejected_calls"`
+
+	FailureRate  float64 `json:"failure_rate"`
+	SlowCallRate float64 `json:"slow_call_rate"`
+
+	LastFailure     time.Time `json:"last_failure"`
+	LastSuccess     time.Time `json:"last_success"`
+	LastStateChange time.Time `json:"last_state_change"`
+
+	WindowStart     time.Time `json:"window_start"`
+	WindowCalls     int64     `json:"window_calls"`
+	WindowFailures  int64     `json:"window_failures"`
+	WindowSlowCalls int64     `json:"window_slow_calls"`
+
 	// 응답 시간 통계
-	AvgResponseTime  time.Duration `json:"avg_response_time"`
-	P95ResponseTime  time.Duration `json:"p95_response_time"`
-	P99ResponseTime  time.Duration `json:"p99_response_time"`
+	AvgResponseTime time.Duration `json:"avg_response_time"`
+	P95ResponseTime time.Duration `json:"p95_response_time"`
+	P99ResponseTime time.Duration `json:"p99_response_time"`
 }
 
 // CircuitStateTransition은 서킷브레이커 상태 전환 정보입니다
 type CircuitStateTransition struct {
-	FromState   CircuitState  `json:"from_state"`
-	ToState     CircuitState  `json:"to_state"`
-	Timestamp   time.Time     `json:"timestamp"`
-	Reason      string        `json:"reason"`
-	Metrics     CircuitMetrics `json:"metrics"`
+	FromState CircuitState   `json:"from_state"`
+	ToState   CircuitState   `json:"to_state"`
+	Timestamp time.Time      `json:"timestamp"`
+	Reason    string         `json:"reason"`
+	Metrics   CircuitMetrics `json:"metrics"`
 }
 
 // CallResult는 호출 결과입니다
 type CallResult struct {
-	Success      bool          `json:"success"`
-	Duration     time.Duration `json:"duration"`
-	Error        error         `json:"error"`
-	Timestamp    time.Time     `json:"timestamp"`
+	Success   bool          `json:"success"`
+	Duration  time.Duration `json:"duration"`
+	Error     error         `json:"error"`
+	Timestamp time.Time     `json:"timestamp"`
 }
 
 // SmartCircuitBreaker는 고급 Circuit Breaker 구현체입니다
 type SmartCircuitBreaker struct {
 	// 기본 상태
-	state         CircuitState
-	stateMutex    sync.RWMutex
-	
+	state      CircuitState
+	stateMutex sync.RWMutex
+
 	// 설정
-	thresholds    CircuitThresholds
+	thresholds     CircuitThresholds
 	thresholdMutex sync.RWMutex
-	
+
 	// 메트릭
-	metrics       CircuitMetrics
-	metricsMutex  sync.RWMutex
-	
+	metrics      CircuitMetrics
+	metricsMutex sync.RWMutex
+
 	// 상태 기록
-	stateHistory  []CircuitStateTransition
-	historyMutex  sync.RWMutex
-	maxHistory    int
-	
+	stateHistory []CircuitStateTransition
+	historyMutex sync.RWMutex
+	maxHistory   int
+
 	// 호출 기록 (슬라이딩 윈도우)
-	callHistory   []CallResult
-	callMutex     sync.RWMutex
-	maxCalls      int
-	
+	callHistory []CallResult
+	callMutex   sync.RWMutex
+	maxCalls    int
+
 	// 응답 시간 추적
 	responseTimes []time.Duration
 	rtMutex       sync.RWMutex
 	maxRTSamples  int
-	
+
 	// 리스너들
 	listeners     []CircuitStateChangeListener
 	listenerMutex sync.RWMutex
-	
+
 	// Half-open 상태 관리
 	halfOpenCalls int32
-	
+
 	// 동적 조정
-	loadBalancer  LoadBalancerMetrics
-	
+	loadBalancer LoadBalancerMetrics
+
 	// 생명주기
-	ctx           context.Context
-	cancel        context.CancelFunc
-	wg            sync.WaitGroup
+	ctx    context.Context
+	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 // LoadBalancerMetrics는 로드 밸런서 메트릭 인터페이스입니다
@@ -169,23 +169,23 @@ type LoadBalancerMetrics interface {
 // DefaultCircuitThresholds는 기본 임계값을 반환합니다
 func DefaultCircuitThresholds() CircuitThresholds {
 	return CircuitThresholds{
-		FailureRate:       0.5,  // 50% 실패율
-		SlowCallRate:      0.3,  // 30% 느린 호출
-		MinCalls:          10,   // 최소 10회 호출
+		FailureRate:       0.5, // 50% 실패율
+		SlowCallRate:      0.3, // 30% 느린 호출
+		MinCalls:          10,  // 최소 10회 호출
 		SlidingWindow:     60 * time.Second,
-		HalfOpenMaxCalls:  5,    // Half-open에서 최대 5회 시도
+		HalfOpenMaxCalls:  5, // Half-open에서 최대 5회 시도
 		SlowCallTimeout:   5 * time.Second,
 		OpenTimeout:       30 * time.Second,
 		DynamicAdjustment: true,
-		LoadThreshold:     0.8,  // 80% 부하
-		AdjustmentFactor:  0.2,  // 20% 조정
+		LoadThreshold:     0.8, // 80% 부하
+		AdjustmentFactor:  0.2, // 20% 조정
 	}
 }
 
 // NewSmartCircuitBreaker는 새로운 스마트 Circuit Breaker를 생성합니다
 func NewSmartCircuitBreaker(thresholds CircuitThresholds) *SmartCircuitBreaker {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	cb := &SmartCircuitBreaker{
 		state:         CircuitClosed,
 		thresholds:    thresholds,
@@ -202,12 +202,12 @@ func NewSmartCircuitBreaker(thresholds CircuitThresholds) *SmartCircuitBreaker {
 			WindowStart: time.Now(),
 		},
 	}
-	
+
 	// 백그라운드 작업 시작
 	cb.wg.Add(2)
 	go cb.metricsUpdater()
 	go cb.stateMonitor()
-	
+
 	return cb
 }
 
@@ -223,19 +223,19 @@ func (cb *SmartCircuitBreaker) SetThresholds(thresholds CircuitThresholds) error
 	if thresholds.FailureRate < 0 || thresholds.FailureRate > 1 {
 		return fmt.Errorf("failure rate must be between 0 and 1")
 	}
-	
+
 	if thresholds.SlowCallRate < 0 || thresholds.SlowCallRate > 1 {
 		return fmt.Errorf("slow call rate must be between 0 and 1")
 	}
-	
+
 	if thresholds.MinCalls <= 0 {
 		return fmt.Errorf("min calls must be positive")
 	}
-	
+
 	cb.thresholdMutex.Lock()
 	cb.thresholds = thresholds
 	cb.thresholdMutex.Unlock()
-	
+
 	return nil
 }
 
@@ -244,9 +244,9 @@ func (cb *SmartCircuitBreaker) HandlePartialFailure(success int, failure int) er
 	if success < 0 || failure < 0 {
 		return fmt.Errorf("success and failure counts must be non-negative")
 	}
-	
+
 	now := time.Now()
-	
+
 	// 성공 호출 기록
 	for i := 0; i < success; i++ {
 		cb.recordCall(CallResult{
@@ -255,7 +255,7 @@ func (cb *SmartCircuitBreaker) HandlePartialFailure(success int, failure int) er
 			Timestamp: now,
 		})
 	}
-	
+
 	// 실패 호출 기록
 	for i := 0; i < failure; i++ {
 		cb.recordCall(CallResult{
@@ -264,10 +264,10 @@ func (cb *SmartCircuitBreaker) HandlePartialFailure(success int, failure int) er
 			Timestamp: now,
 		})
 	}
-	
+
 	// 상태 평가
 	cb.evaluateState()
-	
+
 	return nil
 }
 
@@ -278,41 +278,41 @@ func (cb *SmartCircuitBreaker) AdjustThresholds(load float64) error {
 		cb.thresholdMutex.RUnlock()
 		return nil
 	}
-	
+
 	loadThreshold := cb.thresholds.LoadThreshold
 	adjustmentFactor := cb.thresholds.AdjustmentFactor
 	cb.thresholdMutex.RUnlock()
-	
+
 	if load < loadThreshold {
 		return nil // 조정 불필요
 	}
-	
+
 	// 부하가 높으면 더 엄격한 임계값 적용
 	cb.thresholdMutex.Lock()
 	defer cb.thresholdMutex.Unlock()
-	
+
 	// 실패율 임계값 감소 (더 민감하게)
 	newFailureRate := cb.thresholds.FailureRate * (1.0 - adjustmentFactor)
 	if newFailureRate < 0.1 {
 		newFailureRate = 0.1 // 최소값 제한
 	}
-	
+
 	// 느린 호출 임계값 감소
 	newSlowCallRate := cb.thresholds.SlowCallRate * (1.0 - adjustmentFactor)
 	if newSlowCallRate < 0.1 {
 		newSlowCallRate = 0.1
 	}
-	
+
 	cb.thresholds.FailureRate = newFailureRate
 	cb.thresholds.SlowCallRate = newSlowCallRate
-	
+
 	return nil
 }
 
 // ExecuteRecovery는 복구 전략을 실행합니다
 func (cb *SmartCircuitBreaker) ExecuteRecovery() error {
 	currentState := cb.GetState()
-	
+
 	switch currentState {
 	case CircuitOpen:
 		// Open → Half-open 전환 시도
@@ -335,11 +335,11 @@ func (cb *SmartCircuitBreaker) Execute(ctx context.Context, operation CircuitOpe
 		atomic.AddInt64(&cb.metrics.RejectedCalls, 1)
 		return fmt.Errorf("circuit breaker is open")
 	}
-	
+
 	start := time.Now()
 	err := operation(ctx)
 	duration := time.Since(start)
-	
+
 	// 결과 기록
 	cb.recordCall(CallResult{
 		Success:   err == nil,
@@ -347,13 +347,13 @@ func (cb *SmartCircuitBreaker) Execute(ctx context.Context, operation CircuitOpe
 		Error:     err,
 		Timestamp: time.Now(),
 	})
-	
+
 	// 응답 시간 기록
 	cb.recordResponseTime(duration)
-	
+
 	// 상태 평가
 	cb.evaluateState()
-	
+
 	return err
 }
 
@@ -361,7 +361,7 @@ func (cb *SmartCircuitBreaker) Execute(ctx context.Context, operation CircuitOpe
 func (cb *SmartCircuitBreaker) GetMetrics() CircuitMetrics {
 	cb.metricsMutex.RLock()
 	defer cb.metricsMutex.RUnlock()
-	
+
 	// 복사본 반환
 	metrics := cb.metrics
 	return metrics
@@ -377,17 +377,17 @@ func (cb *SmartCircuitBreaker) RegisterStateListener(listener CircuitStateChange
 // ForceState는 수동으로 상태를 변경합니다
 func (cb *SmartCircuitBreaker) ForceState(state CircuitState) error {
 	oldState := cb.GetState()
-	
+
 	cb.stateMutex.Lock()
 	cb.state = state
 	cb.stateMutex.Unlock()
-	
+
 	// 상태 전환 기록
 	cb.recordStateTransition(oldState, state, "manual force")
-	
+
 	// 리스너 알림
 	cb.notifyStateChange(oldState, state)
-	
+
 	return nil
 }
 
@@ -397,29 +397,29 @@ func (cb *SmartCircuitBreaker) Reset() error {
 	oldState := cb.state
 	cb.state = CircuitClosed
 	cb.stateMutex.Unlock()
-	
+
 	cb.metricsMutex.Lock()
 	cb.metrics = CircuitMetrics{
 		WindowStart: time.Now(),
 	}
 	cb.metricsMutex.Unlock()
-	
+
 	cb.callMutex.Lock()
 	cb.callHistory = cb.callHistory[:0]
 	cb.callMutex.Unlock()
-	
+
 	cb.rtMutex.Lock()
 	cb.responseTimes = cb.responseTimes[:0]
 	cb.rtMutex.Unlock()
-	
+
 	atomic.StoreInt32(&cb.halfOpenCalls, 0)
-	
+
 	// 상태 전환 기록
 	cb.recordStateTransition(oldState, CircuitClosed, "manual reset")
-	
+
 	// 리스너 알림
 	cb.notifyStateChange(oldState, CircuitClosed)
-	
+
 	return nil
 }
 
@@ -427,7 +427,7 @@ func (cb *SmartCircuitBreaker) Reset() error {
 
 func (cb *SmartCircuitBreaker) allowCall() bool {
 	state := cb.GetState()
-	
+
 	switch state {
 	case CircuitClosed, CircuitForcedClosed:
 		return true
@@ -438,7 +438,7 @@ func (cb *SmartCircuitBreaker) allowCall() bool {
 			elapsed := time.Since(cb.metrics.LastStateChange)
 			openTimeout := cb.thresholds.OpenTimeout
 			cb.metricsMutex.RUnlock()
-			
+
 			if elapsed > openTimeout {
 				// Half-open으로 전환 시도
 				cb.transitionToHalfOpen()
@@ -451,7 +451,7 @@ func (cb *SmartCircuitBreaker) allowCall() bool {
 		cb.thresholdMutex.RLock()
 		maxCalls := cb.thresholds.HalfOpenMaxCalls
 		cb.thresholdMutex.RUnlock()
-		
+
 		currentCalls := atomic.LoadInt32(&cb.halfOpenCalls)
 		if int(currentCalls) < maxCalls {
 			atomic.AddInt32(&cb.halfOpenCalls, 1)
@@ -466,15 +466,15 @@ func (cb *SmartCircuitBreaker) allowCall() bool {
 func (cb *SmartCircuitBreaker) recordCall(result CallResult) {
 	cb.callMutex.Lock()
 	defer cb.callMutex.Unlock()
-	
+
 	// 호출 기록 추가
 	cb.callHistory = append(cb.callHistory, result)
-	
+
 	// 최대 기록 수 제한
 	if len(cb.callHistory) > cb.maxCalls {
 		cb.callHistory = cb.callHistory[1:]
 	}
-	
+
 	// 메트릭 업데이트
 	cb.updateMetrics(result)
 }
@@ -482,9 +482,9 @@ func (cb *SmartCircuitBreaker) recordCall(result CallResult) {
 func (cb *SmartCircuitBreaker) updateMetrics(result CallResult) {
 	cb.metricsMutex.Lock()
 	defer cb.metricsMutex.Unlock()
-	
+
 	cb.metrics.TotalCalls++
-	
+
 	if result.Success {
 		cb.metrics.SuccessCalls++
 		cb.metrics.LastSuccess = result.Timestamp
@@ -492,31 +492,31 @@ func (cb *SmartCircuitBreaker) updateMetrics(result CallResult) {
 		cb.metrics.FailureCalls++
 		cb.metrics.LastFailure = result.Timestamp
 	}
-	
+
 	// 느린 호출 확인
 	cb.thresholdMutex.RLock()
 	slowTimeout := cb.thresholds.SlowCallTimeout
 	cb.thresholdMutex.RUnlock()
-	
+
 	if result.Duration > slowTimeout {
 		cb.metrics.SlowCalls++
 	}
-	
+
 	// 윈도우 기반 메트릭 업데이트
 	cb.updateWindowMetrics()
 }
 
 func (cb *SmartCircuitBreaker) updateWindowMetrics() {
 	now := time.Now()
-	
+
 	cb.thresholdMutex.RLock()
 	windowSize := cb.thresholds.SlidingWindow
 	cb.thresholdMutex.RUnlock()
-	
+
 	windowStart := now.Add(-windowSize)
-	
+
 	var windowCalls, windowFailures, windowSlowCalls int64
-	
+
 	cb.callMutex.RLock()
 	for _, call := range cb.callHistory {
 		if call.Timestamp.After(windowStart) {
@@ -524,23 +524,23 @@ func (cb *SmartCircuitBreaker) updateWindowMetrics() {
 			if !call.Success {
 				windowFailures++
 			}
-			
+
 			cb.thresholdMutex.RLock()
 			slowTimeout := cb.thresholds.SlowCallTimeout
 			cb.thresholdMutex.RUnlock()
-			
+
 			if call.Duration > slowTimeout {
 				windowSlowCalls++
 			}
 		}
 	}
 	cb.callMutex.RUnlock()
-	
+
 	cb.metrics.WindowStart = windowStart
 	cb.metrics.WindowCalls = windowCalls
 	cb.metrics.WindowFailures = windowFailures
 	cb.metrics.WindowSlowCalls = windowSlowCalls
-	
+
 	// 비율 계산
 	if windowCalls > 0 {
 		cb.metrics.FailureRate = float64(windowFailures) / float64(windowCalls)
@@ -554,14 +554,14 @@ func (cb *SmartCircuitBreaker) updateWindowMetrics() {
 func (cb *SmartCircuitBreaker) recordResponseTime(duration time.Duration) {
 	cb.rtMutex.Lock()
 	defer cb.rtMutex.Unlock()
-	
+
 	cb.responseTimes = append(cb.responseTimes, duration)
-	
+
 	// 최대 샘플 수 제한
 	if len(cb.responseTimes) > cb.maxRTSamples {
 		cb.responseTimes = cb.responseTimes[1:]
 	}
-	
+
 	// 통계 계산
 	cb.calculateResponseTimeStats()
 }
@@ -570,20 +570,20 @@ func (cb *SmartCircuitBreaker) calculateResponseTimeStats() {
 	if len(cb.responseTimes) == 0 {
 		return
 	}
-	
+
 	// 평균 계산
 	var total time.Duration
 	for _, rt := range cb.responseTimes {
 		total += rt
 	}
-	
+
 	cb.metricsMutex.Lock()
 	cb.metrics.AvgResponseTime = total / time.Duration(len(cb.responseTimes))
-	
+
 	// 퍼센타일 계산 (간단한 구현)
 	sorted := make([]time.Duration, len(cb.responseTimes))
 	copy(sorted, cb.responseTimes)
-	
+
 	// 간단한 버블 정렬 (성능보다 정확성 우선)
 	for i := 0; i < len(sorted); i++ {
 		for j := i + 1; j < len(sorted); j++ {
@@ -592,40 +592,40 @@ func (cb *SmartCircuitBreaker) calculateResponseTimeStats() {
 			}
 		}
 	}
-	
+
 	p95Index := int(float64(len(sorted)) * 0.95)
 	p99Index := int(float64(len(sorted)) * 0.99)
-	
+
 	if p95Index < len(sorted) {
 		cb.metrics.P95ResponseTime = sorted[p95Index]
 	}
 	if p99Index < len(sorted) {
 		cb.metrics.P99ResponseTime = sorted[p99Index]
 	}
-	
+
 	cb.metricsMutex.Unlock()
 }
 
 func (cb *SmartCircuitBreaker) evaluateState() {
 	currentState := cb.GetState()
-	
+
 	cb.metricsMutex.RLock()
 	windowCalls := cb.metrics.WindowCalls
 	failureRate := cb.metrics.FailureRate
 	slowCallRate := cb.metrics.SlowCallRate
 	cb.metricsMutex.RUnlock()
-	
+
 	cb.thresholdMutex.RLock()
 	minCalls := cb.thresholds.MinCalls
 	failureThreshold := cb.thresholds.FailureRate
 	slowCallThreshold := cb.thresholds.SlowCallRate
 	cb.thresholdMutex.RUnlock()
-	
+
 	// 충분한 호출이 있는 경우에만 평가
 	if windowCalls < int64(minCalls) {
 		return
 	}
-	
+
 	switch currentState {
 	case CircuitClosed:
 		// Closed → Open 전환 조건
@@ -648,51 +648,51 @@ func (cb *SmartCircuitBreaker) evaluateState() {
 
 func (cb *SmartCircuitBreaker) transitionToOpen(reason string) {
 	oldState := cb.GetState()
-	
+
 	cb.stateMutex.Lock()
 	cb.state = CircuitOpen
 	cb.stateMutex.Unlock()
-	
+
 	cb.metricsMutex.Lock()
 	cb.metrics.LastStateChange = time.Now()
 	cb.metricsMutex.Unlock()
-	
+
 	cb.recordStateTransition(oldState, CircuitOpen, reason)
 	cb.notifyStateChange(oldState, CircuitOpen)
 }
 
 func (cb *SmartCircuitBreaker) transitionToHalfOpen() error {
 	oldState := cb.GetState()
-	
+
 	cb.stateMutex.Lock()
 	cb.state = CircuitHalfOpen
 	cb.stateMutex.Unlock()
-	
+
 	cb.metricsMutex.Lock()
 	cb.metrics.LastStateChange = time.Now()
 	cb.metricsMutex.Unlock()
-	
+
 	atomic.StoreInt32(&cb.halfOpenCalls, 0)
-	
+
 	cb.recordStateTransition(oldState, CircuitHalfOpen, "attempting recovery")
 	cb.notifyStateChange(oldState, CircuitHalfOpen)
-	
+
 	return nil
 }
 
 func (cb *SmartCircuitBreaker) transitionToClosed(reason string) {
 	oldState := cb.GetState()
-	
+
 	cb.stateMutex.Lock()
 	cb.state = CircuitClosed
 	cb.stateMutex.Unlock()
-	
+
 	cb.metricsMutex.Lock()
 	cb.metrics.LastStateChange = time.Now()
 	cb.metricsMutex.Unlock()
-	
+
 	atomic.StoreInt32(&cb.halfOpenCalls, 0)
-	
+
 	cb.recordStateTransition(oldState, CircuitClosed, reason)
 	cb.notifyStateChange(oldState, CircuitClosed)
 }
@@ -705,7 +705,7 @@ func (cb *SmartCircuitBreaker) recordStateTransition(from, to CircuitState, reas
 		Reason:    reason,
 		Metrics:   cb.GetMetrics(),
 	}
-	
+
 	cb.historyMutex.Lock()
 	cb.stateHistory = append(cb.stateHistory, transition)
 	if len(cb.stateHistory) > cb.maxHistory {
@@ -719,9 +719,9 @@ func (cb *SmartCircuitBreaker) notifyStateChange(oldState, newState CircuitState
 	listeners := make([]CircuitStateChangeListener, len(cb.listeners))
 	copy(listeners, cb.listeners)
 	cb.listenerMutex.RUnlock()
-	
+
 	currentMetrics := cb.GetMetrics()
-	
+
 	for _, listener := range listeners {
 		go listener(oldState, newState, currentMetrics)
 	}
@@ -729,10 +729,10 @@ func (cb *SmartCircuitBreaker) notifyStateChange(oldState, newState CircuitState
 
 func (cb *SmartCircuitBreaker) metricsUpdater() {
 	defer cb.wg.Done()
-	
+
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-cb.ctx.Done():
@@ -747,17 +747,17 @@ func (cb *SmartCircuitBreaker) metricsUpdater() {
 
 func (cb *SmartCircuitBreaker) stateMonitor() {
 	defer cb.wg.Done()
-	
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-cb.ctx.Done():
 			return
 		case <-ticker.C:
 			cb.evaluateState()
-			
+
 			// 동적 조정 (로드 밸런서가 있는 경우)
 			if cb.loadBalancer != nil {
 				load := cb.loadBalancer.GetCurrentLoad()

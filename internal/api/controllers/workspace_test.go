@@ -21,22 +21,22 @@ import (
 func setupTest() (*gin.Engine, *WorkspaceController, *auth.JWTManager, services.WorkspaceService) {
 	gin.SetMode(gin.TestMode)
 	utils.RegisterCustomValidators()
-	
+
 	// JWT 매니저 생성
 	jwtManager := auth.NewJWTManager("test-secret", 3600, 86400)
-	
+
 	// 메모리 스토리지 생성
 	storage := memory.New()
-	
+
 	// 워크스페이스 서비스 생성
 	workspaceService := services.NewWorkspaceService(storage)
-	
+
 	// 컨트롤러 생성 (테스트에서는 Docker 서비스 사용 안 함)
 	controller := NewWorkspaceController(workspaceService, nil)
-	
+
 	// 라우터 설정
 	router := gin.New()
-	
+
 	return router, controller, jwtManager, workspaceService
 }
 
@@ -48,11 +48,11 @@ func getAuthToken(jwtManager *auth.JWTManager, userID, userName, role string) st
 
 func TestListWorkspaces(t *testing.T) {
 	router, controller, jwtManager, workspaceService := setupTest()
-	
+
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
-	
+
 	// 테스트 워크스페이스 생성
 	ctx := context.Background()
 	_, err := workspaceService.CreateWorkspace(ctx, &models.CreateWorkspaceRequest{
@@ -60,7 +60,7 @@ func TestListWorkspaces(t *testing.T) {
 		ProjectPath: "/tmp/test",
 	}, userID)
 	assert.NoError(t, err)
-	
+
 	// 라우트 설정
 	router.GET("/workspaces", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -70,32 +70,32 @@ func TestListWorkspaces(t *testing.T) {
 		})
 		controller.ListWorkspaces(c)
 	})
-	
+
 	// 요청 생성
 	httpReq, _ := http.NewRequest("GET", "/workspaces?page=1&limit=10", nil)
 	httpReq.Header.Set("Authorization", "Bearer "+token)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증
 	if w.Code != http.StatusOK {
 		t.Logf("Response body: %s", w.Body.String())
 	}
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response models.PaginationResponse
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.NotNil(t, response.Data)
-	
+
 	// PaginationResponse 구조에 따라 Meta가 초기화되지 않을 수 있음
 	if response.Meta.CurrentPage == 0 && response.Meta.PerPage == 0 {
 		// 기본값이 설정되지 않은 경우
 		t.Skip("PaginationMeta가 초기화되지 않음")
 	}
-	
+
 	assert.Equal(t, 1, response.Meta.CurrentPage)
 	assert.Equal(t, 10, response.Meta.PerPage)
 	assert.Equal(t, 1, response.Meta.Total) // 생성한 워크스페이스 1개
@@ -103,11 +103,11 @@ func TestListWorkspaces(t *testing.T) {
 
 func TestCreateWorkspace(t *testing.T) {
 	router, controller, jwtManager, _ := setupTest()
-	
+
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
-	
+
 	// 라우트 설정
 	router.POST("/workspaces", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -117,7 +117,7 @@ func TestCreateWorkspace(t *testing.T) {
 		})
 		controller.CreateWorkspace(c)
 	})
-	
+
 	// 요청 데이터
 	createReq := models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
@@ -125,22 +125,22 @@ func TestCreateWorkspace(t *testing.T) {
 		ClaudeKey:   "", // 테스트에서는 빈 값 사용 (선택적 필드)
 	}
 	body, _ := json.Marshal(createReq)
-	
+
 	// 요청 생성
 	httpReq, _ := http.NewRequest("POST", "/workspaces", bytes.NewBuffer(body))
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+token)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증
 	if w.Code != http.StatusCreated {
 		t.Logf("Response body: %s", w.Body.String())
 	}
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response models.SuccessResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -150,11 +150,11 @@ func TestCreateWorkspace(t *testing.T) {
 
 func TestGetWorkspace(t *testing.T) {
 	router, controller, jwtManager, workspaceService := setupTest()
-	
+
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
-	
+
 	// 테스트 워크스페이스 생성
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
@@ -163,7 +163,7 @@ func TestGetWorkspace(t *testing.T) {
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
-	
+
 	// 라우트 설정
 	router.GET("/workspaces/:id", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -173,18 +173,18 @@ func TestGetWorkspace(t *testing.T) {
 		})
 		controller.GetWorkspace(c)
 	})
-	
+
 	// 요청 생성
 	httpReq, _ := http.NewRequest("GET", "/workspaces/"+workspace.ID, nil)
 	httpReq.Header.Set("Authorization", "Bearer "+token)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response models.SuccessResponse
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -193,11 +193,11 @@ func TestGetWorkspace(t *testing.T) {
 
 func TestUpdateWorkspace(t *testing.T) {
 	router, controller, jwtManager, workspaceService := setupTest()
-	
+
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
-	
+
 	// 테스트 워크스페이스 생성
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
@@ -206,7 +206,7 @@ func TestUpdateWorkspace(t *testing.T) {
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
-	
+
 	// 라우트 설정
 	router.PUT("/workspaces/:id", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -216,25 +216,25 @@ func TestUpdateWorkspace(t *testing.T) {
 		})
 		controller.UpdateWorkspace(c)
 	})
-	
+
 	// 업데이트 데이터
 	updateReq := models.UpdateWorkspaceRequest{
 		Name: "updated-workspace",
 	}
 	body, _ := json.Marshal(updateReq)
-	
+
 	// 요청 생성
 	httpReq, _ := http.NewRequest("PUT", "/workspaces/"+workspace.ID, bytes.NewBuffer(body))
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+token)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response models.SuccessResponse
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -244,11 +244,11 @@ func TestUpdateWorkspace(t *testing.T) {
 
 func TestDeleteWorkspace(t *testing.T) {
 	router, controller, jwtManager, workspaceService := setupTest()
-	
+
 	// 테스트 사용자
 	userID := "test-user-id"
 	token := getAuthToken(jwtManager, userID, "testuser", "user")
-	
+
 	// 테스트 워크스페이스 생성
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
@@ -257,7 +257,7 @@ func TestDeleteWorkspace(t *testing.T) {
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
-	
+
 	// 라우트 설정
 	router.DELETE("/workspaces/:id", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -267,18 +267,18 @@ func TestDeleteWorkspace(t *testing.T) {
 		})
 		controller.DeleteWorkspace(c)
 	})
-	
+
 	// 요청 생성
 	httpReq, _ := http.NewRequest("DELETE", "/workspaces/"+workspace.ID, nil)
 	httpReq.Header.Set("Authorization", "Bearer "+token)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response models.SuccessResponse
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -288,11 +288,11 @@ func TestDeleteWorkspace(t *testing.T) {
 
 func TestWorkspacePermissions(t *testing.T) {
 	router, controller, jwtManager, workspaceService := setupTest()
-	
+
 	// 두 명의 사용자
 	ownerID := "owner-id"
 	otherUserID := "other-user-id"
-	
+
 	// 소유자가 워크스페이스 생성
 	req := &models.CreateWorkspaceRequest{
 		Name:        "owner-workspace",
@@ -301,10 +301,10 @@ func TestWorkspacePermissions(t *testing.T) {
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, ownerID)
 	assert.NoError(t, err)
-	
+
 	// 다른 사용자의 토큰
 	otherUserToken := getAuthToken(jwtManager, otherUserID, "otheruser", "user")
-	
+
 	// 라우트 설정
 	router.GET("/workspaces/:id", func(c *gin.Context) {
 		c.Set("claims", &auth.Claims{
@@ -314,15 +314,15 @@ func TestWorkspacePermissions(t *testing.T) {
 		})
 		controller.GetWorkspace(c)
 	})
-	
+
 	// 다른 사용자가 소유자의 워크스페이스에 접근 시도
 	httpReq, _ := http.NewRequest("GET", "/workspaces/"+workspace.ID, nil)
 	httpReq.Header.Set("Authorization", "Bearer "+otherUserToken)
-	
+
 	// 응답 기록
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, httpReq)
-	
+
 	// 검증 - 권한 없음 에러
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }

@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -9,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/aicli/aicli-web/internal/claude"
+	"github.com/sirupsen/logrus"
 )
 
 // 이 파일은 프로세스 관리자 사용 예제입니다.
@@ -122,7 +123,7 @@ func runWithErrorHandling(pm claude.ProcessManager) {
 
 	if err := pm.Start(ctx, config); err != nil {
 		fmt.Printf("예상된 오류 발생: %v\n", err)
-		
+
 		// ProcessError 타입 확인
 		if perr, ok := err.(*claude.ProcessError); ok {
 			fmt.Printf("에러 타입: %s\n", perr.Type)

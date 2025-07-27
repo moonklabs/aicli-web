@@ -8,10 +8,10 @@ import (
 // BackoffType은 adaptive_retrier.go에서 정의됨
 // 여기서는 기존 호환성을 위한 별칭만 정의
 const (
-	BackoffFixed BackoffType = FixedDelayBackoffType
-	BackoffLinear = LinearBackoffType
-	BackoffExponential = ExponentialBackoffType
-	BackoffJittered = DecorrelatedJitterBackoffType
+	BackoffFixed       BackoffType = FixedDelayBackoffType
+	BackoffLinear                  = LinearBackoffType
+	BackoffExponential             = ExponentialBackoffType
+	BackoffJittered                = DecorrelatedJitterBackoffType
 )
 
 // BackoffStrategy 백오프 전략 인터페이스
@@ -49,12 +49,12 @@ func (eb *ExponentialBackoff) NextBackoff() time.Duration {
 		eb.attempts++
 		return eb.initial
 	}
-	
+
 	eb.current = time.Duration(float64(eb.current) * eb.multiplier)
 	if eb.current > eb.max {
 		eb.current = eb.max
 	}
-	
+
 	eb.attempts++
 	return eb.current
 }
@@ -95,12 +95,12 @@ func (lb *LinearBackoff) NextBackoff() time.Duration {
 		lb.attempts++
 		return lb.initial
 	}
-	
+
 	lb.current += lb.increment
 	if lb.current > lb.max {
 		lb.current = lb.max
 	}
-	
+
 	lb.attempts++
 	return lb.current
 }
@@ -159,7 +159,7 @@ func NewJitteredExponentialBackoff(policy *RecoveryPolicy, jitterFactor float64)
 	if jitterFactor > 1 {
 		jitterFactor = 1
 	}
-	
+
 	return &JitteredExponentialBackoff{
 		ExponentialBackoff: &ExponentialBackoff{
 			initial:    policy.RestartInterval,
@@ -174,20 +174,20 @@ func NewJitteredExponentialBackoff(policy *RecoveryPolicy, jitterFactor float64)
 // NextBackoff 다음 백오프 시간을 반환합니다 (지터 적용)
 func (jeb *JitteredExponentialBackoff) NextBackoff() time.Duration {
 	baseBackoff := jeb.ExponentialBackoff.NextBackoff()
-	
+
 	if jeb.jitterFactor == 0 {
 		return baseBackoff
 	}
-	
+
 	// 지터 적용: ±jitterFactor 범위에서 랜덤 조정
 	jitter := jeb.jitterFactor * float64(baseBackoff)
-	randomFactor := (2*rand.Float64()) - 1 // -1 ~ 1 범위
+	randomFactor := (2 * rand.Float64()) - 1 // -1 ~ 1 범위
 	adjustedBackoff := float64(baseBackoff) + (jitter * randomFactor)
-	
+
 	if adjustedBackoff < 0 {
 		adjustedBackoff = float64(baseBackoff) * 0.1 // 최소값 보장
 	}
-	
+
 	return time.Duration(adjustedBackoff)
 }
 

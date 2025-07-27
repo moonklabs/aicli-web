@@ -17,17 +17,17 @@ type AdvancedSessionPool struct {
 	loadBalancer  *LoadBalancer
 	healthChecker *PoolHealthChecker
 	metrics       *PoolMetrics
-	
+
 	// 설정
-	config        AdvancedPoolConfig
-	
+	config AdvancedPoolConfig
+
 	// 동적 상태
 	currentLoad   atomic.Value // float64
 	lastScaleTime time.Time
-	
+
 	// 동시성 제어
 	mu sync.RWMutex
-	
+
 	// 생명주기 관리
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -37,16 +37,16 @@ type AdvancedSessionPool struct {
 type AdvancedPoolConfig struct {
 	// 기본 풀 설정
 	BaseConfig SessionPoolConfig
-	
+
 	// 동적 스케일링 설정
 	AutoScaling AutoScalingConfig
-	
+
 	// 부하 분산 설정
 	LoadBalancing LoadBalancingConfig
-	
+
 	// 모니터링 설정
 	Monitoring MonitoringConfig
-	
+
 	// 헬스 체크 설정
 	HealthCheck HealthCheckConfig
 }
@@ -66,27 +66,27 @@ type AutoScalingConfig struct {
 
 // LoadBalancingConfig는 부하 분산 설정입니다
 type LoadBalancingConfig struct {
-	Strategy         LoadBalancingStrategy `json:"strategy"`
-	SessionAffinity  bool                  `json:"session_affinity"`
-	WeightedRouting  bool                  `json:"weighted_routing"`
-	HealthAware      bool                  `json:"health_aware"`
-	StickyDuration   time.Duration         `json:"sticky_duration"`
+	Strategy        LoadBalancingStrategy `json:"strategy"`
+	SessionAffinity bool                  `json:"session_affinity"`
+	WeightedRouting bool                  `json:"weighted_routing"`
+	HealthAware     bool                  `json:"health_aware"`
+	StickyDuration  time.Duration         `json:"sticky_duration"`
 }
 
 // MonitoringConfig는 모니터링 설정입니다
 type MonitoringConfig struct {
-	MetricsInterval     time.Duration `json:"metrics_interval"`
-	EnableCPUTracking   bool          `json:"enable_cpu_tracking"`
-	EnableMemoryTracking bool         `json:"enable_memory_tracking"`
-	AlertThresholds     AlertThresholds `json:"alert_thresholds"`
+	MetricsInterval      time.Duration   `json:"metrics_interval"`
+	EnableCPUTracking    bool            `json:"enable_cpu_tracking"`
+	EnableMemoryTracking bool            `json:"enable_memory_tracking"`
+	AlertThresholds      AlertThresholds `json:"alert_thresholds"`
 }
 
 // HealthCheckConfig는 헬스 체크 설정입니다
 type HealthCheckConfig struct {
-	Interval        time.Duration `json:"interval"`
-	Timeout         time.Duration `json:"timeout"`
-	FailureThreshold int          `json:"failure_threshold"`
-	SuccessThreshold int          `json:"success_threshold"`
+	Interval         time.Duration `json:"interval"`
+	Timeout          time.Duration `json:"timeout"`
+	FailureThreshold int           `json:"failure_threshold"`
+	SuccessThreshold int           `json:"success_threshold"`
 }
 
 // LoadBalancingStrategy는 부하 분산 전략입니다
@@ -110,32 +110,32 @@ type AlertThresholds struct {
 
 // PoolStatistics는 풀 통계 정보입니다
 type PoolStatistics struct {
-	Size             int           `json:"size"`
-	ActiveSessions   int           `json:"active_sessions"`
-	IdleSessions     int           `json:"idle_sessions"`
-	MemoryUsage      int64         `json:"memory_usage"`
-	CPUUsage         float64       `json:"cpu_usage"`
-	ThroughputRPS    float64       `json:"throughput_rps"`
-	AverageLatency   time.Duration `json:"average_latency"`
-	ErrorRate        float64       `json:"error_rate"`
-	Utilization      float64       `json:"utilization"`
-	LastScaleAction  string        `json:"last_scale_action"`
-	LastScaleTime    time.Time     `json:"last_scale_time"`
+	Size            int           `json:"size"`
+	ActiveSessions  int           `json:"active_sessions"`
+	IdleSessions    int           `json:"idle_sessions"`
+	MemoryUsage     int64         `json:"memory_usage"`
+	CPUUsage        float64       `json:"cpu_usage"`
+	ThroughputRPS   float64       `json:"throughput_rps"`
+	AverageLatency  time.Duration `json:"average_latency"`
+	ErrorRate       float64       `json:"error_rate"`
+	Utilization     float64       `json:"utilization"`
+	LastScaleAction string        `json:"last_scale_action"`
+	LastScaleTime   time.Time     `json:"last_scale_time"`
 }
 
 // SessionMetrics는 개별 세션 메트릭입니다
 type SessionMetrics struct {
-	SessionID     string        `json:"session_id"`
-	StartTime     time.Time     `json:"start_time"`
-	LastUsed      time.Time     `json:"last_used"`
-	RequestCount  int64         `json:"request_count"`
-	MemoryUsage   int64         `json:"memory_usage"`
-	CPUUsage      float64       `json:"cpu_usage"`
-	Status        SessionStatus `json:"status"`
-	ResponseTime  time.Duration `json:"response_time"`
-	ErrorCount    int64         `json:"error_count"`
-	Weight        float64       `json:"weight"`
-	AffinityKey   string        `json:"affinity_key"`
+	SessionID    string        `json:"session_id"`
+	StartTime    time.Time     `json:"start_time"`
+	LastUsed     time.Time     `json:"last_used"`
+	RequestCount int64         `json:"request_count"`
+	MemoryUsage  int64         `json:"memory_usage"`
+	CPUUsage     float64       `json:"cpu_usage"`
+	Status       SessionStatus `json:"status"`
+	ResponseTime time.Duration `json:"response_time"`
+	ErrorCount   int64         `json:"error_count"`
+	Weight       float64       `json:"weight"`
+	AffinityKey  string        `json:"affinity_key"`
 }
 
 // DefaultAdvancedPoolConfig는 기본 고급 풀 설정을 반환합니다
@@ -154,11 +154,11 @@ func DefaultAdvancedPoolConfig() AdvancedPoolConfig {
 			ScaleFactor:        1.5,
 		},
 		LoadBalancing: LoadBalancingConfig{
-			Strategy:         WeightedRoundRobin,
-			SessionAffinity:  true,
-			WeightedRouting:  true,
-			HealthAware:      true,
-			StickyDuration:   30 * time.Minute,
+			Strategy:        WeightedRoundRobin,
+			SessionAffinity: true,
+			WeightedRouting: true,
+			HealthAware:     true,
+			StickyDuration:  30 * time.Minute,
 		},
 		Monitoring: MonitoringConfig{
 			MetricsInterval:      30 * time.Second,
@@ -167,8 +167,8 @@ func DefaultAdvancedPoolConfig() AdvancedPoolConfig {
 			AlertThresholds: AlertThresholds{
 				HighCPUUsage:    0.8,
 				HighMemoryUsage: 1024 * 1024 * 1024, // 1GB
-				HighErrorRate:   0.05,                // 5%
-				LowAvailability: 0.95,                // 95%
+				HighErrorRate:   0.05,               // 5%
+				LowAvailability: 0.95,               // 95%
 			},
 		},
 		HealthCheck: HealthCheckConfig{
@@ -183,10 +183,10 @@ func DefaultAdvancedPoolConfig() AdvancedPoolConfig {
 // NewAdvancedSessionPool은 새로운 고급 세션 풀을 생성합니다
 func NewAdvancedSessionPool(manager SessionManager, config AdvancedPoolConfig) *AdvancedSessionPool {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// 기본 풀 생성
 	basePool := NewSessionPool(manager, config.BaseConfig)
-	
+
 	pool := &AdvancedSessionPool{
 		basePool:      basePool,
 		config:        config,
@@ -194,20 +194,20 @@ func NewAdvancedSessionPool(manager SessionManager, config AdvancedPoolConfig) *
 		cancel:        cancel,
 		lastScaleTime: time.Now(),
 	}
-	
+
 	// 컴포넌트 초기화
 	pool.scaler = NewAutoScaler(pool, config.AutoScaling)
 	pool.monitor = NewPoolMonitor(pool, config.Monitoring)
 	pool.loadBalancer = NewLoadBalancer(pool, config.LoadBalancing)
 	pool.healthChecker = NewPoolHealthChecker(pool, config.HealthCheck)
 	pool.metrics = &PoolMetrics{}
-	
+
 	// 초기 부하값 설정
 	pool.currentLoad.Store(0.0)
-	
+
 	// 백그라운드 작업 시작
 	pool.startBackgroundTasks()
-	
+
 	return pool
 }
 
@@ -217,20 +217,20 @@ func (p *AdvancedSessionPool) AcquireSession(ctx context.Context, config Session
 	if err := p.validateLoad(); err != nil {
 		return nil, fmt.Errorf("load validation failed: %w", err)
 	}
-	
+
 	// 2. 세션 어피니티 확인
 	if affinitySession := p.findAffinitySession(config); affinitySession != nil {
 		p.updateMetrics(affinitySession, "affinity_hit")
 		return affinitySession, nil
 	}
-	
+
 	// 3. 부하 분산을 통한 세션 선택
 	session, err := p.loadBalancer.SelectSession(ctx, config)
 	if err == nil && session != nil {
 		p.updateMetrics(session, "load_balanced")
 		return session, nil
 	}
-	
+
 	// 4. 기본 풀에서 세션 획득 시도
 	session, err = p.basePool.AcquireSession(ctx, config)
 	if err != nil {
@@ -242,16 +242,16 @@ func (p *AdvancedSessionPool) AcquireSession(ctx context.Context, config Session
 			}
 		}
 	}
-	
+
 	if err != nil {
 		p.updateMetrics(nil, "acquisition_failed")
 		return nil, fmt.Errorf("failed to acquire session: %w", err)
 	}
-	
+
 	// 6. 세션 메트릭 초기화
 	p.initSessionMetrics(session)
 	p.updateMetrics(session, "acquired")
-	
+
 	return session, nil
 }
 
@@ -259,11 +259,11 @@ func (p *AdvancedSessionPool) AcquireSession(ctx context.Context, config Session
 func (p *AdvancedSessionPool) ReleaseSession(sessionID string) error {
 	// 기본 풀에 반환
 	err := p.basePool.ReleaseSession(sessionID)
-	
+
 	// 메트릭 업데이트
 	if err == nil {
 		p.updateMetrics(nil, "released")
-		
+
 		// 스케일다운 검토
 		if p.config.AutoScaling.Enabled {
 			go p.scaler.ConsiderScaleDown()
@@ -271,7 +271,7 @@ func (p *AdvancedSessionPool) ReleaseSession(sessionID string) error {
 	} else {
 		p.updateMetrics(nil, "release_failed")
 	}
-	
+
 	return err
 }
 
@@ -279,9 +279,9 @@ func (p *AdvancedSessionPool) ReleaseSession(sessionID string) error {
 func (p *AdvancedSessionPool) Scale(targetSize int) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	currentSize := p.basePool.GetPoolStats().Total
-	
+
 	if targetSize > currentSize {
 		// 스케일 업
 		return p.scaleUp(targetSize - currentSize)
@@ -289,7 +289,7 @@ func (p *AdvancedSessionPool) Scale(targetSize int) error {
 		// 스케일 다운
 		return p.scaleDown(currentSize - targetSize)
 	}
-	
+
 	return nil // 변경 불필요
 }
 
@@ -297,15 +297,15 @@ func (p *AdvancedSessionPool) Scale(targetSize int) error {
 func (p *AdvancedSessionPool) AutoScale(enable bool) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	p.config.AutoScaling.Enabled = enable
-	
+
 	if enable {
 		p.scaler.Start()
 	} else {
 		p.scaler.Stop()
 	}
-	
+
 	return nil
 }
 
@@ -313,12 +313,12 @@ func (p *AdvancedSessionPool) AutoScale(enable bool) error {
 func (p *AdvancedSessionPool) GetPoolStats() PoolStatistics {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	
+
 	baseStats := p.basePool.GetPoolStats()
-	
+
 	var memUsage runtime.MemStats
 	runtime.ReadMemStats(&memUsage)
-	
+
 	return PoolStatistics{
 		Size:            baseStats.Total,
 		ActiveSessions:  baseStats.Active,
@@ -342,7 +342,7 @@ func (p *AdvancedSessionPool) GetSessionMetrics() []SessionMetrics {
 // Shutdown은 고급 풀을 종료합니다
 func (p *AdvancedSessionPool) Shutdown() error {
 	p.cancel()
-	
+
 	// 백그라운드 작업 중지
 	if p.scaler != nil {
 		p.scaler.Stop()
@@ -353,7 +353,7 @@ func (p *AdvancedSessionPool) Shutdown() error {
 	if p.healthChecker != nil {
 		p.healthChecker.Stop()
 	}
-	
+
 	// 기본 풀 종료
 	return p.basePool.Shutdown()
 }
@@ -372,7 +372,7 @@ func (p *AdvancedSessionPool) findAffinitySession(config SessionConfig) *PooledS
 	if !p.config.LoadBalancing.SessionAffinity {
 		return nil
 	}
-	
+
 	return p.loadBalancer.FindAffinitySession(config)
 }
 
@@ -385,7 +385,7 @@ func (p *AdvancedSessionPool) initSessionMetrics(session *PooledSession) {
 		Status:       SessionStatusActive,
 		Weight:       1.0,
 	}
-	
+
 	p.monitor.SetSessionMetrics(session.ID, metrics)
 }
 
@@ -394,7 +394,7 @@ func (p *AdvancedSessionPool) updateMetrics(session *PooledSession, action strin
 	success := session != nil
 	duration := time.Since(time.Now()) // TODO: 실제 duration 계산 필요
 	p.metrics.RecordAction(action, success, duration)
-	
+
 	if session != nil {
 		p.monitor.UpdateSessionMetrics(session.ID, action)
 	}
@@ -406,7 +406,7 @@ func (p *AdvancedSessionPool) scaleUp(count int) error {
 	if currentSize+count > p.config.AutoScaling.MaxSessions {
 		count = p.config.AutoScaling.MaxSessions - currentSize
 	}
-	
+
 	// 실제 스케일링은 AutoScaler에서 처리
 	return p.scaler.ScaleUpBy(count)
 }
@@ -417,7 +417,7 @@ func (p *AdvancedSessionPool) scaleDown(count int) error {
 	if currentSize-count < p.config.AutoScaling.MinSessions {
 		count = currentSize - p.config.AutoScaling.MinSessions
 	}
-	
+
 	// 실제 스케일링은 AutoScaler에서 처리
 	return p.scaler.ScaleDownBy(count)
 }
@@ -427,22 +427,22 @@ func (p *AdvancedSessionPool) calculateUtilization() float64 {
 	if stats.Total == 0 {
 		return 0.0
 	}
-	
+
 	return float64(stats.Active) / float64(stats.Total)
 }
 
 func (p *AdvancedSessionPool) startBackgroundTasks() {
 	// 모니터링 시작
 	go p.monitor.Start()
-	
+
 	// 헬스 체커 시작
 	go p.healthChecker.Start()
-	
+
 	// 자동 스케일러 시작 (활성화된 경우)
 	if p.config.AutoScaling.Enabled {
 		go p.scaler.Start()
 	}
-	
+
 	// 메트릭 수집 시작
 	go p.metrics.Start(p.ctx)
 }

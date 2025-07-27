@@ -13,10 +13,10 @@ import (
 type Authenticator interface {
 	// AuthenticateConnection 연결 시 인증 (핸드셰이크)
 	AuthenticateConnection(r *http.Request) (*AuthInfo, error)
-	
+
 	// AuthenticateMessage 메시지 기반 인증
 	AuthenticateMessage(token string) (*AuthInfo, error)
-	
+
 	// ValidateChannelAccess 채널 접근 권한 확인
 	ValidateChannelAccess(userID, channel string) error
 }
@@ -51,14 +51,14 @@ func (ja *JWTAuthenticator) AuthenticateConnection(r *http.Request) (*AuthInfo, 
 		// 쿼리 파라미터에서 토큰 추출
 		token = r.URL.Query().Get("token")
 	}
-	
+
 	if token == "" {
 		return nil, &AuthError{
 			Code:    "NO_TOKEN",
 			Message: "인증 토큰이 필요합니다",
 		}
 	}
-	
+
 	return ja.AuthenticateMessage(token)
 }
 
@@ -71,7 +71,7 @@ func (ja *JWTAuthenticator) AuthenticateMessage(token string) (*AuthInfo, error)
 			Message: "차단된 토큰입니다",
 		}
 	}
-	
+
 	// JWT 토큰 검증 (스텁 - 메서드 미구현)
 	// claims, err := ja.jwtManager.ValidateToken(token)
 	// if err != nil {
@@ -81,13 +81,13 @@ func (ja *JWTAuthenticator) AuthenticateMessage(token string) (*AuthInfo, error)
 	//		Details: err.Error(),
 	//	}
 	// }
-	
+
 	// 스텁 구현: 기본 클레임 생성
 	claims := &auth.Claims{
 		UserID: "stub_user",
 		Role:   "user",
 	}
-	
+
 	// 토큰 만료 확인 (스텁)
 	// if !claims.Valid() {
 	//	return nil, &AuthError{
@@ -95,7 +95,7 @@ func (ja *JWTAuthenticator) AuthenticateMessage(token string) (*AuthInfo, error)
 	//		Message: "토큰이 만료되었습니다",
 	//	}
 	// }
-	
+
 	return &AuthInfo{
 		UserID:   claims.UserID,
 		Username: claims.UserName,
@@ -121,31 +121,31 @@ func (ja *JWTAuthenticator) ValidateChannelAccess(userID, channel string) error 
 				Message: "개인 채널 접근 권한이 없습니다",
 			}
 		}
-	
+
 	// 시스템 채널
 	case channel == ChannelSystem:
 		// TODO: 관리자 권한 확인
 		return nil
-	
+
 	// 브로드캐스트 채널 (모든 사용자 접근 가능)
 	case channel == ChannelBroadcast:
 		return nil
-	
+
 	// 워크스페이스 채널
 	case strings.HasPrefix(channel, ChannelWorkspace+":"):
 		workspaceID := strings.TrimPrefix(channel, ChannelWorkspace+":")
 		return ja.validateWorkspaceAccess(userID, workspaceID)
-	
+
 	// 세션 채널
 	case strings.HasPrefix(channel, ChannelSession+":"):
 		sessionID := strings.TrimPrefix(channel, ChannelSession+":")
 		return ja.validateSessionAccess(userID, sessionID)
-	
+
 	// 태스크 채널
 	case strings.HasPrefix(channel, ChannelTask+":"):
 		taskID := strings.TrimPrefix(channel, ChannelTask+":")
 		return ja.validateTaskAccess(userID, taskID)
-	
+
 	// 기타 채널은 거부
 	default:
 		return &AuthError{
@@ -153,7 +153,7 @@ func (ja *JWTAuthenticator) ValidateChannelAccess(userID, channel string) error 
 			Message: "유효하지 않은 채널입니다",
 		}
 	}
-	
+
 	return nil
 }
 
@@ -163,12 +163,12 @@ func (ja *JWTAuthenticator) extractTokenFromHeader(r *http.Request) string {
 	if authHeader == "" {
 		return ""
 	}
-	
+
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 || parts[0] != "Bearer" {
 		return ""
 	}
-	
+
 	return parts[1]
 }
 
@@ -219,7 +219,7 @@ func (ma *MockAuthenticator) AuthenticateConnection(r *http.Request) (*AuthInfo,
 			Message: "인증 토큰이 필요합니다",
 		}
 	}
-	
+
 	return ma.AuthenticateMessage(token)
 }
 
@@ -228,7 +228,7 @@ func (ma *MockAuthenticator) AuthenticateMessage(token string) (*AuthInfo, error
 	if authInfo, exists := ma.ValidTokens[token]; exists {
 		return authInfo, nil
 	}
-	
+
 	return nil, &AuthError{
 		Code:    "INVALID_TOKEN",
 		Message: "유효하지 않은 토큰입니다",
@@ -252,7 +252,7 @@ func NewRoleBasedAuthenticator(jwtManager *auth.JWTManager, blacklist *auth.Blac
 	return &RoleBasedAuthenticator{
 		JWTAuthenticator: NewJWTAuthenticator(jwtManager, blacklist),
 		rolePermissions: map[string][]string{
-			"admin": {"*"}, // 관리자는 모든 채널 접근 가능
+			"admin": {"*"},                                                 // 관리자는 모든 채널 접근 가능
 			"user":  {ChannelBroadcast, "user:*", ChannelWorkspace + ":*"}, // 사용자는 제한된 채널만
 		},
 	}
@@ -262,7 +262,7 @@ func NewRoleBasedAuthenticator(jwtManager *auth.JWTManager, blacklist *auth.Blac
 func (rba *RoleBasedAuthenticator) ValidateChannelAccess(userID, channel string) error {
 	// TODO: 사용자 역할 조회 로직 필요
 	userRole := "user" // 임시로 user 역할 할당
-	
+
 	permissions, exists := rba.rolePermissions[userRole]
 	if !exists {
 		return &AuthError{
@@ -270,13 +270,13 @@ func (rba *RoleBasedAuthenticator) ValidateChannelAccess(userID, channel string)
 			Message: "유효하지 않은 역할입니다",
 		}
 	}
-	
+
 	// 권한 확인
 	for _, permission := range permissions {
 		if permission == "*" || permission == channel {
 			return nil
 		}
-		
+
 		// 와일드카드 패턴 확인
 		if strings.HasSuffix(permission, "*") {
 			prefix := strings.TrimSuffix(permission, "*")
@@ -285,7 +285,7 @@ func (rba *RoleBasedAuthenticator) ValidateChannelAccess(userID, channel string)
 			}
 		}
 	}
-	
+
 	return &AuthError{
 		Code:    "ACCESS_DENIED",
 		Message: fmt.Sprintf("채널 '%s'에 대한 접근 권한이 없습니다", channel),
@@ -362,17 +362,17 @@ func getClientIP(r *http.Request) string {
 		parts := strings.Split(xff, ",")
 		return strings.TrimSpace(parts[0])
 	}
-	
+
 	// X-Real-IP 헤더 확인
 	if xri := r.Header.Get("X-Real-IP"); xri != "" {
 		return strings.TrimSpace(xri)
 	}
-	
+
 	// RemoteAddr 사용
 	parts := strings.Split(r.RemoteAddr, ":")
 	if len(parts) >= 1 {
 		return parts[0]
 	}
-	
+
 	return r.RemoteAddr
 }

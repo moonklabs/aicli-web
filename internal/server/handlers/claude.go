@@ -103,11 +103,25 @@ func (h *ClaudeHandler) getOrCreateSession(c *gin.Context, req ExecuteRequest) (
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return nil, err
 	}
-	sessions := result.Data.([]*models.Session)
+	// Data 필드의 타입 처리
+	var sessions []*models.Session
+	switch data := result.Data.(type) {
+	case []*models.Session:
+		sessions = data
+	case []interface{}:
+		sessions = make([]*models.Session, 0, len(data))
+		for _, item := range data {
+			if session, ok := item.(*models.Session); ok {
+				sessions = append(sessions, session)
+			}
+		}
+	default:
+		sessions = []*models.Session{}
+	}
 
 	// 활성 세션 중에서 재사용 가능한 세션 찾기
 	for _, session := range sessions {
-		if session.Status == models.SessionIdle && session.ProjectID == req.WorkspaceID {
+		if session.Status == models.SessionStatusIdle && session.ProjectID == req.WorkspaceID {
 			// models.Session을 claude.Session으로 변환
 			claudeSession := &claude.Session{
 				ID:          session.ID,
@@ -227,7 +241,7 @@ func (h *ClaudeHandler) ListSessions(c *gin.Context) {
 	filter := claude.SessionFilter{
 		WorkspaceID: workspaceID,
 	}
-	
+
 	sessions, err := h.claudeWrapper.ListSessions(filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -380,7 +394,7 @@ func toSessionResponse(session *claude.Session) SessionResponse {
 	return SessionResponse{
 		ID:           session.ID,
 		WorkspaceID:  session.WorkspaceID,
-		Status:       string(session.State),
+		Status:       session.State.String(),
 		SystemPrompt: session.Config.SystemPrompt,
 		MaxTurns:     session.Config.MaxTurns,
 		CreatedAt:    session.Created,

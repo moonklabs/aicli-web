@@ -7,26 +7,26 @@ import (
 // 에러 변수들을 errors 패키지로 재사용
 var (
 	// 일반적인 에러
-	ErrWorkspaceNotFound           = errors.ErrWorkspaceNotFound
-	ErrInvalidWorkspaceName        = errors.ErrInvalidWorkspaceName
-	ErrInvalidProjectPath          = errors.ErrInvalidProjectPath
-	ErrWorkspaceExists             = errors.ErrWorkspaceExists
-	ErrUnauthorized                = errors.ErrUnauthorized
-	ErrInvalidRequest              = errors.ErrInvalidRequest
-	
+	ErrWorkspaceNotFound    = errors.ErrWorkspaceNotFound
+	ErrInvalidWorkspaceName = errors.ErrInvalidWorkspaceName
+	ErrInvalidProjectPath   = errors.ErrInvalidProjectPath
+	ErrWorkspaceExists      = errors.ErrWorkspaceExists
+	ErrUnauthorized         = errors.ErrUnauthorized
+	ErrInvalidRequest       = errors.ErrInvalidRequest
+
 	// 상태 관련 에러
-	ErrInvalidWorkspaceStatus      = errors.ErrInvalidWorkspaceStatus
-	ErrWorkspaceNotActive          = errors.ErrWorkspaceNotActive
-	ErrWorkspaceArchived           = errors.ErrWorkspaceArchived
-	
+	ErrInvalidWorkspaceStatus = errors.ErrInvalidWorkspaceStatus
+	ErrWorkspaceNotActive     = errors.ErrWorkspaceNotActive
+	ErrWorkspaceArchived      = errors.ErrWorkspaceArchived
+
 	// 권한 관련 에러
-	ErrInsufficientPermissions     = errors.ErrInsufficientPermissions
-	ErrOwnershipRequired           = errors.ErrOwnershipRequired
-	
+	ErrInsufficientPermissions = errors.ErrInsufficientPermissions
+	ErrOwnershipRequired       = errors.ErrOwnershipRequired
+
 	// 리소스 관련 에러
-	ErrMaxWorkspacesReached        = errors.ErrMaxWorkspacesReached
-	ErrResourceBusy                = errors.ErrResourceBusy
-	ErrDependencyExists            = errors.ErrDependencyExists
+	ErrMaxWorkspacesReached = errors.ErrMaxWorkspacesReached
+	ErrResourceBusy         = errors.ErrResourceBusy
+	ErrDependencyExists     = errors.ErrDependencyExists
 )
 
 // WorkspaceError 는 errors 패키지에서 사용

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/aicli/aicli-web/internal/models"
+	"github.com/go-redis/redis/v8"
 )
 
 // RedisStore는 Redis를 백엔드로 하는 세션 저장소입니다.
@@ -54,7 +54,7 @@ func (s *RedisStore) Create(ctx context.Context, session *models.AuthSession) er
 	}
 
 	key := s.sessionKey(session.ID)
-	
+
 	// 세션 데이터 저장
 	err = s.client.Set(ctx, key, sessionData, s.defaultTTL).Err()
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *RedisStore) Create(ctx context.Context, session *models.AuthSession) er
 	if err != nil {
 		return fmt.Errorf("사용자 세션 목록 업데이트 실패: %w", err)
 	}
-	
+
 	// 사용자 세션 목록 TTL 설정
 	s.client.Expire(ctx, userKey, s.defaultTTL*2)
 
@@ -87,7 +87,7 @@ func (s *RedisStore) Create(ctx context.Context, session *models.AuthSession) er
 // Get은 세션 ID로 세션을 조회합니다.
 func (s *RedisStore) Get(ctx context.Context, sessionID string) (*models.AuthSession, error) {
 	key := s.sessionKey(sessionID)
-	
+
 	data, err := s.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -119,13 +119,13 @@ func (s *RedisStore) Update(ctx context.Context, session *models.AuthSession) er
 	}
 
 	key := s.sessionKey(session.ID)
-	
+
 	// TTL 유지하면서 업데이트
 	ttl := s.client.TTL(ctx, key).Val()
 	if ttl <= 0 {
 		ttl = s.defaultTTL
 	}
-	
+
 	err = s.client.Set(ctx, key, sessionData, ttl).Err()
 	if err != nil {
 		return fmt.Errorf("세션 업데이트 실패: %w", err)
@@ -140,7 +140,7 @@ func (s *RedisStore) Delete(ctx context.Context, sessionID string) error {
 	if err != nil && err != ErrSessionNotFound {
 		return err
 	}
-	
+
 	if session != nil {
 		// 사용자 세션 목록에서 제거
 		userKey := s.userSessionsKey(session.UserID)
@@ -166,7 +166,7 @@ func (s *RedisStore) Delete(ctx context.Context, sessionID string) error {
 // GetUserSessions는 사용자의 모든 활성 세션을 조회합니다.
 func (s *RedisStore) GetUserSessions(ctx context.Context, userID string) ([]*models.AuthSession, error) {
 	userKey := s.userSessionsKey(userID)
-	
+
 	sessionIDs, err := s.client.SMembers(ctx, userKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("사용자 세션 ID 조회 실패: %w", err)
@@ -183,7 +183,7 @@ func (s *RedisStore) GetUserSessions(ctx context.Context, userID string) ([]*mod
 			}
 			return nil, fmt.Errorf("세션 조회 실패 (%s): %w", sessionID, err)
 		}
-		
+
 		// 비활성 세션은 제외
 		if session.IsActive {
 			sessions = append(sessions, session)
@@ -196,7 +196,7 @@ func (s *RedisStore) GetUserSessions(ctx context.Context, userID string) ([]*mod
 // GetDeviceSessions는 특정 디바이스의 모든 세션을 조회합니다.
 func (s *RedisStore) GetDeviceSessions(ctx context.Context, fingerprint string) ([]*models.AuthSession, error) {
 	deviceKey := s.deviceSessionsKey(fingerprint)
-	
+
 	sessionIDs, err := s.client.SMembers(ctx, deviceKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("디바이스 세션 ID 조회 실패: %w", err)
@@ -212,7 +212,7 @@ func (s *RedisStore) GetDeviceSessions(ctx context.Context, fingerprint string) 
 			}
 			return nil, fmt.Errorf("세션 조회 실패 (%s): %w", sessionID, err)
 		}
-		
+
 		if session.IsActive {
 			sessions = append(sessions, session)
 		}
@@ -225,21 +225,21 @@ func (s *RedisStore) GetDeviceSessions(ctx context.Context, fingerprint string) 
 func (s *RedisStore) CleanupExpiredSessions(ctx context.Context) error {
 	// 스캔 패턴으로 모든 세션 키 조회
 	pattern := fmt.Sprintf("%s:session:*", s.keyPrefix)
-	
+
 	var cursor uint64
 	var keys []string
-	
+
 	for {
 		var scanKeys []string
 		var err error
-		
+
 		scanKeys, cursor, err = s.client.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return fmt.Errorf("세션 키 스캔 실패: %w", err)
 		}
-		
+
 		keys = append(keys, scanKeys...)
-		
+
 		if cursor == 0 {
 			break
 		}
@@ -261,12 +261,12 @@ func (s *RedisStore) CleanupExpiredSessions(ctx context.Context) error {
 // ExtendSession은 세션의 만료 시간을 연장합니다.
 func (s *RedisStore) ExtendSession(ctx context.Context, sessionID string, duration time.Duration) error {
 	key := s.sessionKey(sessionID)
-	
+
 	exists, err := s.client.Exists(ctx, key).Result()
 	if err != nil {
 		return fmt.Errorf("세션 존재 확인 실패: %w", err)
 	}
-	
+
 	if exists == 0 {
 		return ErrSessionNotFound
 	}
@@ -285,6 +285,6 @@ func (s *RedisStore) CountUserActiveSessions(ctx context.Context, userID string)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return len(sessions), nil
 }

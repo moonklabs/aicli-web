@@ -87,8 +87,8 @@ func DefaultConfig() *Config {
 		DefaultImage: "alpine:latest",
 		DefaultShell: []string{"/bin/sh"},
 		NetworkName:  "aicli-network",
-		CPULimit:     1.0,                   // 1 CPU
-		MemoryLimit:  512 * 1024 * 1024,    // 512MB
+		CPULimit:     1.0,               // 1 CPU
+		MemoryLimit:  512 * 1024 * 1024, // 512MB
 		Privileged:   false,
 		ReadOnly:     true,
 		SecurityOpts: []string{"no-new-privileges:true"},
@@ -165,10 +165,10 @@ func (c *Client) GenerateContainerName(workspaceID string) string {
 // WorkspaceLabels 워크스페이스 컨테이너용 레이블을 생성합니다.
 func (c *Client) WorkspaceLabels(workspaceID, workspaceName string) map[string]string {
 	return map[string]string{
-		c.labelKey("managed"):      "true",
-		c.labelKey("type"):         "workspace",
-		c.labelKey("workspace.id"): workspaceID,
+		c.labelKey("managed"):        "true",
+		c.labelKey("type"):           "workspace",
+		c.labelKey("workspace.id"):   workspaceID,
 		c.labelKey("workspace.name"): workspaceName,
-		c.labelKey("created"):      time.Now().Format(time.RFC3339),
+		c.labelKey("created"):        time.Now().Format(time.RFC3339),
 	}
 }

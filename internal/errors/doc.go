@@ -12,7 +12,7 @@
 //
 // 에러 생성:
 //
-//	err := errors.NewValidationError("필수 필드가 누락되었습니다", 
+//	err := errors.NewValidationError("필수 필드가 누락되었습니다",
 //		"--name 플래그를 추가하세요")
 //
 // 에러 포맷팅:
@@ -35,7 +35,7 @@
 //
 //	policy := errors.DefaultRetryPolicy()
 //	manager := errors.NewRecoveryManager()
-//	
+//
 //	err := errors.RetryWithRecovery(ctx, policy, manager, func(ctx context.Context, attempt int) error {
 //		// 재시도할 작업
 //		return doSomething()

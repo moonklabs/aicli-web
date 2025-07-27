@@ -12,30 +12,30 @@ import (
 // 모의 Docker 클라이언트
 type mockDockerClient struct{}
 
-func (m *mockDockerClient) Ping(ctx context.Context) error       { return nil }
-func (m *mockDockerClient) Close() error                        { return nil }
-func (m *mockDockerClient) GetConfig() interface{}              { return nil }
-func (m *mockDockerClient) GetNetworkID() string                { return "default-network" }
+func (m *mockDockerClient) Ping(ctx context.Context) error { return nil }
+func (m *mockDockerClient) Close() error                   { return nil }
+func (m *mockDockerClient) GetConfig() interface{}         { return nil }
+func (m *mockDockerClient) GetNetworkID() string           { return "default-network" }
 
 func TestNewNetworkManager(t *testing.T) {
 	client := &mockDockerClient{}
-	
+
 	t.Run("with config", func(t *testing.T) {
 		config := &IsolationConfig{
 			EnableNetworkIsolation: true,
 			BlockedPorts:           []int{80, 443},
 		}
-		
+
 		nm := NewNetworkManager(client, config)
-		
+
 		assert.NotNil(t, nm)
 		assert.Equal(t, client, nm.client)
 		assert.Equal(t, config, nm.config)
 	})
-	
+
 	t.Run("with nil config", func(t *testing.T) {
 		nm := NewNetworkManager(client, nil)
-		
+
 		assert.NotNil(t, nm)
 		assert.NotNil(t, nm.config)
 		// 기본 설정으로 초기화되어야 함
@@ -47,12 +47,12 @@ func TestCreateWorkspaceNetwork(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	ctx := context.Background()
-	
+
 	t.Run("valid workspace ID", func(t *testing.T) {
 		workspaceID := "test-workspace-123"
-		
+
 		networkInfo, err := nm.CreateWorkspaceNetwork(ctx, workspaceID)
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, networkInfo)
 		assert.NotEmpty(t, networkInfo.ID)
@@ -67,10 +67,10 @@ func TestCreateWorkspaceNetwork(t *testing.T) {
 		assert.Contains(t, networkInfo.Labels, "aicli.workspace.id")
 		assert.Equal(t, workspaceID, networkInfo.Labels["aicli.workspace.id"])
 	})
-	
+
 	t.Run("empty workspace ID", func(t *testing.T) {
 		networkInfo, err := nm.CreateWorkspaceNetwork(ctx, "")
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, networkInfo)
 		assert.Contains(t, err.Error(), "workspace ID cannot be empty")
@@ -81,22 +81,22 @@ func TestGetWorkspaceNetwork(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	ctx := context.Background()
-	
+
 	t.Run("valid workspace ID", func(t *testing.T) {
 		workspaceID := "test-workspace-456"
-		
+
 		networkInfo, err := nm.GetWorkspaceNetwork(ctx, workspaceID)
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, networkInfo)
 		assert.Equal(t, "net_test-workspace-456", networkInfo.ID)
 		assert.Equal(t, "aicli-workspace-test-workspace-456", networkInfo.Name)
 		assert.Equal(t, workspaceID, networkInfo.WorkspaceID)
 	})
-	
+
 	t.Run("empty workspace ID", func(t *testing.T) {
 		networkInfo, err := nm.GetWorkspaceNetwork(ctx, "")
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, networkInfo)
 		assert.Contains(t, err.Error(), "workspace ID cannot be empty")
@@ -107,12 +107,12 @@ func TestDeleteWorkspaceNetwork(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	ctx := context.Background()
-	
+
 	t.Run("valid workspace ID", func(t *testing.T) {
 		err := nm.DeleteWorkspaceNetwork(ctx, "test-workspace")
 		assert.NoError(t, err)
 	})
-	
+
 	t.Run("empty workspace ID", func(t *testing.T) {
 		err := nm.DeleteWorkspaceNetwork(ctx, "")
 		assert.Error(t, err)
@@ -124,9 +124,9 @@ func TestListWorkspaceNetworks(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	ctx := context.Background()
-	
+
 	networks, err := nm.ListWorkspaceNetworks(ctx)
-	
+
 	require.NoError(t, err)
 	assert.NotNil(t, networks)
 	// 모의 구현에서는 빈 배열 반환
@@ -136,23 +136,23 @@ func TestListWorkspaceNetworks(t *testing.T) {
 func TestAllocateSubnet(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	tests := []struct {
-		workspaceID string
+		workspaceID  string
 		expectPrefix string
 	}{
 		{"test-workspace-1", "172.20."},
 		{"test-workspace-2", "172.20."},
 		{"different-workspace", "172.20."},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.workspaceID, func(t *testing.T) {
 			subnet := nm.allocateSubnet(tt.workspaceID)
-			
+
 			assert.Contains(t, subnet, tt.expectPrefix)
 			assert.Contains(t, subnet, "/24")
-			
+
 			// 같은 워크스페이스 ID는 항상 같은 서브넷을 생성해야 함
 			subnet2 := nm.allocateSubnet(tt.workspaceID)
 			assert.Equal(t, subnet, subnet2)
@@ -163,7 +163,7 @@ func TestAllocateSubnet(t *testing.T) {
 func TestGetGatewayIP(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	tests := []struct {
 		subnet     string
 		expectedGW string
@@ -172,14 +172,14 @@ func TestGetGatewayIP(t *testing.T) {
 		{"172.20.100.0/24", "172.20.100.1"},
 		{"10.0.0.0/24", "10.0.0.1"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.subnet, func(t *testing.T) {
 			gateway := nm.getGatewayIP(tt.subnet)
 			assert.Equal(t, tt.expectedGW, gateway)
 		})
 	}
-	
+
 	t.Run("invalid subnet", func(t *testing.T) {
 		gateway := nm.getGatewayIP("invalid-subnet")
 		assert.Empty(t, gateway)
@@ -189,18 +189,18 @@ func TestGetGatewayIP(t *testing.T) {
 func TestNetworkHashWorkspaceID(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	// 같은 ID는 같은 해시를 생성
 	id1 := "test-workspace-123"
 	hash1a := nm.hashWorkspaceID(id1)
 	hash1b := nm.hashWorkspaceID(id1)
 	assert.Equal(t, hash1a, hash1b)
-	
+
 	// 다른 ID는 다른 해시를 생성
 	id2 := "test-workspace-456"
 	hash2 := nm.hashWorkspaceID(id2)
 	assert.NotEqual(t, hash1a, hash2)
-	
+
 	// 해시는 1000 미만이어야 함 (% 1000 연산)
 	assert.True(t, hash1a < 1000)
 	assert.True(t, hash2 < 1000)
@@ -212,7 +212,7 @@ func TestValidatePortMapping(t *testing.T) {
 	}
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, config)
-	
+
 	tests := []struct {
 		name        string
 		portMap     map[string]string
@@ -288,11 +288,11 @@ func TestValidatePortMapping(t *testing.T) {
 			expectError: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := nm.ValidatePortMapping(tt.portMap)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
@@ -309,7 +309,7 @@ func TestIsPortBlocked(t *testing.T) {
 	}
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, config)
-	
+
 	tests := []struct {
 		port     int
 		expected bool
@@ -322,7 +322,7 @@ func TestIsPortBlocked(t *testing.T) {
 		{9000, false},
 		{3000, false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(string(rune(tt.port)), func(t *testing.T) {
 			result := nm.isPortBlocked(tt.port)
@@ -338,16 +338,16 @@ func TestCreatePortMapping(t *testing.T) {
 	}
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, config)
-	
+
 	t.Run("nil request", func(t *testing.T) {
 		exposedPorts, portBindings, err := nm.CreatePortMapping(nil)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, exposedPorts)
 		assert.Nil(t, portBindings)
 		assert.Contains(t, err.Error(), "port mapping request cannot be nil")
 	})
-	
+
 	t.Run("valid port mapping with host binding", func(t *testing.T) {
 		req := &PortMappingRequest{
 			PortMappings: map[string]string{
@@ -357,16 +357,16 @@ func TestCreatePortMapping(t *testing.T) {
 			HostIP:     "127.0.0.1",
 			BindToHost: true,
 		}
-		
+
 		exposedPorts, portBindings, err := nm.CreatePortMapping(req)
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, exposedPorts)
 		assert.NotNil(t, portBindings)
 		assert.Len(t, exposedPorts, 2)
 		assert.Len(t, portBindings, 2)
 	})
-	
+
 	t.Run("valid port mapping without host binding", func(t *testing.T) {
 		req := &PortMappingRequest{
 			PortMappings: map[string]string{
@@ -374,16 +374,16 @@ func TestCreatePortMapping(t *testing.T) {
 			},
 			BindToHost: false,
 		}
-		
+
 		exposedPorts, portBindings, err := nm.CreatePortMapping(req)
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, exposedPorts)
 		assert.NotNil(t, portBindings)
 		assert.Len(t, exposedPorts, 1)
 		assert.Empty(t, portBindings) // BindToHost가 false이므로 바인딩 없음
 	})
-	
+
 	t.Run("invalid port mapping", func(t *testing.T) {
 		req := &PortMappingRequest{
 			PortMappings: map[string]string{
@@ -391,9 +391,9 @@ func TestCreatePortMapping(t *testing.T) {
 			},
 			BindToHost: true,
 		}
-		
+
 		exposedPorts, portBindings, err := nm.CreatePortMapping(req)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, exposedPorts)
 		assert.Nil(t, portBindings)
@@ -404,28 +404,28 @@ func TestCreatePortMapping(t *testing.T) {
 func TestMonitorNetworkUsage(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	t.Run("empty network ID", func(t *testing.T) {
 		ctx := context.Background()
-		
+
 		statsChan, err := nm.MonitorNetworkUsage(ctx, "")
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, statsChan)
 		assert.Contains(t, err.Error(), "network ID cannot be empty")
 	})
-	
+
 	t.Run("valid network ID", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		defer cancel()
-		
+
 		networkID := "test-network-123"
-		
+
 		statsChan, err := nm.MonitorNetworkUsage(ctx, networkID)
-		
+
 		require.NoError(t, err)
 		assert.NotNil(t, statsChan)
-		
+
 		// 첫 번째 통계 수신을 기다림 (5초 간격이므로 충분히 기다림)
 		select {
 		case stats, ok := <-statsChan:
@@ -447,7 +447,7 @@ func TestMonitorNetworkUsage(t *testing.T) {
 func TestValidateNetworkSecurityPolicy(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	tests := []struct {
 		name        string
 		policy      *NetworkSecurityPolicy
@@ -512,11 +512,11 @@ func TestValidateNetworkSecurityPolicy(t *testing.T) {
 			errorMsg:    "invalid block rule",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := nm.validateNetworkSecurityPolicy(tt.policy)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
@@ -530,7 +530,7 @@ func TestValidateNetworkSecurityPolicy(t *testing.T) {
 func TestValidateFirewallRule(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
-	
+
 	tests := []struct {
 		name        string
 		rule        FirewallRule
@@ -617,11 +617,11 @@ func TestValidateFirewallRule(t *testing.T) {
 			errorMsg:    "invalid IP address",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := nm.validateFirewallRule(tt.rule)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
@@ -636,31 +636,31 @@ func TestApplyNetworkSecurity(t *testing.T) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	ctx := context.Background()
-	
+
 	t.Run("empty network ID", func(t *testing.T) {
 		policy := &NetworkSecurityPolicy{}
-		
+
 		err := nm.ApplyNetworkSecurity(ctx, "", policy)
-		
+
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "network ID cannot be empty")
 	})
-	
+
 	t.Run("nil policy", func(t *testing.T) {
 		err := nm.ApplyNetworkSecurity(ctx, "test-network", nil)
-		
+
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "network security policy cannot be nil")
 	})
-	
+
 	t.Run("valid policy", func(t *testing.T) {
 		policy := &NetworkSecurityPolicy{
 			MaxBandwidth:   1000000,
 			MaxConnections: 100,
 		}
-		
+
 		err := nm.ApplyNetworkSecurity(ctx, "test-network", policy)
-		
+
 		assert.NoError(t, err)
 	})
 }
@@ -670,7 +670,7 @@ func BenchmarkAllocateSubnet(b *testing.B) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	workspaceID := "benchmark-workspace-12345"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		nm.allocateSubnet(workspaceID)
@@ -681,7 +681,7 @@ func BenchmarkNetworkHashWorkspaceID(b *testing.B) {
 	client := &mockDockerClient{}
 	nm := NewNetworkManager(client, nil)
 	workspaceID := "benchmark-workspace-for-hashing-performance-test"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		nm.hashWorkspaceID(workspaceID)
@@ -698,7 +698,7 @@ func BenchmarkValidatePortMapping(b *testing.B) {
 		"6060": "6000",
 		"5050": "5000",
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		nm.ValidatePortMapping(portMap)

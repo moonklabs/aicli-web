@@ -162,13 +162,13 @@ func validateDirectoryOrCreatable(fl validator.FieldLevel) bool {
 
 // PathValidationOptions 경로 검증 옵션
 type PathValidationOptions struct {
-	MustExist     bool   // 경로가 반드시 존재해야 함
-	MustBeDir     bool   // 디렉토리여야 함
-	MustBeFile    bool   // 파일이어야 함
-	Writable      bool   // 쓰기 가능해야 함
-	Readable      bool   // 읽기 가능해야 함
-	AllowRelative bool   // 상대 경로 허용
-	MaxDepth      int    // 최대 디렉토리 깊이
+	MustExist     bool     // 경로가 반드시 존재해야 함
+	MustBeDir     bool     // 디렉토리여야 함
+	MustBeFile    bool     // 파일이어야 함
+	Writable      bool     // 쓰기 가능해야 함
+	Readable      bool     // 읽기 가능해야 함
+	AllowRelative bool     // 상대 경로 허용
+	MaxDepth      int      // 최대 디렉토리 깊이
 	AllowedExts   []string // 허용되는 파일 확장자
 }
 

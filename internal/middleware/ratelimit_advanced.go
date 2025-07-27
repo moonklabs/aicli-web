@@ -11,48 +11,47 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"golang.org/x/time/rate"
 	"go.uber.org/zap"
-
+	"golang.org/x/time/rate"
 )
 
 // AdvancedRateLimitConfig는 고급 Rate Limiting 설정입니다.
 type AdvancedRateLimitConfig struct {
 	// Redis 클라이언트
 	Redis redis.UniversalClient
-	
+
 	// 기본 설정
-	GlobalRateLimit    int           // 전역 초당 요청 제한
-	UserRateLimit      int           // 사용자별 초당 요청 제한
-	IPRateLimit        int           // IP별 초당 요청 제한
-	EndpointRateLimit  map[string]int // 엔드포인트별 초당 요청 제한
-	
+	GlobalRateLimit   int            // 전역 초당 요청 제한
+	UserRateLimit     int            // 사용자별 초당 요청 제한
+	IPRateLimit       int            // IP별 초당 요청 제한
+	EndpointRateLimit map[string]int // 엔드포인트별 초당 요청 제한
+
 	// 시간 윈도우 설정
-	WindowSize         time.Duration // 슬라이딩 윈도우 크기
-	CleanupInterval    time.Duration // 정리 작업 간격
-	
+	WindowSize      time.Duration // 슬라이딩 윈도우 크기
+	CleanupInterval time.Duration // 정리 작업 간격
+
 	// 화이트리스트
-	WhitelistedIPs     []string      // 제외할 IP 목록
-	WhitelistedUsers   []string      // 제외할 사용자 목록
-	
+	WhitelistedIPs   []string // 제외할 IP 목록
+	WhitelistedUsers []string // 제외할 사용자 목록
+
 	// 지능형 설정
-	BurstMultiplier    float64       // 버스트 허용 배수
-	AdaptiveScaling    bool          // 적응형 스케일링 활성화
-	GeoBasedLimits     bool          // 지역 기반 제한 활성화
-	
+	BurstMultiplier float64 // 버스트 허용 배수
+	AdaptiveScaling bool    // 적응형 스케일링 활성화
+	GeoBasedLimits  bool    // 지역 기반 제한 활성화
+
 	// 보안 설정
-	SuspiciousThreshold int          // 의심스러운 활동 임계값
+	SuspiciousThreshold int           // 의심스러운 활동 임계값
 	AutoBlockDuration   time.Duration // 자동 차단 지속 시간
-	
+
 	Logger *zap.Logger
 }
 
 // AdvancedRateLimiter는 Redis 기반 고급 Rate Limiter입니다.
 type AdvancedRateLimiter struct {
-	config     *AdvancedRateLimitConfig
-	redis      redis.UniversalClient
-	logger     *zap.Logger
-	
+	config *AdvancedRateLimitConfig
+	redis  redis.UniversalClient
+	logger *zap.Logger
+
 	// 로컬 rate limiter (fallback)
 	localLimiter *rate.Limiter
 }
@@ -148,14 +147,14 @@ func (arl *AdvancedRateLimiter) Handler() gin.HandlerFunc {
 		// 각 레이어별 Rate Limit 검사
 		for _, key := range limitChecks {
 			allowed, remaining, resetTime := arl.checkRateLimit(c.Request.Context(), key)
-			
+
 			// Rate Limit 헤더 설정
 			arl.setRateLimitHeaders(c, key.Type, allowed, remaining, resetTime)
-			
+
 			if !allowed {
 				// 의심스러운 활동 기록
 				arl.recordSuspiciousActivity(c.Request.Context(), clientIP, userID, key.Type)
-				
+
 				arl.handleRateLimitExceeded(c, key.Type, resetTime)
 				return
 			}
@@ -163,7 +162,7 @@ func (arl *AdvancedRateLimiter) Handler() gin.HandlerFunc {
 
 		// 요청 허용
 		c.Next()
-		
+
 		// 응답 상태에 따른 후처리
 		arl.handlePostResponse(c.Request.Context(), c, clientIP, userID, endpoint)
 	}
@@ -173,7 +172,7 @@ func (arl *AdvancedRateLimiter) Handler() gin.HandlerFunc {
 func (arl *AdvancedRateLimiter) checkRateLimit(ctx context.Context, key LimitKey) (allowed bool, remaining int, resetTime time.Time) {
 	redisKey := arl.generateRedisKey(key)
 	limit := arl.getLimitForKey(key)
-	
+
 	if limit <= 0 {
 		return true, 999, time.Now().Add(arl.config.WindowSize)
 	}
@@ -181,24 +180,24 @@ func (arl *AdvancedRateLimiter) checkRateLimit(ctx context.Context, key LimitKey
 	// 슬라이딩 윈도우 알고리즘 사용
 	now := time.Now()
 	windowStart := now.Add(-arl.config.WindowSize)
-	
+
 	pipe := arl.redis.Pipeline()
-	
+
 	// 이전 요청들을 윈도우 시작 전 것들 제거
 	pipe.ZRemRangeByScore(ctx, redisKey, "0", strconv.FormatInt(windowStart.UnixNano(), 10))
-	
+
 	// 현재 윈도우의 요청 수 조회
 	countCmd := pipe.ZCard(ctx, redisKey)
-	
+
 	// 현재 요청 추가
 	pipe.ZAdd(ctx, redisKey, &redis.Z{
 		Score:  float64(now.UnixNano()),
 		Member: fmt.Sprintf("%d:%s", now.UnixNano(), arl.generateRequestID()),
 	})
-	
+
 	// TTL 설정
 	pipe.Expire(ctx, redisKey, arl.config.WindowSize*2)
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		arl.logger.Error("Redis pipeline 실행 실패", zap.Error(err))
@@ -212,9 +211,9 @@ func (arl *AdvancedRateLimiter) checkRateLimit(ctx context.Context, key LimitKey
 	if remaining < 0 {
 		remaining = 0
 	}
-	
+
 	resetTime = now.Add(arl.config.WindowSize)
-	
+
 	return allowed, remaining, resetTime
 }
 
@@ -260,7 +259,7 @@ func (arl *AdvancedRateLimiter) extractUserID(c *gin.Context) string {
 			return uid
 		}
 	}
-	
+
 	// JWT 토큰에서 사용자 ID 추출 (간단한 구현)
 	authHeader := c.GetHeader("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
@@ -268,7 +267,7 @@ func (arl *AdvancedRateLimiter) extractUserID(c *gin.Context) string {
 		// 여기서는 간단히 처리
 		return ""
 	}
-	
+
 	return ""
 }
 
@@ -280,7 +279,7 @@ func (arl *AdvancedRateLimiter) isWhitelisted(clientIP, userID string) bool {
 			return true
 		}
 	}
-	
+
 	// 사용자 화이트리스트 확인
 	if userID != "" {
 		for _, whiteUser := range arl.config.WhitelistedUsers {
@@ -289,7 +288,7 @@ func (arl *AdvancedRateLimiter) isWhitelisted(clientIP, userID string) bool {
 			}
 		}
 	}
-	
+
 	return false
 }
 
@@ -299,7 +298,7 @@ func (arl *AdvancedRateLimiter) matchesIP(clientIP, pattern string) bool {
 	if clientIP == pattern {
 		return true
 	}
-	
+
 	// CIDR 매치
 	_, cidr, err := net.ParseCIDR(pattern)
 	if err == nil {
@@ -308,7 +307,7 @@ func (arl *AdvancedRateLimiter) matchesIP(clientIP, pattern string) bool {
 			return cidr.Contains(ip)
 		}
 	}
-	
+
 	return false
 }
 
@@ -332,14 +331,14 @@ func (arl *AdvancedRateLimiter) recordSuspiciousActivity(ctx context.Context, cl
 		arl.logger.Error("의심스러운 활동 기록 실패", zap.Error(err))
 		return
 	}
-	
+
 	// TTL 설정 (24시간)
 	arl.redis.Expire(ctx, suspiciousKey, 24*time.Hour)
-	
+
 	// 임계값 초과 시 자동 차단
 	if count >= int64(arl.config.SuspiciousThreshold) {
 		arl.blockIP(ctx, clientIP, arl.config.AutoBlockDuration)
-		
+
 		arl.logger.Warn("IP 자동 차단",
 			zap.String("ip", clientIP),
 			zap.String("user_id", userID),
@@ -360,7 +359,7 @@ func (arl *AdvancedRateLimiter) blockIP(ctx context.Context, clientIP string, du
 // setRateLimitHeaders는 Rate Limit 헤더를 설정합니다.
 func (arl *AdvancedRateLimiter) setRateLimitHeaders(c *gin.Context, limitType string, allowed bool, remaining int, resetTime time.Time) {
 	prefix := fmt.Sprintf("X-RateLimit-%s-", strings.Title(limitType))
-	
+
 	c.Header(prefix+"Limit", strconv.Itoa(arl.getLimitForKey(LimitKey{Type: limitType})))
 	c.Header(prefix+"Remaining", strconv.Itoa(remaining))
 	c.Header(prefix+"Reset", strconv.FormatInt(resetTime.Unix(), 10))
@@ -372,17 +371,17 @@ func (arl *AdvancedRateLimiter) handleRateLimitExceeded(c *gin.Context, limitTyp
 	if retryAfter < 1 {
 		retryAfter = 1
 	}
-	
+
 	c.Header("Retry-After", strconv.Itoa(retryAfter))
-	
+
 	c.JSON(http.StatusTooManyRequests, gin.H{
-		"error":     "Too Many Requests",
-		"message":   fmt.Sprintf("Rate limit exceeded for %s", limitType),
-		"code":      "RATE_LIMIT_EXCEEDED",
-		"type":      limitType,
+		"error":       "Too Many Requests",
+		"message":     fmt.Sprintf("Rate limit exceeded for %s", limitType),
+		"code":        "RATE_LIMIT_EXCEEDED",
+		"type":        limitType,
 		"retry_after": retryAfter,
 	})
-	
+
 	c.Abort()
 }
 
@@ -393,14 +392,14 @@ func (arl *AdvancedRateLimiter) handleBlocked(c *gin.Context, clientIP string) {
 		"message": "Your IP address has been temporarily blocked due to suspicious activity",
 		"code":    "IP_BLOCKED",
 	})
-	
+
 	c.Abort()
 }
 
 // handlePostResponse는 응답 후 처리를 수행합니다.
 func (arl *AdvancedRateLimiter) handlePostResponse(ctx context.Context, c *gin.Context, clientIP, userID, endpoint string) {
 	statusCode := c.Writer.Status()
-	
+
 	// 실패한 요청에 대한 추가 처리
 	if statusCode >= 400 {
 		// 실패 횟수 기록
@@ -414,15 +413,15 @@ func (arl *AdvancedRateLimiter) handlePostResponse(ctx context.Context, c *gin.C
 func (arl *AdvancedRateLimiter) cleanupExpiredEntries() {
 	ticker := time.NewTicker(arl.config.CleanupInterval)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		ctx := context.Background()
 		now := time.Now()
-		
+
 		// 만료된 Rate Limit 항목 정리
 		pattern := "rate_limit:*"
 		arl.cleanupByPattern(ctx, pattern, now.Add(-arl.config.WindowSize*2))
-		
+
 		// 만료된 의심스러운 활동 기록 정리
 		pattern = "suspicious:*"
 		arl.cleanupByPattern(ctx, pattern, now.Add(-24*time.Hour))
@@ -438,14 +437,14 @@ func (arl *AdvancedRateLimiter) cleanupByPattern(ctx context.Context, pattern st
 			arl.logger.Error("Redis scan 실패", zap.Error(err))
 			break
 		}
-		
+
 		for _, key := range keys {
 			// ZSet의 경우 시간 기반 정리
 			if strings.Contains(key, "rate_limit:") {
 				arl.redis.ZRemRangeByScore(ctx, key, "0", strconv.FormatInt(before.UnixNano(), 10))
 			}
 		}
-		
+
 		cursor = nextCursor
 		if cursor == 0 {
 			break
@@ -461,35 +460,35 @@ func (arl *AdvancedRateLimiter) generateRequestID() string {
 // GetStats는 Rate Limiting 통계를 반환합니다.
 func (arl *AdvancedRateLimiter) GetStats(ctx context.Context) (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
-	
+
 	// 활성 IP 수
 	activeIPsPattern := "rate_limit:ip:*"
 	activeIPs, err := arl.getKeyCount(ctx, activeIPsPattern)
 	if err == nil {
 		stats["active_ips"] = activeIPs
 	}
-	
+
 	// 활성 사용자 수
 	activeUsersPattern := "rate_limit:user:*"
 	activeUsers, err := arl.getKeyCount(ctx, activeUsersPattern)
 	if err == nil {
 		stats["active_users"] = activeUsers
 	}
-	
+
 	// 차단된 IP 수
 	blockedIPsPattern := "blocked:ip:*"
 	blockedIPs, err := arl.getKeyCount(ctx, blockedIPsPattern)
 	if err == nil {
 		stats["blocked_ips"] = blockedIPs
 	}
-	
+
 	// 의심스러운 활동 수
 	suspiciousPattern := "suspicious:ip:*"
 	suspiciousCount, err := arl.getKeyCount(ctx, suspiciousPattern)
 	if err == nil {
 		stats["suspicious_activities"] = suspiciousCount
 	}
-	
+
 	return stats, nil
 }
 
@@ -497,20 +496,20 @@ func (arl *AdvancedRateLimiter) GetStats(ctx context.Context) (map[string]interf
 func (arl *AdvancedRateLimiter) getKeyCount(ctx context.Context, pattern string) (int, error) {
 	var cursor uint64
 	var count int
-	
+
 	for {
 		keys, nextCursor, err := arl.redis.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return 0, err
 		}
-		
+
 		count += len(keys)
 		cursor = nextCursor
 		if cursor == 0 {
 			break
 		}
 	}
-	
+
 	return count, nil
 }
 

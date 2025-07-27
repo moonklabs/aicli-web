@@ -220,10 +220,10 @@ func NewRecoveryErrorClassifier() *RecoveryErrorClassifier {
 	classifier := &RecoveryErrorClassifier{
 		rules: make(map[RecoveryErrorType][]RecoveryClassificationRule),
 	}
-	
+
 	// 기본 분류 규칙 추가
 	classifier.addDefaultRules()
-	
+
 	return classifier
 }
 
@@ -232,110 +232,110 @@ func (ec *RecoveryErrorClassifier) addDefaultRules() {
 	// 일시적 에러 규칙
 	ec.rules[RecoveryErrorTypeTransient] = []RecoveryClassificationRule{
 		{
-			ErrorPattern: "connection refused",
-			Action:       ActionRetry,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "connection refused",
+			Action:              ActionRetry,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "timeout",
-			Action:       ActionRetry,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "timeout",
+			Action:              ActionRetry,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "temporary failure",
-			Action:       ActionRetry,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffLinear,
+			ErrorPattern:        "temporary failure",
+			Action:              ActionRetry,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffLinear,
 		},
 	}
 
 	// 영구적 에러 규칙
 	ec.rules[RecoveryErrorTypePermanent] = []RecoveryClassificationRule{
 		{
-			ErrorPattern: "permission denied",
-			Action:       ActionFail,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "permission denied",
+			Action:              ActionFail,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 		{
-			ErrorPattern: "invalid api key",
-			Action:       ActionFail,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "invalid api key",
+			Action:              ActionFail,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 		{
-			ErrorPattern: "authentication failed",
-			Action:       ActionFail,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "authentication failed",
+			Action:              ActionFail,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 	}
 
 	// 프로세스 에러 규칙
 	ec.rules[RecoveryErrorTypeProcess] = []RecoveryClassificationRule{
 		{
-			ErrorPattern: "process exited",
-			Action:       ActionRestart,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "process exited",
+			Action:              ActionRestart,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "signal",
-			Action:       ActionRestart,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "signal",
+			Action:              ActionRestart,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "unexpected exit",
-			Action:       ActionRestart,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "unexpected exit",
+			Action:              ActionRestart,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 	}
 
 	// 리소스 에러 규칙
 	ec.rules[RecoveryErrorTypeResource] = []RecoveryClassificationRule{
 		{
-			ErrorPattern: "out of memory",
-			Action:       ActionCircuitBreak,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "out of memory",
+			Action:              ActionCircuitBreak,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 		{
-			ErrorPattern: "resource limit",
-			Action:       ActionCircuitBreak,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "resource limit",
+			Action:              ActionCircuitBreak,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 		{
-			ErrorPattern: "disk full",
-			Action:       ActionFail,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "disk full",
+			Action:              ActionFail,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 	}
 
 	// API 에러 규칙
 	ec.rules[RecoveryErrorTypeAPI] = []RecoveryClassificationRule{
 		{
-			ErrorPattern: "rate limit",
-			Action:       ActionRetry,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "rate limit",
+			Action:              ActionRetry,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "service unavailable",
-			Action:       ActionRetry,
-			Retryable:    true,
-			RecoveryBackoffType:  RecoveryBackoffExponential,
+			ErrorPattern:        "service unavailable",
+			Action:              ActionRetry,
+			Retryable:           true,
+			RecoveryBackoffType: RecoveryBackoffExponential,
 		},
 		{
-			ErrorPattern: "bad request",
-			Action:       ActionFail,
-			Retryable:    false,
-			RecoveryBackoffType:  RecoveryBackoffFixed,
+			ErrorPattern:        "bad request",
+			Action:              ActionFail,
+			Retryable:           false,
+			RecoveryBackoffType: RecoveryBackoffFixed,
 		},
 	}
 }
@@ -348,9 +348,9 @@ func (ec *RecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, 
 
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
-	
+
 	errStr := strings.ToLower(err.Error())
-	
+
 	// 각 에러 타입의 규칙을 확인
 	for errorType, rules := range ec.rules {
 		for _, rule := range rules {
@@ -359,7 +359,7 @@ func (ec *RecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, 
 			}
 		}
 	}
-	
+
 	// 기본 처리
 	return RecoveryErrorTypeUnknown, ActionIgnore
 }
@@ -368,11 +368,11 @@ func (ec *RecoveryErrorClassifier) ClassifyError(err error) (RecoveryErrorType, 
 func (ec *RecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, rule RecoveryClassificationRule) {
 	ec.mutex.Lock()
 	defer ec.mutex.Unlock()
-	
+
 	if ec.rules[errorType] == nil {
 		ec.rules[errorType] = []RecoveryClassificationRule{}
 	}
-	
+
 	ec.rules[errorType] = append(ec.rules[errorType], rule)
 }
 
@@ -380,6 +380,6 @@ func (ec *RecoveryErrorClassifier) AddRule(errorType RecoveryErrorType, rule Rec
 func (ec *RecoveryErrorClassifier) GetRules(errorType RecoveryErrorType) []RecoveryClassificationRule {
 	ec.mutex.RLock()
 	defer ec.mutex.RUnlock()
-	
+
 	return ec.rules[errorType]
 }

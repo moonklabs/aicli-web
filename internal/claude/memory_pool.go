@@ -14,12 +14,12 @@ type MemoryPoolManager interface {
 	GetMessagePool() *MessagePool
 	GetBufferPool() *BufferPool
 	GetSessionPool() *SessionDataPool
-	
+
 	// 풀 통계 및 관리
 	GetPoolStatistics() PoolStats
 	OptimizePoolSizes() error
 	RecycleUnusedObjects() error
-	
+
 	// 생명주기 관리
 	Start() error
 	Stop() error
@@ -31,20 +31,20 @@ type OptimizedMemoryManager struct {
 	messagePool  *MessagePool
 	bufferPools  map[int]*BufferPool
 	sessionPools *SessionDataPool
-	
+
 	// 최적화
 	poolOptimizer *PoolOptimizer
-	metrics      *MemoryMetrics
-	
+	metrics       *MemoryMetrics
+
 	// 설정
 	config MemoryPoolConfig
-	
+
 	// 생명주기
-	ctx           *sync.RWMutex
-	running       atomic.Bool
+	ctx            *sync.RWMutex
+	running        atomic.Bool
 	optimizeTicker *time.Ticker
 	cleanupTicker  *time.Ticker
-	stopChan      chan struct{}
+	stopChan       chan struct{}
 }
 
 // MessagePool은 메시지 객체 풀입니다
@@ -57,11 +57,11 @@ type MessagePool struct {
 
 // BufferPool은 버퍼 풀입니다
 type BufferPool struct {
-	pools     map[int]*sync.Pool  // 크기별 버퍼 풀
-	metrics   *PoolMetrics
-	maxSize   int
-	sizes     []int
-	mutex     sync.RWMutex
+	pools   map[int]*sync.Pool // 크기별 버퍼 풀
+	metrics *PoolMetrics
+	maxSize int
+	sizes   []int
+	mutex   sync.RWMutex
 }
 
 // SessionDataPool은 세션 데이터 풀입니다
@@ -74,60 +74,60 @@ type SessionDataPool struct {
 
 // PoolMetrics는 풀 메트릭입니다
 type PoolMetrics struct {
-	Gets        atomic.Int64  `json:"gets"`
-	Puts        atomic.Int64  `json:"puts"`
-	Hits        atomic.Int64  `json:"hits"`
-	Misses      atomic.Int64  `json:"misses"`
-	Creates     atomic.Int64  `json:"creates"`
-	Recycles    atomic.Int64  `json:"recycles"`
-	
+	Gets     atomic.Int64 `json:"gets"`
+	Puts     atomic.Int64 `json:"puts"`
+	Hits     atomic.Int64 `json:"hits"`
+	Misses   atomic.Int64 `json:"misses"`
+	Creates  atomic.Int64 `json:"creates"`
+	Recycles atomic.Int64 `json:"recycles"`
+
 	// 성능 메트릭
-	AvgGetTime  time.Duration `json:"avg_get_time"`
-	AvgPutTime  time.Duration `json:"avg_put_time"`
-	
+	AvgGetTime time.Duration `json:"avg_get_time"`
+	AvgPutTime time.Duration `json:"avg_put_time"`
+
 	// 메모리 메트릭
-	ObjectsInUse    int64 `json:"objects_in_use"`
-	ObjectsInPool   int64 `json:"objects_in_pool"`
-	TotalAllocated  int64 `json:"total_allocated"`
-	TotalFreed      int64 `json:"total_freed"`
-	
+	ObjectsInUse   int64 `json:"objects_in_use"`
+	ObjectsInPool  int64 `json:"objects_in_pool"`
+	TotalAllocated int64 `json:"total_allocated"`
+	TotalFreed     int64 `json:"total_freed"`
+
 	// 시간 정보
-	LastOptimized   time.Time `json:"last_optimized"`
-	LastCleaned     time.Time `json:"last_cleaned"`
+	LastOptimized time.Time `json:"last_optimized"`
+	LastCleaned   time.Time `json:"last_cleaned"`
 }
 
 // PoolStats는 전체 풀 통계입니다
 type MemoryPoolStats struct {
-	MessagePool  PoolMetrics            `json:"message_pool"`
-	BufferPools  map[int]PoolMetrics    `json:"buffer_pools"`
-	SessionPool  PoolMetrics            `json:"session_pool"`
-	TotalMemory  int64                  `json:"total_memory"`
-	
+	MessagePool PoolMetrics         `json:"message_pool"`
+	BufferPools map[int]PoolMetrics `json:"buffer_pools"`
+	SessionPool PoolMetrics         `json:"session_pool"`
+	TotalMemory int64               `json:"total_memory"`
+
 	// 효율성 지표
-	HitRate      float64                `json:"hit_rate"`
-	MemorySaved  int64                  `json:"memory_saved"`
-	GCReduction  float64                `json:"gc_reduction"`
-	
+	HitRate     float64 `json:"hit_rate"`
+	MemorySaved int64   `json:"memory_saved"`
+	GCReduction float64 `json:"gc_reduction"`
+
 	// 시스템 메트릭
-	HeapSize     uint64                 `json:"heap_size"`
-	HeapInUse    uint64                 `json:"heap_in_use"`
-	NumGC        uint32                 `json:"num_gc"`
-	PauseTotalNs uint64                 `json:"pause_total_ns"`
+	HeapSize     uint64 `json:"heap_size"`
+	HeapInUse    uint64 `json:"heap_in_use"`
+	NumGC        uint32 `json:"num_gc"`
+	PauseTotalNs uint64 `json:"pause_total_ns"`
 }
 
 // MemoryMetrics는 메모리 관련 메트릭입니다
 type MemoryMetrics struct {
-	// GC 통계  
-	GCStats      debug.GCStats
-	MemStats     runtime.MemStats
-	
+	// GC 통계
+	GCStats  debug.GCStats
+	MemStats runtime.MemStats
+
 	// 풀 효율성
-	PoolEfficiency   float64 `json:"pool_efficiency"`
+	PoolEfficiency    float64 `json:"pool_efficiency"`
 	MemoryUtilization float64 `json:"memory_utilization"`
-	
+
 	// 최적화 이력
 	OptimizationHistory []OptimizationRecord `json:"optimization_history"`
-	
+
 	mutex sync.RWMutex
 }
 
@@ -144,15 +144,15 @@ type OptimizationRecord struct {
 // PoolOptimizer는 풀 크기 최적화기입니다
 type PoolOptimizer struct {
 	// 최적화 정책
-	targetHitRate    float64
+	targetHitRate     float64
 	targetMemoryUsage int64
-	optimizeInterval time.Duration
-	
+	optimizeInterval  time.Duration
+
 	// 히스토리 추적
-	usageHistory     []UsageSnapshot
-	maxHistorySize   int
-	historyMutex     sync.RWMutex
-	
+	usageHistory   []UsageSnapshot
+	maxHistorySize int
+	historyMutex   sync.RWMutex
+
 	// 알고리즘 설정
 	learningRate     float64
 	adaptationFactor float64
@@ -160,32 +160,32 @@ type PoolOptimizer struct {
 
 // UsageSnapshot은 사용량 스냅샷입니다
 type UsageSnapshot struct {
-	Timestamp    time.Time `json:"timestamp"`
-	PoolSize     int       `json:"pool_size"`
-	HitRate      float64   `json:"hit_rate"`
-	MemoryUsage  int64     `json:"memory_usage"`
-	Efficiency   float64   `json:"efficiency"`
+	Timestamp   time.Time `json:"timestamp"`
+	PoolSize    int       `json:"pool_size"`
+	HitRate     float64   `json:"hit_rate"`
+	MemoryUsage int64     `json:"memory_usage"`
+	Efficiency  float64   `json:"efficiency"`
 }
 
 // MemoryPoolConfig는 메모리 풀 설정입니다
 type MemoryPoolConfig struct {
 	// 풀 크기 설정
-	MessagePoolSize    int   `json:"message_pool_size"`
-	SessionPoolSize    int   `json:"session_pool_size"`
-	BufferPoolSizes    []int `json:"buffer_pool_sizes"`
-	
+	MessagePoolSize int   `json:"message_pool_size"`
+	SessionPoolSize int   `json:"session_pool_size"`
+	BufferPoolSizes []int `json:"buffer_pool_sizes"`
+
 	// 최적화 설정
 	EnableOptimization bool          `json:"enable_optimization"`
 	OptimizeInterval   time.Duration `json:"optimize_interval"`
 	CleanupInterval    time.Duration `json:"cleanup_interval"`
-	
+
 	// 성능 설정
-	MaxObjectLifetime  time.Duration `json:"max_object_lifetime"`
-	GCThreshold        float64       `json:"gc_threshold"`
-	
+	MaxObjectLifetime time.Duration `json:"max_object_lifetime"`
+	GCThreshold       float64       `json:"gc_threshold"`
+
 	// 모니터링
-	EnableMetrics      bool `json:"enable_metrics"`
-	MetricsInterval    time.Duration `json:"metrics_interval"`
+	EnableMetrics   bool          `json:"enable_metrics"`
+	MetricsInterval time.Duration `json:"metrics_interval"`
 }
 
 // PoolableMessage는 풀링 가능한 메시지입니다
@@ -193,7 +193,7 @@ type PoolableMessage struct {
 	Type      string                 `json:"type"`
 	Data      map[string]interface{} `json:"data"`
 	Timestamp time.Time              `json:"timestamp"`
-	
+
 	// 풀링 메타데이터
 	pooled    bool
 	allocTime time.Time
@@ -205,7 +205,7 @@ type PoolableBuffer struct {
 	Data     []byte
 	Size     int
 	Capacity int
-	
+
 	// 풀링 메타데이터
 	pooled    bool
 	allocTime time.Time
@@ -218,7 +218,7 @@ type PoolableSessionData struct {
 	Config   map[string]interface{} `json:"config"`
 	Messages []PoolableMessage      `json:"messages"`
 	State    map[string]interface{} `json:"state"`
-	
+
 	// 풀링 메타데이터
 	pooled    bool
 	allocTime time.Time
@@ -243,29 +243,29 @@ func NewOptimizedMemoryManager(config MemoryPoolConfig) *OptimizedMemoryManager 
 		stopChan:    make(chan struct{}),
 		ctx:         &sync.RWMutex{},
 	}
-	
+
 	// 메시지 풀 초기화
 	manager.messagePool = NewMessagePool(config.MessagePoolSize)
-	
+
 	// 버퍼 풀들 초기화
 	sizes := config.BufferPoolSizes
 	if len(sizes) == 0 {
 		sizes = standardBufferSizes
 	}
-	
+
 	for _, size := range sizes {
 		manager.bufferPools[size] = NewBufferPool(size)
 	}
-	
+
 	// 세션 데이터 풀 초기화
 	manager.sessionPools = NewSessionDataPool(config.SessionPoolSize)
-	
+
 	// 메트릭 초기화
 	manager.metrics = NewMemoryMetrics()
-	
+
 	// 풀 최적화기 초기화
 	manager.poolOptimizer = NewPoolOptimizer()
-	
+
 	return manager
 }
 
@@ -275,7 +275,7 @@ func NewMessagePool(maxSize int) *MessagePool {
 		maxSize: maxSize,
 		metrics: &PoolMetrics{},
 	}
-	
+
 	pool.pool = &sync.Pool{
 		New: func() interface{} {
 			pool.metrics.Creates.Add(1)
@@ -286,7 +286,7 @@ func NewMessagePool(maxSize int) *MessagePool {
 			}
 		},
 	}
-	
+
 	pool.initialized.Store(true)
 	return pool
 }
@@ -298,11 +298,11 @@ func NewBufferPool(sizes ...int) *BufferPool {
 		metrics: &PoolMetrics{},
 		sizes:   sizes,
 	}
-	
+
 	if len(sizes) == 0 {
 		pool.sizes = standardBufferSizes
 	}
-	
+
 	for _, size := range pool.sizes {
 		currentSize := size // 클로저를 위한 복사
 		pool.pools[size] = &sync.Pool{
@@ -318,7 +318,7 @@ func NewBufferPool(sizes ...int) *BufferPool {
 			},
 		}
 	}
-	
+
 	pool.maxSize = pool.sizes[len(pool.sizes)-1]
 	return pool
 }
@@ -329,7 +329,7 @@ func NewSessionDataPool(maxSize int) *SessionDataPool {
 		maxSize: maxSize,
 		metrics: &PoolMetrics{},
 	}
-	
+
 	pool.pool = &sync.Pool{
 		New: func() interface{} {
 			pool.metrics.Creates.Add(1)
@@ -342,7 +342,7 @@ func NewSessionDataPool(maxSize int) *SessionDataPool {
 			}
 		},
 	}
-	
+
 	pool.initialized.Store(true)
 	return pool
 }
@@ -350,9 +350,9 @@ func NewSessionDataPool(maxSize int) *SessionDataPool {
 // GetMessage는 메시지 객체를 풀에서 가져옵니다
 func (mp *MessagePool) GetMessage() *PoolableMessage {
 	start := time.Now()
-	
+
 	mp.metrics.Gets.Add(1)
-	
+
 	msg, ok := mp.pool.Get().(*PoolableMessage)
 	if !ok || msg == nil {
 		mp.metrics.Misses.Add(1)
@@ -366,13 +366,13 @@ func (mp *MessagePool) GetMessage() *PoolableMessage {
 		// 객체 재사용을 위한 초기화
 		msg.reset()
 	}
-	
+
 	atomic.AddInt32(&msg.useCount, 1)
 	atomic.AddInt64(&mp.metrics.ObjectsInUse, 1)
-	
+
 	// 성능 메트릭 업데이트
 	mp.updateGetTime(time.Since(start))
-	
+
 	return msg
 }
 
@@ -381,19 +381,19 @@ func (mp *MessagePool) PutMessage(msg *PoolableMessage) {
 	if msg == nil || !msg.pooled {
 		return
 	}
-	
+
 	start := time.Now()
-	
+
 	mp.metrics.Puts.Add(1)
 	mp.metrics.Recycles.Add(1)
 	atomic.AddInt64(&mp.metrics.ObjectsInUse, -1)
 	atomic.AddInt64(&mp.metrics.ObjectsInPool, 1)
-	
+
 	// 객체 정리
 	msg.reset()
-	
+
 	mp.pool.Put(msg)
-	
+
 	// 성능 메트릭 업데이트
 	mp.updatePutTime(time.Since(start))
 }
@@ -401,16 +401,16 @@ func (mp *MessagePool) PutMessage(msg *PoolableMessage) {
 // GetBuffer는 적절한 크기의 버퍼를 풀에서 가져옵니다
 func (bp *BufferPool) GetBuffer(size int) *PoolableBuffer {
 	start := time.Now()
-	
+
 	bp.metrics.Gets.Add(1)
-	
+
 	// 가장 적합한 풀 크기 찾기
 	poolSize := bp.findBestPoolSize(size)
-	
+
 	bp.mutex.RLock()
 	pool, exists := bp.pools[poolSize]
 	bp.mutex.RUnlock()
-	
+
 	if !exists {
 		bp.metrics.Misses.Add(1)
 		return &PoolableBuffer{
@@ -421,7 +421,7 @@ func (bp *BufferPool) GetBuffer(size int) *PoolableBuffer {
 			pooled:    false,
 		}
 	}
-	
+
 	buf, ok := pool.Get().(*PoolableBuffer)
 	if !ok || buf == nil {
 		bp.metrics.Misses.Add(1)
@@ -437,13 +437,13 @@ func (bp *BufferPool) GetBuffer(size int) *PoolableBuffer {
 		// 버퍼 재사용을 위한 초기화
 		buf.reset()
 	}
-	
+
 	atomic.AddInt32(&buf.useCount, 1)
 	atomic.AddInt64(&bp.metrics.ObjectsInUse, 1)
-	
+
 	// 성능 메트릭 업데이트
 	bp.updateGetTime(time.Since(start))
-	
+
 	return buf
 }
 
@@ -452,25 +452,25 @@ func (bp *BufferPool) PutBuffer(buf *PoolableBuffer) {
 	if buf == nil || !buf.pooled {
 		return
 	}
-	
+
 	start := time.Now()
-	
+
 	bp.metrics.Puts.Add(1)
 	bp.metrics.Recycles.Add(1)
 	atomic.AddInt64(&bp.metrics.ObjectsInUse, -1)
 	atomic.AddInt64(&bp.metrics.ObjectsInPool, 1)
-	
+
 	// 적절한 풀 찾기
 	bp.mutex.RLock()
 	pool, exists := bp.pools[buf.Capacity]
 	bp.mutex.RUnlock()
-	
+
 	if exists {
 		// 버퍼 정리
 		buf.reset()
 		pool.Put(buf)
 	}
-	
+
 	// 성능 메트릭 업데이트
 	bp.updatePutTime(time.Since(start))
 }
@@ -478,9 +478,9 @@ func (bp *BufferPool) PutBuffer(buf *PoolableBuffer) {
 // GetSessionData는 세션 데이터를 풀에서 가져옵니다
 func (sp *SessionDataPool) GetSessionData() *PoolableSessionData {
 	start := time.Now()
-	
+
 	sp.metrics.Gets.Add(1)
-	
+
 	data, ok := sp.pool.Get().(*PoolableSessionData)
 	if !ok || data == nil {
 		sp.metrics.Misses.Add(1)
@@ -496,13 +496,13 @@ func (sp *SessionDataPool) GetSessionData() *PoolableSessionData {
 		// 객체 재사용을 위한 초기화
 		data.reset()
 	}
-	
+
 	atomic.AddInt32(&data.useCount, 1)
 	atomic.AddInt64(&sp.metrics.ObjectsInUse, 1)
-	
+
 	// 성능 메트릭 업데이트
 	sp.updateGetTime(time.Since(start))
-	
+
 	return data
 }
 
@@ -511,19 +511,19 @@ func (sp *SessionDataPool) PutSessionData(data *PoolableSessionData) {
 	if data == nil || !data.pooled {
 		return
 	}
-	
+
 	start := time.Now()
-	
+
 	sp.metrics.Puts.Add(1)
 	sp.metrics.Recycles.Add(1)
 	atomic.AddInt64(&sp.metrics.ObjectsInUse, -1)
 	atomic.AddInt64(&sp.metrics.ObjectsInPool, 1)
-	
+
 	// 객체 정리
 	data.reset()
-	
+
 	sp.pool.Put(data)
-	
+
 	// 성능 메트릭 업데이트
 	sp.updatePutTime(time.Since(start))
 }
@@ -535,22 +535,22 @@ func (omm *OptimizedMemoryManager) Start() error {
 	if !omm.running.CompareAndSwap(false, true) {
 		return nil // 이미 실행 중
 	}
-	
+
 	// 최적화 주기 시작
 	if omm.config.EnableOptimization {
 		omm.optimizeTicker = time.NewTicker(omm.config.OptimizeInterval)
 		go omm.optimizeLoop()
 	}
-	
+
 	// 정리 주기 시작
 	omm.cleanupTicker = time.NewTicker(omm.config.CleanupInterval)
 	go omm.cleanupLoop()
-	
+
 	// 메트릭 수집 시작
 	if omm.config.EnableMetrics {
 		go omm.metricsLoop()
 	}
-	
+
 	return nil
 }
 
@@ -559,17 +559,17 @@ func (omm *OptimizedMemoryManager) Stop() error {
 	if !omm.running.CompareAndSwap(true, false) {
 		return nil // 이미 중지됨
 	}
-	
+
 	close(omm.stopChan)
-	
+
 	if omm.optimizeTicker != nil {
 		omm.optimizeTicker.Stop()
 	}
-	
+
 	if omm.cleanupTicker != nil {
 		omm.cleanupTicker.Stop()
 	}
-	
+
 	return nil
 }
 
@@ -598,11 +598,11 @@ func (omm *OptimizedMemoryManager) GetSessionPool() *SessionDataPool {
 func (omm *OptimizedMemoryManager) GetPoolStatistics() PoolStats {
 	// 기본 통계 정보만 반환
 	return PoolStats{
-		Active:      0, // 실제 구현 필요
-		Idle:        0, // 실제 구현 필요
-		Total:       0, // 실제 구현 필요
+		Active:      0,    // 실제 구현 필요
+		Idle:        0,    // 실제 구현 필요
+		Total:       0,    // 실제 구현 필요
 		MaxCapacity: 1000, // 기본값
-		Utilization: 0.0, // 실제 구현 필요
+		Utilization: 0.0,  // 실제 구현 필요
 	}
 }
 
@@ -611,7 +611,7 @@ func (omm *OptimizedMemoryManager) OptimizePoolSizes() error {
 	if omm.poolOptimizer == nil {
 		return nil
 	}
-	
+
 	stats := omm.GetPoolStatistics()
 	return omm.poolOptimizer.OptimizePools(stats)
 }
@@ -620,10 +620,10 @@ func (omm *OptimizedMemoryManager) OptimizePoolSizes() error {
 func (omm *OptimizedMemoryManager) RecycleUnusedObjects() error {
 	// 강제 GC 실행
 	runtime.GC()
-	
+
 	// 오래된 객체들 정리 (실제 구현에서는 더 정교한 로직 필요)
 	// omm.metrics.LastCleaned = time.Now() // 필드 없음
-	
+
 	return nil
 }
 
@@ -632,7 +632,7 @@ func (omm *OptimizedMemoryManager) RecycleUnusedObjects() error {
 func (msg *PoolableMessage) reset() {
 	msg.Type = ""
 	msg.Timestamp = time.Time{}
-	
+
 	// 맵 재사용을 위한 초기화
 	for k := range msg.Data {
 		delete(msg.Data, k)
@@ -646,7 +646,7 @@ func (buf *PoolableBuffer) reset() {
 
 func (data *PoolableSessionData) reset() {
 	data.ID = ""
-	
+
 	// 맵들 초기화
 	for k := range data.Config {
 		delete(data.Config, k)
@@ -654,7 +654,7 @@ func (data *PoolableSessionData) reset() {
 	for k := range data.State {
 		delete(data.State, k)
 	}
-	
+
 	// 슬라이스 재사용
 	data.Messages = data.Messages[:0]
 }
@@ -662,13 +662,13 @@ func (data *PoolableSessionData) reset() {
 func (bp *BufferPool) findBestPoolSize(requestedSize int) int {
 	bp.mutex.RLock()
 	defer bp.mutex.RUnlock()
-	
+
 	for _, size := range bp.sizes {
 		if size >= requestedSize {
 			return size
 		}
 	}
-	
+
 	// 가장 큰 크기 반환
 	return bp.maxSize
 }
@@ -742,7 +742,7 @@ func (omm *OptimizedMemoryManager) cleanupLoop() {
 func (omm *OptimizedMemoryManager) metricsLoop() {
 	ticker := time.NewTicker(omm.config.MetricsInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-omm.stopChan:
@@ -756,14 +756,14 @@ func (omm *OptimizedMemoryManager) metricsLoop() {
 func (omm *OptimizedMemoryManager) collectMetrics() {
 	omm.metrics.mutex.Lock()
 	defer omm.metrics.mutex.Unlock()
-	
+
 	// GC 통계 수집
 	// runtime.ReadGCStats(&omm.metrics.GCStats) // ReadGCStats는 존재하지 않음
 	runtime.ReadMemStats(&omm.metrics.MemStats)
-	
+
 	// 풀 효율성 계산
 	omm.metrics.PoolEfficiency = 0.0 // HitRate 필드 없음으로 기본값 사용
-	
+
 	// 메모리 활용률 계산
 	if omm.metrics.MemStats.HeapSys > 0 {
 		omm.metrics.MemoryUtilization = float64(omm.metrics.MemStats.HeapInuse) / float64(omm.metrics.MemStats.HeapSys)
@@ -780,13 +780,13 @@ func NewMemoryMetrics() *MemoryMetrics {
 // NewPoolOptimizer는 새로운 풀 최적화기를 생성합니다
 func NewPoolOptimizer() *PoolOptimizer {
 	return &PoolOptimizer{
-		targetHitRate:      0.8,
-		targetMemoryUsage:  1024 * 1024 * 100, // 100MB
-		optimizeInterval:   time.Minute * 5,
-		usageHistory:       make([]UsageSnapshot, 0, 100),
-		maxHistorySize:     100,
-		learningRate:       0.1,
-		adaptationFactor:   0.05,
+		targetHitRate:     0.8,
+		targetMemoryUsage: 1024 * 1024 * 100, // 100MB
+		optimizeInterval:  time.Minute * 5,
+		usageHistory:      make([]UsageSnapshot, 0, 100),
+		maxHistorySize:    100,
+		learningRate:      0.1,
+		adaptationFactor:  0.05,
 	}
 }
 
@@ -801,7 +801,7 @@ func (po *PoolOptimizer) OptimizePools(stats PoolStats) error {
 		// 메모리 사용량이 높으면 풀 크기 감소 권장
 		return po.recommendPoolDecrease(stats)
 	}
-	
+
 	return nil
 }
 

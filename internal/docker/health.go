@@ -117,7 +117,7 @@ type HealthStatus struct {
 // CheckMultipleContainers 여러 컨테이너의 헬스 상태를 확인합니다.
 func (h *HealthChecker) CheckMultipleContainers(ctx context.Context, containerIDs []string) ([]HealthStatus, error) {
 	results := make([]HealthStatus, len(containerIDs))
-	
+
 	for i, containerID := range containerIDs {
 		status := HealthStatus{
 			ContainerID: containerID,

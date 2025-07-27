@@ -31,26 +31,26 @@ type MetricsCollector struct {
 // AggregatedMetrics 집계된 메트릭
 type AggregatedMetrics struct {
 	// 기본 정보
-	ContainerID  string    `json:"container_id"`
-	WorkspaceID  string    `json:"workspace_id"`
-	LastUpdated  time.Time `json:"last_updated"`
-	DataPoints   int       `json:"data_points"`
+	ContainerID string    `json:"container_id"`
+	WorkspaceID string    `json:"workspace_id"`
+	LastUpdated time.Time `json:"last_updated"`
+	DataPoints  int       `json:"data_points"`
 
 	// CPU 메트릭
-	CPUUsage    CPUMetrics `json:"cpu_usage"`
+	CPUUsage CPUMetrics `json:"cpu_usage"`
 
 	// 메모리 메트릭
 	MemoryUsage MemoryMetrics `json:"memory_usage"`
 
 	// 네트워크 메트릭
-	NetworkIO   NetworkMetrics `json:"network_io"`
+	NetworkIO NetworkMetrics `json:"network_io"`
 
 	// 디스크 메트릭 (향후 확장)
-	DiskIO      DiskMetrics `json:"disk_io"`
+	DiskIO DiskMetrics `json:"disk_io"`
 
 	// 타이밍 정보
-	Uptime      time.Duration `json:"uptime"`
-	ActiveTime  time.Duration `json:"active_time"`
+	Uptime     time.Duration `json:"uptime"`
+	ActiveTime time.Duration `json:"active_time"`
 }
 
 // CPUMetrics CPU 관련 메트릭
@@ -59,7 +59,7 @@ type CPUMetrics struct {
 	Average float64 `json:"average"`
 	Peak    float64 `json:"peak"`
 	Min     float64 `json:"min"`
-	
+
 	// 히스토리
 	History []DataPoint `json:"history,omitempty"`
 }
@@ -71,23 +71,23 @@ type MemoryMetrics struct {
 	PeakUsage    int64   `json:"peak_usage"`
 	Limit        int64   `json:"limit"`
 	UsagePercent float64 `json:"usage_percent"`
-	
+
 	// 히스토리
 	History []DataPoint `json:"history,omitempty"`
 }
 
 // NetworkMetrics 네트워크 관련 메트릭
 type NetworkMetrics struct {
-	RxBytes       float64 `json:"rx_bytes"`
-	TxBytes       float64 `json:"tx_bytes"`
-	RxMB          float64 `json:"rx_mb"`
-	TxMB          float64 `json:"tx_mb"`
-	TotalMB       float64 `json:"total_mb"`
-	
+	RxBytes float64 `json:"rx_bytes"`
+	TxBytes float64 `json:"tx_bytes"`
+	RxMB    float64 `json:"rx_mb"`
+	TxMB    float64 `json:"tx_mb"`
+	TotalMB float64 `json:"total_mb"`
+
 	// 속도 (MB/s)
-	RxRate        float64 `json:"rx_rate"`
-	TxRate        float64 `json:"tx_rate"`
-	
+	RxRate float64 `json:"rx_rate"`
+	TxRate float64 `json:"tx_rate"`
+
 	// 히스토리
 	History []DataPoint `json:"history,omitempty"`
 }
@@ -98,7 +98,7 @@ type DiskMetrics struct {
 	WriteBytes int64   `json:"write_bytes"`
 	ReadRate   float64 `json:"read_rate"`
 	WriteRate  float64 `json:"write_rate"`
-	
+
 	// 히스토리
 	History []DataPoint `json:"history,omitempty"`
 }
@@ -160,21 +160,21 @@ func (mc *MetricsCollector) SetLogger(logger Logger) {
 // Start 메트릭 수집 시작
 func (mc *MetricsCollector) Start() error {
 	mc.logger.Info("메트릭 수집기 시작 - 수집 간격: %v", mc.collectionInterval)
-	
+
 	mc.wg.Add(2)
 	go mc.collectLoop()
 	go mc.cleanupLoop()
-	
+
 	return nil
 }
 
 // Stop 메트릭 수집 중지
 func (mc *MetricsCollector) Stop() error {
 	mc.logger.Info("메트릭 수집기 중지 중...")
-	
+
 	mc.cancel()
 	mc.wg.Wait()
-	
+
 	mc.logger.Info("메트릭 수집기 중지 완료")
 	return nil
 }
@@ -253,26 +253,26 @@ func (mc *MetricsCollector) processContainerMetrics(containerID string, stats *C
 	existing.LastUpdated = time.Now()
 	existing.DataPoints++
 
-	mc.logger.Debug("컨테이너 %s 메트릭 업데이트: CPU=%.2f%%, MEM=%dMB", 
+	mc.logger.Debug("컨테이너 %s 메트릭 업데이트: CPU=%.2f%%, MEM=%dMB",
 		containerID[:12], stats.CPUPercent, stats.MemoryUsage/(1024*1024))
 }
 
 // updateCPUMetrics CPU 메트릭 업데이트
 func (mc *MetricsCollector) updateCPUMetrics(cpu *CPUMetrics, current float64) {
 	cpu.Current = current
-	
+
 	// 평균 계산 (이동 평균)
 	if cpu.Average == 0 {
 		cpu.Average = current
 	} else {
-		cpu.Average = (cpu.Average*0.9) + (current*0.1)
+		cpu.Average = (cpu.Average * 0.9) + (current * 0.1)
 	}
-	
+
 	// 최대값 업데이트
 	if current > cpu.Peak {
 		cpu.Peak = current
 	}
-	
+
 	// 최소값 업데이트
 	if current < cpu.Min {
 		cpu.Min = current
@@ -292,19 +292,19 @@ func (mc *MetricsCollector) updateCPUMetrics(cpu *CPUMetrics, current float64) {
 func (mc *MetricsCollector) updateMemoryMetrics(mem *MemoryMetrics, currentUsage, limit int64) {
 	mem.CurrentUsage = currentUsage
 	mem.Limit = limit
-	
+
 	// 사용률 계산
 	if limit > 0 {
 		mem.UsagePercent = float64(currentUsage) / float64(limit) * 100
 	}
-	
+
 	// 평균 계산
 	if mem.AverageUsage == 0 {
 		mem.AverageUsage = currentUsage
 	} else {
 		mem.AverageUsage = int64(float64(mem.AverageUsage)*0.9 + float64(currentUsage)*0.1)
 	}
-	
+
 	// 최대값 업데이트
 	if currentUsage > mem.PeakUsage {
 		mem.PeakUsage = currentUsage
@@ -325,16 +325,16 @@ func (mc *MetricsCollector) updateNetworkMetrics(net *NetworkMetrics, rxMB, txMB
 	// 이전 값 저장
 	prevRxMB := net.RxMB
 	prevTxMB := net.TxMB
-	
+
 	// 현재 값 업데이트
 	net.RxMB = rxMB
 	net.TxMB = txMB
 	net.TotalMB = rxMB + txMB
-	
+
 	// 바이트 단위 계산
 	net.RxBytes = rxMB * 1024 * 1024
 	net.TxBytes = txMB * 1024 * 1024
-	
+
 	// 전송 속도 계산 (MB/s)
 	if !lastUpdate.IsZero() {
 		timeDiff := time.Since(lastUpdate).Seconds()
@@ -351,8 +351,8 @@ func (mc *MetricsCollector) updateNetworkMetrics(net *NetworkMetrics, rxMB, txMB
 	net.History = append(net.History, DataPoint{
 		Timestamp: time.Now(),
 		Value: map[string]float64{
-			"rx_mb": rxMB,
-			"tx_mb": txMB,
+			"rx_mb":   rxMB,
+			"tx_mb":   txMB,
 			"rx_rate": net.RxRate,
 			"tx_rate": net.TxRate,
 		},
@@ -364,7 +364,7 @@ func (mc *MetricsCollector) extractWorkspaceID(containerID string) string {
 	// Docker 라벨이나 이름에서 워크스페이스 ID 추출
 	// 실제 구현에서는 Docker inspect를 통해 라벨을 확인해야 함
 	// 현재는 간단한 매칭으로 구현
-	
+
 	// 컨테이너 정보 조회 (향후 구현)
 	return "unknown"
 }

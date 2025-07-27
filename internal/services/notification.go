@@ -15,7 +15,7 @@ type NotificationService interface {
 	SendPasswordResetEmail(ctx context.Context, to, resetToken string) error
 	SendEmailVerificationEmail(ctx context.Context, to, verificationToken string) error
 	Send2FAEnabledEmail(ctx context.Context, to string) error
-	
+
 	// 푸시 알림 (향후 확장)
 	SendPushNotification(ctx context.Context, userID, title, message string) error
 }
@@ -26,8 +26,8 @@ type notificationService struct {
 	smtpPort     int
 	smtpUsername string
 	smtpPassword string
-	fromEmail   string
-	fromName    string
+	fromEmail    string
+	fromName     string
 }
 
 // NotificationConfig는 알림 서비스 설정입니다
@@ -36,8 +36,8 @@ type NotificationConfig struct {
 	SMTPPort     int
 	SMTPUsername string
 	SMTPPassword string
-	FromEmail   string
-	FromName    string
+	FromEmail    string
+	FromName     string
 }
 
 // NewNotificationService는 새로운 알림 서비스를 생성합니다
@@ -47,8 +47,8 @@ func NewNotificationService(config *NotificationConfig) NotificationService {
 		smtpPort:     config.SMTPPort,
 		smtpUsername: config.SMTPUsername,
 		smtpPassword: config.SMTPPassword,
-		fromEmail:   config.FromEmail,
-		fromName:    config.FromName,
+		fromEmail:    config.FromEmail,
+		fromName:     config.FromName,
 	}
 }
 
@@ -61,18 +61,18 @@ func (s *notificationService) SendEmail(ctx context.Context, to, subject, body s
 	m.SetBody("text/html", body)
 
 	d := mail.NewDialer(s.smtpHost, s.smtpPort, s.smtpUsername, s.smtpPassword)
-	
+
 	if err := d.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
-	
+
 	return nil
 }
 
 // SendPasswordResetEmail은 비밀번호 재설정 이메일을 발송합니다
 func (s *notificationService) SendPasswordResetEmail(ctx context.Context, to, resetToken string) error {
 	subject := "비밀번호 재설정 요청"
-	
+
 	// HTML 템플릿 생성
 	body := fmt.Sprintf(`
 <!DOCTYPE html>
@@ -126,7 +126,7 @@ func (s *notificationService) SendPasswordResetEmail(ctx context.Context, to, re
 // SendEmailVerificationEmail은 이메일 인증 메일을 발송합니다
 func (s *notificationService) SendEmailVerificationEmail(ctx context.Context, to, verificationToken string) error {
 	subject := "이메일 주소 인증"
-	
+
 	body := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
@@ -178,7 +178,7 @@ func (s *notificationService) SendEmailVerificationEmail(ctx context.Context, to
 // Send2FAEnabledEmail은 2FA 활성화 알림 이메일을 발송합니다
 func (s *notificationService) Send2FAEnabledEmail(ctx context.Context, to string) error {
 	subject := "2단계 인증이 활성화되었습니다"
-	
+
 	body := `
 <!DOCTYPE html>
 <html>

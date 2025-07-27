@@ -54,13 +54,13 @@ type HealthHandler func(status HealthStatus)
 
 // healthChecker 헬스체크 구현
 type healthChecker struct {
-	mu          sync.RWMutex
-	status      HealthStatus
-	handlers    []HealthHandler
-	stopCh      chan struct{}
-	stopped     bool
-	logger      *logrus.Logger
-	checkFunc   HealthCheckFunc
+	mu        sync.RWMutex
+	status    HealthStatus
+	handlers  []HealthHandler
+	stopCh    chan struct{}
+	stopped   bool
+	logger    *logrus.Logger
+	checkFunc HealthCheckFunc
 }
 
 // HealthCheckFunc 헬스체크 함수 타입
@@ -71,10 +71,10 @@ func NewHealthChecker(logger *logrus.Logger) HealthChecker {
 	if logger == nil {
 		logger = logrus.StandardLogger()
 	}
-	
+
 	return &healthChecker{
-		logger:    logger,
-		stopCh:    make(chan struct{}),
+		logger: logger,
+		stopCh: make(chan struct{}),
 		status: HealthStatus{
 			Healthy:   false,
 			LastCheck: time.Now(),
@@ -162,7 +162,7 @@ func (hc *healthChecker) CheckHealth(ctx context.Context, process ProcessManager
 		ResponseTime: responseTime,
 		Uptime:       time.Since(startTime), // 실제로는 프로세스 시작 시간 사용
 		CPUUsage:     0.0,                   // TODO: 실제 CPU 사용률 수집
-		MemoryUsage:  0,                      // TODO: 실제 메모리 사용량 수집
+		MemoryUsage:  0,                     // TODO: 실제 메모리 사용량 수집
 	}
 
 	hc.updateStatus(HealthStatus{

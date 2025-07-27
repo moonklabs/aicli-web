@@ -5,22 +5,22 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/aicli/aicli-web/pkg/version"
+	"github.com/gin-gonic/gin"
 )
 
 // SystemInfo는 시스템 정보 응답 구조체입니다.
 type SystemInfo struct {
-	Service     string            `json:"service"`
-	Version     string            `json:"version"`
-	BuildTime   string            `json:"build_time"`
-	GitCommit   string            `json:"git_commit"`
-	GoVersion   string            `json:"go_version"`
-	Platform    string            `json:"platform"`
-	Runtime     RuntimeInfo       `json:"runtime"`
-	Uptime      string            `json:"uptime"`
-	Environment string            `json:"environment"`
-	Features    map[string]bool   `json:"features"`
+	Service     string          `json:"service"`
+	Version     string          `json:"version"`
+	BuildTime   string          `json:"build_time"`
+	GitCommit   string          `json:"git_commit"`
+	GoVersion   string          `json:"go_version"`
+	Platform    string          `json:"platform"`
+	Runtime     RuntimeInfo     `json:"runtime"`
+	Uptime      string          `json:"uptime"`
+	Environment string          `json:"environment"`
+	Features    map[string]bool `json:"features"`
 }
 
 // RuntimeInfo는 런타임 정보 구조체입니다.
@@ -47,11 +47,11 @@ var (
 // @Router /system/info [get]
 func GetSystemInfo(c *gin.Context) {
 	versionInfo := version.Get()
-	
+
 	// 메모리 통계 수집
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
-	
+
 	// 런타임 정보 구성
 	runtimeInfo := RuntimeInfo{
 		NumGoroutines: runtime.NumGoroutine(),
@@ -61,24 +61,24 @@ func GetSystemInfo(c *gin.Context) {
 		SysMB:         bToMb(memStats.Sys),
 		NumGC:         memStats.NumGC,
 	}
-	
+
 	// 업타임 계산
 	uptime := time.Since(startTime)
-	
+
 	// 활성화된 기능 목록
 	features := map[string]bool{
-		"middleware_logging":    true,
-		"middleware_cors":       true,
-		"middleware_security":   true,
-		"middleware_recovery":   true,
-		"error_handling":        true,
-		"request_id_tracking":   true,
-		"graceful_shutdown":     true,
-		"structured_logging":    true,
-		"version_info":          true,
-		"health_check":          true,
+		"middleware_logging":  true,
+		"middleware_cors":     true,
+		"middleware_security": true,
+		"middleware_recovery": true,
+		"error_handling":      true,
+		"request_id_tracking": true,
+		"graceful_shutdown":   true,
+		"structured_logging":  true,
+		"version_info":        true,
+		"health_check":        true,
 	}
-	
+
 	systemInfo := SystemInfo{
 		Service:     "AICode Manager API",
 		Version:     versionInfo.Version,
@@ -91,7 +91,7 @@ func GetSystemInfo(c *gin.Context) {
 		Environment: gin.Mode(),
 		Features:    features,
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    systemInfo,

@@ -17,25 +17,25 @@ type ConnectionManager struct {
 	// 연결 관리
 	connections      map[string]*ManagedConnection
 	connectionsMutex sync.RWMutex
-	
+
 	// 사용자별 연결 추적
-	userConnections  map[string]map[string]*ManagedConnection
-	userMutex        sync.RWMutex
-	
+	userConnections map[string]map[string]*ManagedConnection
+	userMutex       sync.RWMutex
+
 	// 세션별 연결 추적
 	sessionConnections map[string]map[string]*ManagedConnection
 	sessionMutex       sync.RWMutex
-	
+
 	// 통계
-	stats            ConnectionStats
-	statsUpdatedAt   time.Time
-	
+	stats          ConnectionStats
+	statsUpdatedAt time.Time
+
 	// 설정
 	config ConnectionManagerConfig
-	
+
 	// 이벤트 채널
 	eventChan chan ConnectionEvent
-	
+
 	// 생명주기
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -45,22 +45,22 @@ type ConnectionManager struct {
 // ManagedConnection은 관리되는 연결입니다
 type ManagedConnection struct {
 	*ClientConnection
-	
+
 	// 연결 관리
 	manager     *ConnectionManager
 	healthCheck *ConnectionHealthCheck
-	
+
 	// 메트릭
 	metrics ConnectionMetrics
-	
+
 	// 상태
-	state       ConnectionState
-	stateMutex  sync.RWMutex
-	
+	state      ConnectionState
+	stateMutex sync.RWMutex
+
 	// 타이머
 	heartbeatTicker *time.Ticker
 	timeoutTimer    *time.Timer
-	
+
 	// 구독
 	subscriptions map[string]bool
 	subMutex      sync.RWMutex
@@ -68,14 +68,14 @@ type ManagedConnection struct {
 
 // ConnectionHealthCheck는 연결 상태 검사입니다
 type ConnectionHealthCheck struct {
-	LastPing       time.Time     `json:"last_ping"`
-	LastPong       time.Time     `json:"last_pong"`
-	PingCount      int64         `json:"ping_count"`
-	PongCount      int64         `json:"pong_count"`
-	MissedPongs    int           `json:"missed_pongs"`
-	Latency        time.Duration `json:"latency"`
-	IsHealthy      bool          `json:"is_healthy"`
-	LastHealthy    time.Time     `json:"last_healthy"`
+	LastPing    time.Time     `json:"last_ping"`
+	LastPong    time.Time     `json:"last_pong"`
+	PingCount   int64         `json:"ping_count"`
+	PongCount   int64         `json:"pong_count"`
+	MissedPongs int           `json:"missed_pongs"`
+	Latency     time.Duration `json:"latency"`
+	IsHealthy   bool          `json:"is_healthy"`
+	LastHealthy time.Time     `json:"last_healthy"`
 }
 
 // ConnectionMetrics는 연결 메트릭입니다
@@ -106,43 +106,43 @@ const (
 
 // ConnectionStats는 전체 연결 통계입니다
 type ConnectionStats struct {
-	TotalConnections    int64 `json:"total_connections"`
-	ActiveConnections   int64 `json:"active_connections"`
-	AuthenticatedConns  int64 `json:"authenticated_connections"`
-	TotalSessions       int64 `json:"total_sessions"`
-	ActiveSessions      int64 `json:"active_sessions"`
-	TotalUsers          int64 `json:"total_users"`
-	ActiveUsers         int64 `json:"active_users"`
-	TotalMessages       int64 `json:"total_messages"`
-	MessagesPerSecond   float64 `json:"messages_per_second"`
+	TotalConnections    int64         `json:"total_connections"`
+	ActiveConnections   int64         `json:"active_connections"`
+	AuthenticatedConns  int64         `json:"authenticated_connections"`
+	TotalSessions       int64         `json:"total_sessions"`
+	ActiveSessions      int64         `json:"active_sessions"`
+	TotalUsers          int64         `json:"total_users"`
+	ActiveUsers         int64         `json:"active_users"`
+	TotalMessages       int64         `json:"total_messages"`
+	MessagesPerSecond   float64       `json:"messages_per_second"`
 	AverageConnTime     time.Duration `json:"average_connection_time"`
-	PeakConnections     int64 `json:"peak_connections"`
-	PeakConnectionsTime time.Time `json:"peak_connections_time"`
+	PeakConnections     int64         `json:"peak_connections"`
+	PeakConnectionsTime time.Time     `json:"peak_connections_time"`
 }
 
 // ConnectionManagerConfig는 연결 매니저 설정입니다
 type ConnectionManagerConfig struct {
-	MaxConnections       int           `json:"max_connections"`
-	MaxConnectionsPerUser int          `json:"max_connections_per_user"`
-	HeartbeatInterval    time.Duration `json:"heartbeat_interval"`
-	ConnectionTimeout    time.Duration `json:"connection_timeout"`
-	IdleTimeout          time.Duration `json:"idle_timeout"`
-	MaxMissedPongs       int           `json:"max_missed_pongs"`
-	EnableReconnect      bool          `json:"enable_reconnect"`
-	ReconnectAttempts    int           `json:"reconnect_attempts"`
-	ReconnectDelay       time.Duration `json:"reconnect_delay"`
-	StatsUpdateInterval  time.Duration `json:"stats_update_interval"`
-	CleanupInterval      time.Duration `json:"cleanup_interval"`
+	MaxConnections        int           `json:"max_connections"`
+	MaxConnectionsPerUser int           `json:"max_connections_per_user"`
+	HeartbeatInterval     time.Duration `json:"heartbeat_interval"`
+	ConnectionTimeout     time.Duration `json:"connection_timeout"`
+	IdleTimeout           time.Duration `json:"idle_timeout"`
+	MaxMissedPongs        int           `json:"max_missed_pongs"`
+	EnableReconnect       bool          `json:"enable_reconnect"`
+	ReconnectAttempts     int           `json:"reconnect_attempts"`
+	ReconnectDelay        time.Duration `json:"reconnect_delay"`
+	StatsUpdateInterval   time.Duration `json:"stats_update_interval"`
+	CleanupInterval       time.Duration `json:"cleanup_interval"`
 }
 
 // ConnectionEvent는 연결 이벤트입니다
 type ConnectionEvent struct {
-	Type       string                 `json:"type"`
-	ConnectionID string               `json:"connection_id"`
-	UserID     string                 `json:"user_id"`
-	SessionID  string                 `json:"session_id,omitempty"`
-	Timestamp  time.Time              `json:"timestamp"`
-	Data       map[string]interface{} `json:"data,omitempty"`
+	Type         string                 `json:"type"`
+	ConnectionID string                 `json:"connection_id"`
+	UserID       string                 `json:"user_id"`
+	SessionID    string                 `json:"session_id,omitempty"`
+	Timestamp    time.Time              `json:"timestamp"`
+	Data         map[string]interface{} `json:"data,omitempty"`
 }
 
 // HeartbeatMessage는 하트비트 메시지입니다
@@ -154,59 +154,59 @@ type HeartbeatMessage struct {
 
 // ConnectionInfo는 연결 정보입니다
 type ConnectionInfo struct {
-	ConnectionID  string            `json:"connection_id"`
-	UserID        string            `json:"user_id"`
-	UserName      string            `json:"user_name"`
-	SessionID     string            `json:"session_id,omitempty"`
-	State         ConnectionState   `json:"state"`
-	ConnectedAt   time.Time         `json:"connected_at"`
-	LastActivity  time.Time         `json:"last_activity"`
-	RemoteAddr    string            `json:"remote_addr"`
-	UserAgent     string            `json:"user_agent"`
-	Permission    Permission        `json:"permission"`
-	Metrics       ConnectionMetrics `json:"metrics"`
+	ConnectionID  string                `json:"connection_id"`
+	UserID        string                `json:"user_id"`
+	UserName      string                `json:"user_name"`
+	SessionID     string                `json:"session_id,omitempty"`
+	State         ConnectionState       `json:"state"`
+	ConnectedAt   time.Time             `json:"connected_at"`
+	LastActivity  time.Time             `json:"last_activity"`
+	RemoteAddr    string                `json:"remote_addr"`
+	UserAgent     string                `json:"user_agent"`
+	Permission    Permission            `json:"permission"`
+	Metrics       ConnectionMetrics     `json:"metrics"`
 	HealthCheck   ConnectionHealthCheck `json:"health_check"`
-	Subscriptions []string          `json:"subscriptions"`
+	Subscriptions []string              `json:"subscriptions"`
 }
 
 // DefaultConnectionManagerConfig는 기본 설정을 반환합니다
 func DefaultConnectionManagerConfig() ConnectionManagerConfig {
 	return ConnectionManagerConfig{
-		MaxConnections:       1000,
+		MaxConnections:        1000,
 		MaxConnectionsPerUser: 10,
-		HeartbeatInterval:    30 * time.Second,
-		ConnectionTimeout:    60 * time.Second,
-		IdleTimeout:          5 * time.Minute,
-		MaxMissedPongs:       3,
-		EnableReconnect:      true,
-		ReconnectAttempts:    5,
-		ReconnectDelay:       time.Second,
-		StatsUpdateInterval:  10 * time.Second,
-		CleanupInterval:      time.Minute,
+		HeartbeatInterval:     30 * time.Second,
+		ConnectionTimeout:     60 * time.Second,
+		IdleTimeout:           5 * time.Minute,
+		MaxMissedPongs:        3,
+		EnableReconnect:       true,
+		ReconnectAttempts:     5,
+		ReconnectDelay:        time.Second,
+		StatsUpdateInterval:   10 * time.Second,
+		CleanupInterval:       time.Minute,
 	}
 }
 
 // NewConnectionManager는 새로운 연결 매니저를 생성합니다
 func NewConnectionManager(config ConnectionManagerConfig) *ConnectionManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	cm := &ConnectionManager{
 		connections:        make(map[string]*ManagedConnection),
 		userConnections:    make(map[string]map[string]*ManagedConnection),
 		sessionConnections: make(map[string]map[string]*ManagedConnection),
-		config:            config,
-		eventChan:         make(chan ConnectionEvent, 1000),
-		ctx:               ctx,
-		cancel:            cancel,
-		statsUpdatedAt:    time.Now(),
+		config:             config,
+		eventChan:          make(chan ConnectionEvent, 1000),
+		ctx:                ctx,
+		cancel:             cancel,
+		statsUpdatedAt:     time.Now(),
 	}
-	
+
 	// 백그라운드 작업 시작
 	cm.wg.Add(3)
 	go cm.statsUpdater()
 	go cm.cleanupWorker()
 	go cm.eventProcessor()
-	
+
 	return cm
 }
 
@@ -216,29 +216,29 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 	cm.connectionsMutex.RLock()
 	totalConnections := len(cm.connections)
 	cm.connectionsMutex.RUnlock()
-	
+
 	if totalConnections >= cm.config.MaxConnections {
 		return nil, fmt.Errorf("maximum connections exceeded")
 	}
-	
+
 	// 사용자별 연결 수 제한 확인
 	cm.userMutex.RLock()
 	userConns := cm.userConnections[userInfo.ID]
 	userConnCount := len(userConns)
 	cm.userMutex.RUnlock()
-	
+
 	if userConnCount >= cm.config.MaxConnectionsPerUser {
 		return nil, fmt.Errorf("maximum connections per user exceeded")
 	}
-	
+
 	// 관리 연결 생성
 	managed := cm.createManagedConnection(conn, userInfo)
-	
+
 	// 연결 등록
 	cm.connectionsMutex.Lock()
 	cm.connections[managed.ID] = managed
 	cm.connectionsMutex.Unlock()
-	
+
 	// 사용자별 연결 등록
 	cm.userMutex.Lock()
 	if cm.userConnections[userInfo.ID] == nil {
@@ -246,11 +246,11 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 	}
 	cm.userConnections[userInfo.ID][managed.ID] = managed
 	cm.userMutex.Unlock()
-	
+
 	// 통계 업데이트
 	atomic.AddInt64(&cm.stats.TotalConnections, 1)
 	atomic.AddInt64(&cm.stats.ActiveConnections, 1)
-	
+
 	// 이벤트 발생
 	cm.publishEvent(ConnectionEvent{
 		Type:         "connection_registered",
@@ -261,10 +261,10 @@ func (cm *ConnectionManager) RegisterConnection(conn *websocket.Conn, userInfo *
 			"remote_addr": conn.RemoteAddr().String(),
 		},
 	})
-	
+
 	// 연결 관리 시작
 	managed.start()
-	
+
 	return managed, nil
 }
 
@@ -276,11 +276,11 @@ func (cm *ConnectionManager) UnregisterConnection(connectionID string) error {
 		delete(cm.connections, connectionID)
 	}
 	cm.connectionsMutex.Unlock()
-	
+
 	if !exists {
 		return fmt.Errorf("connection not found: %s", connectionID)
 	}
-	
+
 	// 사용자별 연결에서 제거
 	cm.userMutex.Lock()
 	if userConns := cm.userConnections[managed.UserID]; userConns != nil {
@@ -290,16 +290,16 @@ func (cm *ConnectionManager) UnregisterConnection(connectionID string) error {
 		}
 	}
 	cm.userMutex.Unlock()
-	
+
 	// 세션별 연결에서 제거
 	cm.removeFromAllSessions(connectionID)
-	
+
 	// 연결 정리
 	managed.stop()
-	
+
 	// 통계 업데이트
 	atomic.AddInt64(&cm.stats.ActiveConnections, -1)
-	
+
 	// 이벤트 발생
 	cm.publishEvent(ConnectionEvent{
 		Type:         "connection_unregistered",
@@ -307,7 +307,7 @@ func (cm *ConnectionManager) UnregisterConnection(connectionID string) error {
 		UserID:       managed.UserID,
 		Timestamp:    time.Now(),
 	})
-	
+
 	return nil
 }
 
@@ -316,11 +316,11 @@ func (cm *ConnectionManager) AssignToSession(connectionID, sessionID string) err
 	cm.connectionsMutex.RLock()
 	managed, exists := cm.connections[connectionID]
 	cm.connectionsMutex.RUnlock()
-	
+
 	if !exists {
 		return fmt.Errorf("connection not found: %s", connectionID)
 	}
-	
+
 	// 세션별 연결에 추가
 	cm.sessionMutex.Lock()
 	if cm.sessionConnections[sessionID] == nil {
@@ -328,14 +328,14 @@ func (cm *ConnectionManager) AssignToSession(connectionID, sessionID string) err
 	}
 	cm.sessionConnections[sessionID][connectionID] = managed
 	cm.sessionMutex.Unlock()
-	
+
 	// 연결 상태 업데이트
 	managed.stateMutex.Lock()
 	if managed.state == StateConnected {
 		managed.state = StateAuthenticated
 	}
 	managed.stateMutex.Unlock()
-	
+
 	// 이벤트 발생
 	cm.publishEvent(ConnectionEvent{
 		Type:         "connection_assigned_to_session",
@@ -344,7 +344,7 @@ func (cm *ConnectionManager) AssignToSession(connectionID, sessionID string) err
 		SessionID:    sessionID,
 		Timestamp:    time.Now(),
 	})
-	
+
 	return nil
 }
 
@@ -358,7 +358,7 @@ func (cm *ConnectionManager) RemoveFromSession(connectionID, sessionID string) e
 		}
 	}
 	cm.sessionMutex.Unlock()
-	
+
 	// 이벤트 발생
 	cm.publishEvent(ConnectionEvent{
 		Type:         "connection_removed_from_session",
@@ -366,7 +366,7 @@ func (cm *ConnectionManager) RemoveFromSession(connectionID, sessionID string) e
 		SessionID:    sessionID,
 		Timestamp:    time.Now(),
 	})
-	
+
 	return nil
 }
 
@@ -374,12 +374,12 @@ func (cm *ConnectionManager) RemoveFromSession(connectionID, sessionID string) e
 func (cm *ConnectionManager) GetConnection(connectionID string) (*ManagedConnection, error) {
 	cm.connectionsMutex.RLock()
 	defer cm.connectionsMutex.RUnlock()
-	
+
 	managed, exists := cm.connections[connectionID]
 	if !exists {
 		return nil, fmt.Errorf("connection not found: %s", connectionID)
 	}
-	
+
 	return managed, nil
 }
 
@@ -387,17 +387,17 @@ func (cm *ConnectionManager) GetConnection(connectionID string) (*ManagedConnect
 func (cm *ConnectionManager) GetUserConnections(userID string) []*ManagedConnection {
 	cm.userMutex.RLock()
 	defer cm.userMutex.RUnlock()
-	
+
 	userConns := cm.userConnections[userID]
 	if userConns == nil {
 		return []*ManagedConnection{}
 	}
-	
+
 	connections := make([]*ManagedConnection, 0, len(userConns))
 	for _, conn := range userConns {
 		connections = append(connections, conn)
 	}
-	
+
 	return connections
 }
 
@@ -405,17 +405,17 @@ func (cm *ConnectionManager) GetUserConnections(userID string) []*ManagedConnect
 func (cm *ConnectionManager) GetSessionConnections(sessionID string) []*ManagedConnection {
 	cm.sessionMutex.RLock()
 	defer cm.sessionMutex.RUnlock()
-	
+
 	sessionConns := cm.sessionConnections[sessionID]
 	if sessionConns == nil {
 		return []*ManagedConnection{}
 	}
-	
+
 	connections := make([]*ManagedConnection, 0, len(sessionConns))
 	for _, conn := range sessionConns {
 		connections = append(connections, conn)
 	}
-	
+
 	return connections
 }
 
@@ -423,13 +423,13 @@ func (cm *ConnectionManager) GetSessionConnections(sessionID string) []*ManagedC
 func (cm *ConnectionManager) GetAllConnections() []ConnectionInfo {
 	cm.connectionsMutex.RLock()
 	defer cm.connectionsMutex.RUnlock()
-	
+
 	connections := make([]ConnectionInfo, 0, len(cm.connections))
 	for _, managed := range cm.connections {
 		info := cm.buildConnectionInfo(managed)
 		connections = append(connections, info)
 	}
-	
+
 	return connections
 }
 
@@ -442,12 +442,12 @@ func (cm *ConnectionManager) GetStats() ConnectionStats {
 func (cm *ConnectionManager) BroadcastToAll(message WebSocketMessage) {
 	cm.connectionsMutex.RLock()
 	defer cm.connectionsMutex.RUnlock()
-	
+
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return
 	}
-	
+
 	for _, managed := range cm.connections {
 		if managed.IsActive {
 			select {
@@ -463,12 +463,12 @@ func (cm *ConnectionManager) BroadcastToAll(message WebSocketMessage) {
 // BroadcastToSession은 세션의 모든 연결에 메시지를 브로드캐스트합니다
 func (cm *ConnectionManager) BroadcastToSession(sessionID string, message WebSocketMessage) {
 	connections := cm.GetSessionConnections(sessionID)
-	
+
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return
 	}
-	
+
 	for _, managed := range connections {
 		if managed.IsActive {
 			select {
@@ -484,12 +484,12 @@ func (cm *ConnectionManager) BroadcastToSession(sessionID string, message WebSoc
 // BroadcastToUser는 사용자의 모든 연결에 메시지를 브로드캐스트합니다
 func (cm *ConnectionManager) BroadcastToUser(userID string, message WebSocketMessage) {
 	connections := cm.GetUserConnections(userID)
-	
+
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
 		return
 	}
-	
+
 	for _, managed := range connections {
 		if managed.IsActive {
 			select {
@@ -505,7 +505,7 @@ func (cm *ConnectionManager) BroadcastToUser(userID string, message WebSocketMes
 // Shutdown은 연결 매니저를 종료합니다
 func (cm *ConnectionManager) Shutdown() {
 	cm.cancel()
-	
+
 	// 모든 연결 종료
 	cm.connectionsMutex.RLock()
 	connections := make([]*ManagedConnection, 0, len(cm.connections))
@@ -513,11 +513,11 @@ func (cm *ConnectionManager) Shutdown() {
 		connections = append(connections, managed)
 	}
 	cm.connectionsMutex.RUnlock()
-	
+
 	for _, managed := range connections {
 		managed.forceClose()
 	}
-	
+
 	cm.wg.Wait()
 	close(cm.eventChan)
 }
@@ -537,23 +537,23 @@ func (cm *ConnectionManager) createManagedConnection(conn *websocket.Conn, userI
 		sendChan:    make(chan []byte, 256),
 		closeChan:   make(chan struct{}),
 	}
-	
+
 	ctx, cancel := context.WithCancel(cm.ctx)
 	clientConn.ctx = ctx
 	clientConn.cancel = cancel
-	
+
 	managed := &ManagedConnection{
 		ClientConnection: clientConn,
-		manager:         cm,
+		manager:          cm,
 		healthCheck: &ConnectionHealthCheck{
 			IsHealthy:   true,
 			LastHealthy: time.Now(),
 		},
-		state:         StateConnected,
-		subscriptions: make(map[string]bool),
+		state:           StateConnected,
+		subscriptions:   make(map[string]bool),
 		heartbeatTicker: time.NewTicker(cm.config.HeartbeatInterval),
 	}
-	
+
 	return managed
 }
 
@@ -561,14 +561,14 @@ func (cm *ConnectionManager) buildConnectionInfo(managed *ManagedConnection) Con
 	managed.stateMutex.RLock()
 	state := managed.state
 	managed.stateMutex.RUnlock()
-	
+
 	managed.subMutex.RLock()
 	subscriptions := make([]string, 0, len(managed.subscriptions))
 	for sub := range managed.subscriptions {
 		subscriptions = append(subscriptions, sub)
 	}
 	managed.subMutex.RUnlock()
-	
+
 	return ConnectionInfo{
 		ConnectionID:  managed.ID,
 		UserID:        managed.UserID,
@@ -587,7 +587,7 @@ func (cm *ConnectionManager) buildConnectionInfo(managed *ManagedConnection) Con
 func (cm *ConnectionManager) removeFromAllSessions(connectionID string) {
 	cm.sessionMutex.Lock()
 	defer cm.sessionMutex.Unlock()
-	
+
 	for sessionID, sessionConns := range cm.sessionConnections {
 		if _, exists := sessionConns[connectionID]; exists {
 			delete(sessionConns, connectionID)
@@ -608,10 +608,10 @@ func (cm *ConnectionManager) publishEvent(event ConnectionEvent) {
 
 func (cm *ConnectionManager) statsUpdater() {
 	defer cm.wg.Done()
-	
+
 	ticker := time.NewTicker(cm.config.StatsUpdateInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-cm.ctx.Done():
@@ -624,25 +624,25 @@ func (cm *ConnectionManager) statsUpdater() {
 
 func (cm *ConnectionManager) updateStats() {
 	now := time.Now()
-	
+
 	cm.connectionsMutex.RLock()
 	activeConnections := int64(len(cm.connections))
 	cm.connectionsMutex.RUnlock()
-	
+
 	cm.userMutex.RLock()
 	activeUsers := int64(len(cm.userConnections))
 	cm.userMutex.RUnlock()
-	
+
 	cm.sessionMutex.RLock()
 	activeSessions := int64(len(cm.sessionConnections))
 	cm.sessionMutex.RUnlock()
-	
+
 	// 피크 연결 수 업데이트
 	if activeConnections > cm.stats.PeakConnections {
 		cm.stats.PeakConnections = activeConnections
 		cm.stats.PeakConnectionsTime = now
 	}
-	
+
 	// 통계 업데이트
 	cm.stats.ActiveConnections = activeConnections
 	cm.stats.ActiveUsers = activeUsers
@@ -652,10 +652,10 @@ func (cm *ConnectionManager) updateStats() {
 
 func (cm *ConnectionManager) cleanupWorker() {
 	defer cm.wg.Done()
-	
+
 	ticker := time.NewTicker(cm.config.CleanupInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-cm.ctx.Done():
@@ -669,7 +669,7 @@ func (cm *ConnectionManager) cleanupWorker() {
 func (cm *ConnectionManager) cleanupInactiveConnections() {
 	now := time.Now()
 	idleTimeout := cm.config.IdleTimeout
-	
+
 	cm.connectionsMutex.RLock()
 	var inactiveConnections []string
 	for id, managed := range cm.connections {
@@ -678,7 +678,7 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 		}
 	}
 	cm.connectionsMutex.RUnlock()
-	
+
 	// 비활성 연결 정리
 	for _, id := range inactiveConnections {
 		cm.UnregisterConnection(id)
@@ -687,7 +687,7 @@ func (cm *ConnectionManager) cleanupInactiveConnections() {
 
 func (cm *ConnectionManager) eventProcessor() {
 	defer cm.wg.Done()
-	
+
 	for {
 		select {
 		case <-cm.ctx.Done():
@@ -742,14 +742,14 @@ func (mc *ManagedConnection) sendHeartbeat() {
 		Timestamp: time.Now(),
 		Sequence:  atomic.AddInt64(&mc.healthCheck.PingCount, 1),
 	}
-	
+
 	heartbeatBytes, err := json.Marshal(heartbeat)
 	if err != nil {
 		return
 	}
-	
+
 	mc.healthCheck.LastPing = time.Now()
-	
+
 	select {
 	case mc.sendChan <- heartbeatBytes:
 	default:
@@ -772,12 +772,12 @@ func (mc *ManagedConnection) readLoop() {
 				mc.forceClose()
 				return
 			}
-			
+
 			mc.LastSeen = time.Now()
 			mc.metrics.MessagesReceived++
 			mc.metrics.BytesReceived += int64(len(message))
 			mc.metrics.LastMessage = time.Now()
-			
+
 			// 메시지 처리 (실제 구현에서는 메시지 라우터로 전달)
 		}
 	}
@@ -796,7 +796,7 @@ func (mc *ManagedConnection) writeLoop() {
 				mc.forceClose()
 				return
 			}
-			
+
 			mc.metrics.MessagesSent++
 			mc.metrics.BytesSent += int64(len(message))
 		}

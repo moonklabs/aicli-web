@@ -20,7 +20,7 @@ func NewQueryAnalyzer(logger *zap.Logger) *QueryAnalyzer {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	
+
 	return &QueryAnalyzer{
 		logger: logger,
 	}
@@ -51,7 +51,7 @@ func (a *QueryAnalyzer) AnalyzeSQLiteQuery(ctx context.Context, db *sql.DB, quer
 	explainQuery := "EXPLAIN QUERY PLAN " + query
 	rows, err := db.QueryContext(ctx, explainQuery)
 	if err != nil {
-		a.logger.Error("쿼리 계획 분석 실패", 
+		a.logger.Error("쿼리 계획 분석 실패",
 			zap.String("query", query),
 			zap.Error(err),
 		)
@@ -84,16 +84,16 @@ func (a *QueryAnalyzer) AnalyzeSQLiteQuery(ctx context.Context, db *sql.DB, quer
 
 	// 인덱스 사용 분석
 	analysis.IndexesUsed = a.extractIndexesUsed(plans)
-	
+
 	// 테이블 스캔 분석
 	analysis.TableScans = a.extractTableScans(plans)
-	
+
 	// 복잡도 계산
 	analysis.Complexity = a.calculateComplexity(plans)
-	
+
 	// 비용 계산 (근사치)
 	analysis.Cost = a.calculateCost(plans)
-	
+
 	// 최적화 제안
 	analysis.Suggestions = a.generateSuggestions(query, plans)
 
@@ -113,10 +113,10 @@ func (a *QueryAnalyzer) AnalyzeSQLiteQuery(ctx context.Context, db *sql.DB, quer
 func (a *QueryAnalyzer) extractIndexesUsed(plans []QueryPlan) []string {
 	var indexes []string
 	indexSet := make(map[string]bool)
-	
+
 	for _, plan := range plans {
 		detail := strings.ToLower(plan.Detail)
-		
+
 		// 인덱스 사용 패턴 감지
 		if strings.Contains(detail, "using index") {
 			// "USING INDEX idx_name" 패턴 추출
@@ -130,7 +130,7 @@ func (a *QueryAnalyzer) extractIndexesUsed(plans []QueryPlan) []string {
 				if idx := strings.Index(indexName, "("); idx != -1 {
 					indexName = indexName[:idx]
 				}
-				
+
 				if indexName != "" && !indexSet[indexName] {
 					indexes = append(indexes, indexName)
 					indexSet[indexName] = true
@@ -138,7 +138,7 @@ func (a *QueryAnalyzer) extractIndexesUsed(plans []QueryPlan) []string {
 			}
 		}
 	}
-	
+
 	return indexes
 }
 
@@ -146,10 +146,10 @@ func (a *QueryAnalyzer) extractIndexesUsed(plans []QueryPlan) []string {
 func (a *QueryAnalyzer) extractTableScans(plans []QueryPlan) []string {
 	var tableScans []string
 	scanSet := make(map[string]bool)
-	
+
 	for _, plan := range plans {
 		detail := strings.ToLower(plan.Detail)
-		
+
 		// 테이블 스캔 패턴 감지
 		if strings.Contains(detail, "scan table") {
 			// "SCAN TABLE table_name" 패턴 추출
@@ -160,7 +160,7 @@ func (a *QueryAnalyzer) extractTableScans(plans []QueryPlan) []string {
 				if idx := strings.Index(tableName, " "); idx != -1 {
 					tableName = tableName[:idx]
 				}
-				
+
 				if tableName != "" && !scanSet[tableName] {
 					tableScans = append(tableScans, tableName)
 					scanSet[tableName] = true
@@ -168,7 +168,7 @@ func (a *QueryAnalyzer) extractTableScans(plans []QueryPlan) []string {
 			}
 		}
 	}
-	
+
 	return tableScans
 }
 
@@ -178,10 +178,10 @@ func (a *QueryAnalyzer) calculateComplexity(plans []QueryPlan) string {
 	hasTableScan := false
 	hasSubquery := false
 	hasJoin := false
-	
+
 	for _, plan := range plans {
 		detail := strings.ToLower(plan.Detail)
-		
+
 		if strings.Contains(detail, "scan table") {
 			hasTableScan = true
 		}
@@ -192,7 +192,7 @@ func (a *QueryAnalyzer) calculateComplexity(plans []QueryPlan) string {
 			hasJoin = true
 		}
 	}
-	
+
 	// 복잡도 결정
 	switch {
 	case planCount > 10 || hasSubquery:
@@ -207,10 +207,10 @@ func (a *QueryAnalyzer) calculateComplexity(plans []QueryPlan) string {
 // calculateCost 비용 계산 (근사치)
 func (a *QueryAnalyzer) calculateCost(plans []QueryPlan) int {
 	cost := 0
-	
+
 	for _, plan := range plans {
 		detail := strings.ToLower(plan.Detail)
-		
+
 		// 각 연산별 비용 추정
 		switch {
 		case strings.Contains(detail, "scan table"):
@@ -227,7 +227,7 @@ func (a *QueryAnalyzer) calculateCost(plans []QueryPlan) int {
 			cost += 5 // 기본 비용
 		}
 	}
-	
+
 	return cost
 }
 
@@ -235,14 +235,14 @@ func (a *QueryAnalyzer) calculateCost(plans []QueryPlan) int {
 func (a *QueryAnalyzer) generateSuggestions(query string, plans []QueryPlan) []string {
 	var suggestions []string
 	queryLower := strings.ToLower(query)
-	
+
 	// 테이블 스캔 감지
 	hasTableScan := false
 	scannedTables := make(map[string]bool)
-	
+
 	for _, plan := range plans {
 		detail := strings.ToLower(plan.Detail)
-		
+
 		if strings.Contains(detail, "scan table") {
 			hasTableScan = true
 			// 테이블명 추출
@@ -256,35 +256,35 @@ func (a *QueryAnalyzer) generateSuggestions(query string, plans []QueryPlan) []s
 			}
 		}
 	}
-	
+
 	if hasTableScan {
 		suggestions = append(suggestions, "테이블 스캔이 감지되었습니다. 적절한 인덱스 생성을 고려해보세요.")
 		for table := range scannedTables {
 			suggestions = append(suggestions, fmt.Sprintf("테이블 '%s'에 인덱스 생성을 고려해보세요.", table))
 		}
 	}
-	
+
 	// SELECT * 패턴 감지
 	if strings.Contains(queryLower, "select *") {
 		suggestions = append(suggestions, "SELECT *보다는 필요한 컬럼만 선택하는 것을 권장합니다.")
 	}
-	
+
 	// ORDER BY without LIMIT 감지
 	if strings.Contains(queryLower, "order by") && !strings.Contains(queryLower, "limit") {
 		suggestions = append(suggestions, "ORDER BY 사용 시 LIMIT을 함께 사용하는 것을 고려해보세요.")
 	}
-	
+
 	// N+1 쿼리 패턴 감지 (단순한 휴리스틱)
 	if strings.Contains(queryLower, "where") && strings.Contains(queryLower, "=") {
 		suggestions = append(suggestions, "N+1 쿼리 패턴이 의심됩니다. JOIN을 사용한 최적화를 고려해보세요.")
 	}
-	
+
 	// 복잡한 WHERE 조건 감지
 	whereCount := strings.Count(queryLower, " and ") + strings.Count(queryLower, " or ")
 	if whereCount > 5 {
 		suggestions = append(suggestions, "복잡한 WHERE 조건이 감지되었습니다. 복합 인덱스 생성을 고려해보세요.")
 	}
-	
+
 	return suggestions
 }
 
@@ -293,35 +293,35 @@ func (a *QueryAnalyzer) BenchmarkQuery(ctx context.Context, db *sql.DB, query st
 	if iterations <= 0 {
 		iterations = 100
 	}
-	
+
 	var totalDuration time.Duration
 	var minDuration = time.Hour // 충분히 큰 값으로 초기화
 	var maxDuration time.Duration
 	var errorCount int
-	
+
 	a.logger.Info("쿼리 벤치마크 시작",
 		zap.String("query", query),
 		zap.Int("iterations", iterations),
 	)
-	
+
 	for i := 0; i < iterations; i++ {
 		start := time.Now()
-		
+
 		rows, err := db.QueryContext(ctx, query)
 		if err != nil {
 			errorCount++
 			continue
 		}
-		
+
 		// 모든 row를 소비하여 정확한 실행 시간 측정
 		for rows.Next() {
 			// 실제로는 row를 읽지 않음 (벤치마크 목적)
 		}
 		rows.Close()
-		
+
 		duration := time.Since(start)
 		totalDuration += duration
-		
+
 		if duration < minDuration {
 			minDuration = duration
 		}
@@ -329,26 +329,26 @@ func (a *QueryAnalyzer) BenchmarkQuery(ctx context.Context, db *sql.DB, query st
 			maxDuration = duration
 		}
 	}
-	
+
 	successfulIterations := iterations - errorCount
 	if successfulIterations == 0 {
 		return nil, fmt.Errorf("모든 벤치마크 실행이 실패했습니다")
 	}
-	
+
 	avgDuration := totalDuration / time.Duration(successfulIterations)
-	
+
 	result := &BenchmarkResult{
-		Query:          query,
-		Iterations:     iterations,
-		SuccessCount:   successfulIterations,
-		ErrorCount:     errorCount,
-		TotalDuration:  totalDuration,
+		Query:           query,
+		Iterations:      iterations,
+		SuccessCount:    successfulIterations,
+		ErrorCount:      errorCount,
+		TotalDuration:   totalDuration,
 		AverageDuration: avgDuration,
-		MinDuration:    minDuration,
-		MaxDuration:    maxDuration,
-		QPS:            float64(successfulIterations) / totalDuration.Seconds(),
+		MinDuration:     minDuration,
+		MaxDuration:     maxDuration,
+		QPS:             float64(successfulIterations) / totalDuration.Seconds(),
 	}
-	
+
 	a.logger.Info("쿼리 벤치마크 완료",
 		zap.String("query", query),
 		zap.Int("iterations", iterations),
@@ -357,7 +357,7 @@ func (a *QueryAnalyzer) BenchmarkQuery(ctx context.Context, db *sql.DB, query st
 		zap.Duration("avg_duration", avgDuration),
 		zap.Float64("qps", result.QPS),
 	)
-	
+
 	return result, nil
 }
 

@@ -13,37 +13,37 @@ import (
 
 // LifecycleManager 컨테이너 생명주기 이벤트를 관리합니다.
 type LifecycleManager struct {
-	client       *Client
-	eventChan    chan ContainerEvent
-	subscribers  map[string][]ContainerEventHandler
-	mu           sync.RWMutex
-	ctx          context.Context
-	cancel       context.CancelFunc
+	client      *Client
+	eventChan   chan ContainerEvent
+	subscribers map[string][]ContainerEventHandler
+	mu          sync.RWMutex
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // ContainerEvent 컨테이너 이벤트 구조체입니다.
 type ContainerEvent struct {
-	ContainerID   string            `json:"container_id"`
-	WorkspaceID   string            `json:"workspace_id"`
-	Type          ContainerEventType `json:"type"`
-	Status        ContainerState    `json:"status"`
-	Message       string            `json:"message"`
-	Timestamp     time.Time         `json:"timestamp"`
-	Attributes    map[string]string `json:"attributes,omitempty"`
+	ContainerID string             `json:"container_id"`
+	WorkspaceID string             `json:"workspace_id"`
+	Type        ContainerEventType `json:"type"`
+	Status      ContainerState     `json:"status"`
+	Message     string             `json:"message"`
+	Timestamp   time.Time          `json:"timestamp"`
+	Attributes  map[string]string  `json:"attributes,omitempty"`
 }
 
 // ContainerEventType 컨테이너 이벤트 타입입니다.
 type ContainerEventType string
 
 const (
-	EventTypeCreate     ContainerEventType = "create"
-	EventTypeStart      ContainerEventType = "start"
-	EventTypeStop       ContainerEventType = "stop"
-	EventTypeRestart    ContainerEventType = "restart"
-	EventTypeDestroy    ContainerEventType = "destroy"
-	EventTypeDie        ContainerEventType = "die"
-	EventTypePause      ContainerEventType = "pause"
-	EventTypeUnpause    ContainerEventType = "unpause"
+	EventTypeCreate      ContainerEventType = "create"
+	EventTypeStart       ContainerEventType = "start"
+	EventTypeStop        ContainerEventType = "stop"
+	EventTypeRestart     ContainerEventType = "restart"
+	EventTypeDestroy     ContainerEventType = "destroy"
+	EventTypeDie         ContainerEventType = "die"
+	EventTypePause       ContainerEventType = "pause"
+	EventTypeUnpause     ContainerEventType = "unpause"
 	EventTypeHealthcheck ContainerEventType = "health_status"
 )
 
@@ -53,7 +53,7 @@ type ContainerEventHandler func(event ContainerEvent)
 // NewLifecycleManager 새로운 생명주기 매니저를 생성합니다.
 func NewLifecycleManager(client *Client) *LifecycleManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	lm := &LifecycleManager{
 		client:      client,
 		eventChan:   make(chan ContainerEvent, 100),
@@ -61,11 +61,11 @@ func NewLifecycleManager(client *Client) *LifecycleManager {
 		ctx:         ctx,
 		cancel:      cancel,
 	}
-	
+
 	// 이벤트 모니터링 시작
 	go lm.monitorEvents()
 	go lm.processEvents()
-	
+
 	return lm
 }
 
@@ -73,7 +73,7 @@ func NewLifecycleManager(client *Client) *LifecycleManager {
 func (lm *LifecycleManager) Subscribe(workspaceID string, handler ContainerEventHandler) {
 	lm.mu.Lock()
 	defer lm.mu.Unlock()
-	
+
 	lm.subscribers[workspaceID] = append(lm.subscribers[workspaceID], handler)
 }
 
@@ -81,7 +81,7 @@ func (lm *LifecycleManager) Subscribe(workspaceID string, handler ContainerEvent
 func (lm *LifecycleManager) Unsubscribe(workspaceID string) {
 	lm.mu.Lock()
 	defer lm.mu.Unlock()
-	
+
 	delete(lm.subscribers, workspaceID)
 }
 
@@ -97,13 +97,13 @@ func (lm *LifecycleManager) monitorEvents() {
 	eventFilters := filters.NewArgs()
 	eventFilters.Add("type", "container")
 	eventFilters.Add("label", fmt.Sprintf("%s.managed=true", lm.client.labelPrefix))
-	
+
 	eventOptions := types.EventsOptions{
 		Filters: eventFilters,
 	}
-	
+
 	eventChan, errChan := lm.client.cli.Events(lm.ctx, eventOptions)
-	
+
 	for {
 		select {
 		case <-lm.ctx.Done():
@@ -128,7 +128,7 @@ func (lm *LifecycleManager) handleDockerEvent(dockerEvent events.Message) {
 	if !exists {
 		return
 	}
-	
+
 	// 컨테이너 이벤트로 변환
 	containerEvent := ContainerEvent{
 		ContainerID: dockerEvent.Actor.ID,
@@ -139,7 +139,7 @@ func (lm *LifecycleManager) handleDockerEvent(dockerEvent events.Message) {
 		Timestamp:   time.Unix(dockerEvent.Time, dockerEvent.TimeNano),
 		Attributes:  dockerEvent.Actor.Attributes,
 	}
-	
+
 	select {
 	case lm.eventChan <- containerEvent:
 	case <-lm.ctx.Done():
@@ -174,11 +174,11 @@ func (lm *LifecycleManager) notifySubscribers(event ContainerEvent) {
 	lm.mu.RLock()
 	handlers, exists := lm.subscribers[event.WorkspaceID]
 	lm.mu.RUnlock()
-	
+
 	if !exists {
 		return
 	}
-	
+
 	// 각 핸들러를 별도 고루틴에서 실행
 	for _, handler := range handlers {
 		go func(h ContainerEventHandler) {
@@ -224,16 +224,16 @@ func (lm *LifecycleManager) GetContainerHistory(ctx context.Context, containerID
 	eventFilters := filters.NewArgs()
 	eventFilters.Add("type", "container")
 	eventFilters.Add("container", containerID)
-	
+
 	eventOptions := types.EventsOptions{
 		Since:   fmt.Sprintf("%d", since.Unix()),
 		Until:   fmt.Sprintf("%d", time.Now().Unix()),
 		Filters: eventFilters,
 	}
-	
+
 	eventChan, errChan := lm.client.cli.Events(ctx, eventOptions)
 	var events []ContainerEvent
-	
+
 	for {
 		select {
 		case dockerEvent := <-eventChan:
@@ -241,10 +241,10 @@ func (lm *LifecycleManager) GetContainerHistory(ctx context.Context, containerID
 				// 이벤트 스트림 종료
 				return events, nil
 			}
-			
+
 			// 워크스페이스 ID 추출
 			workspaceID := dockerEvent.Actor.Attributes[lm.client.labelKey("workspace.id")]
-			
+
 			event := ContainerEvent{
 				ContainerID: dockerEvent.Actor.ID,
 				WorkspaceID: workspaceID,
@@ -254,14 +254,14 @@ func (lm *LifecycleManager) GetContainerHistory(ctx context.Context, containerID
 				Timestamp:   time.Unix(dockerEvent.Time, dockerEvent.TimeNano),
 				Attributes:  dockerEvent.Actor.Attributes,
 			}
-			
+
 			events = append(events, event)
-			
+
 		case err := <-errChan:
 			if err != nil {
 				return events, fmt.Errorf("get container history: %w", err)
 			}
-			
+
 		case <-ctx.Done():
 			return events, ctx.Err()
 		}
@@ -272,18 +272,18 @@ func (lm *LifecycleManager) GetContainerHistory(ctx context.Context, containerID
 func (lm *LifecycleManager) WaitForContainerState(ctx context.Context, containerID string, targetState ContainerState, timeout time.Duration) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	
+
 	// 현재 상태 확인
 	inspect, err := lm.client.cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return fmt.Errorf("inspect container: %w", err)
 	}
-	
+
 	currentState := ContainerState(inspect.State.Status)
 	if currentState == targetState {
 		return nil
 	}
-	
+
 	// 상태 변경을 기다림
 	eventChan := make(chan ContainerEvent, 10)
 	handler := func(event ContainerEvent) {
@@ -291,12 +291,12 @@ func (lm *LifecycleManager) WaitForContainerState(ctx context.Context, container
 			eventChan <- event
 		}
 	}
-	
+
 	// 임시 구독
 	workspaceID := inspect.Config.Labels[lm.client.labelKey("workspace.id")]
 	lm.Subscribe(workspaceID, handler)
 	defer lm.Unsubscribe(workspaceID)
-	
+
 	for {
 		select {
 		case <-timeoutCtx.Done():

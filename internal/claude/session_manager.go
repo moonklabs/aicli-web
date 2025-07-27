@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/aicli/aicli-web/internal/models"
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/gofrs/uuid"
 )
 
 // SessionManager 인터페이스는 Claude CLI 세션을 관리합니다
@@ -52,7 +52,7 @@ type SessionConfig struct {
 	OAuthToken  string            `json:"-"` // 보안상 직렬화하지 않음
 
 	// 리소스 제한
-	MaxMemory   int64         `json:"max_memory" validate:"min=0"`   // bytes
+	MaxMemory   int64         `json:"max_memory" validate:"min=0"`    // bytes
 	MaxCPU      float64       `json:"max_cpu" validate:"min=0,max=1"` // 0-1 범위
 	MaxDuration time.Duration `json:"max_duration" validate:"min=1m,max=24h"`
 }
@@ -115,7 +115,6 @@ const (
 	SessionStateError
 )
 
-
 // String은 SessionState의 문자열 표현을 반환합니다
 func (s SessionState) String() string {
 	states := []string{
@@ -137,10 +136,10 @@ func (s SessionState) String() string {
 
 // SessionUpdate는 세션 업데이트 정보를 담습니다
 type SessionUpdate struct {
-	State    *SessionState                  `json:"state,omitempty"`
-	Config   *SessionConfig                 `json:"config,omitempty"`
-	Metadata map[string]interface{}         `json:"metadata,omitempty"`
-	UpdateFn func(*Session) error          `json:"-"` // 커스텀 업데이트 함수
+	State    *SessionState          `json:"state,omitempty"`
+	Config   *SessionConfig         `json:"config,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	UpdateFn func(*Session) error   `json:"-"` // 커스텀 업데이트 함수
 }
 
 // SessionFilter는 세션 필터링 옵션을 정의합니다
@@ -170,10 +169,10 @@ func NewSessionManager(processManager ProcessManager, store storage.Storage) Ses
 		store:          store,
 		eventBus:       NewSessionEventBus(1000),
 	}
-	
+
 	// 기본 이벤트 로거 추가
 	sm.eventBus.Subscribe("", NewSessionEventLogger(nil))
-	
+
 	return sm
 }
 
@@ -215,7 +214,7 @@ func (sm *sessionManager) CreateSession(ctx context.Context, config SessionConfi
 			Metadata:   make(map[string]string),
 		}
 		sessionModel.ID = session.ID
-		
+
 		if err := sm.store.Session().Create(ctx, sessionModel); err != nil {
 			// 메모리에서 롤백
 			sm.mu.Lock()
@@ -224,7 +223,7 @@ func (sm *sessionManager) CreateSession(ctx context.Context, config SessionConfi
 			return nil, fmt.Errorf("failed to persist session: %w", err)
 		}
 	}
-	
+
 	// 이벤트 발행
 	sm.eventBus.Publish(SessionEvent{
 		SessionID: session.ID,
@@ -239,11 +238,11 @@ func (sm *sessionManager) CreateSession(ctx context.Context, config SessionConfi
 
 	// 프로세스 생성
 	processConfig := ProcessConfig{
-		Command:      "claude",
-		Args:         []string{},
-		WorkingDir:   config.WorkingDir,
-		Environment:  config.Environment,
-		OAuthToken:   config.OAuthToken,
+		Command:     "claude",
+		Args:        []string{},
+		WorkingDir:  config.WorkingDir,
+		Environment: config.Environment,
+		OAuthToken:  config.OAuthToken,
 		ResourceLimits: &ResourceLimits{
 			MaxMemory: config.MaxMemory,
 			MaxCPU:    config.MaxCPU,
@@ -278,22 +277,22 @@ func (sm *sessionManager) GetSession(sessionID string) (*Session, error) {
 			if err != nil {
 				return nil, fmt.Errorf("session not found: %s", sessionID)
 			}
-			
+
 			// 모델을 세션으로 변환
 			session = &Session{
-				ID:         sessionModel.ID,
+				ID:          sessionModel.ID,
 				WorkspaceID: sessionModel.ProjectID,
-				State:      SessionStateFromString(string(sessionModel.Status)),
-				Created:    sessionModel.CreatedAt,
-				LastActive: sessionModel.LastActive,
-				Metadata:   make(map[string]interface{}),
+				State:       SessionStateFromString(string(sessionModel.Status)),
+				Created:     sessionModel.CreatedAt,
+				LastActive:  sessionModel.LastActive,
+				Metadata:    make(map[string]interface{}),
 			}
-			
+
 			// 메타데이터 변환
 			for k, v := range sessionModel.Metadata {
 				session.Metadata[k] = v
 			}
-			
+
 			// 메모리에 캐시
 			sm.mu.Lock()
 			sm.sessions[session.ID] = session
@@ -358,15 +357,15 @@ func (sm *sessionManager) UpdateSession(sessionID string, updates SessionUpdate)
 		if err != nil {
 			return fmt.Errorf("failed to get session from store: %w", err)
 		}
-		
+
 		sessionModel.Status = models.SessionStatus(session.State.String())
 		sessionModel.LastActive = session.LastActive
-		
+
 		if err := sm.store.Session().Update(context.Background(), sessionModel); err != nil {
 			return fmt.Errorf("failed to persist session update: %w", err)
 		}
 	}
-	
+
 	// 이벤트 발행
 	if updates.State != nil {
 		sm.eventBus.Publish(SessionEvent{
@@ -429,16 +428,16 @@ func (sm *sessionManager) CloseSession(sessionID string) error {
 		if err != nil {
 			return fmt.Errorf("failed to get session from store: %w", err)
 		}
-		
+
 		now := time.Now()
 		sessionModel.Status = models.SessionEnded
 		sessionModel.EndedAt = &now
-		
+
 		if err := sm.store.Session().Update(context.Background(), sessionModel); err != nil {
 			return fmt.Errorf("failed to persist session close: %w", err)
 		}
 	}
-	
+
 	// 이벤트 발행
 	sm.eventBus.Publish(SessionEvent{
 		SessionID: sessionID,
@@ -505,7 +504,7 @@ func SessionStateFromString(state string) SessionState {
 		"closed":       SessionStateClosed,
 		"error":        SessionStateError,
 	}
-	
+
 	if s, ok := states[state]; ok {
 		return s
 	}

@@ -99,8 +99,8 @@ func TestAdvancedRateLimit(t *testing.T) {
 func TestCSRFProtection(t *testing.T) {
 	config := DefaultCSRFConfig()
 	config.Logger = zap.NewNop()
-	config.Redis = nil // Redis 없이 쿠키 기반으로만 동작
-	config.SecureCookie = false // 테스트 환경에서는 HTTP 허용
+	config.Redis = nil                                   // Redis 없이 쿠키 기반으로만 동작
+	config.SecureCookie = false                          // 테스트 환경에서는 HTTP 허용
 	config.TrustedOrigins = []string{"http://localhost"} // 테스트 Origin 추가
 
 	protection := NewCSRFProtection(config)
@@ -109,13 +109,13 @@ func TestCSRFProtection(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(middleware)
-	
+
 	// GET 요청은 토큰 생성
 	r.GET("/form", func(c *gin.Context) {
 		token := protection.GetToken(c)
 		c.JSON(http.StatusOK, gin.H{"csrf_token": token})
 	})
-	
+
 	// POST 요청은 토큰 검증
 	r.POST("/submit", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
@@ -128,11 +128,11 @@ func TestCSRFProtection(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		
+
 		var response map[string]interface{}
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		require.NoError(t, err)
-		
+
 		token, exists := response["csrf_token"]
 		assert.True(t, exists)
 		assert.NotEmpty(t, token)
@@ -201,7 +201,7 @@ func TestSecurityHeaders(t *testing.T) {
 
 	// 보안 헤더 확인
 	headers := w.Header()
-	
+
 	assert.Equal(t, "SAMEORIGIN", headers.Get("X-Frame-Options"))
 	assert.Equal(t, "nosniff", headers.Get("X-Content-Type-Options"))
 	assert.Equal(t, "1; mode=block", headers.Get("X-XSS-Protection"))
@@ -257,10 +257,10 @@ func TestAttackDetection(t *testing.T) {
 	detector := security.NewAttackDetector(config)
 
 	tests := []struct {
-		name           string
-		request        *security.AttackDetectionRequest
-		expectAttack   bool
-		expectedType   string
+		name         string
+		request      *security.AttackDetectionRequest
+		expectAttack bool
+		expectedType string
 	}{
 		{
 			name: "정상 요청",
@@ -322,11 +322,11 @@ func TestAttackDetection(t *testing.T) {
 			result := detector.DetectAttacks(ctx, tt.request)
 
 			assert.Equal(t, tt.expectAttack, result.IsAttack)
-			
+
 			if tt.expectedType != "" {
 				assert.Equal(t, tt.expectedType, result.AttackType)
 			}
-			
+
 			if tt.expectAttack {
 				assert.Greater(t, result.Confidence, 0.0)
 				assert.NotEmpty(t, result.Evidence)
@@ -349,19 +349,19 @@ func TestMetricsCollection(t *testing.T) {
 
 	t.Run("카운터 메트릭", func(t *testing.T) {
 		collector.IncrementCounter("test_counter", map[string]string{"label": "value"})
-		
+
 		// 수집될 시간을 기다림
 		time.Sleep(200 * time.Millisecond)
-		
+
 		metrics := collector.GetCurrentMetrics()
 		assert.NotEmpty(t, metrics)
 	})
 
 	t.Run("게이지 메트릭", func(t *testing.T) {
 		collector.SetGauge("test_gauge", 42.5, nil)
-		
+
 		time.Sleep(200 * time.Millisecond)
-		
+
 		metrics := collector.GetCurrentMetrics()
 		found := false
 		for _, metric := range metrics {
@@ -375,9 +375,9 @@ func TestMetricsCollection(t *testing.T) {
 
 	t.Run("히스토그램 메트릭", func(t *testing.T) {
 		collector.RecordHistogram("test_histogram", 1.23, map[string]string{"path": "/api/test"})
-		
+
 		time.Sleep(200 * time.Millisecond)
-		
+
 		metrics := collector.GetCurrentMetrics()
 		assert.NotEmpty(t, metrics)
 	})
@@ -464,11 +464,11 @@ func TestSecurityIntegration(t *testing.T) {
 
 	// 모든 보안 미들웨어 적용
 	r.Use(SecurityHeadersMiddleware(DefaultSecurityHeadersConfig()))
-	
+
 	csrfConfig := DefaultCSRFConfig()
 	csrfConfig.Logger = zap.NewNop()
 	r.Use(CSRF(csrfConfig))
-	
+
 	auditConfig := DefaultAuditConfig()
 	auditConfig.Logger = zap.NewNop()
 	r.Use(AuditMiddleware(auditConfig))
@@ -488,7 +488,7 @@ func TestSecurityIntegration(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		
+
 		// 보안 헤더 확인
 		headers := w.Header()
 		assert.NotEmpty(t, headers.Get("X-Frame-Options"))
