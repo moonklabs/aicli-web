@@ -14,7 +14,7 @@ const (
 	TaskCompleted TaskStatus = "completed" // 완료
 	TaskFailed    TaskStatus = "failed"    // 실패
 	TaskCancelled TaskStatus = "cancelled" // 취소됨
-	
+
 	// Alias for consistency with usage
 	TaskStatusPending   = TaskPending
 	TaskStatusRunning   = TaskRunning
@@ -33,12 +33,12 @@ type Task struct {
 	Error       string     `json:"error,omitempty" gorm:"type:text" validate:"omitempty"`
 	StartedAt   *time.Time `json:"started_at,omitempty" validate:"-"`
 	CompletedAt *time.Time `json:"completed_at,omitempty" validate:"-"`
-	
+
 	// 통계 정보
 	BytesIn  int64 `json:"bytes_in" gorm:"default:0" validate:"min=0"`
 	BytesOut int64 `json:"bytes_out" gorm:"default:0" validate:"min=0"`
 	Duration int64 `json:"duration" gorm:"default:0" validate:"min=0"` // 실행 시간 (밀리초)
-	
+
 	mu sync.RWMutex `json:"-" gorm:"-"` // 동시성 제어를 위한 뮤텍스
 }
 
@@ -117,7 +117,7 @@ func (t *Task) SetCompleted(output string) {
 		now := time.Now()
 		t.CompletedAt = &now
 		t.Output = output
-		
+
 		if t.StartedAt != nil {
 			t.Duration = now.Sub(*t.StartedAt).Milliseconds()
 		}
@@ -133,7 +133,7 @@ func (t *Task) SetFailed(errorMsg string) {
 		now := time.Now()
 		t.CompletedAt = &now
 		t.Error = errorMsg
-		
+
 		if t.StartedAt != nil {
 			t.Duration = now.Sub(*t.StartedAt).Milliseconds()
 		}
@@ -148,7 +148,7 @@ func (t *Task) SetCancelled() {
 		t.Status = TaskCancelled
 		now := time.Now()
 		t.CompletedAt = &now
-		
+
 		if t.StartedAt != nil {
 			t.Duration = now.Sub(*t.StartedAt).Milliseconds()
 		}
@@ -180,7 +180,7 @@ func (t *Task) ToResponse() *TaskResponse {
 func (t *Task) Clone() *Task {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
-	
+
 	return &Task{
 		BaseModel:   t.BaseModel,
 		SessionID:   t.SessionID,

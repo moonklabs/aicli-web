@@ -29,7 +29,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "유효한 데이터",
 			input: TestStruct{
-				ID:     "123e4567-e89b-12d3-a456-426614174000",
+				ID:     "123e4567-e89b-42d3-a456-426614174000",
 				Name:   "테스트 이름",
 				Email:  "test@example.com",
 				Age:    25,
@@ -60,7 +60,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "이름 길이 초과",
 			input: TestStruct{
-				ID:     "123e4567-e89b-12d3-a456-426614174000",
+				ID:     "123e4567-e89b-42d3-a456-426614174000",
 				Name:   string(make([]byte, 101)), // 101자
 				Email:  "test@example.com",
 				Age:    25,
@@ -71,7 +71,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "잘못된 이메일",
 			input: TestStruct{
-				ID:     "123e4567-e89b-12d3-a456-426614174000",
+				ID:     "123e4567-e89b-42d3-a456-426614174000",
 				Name:   "테스트 이름",
 				Email:  "invalid-email",
 				Age:    25,
@@ -82,7 +82,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "나이 범위 초과",
 			input: TestStruct{
-				ID:     "123e4567-e89b-12d3-a456-426614174000",
+				ID:     "123e4567-e89b-42d3-a456-426614174000",
 				Name:   "테스트 이름",
 				Email:  "test@example.com",
 				Age:    200,
@@ -93,7 +93,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "유효하지 않은 상태",
 			input: TestStruct{
-				ID:     "123e4567-e89b-12d3-a456-426614174000",
+				ID:     "123e4567-e89b-42d3-a456-426614174000",
 				Name:   "테스트 이름",
 				Email:  "test@example.com",
 				Age:    25,
@@ -104,7 +104,7 @@ func TestValidationManager_Validate(t *testing.T) {
 		{
 			name: "선택적 필드 - 유효한 URL",
 			input: TestStruct{
-				ID:          "123e4567-e89b-12d3-a456-426614174000",
+				ID:          "123e4567-e89b-42d3-a456-426614174000",
 				Name:        "테스트 이름",
 				Email:       "test@example.com",
 				Age:         25,
@@ -133,11 +133,11 @@ func TestValidationManager_Validate(t *testing.T) {
 
 			if tt.wantError {
 				assert.Error(t, err)
-				
+
 				// ValidationErrors 타입 확인
 				var validationErrors ValidationErrors
 				assert.IsType(t, validationErrors, err)
-				
+
 				// 에러가 적절한 구조를 갖고 있는지 확인
 				vErr := err.(ValidationErrors)
 				assert.NotEmpty(t, vErr.Errors)
@@ -159,7 +159,7 @@ func TestValidationManager_ValidateVar(t *testing.T) {
 	}{
 		{
 			name:      "유효한 UUID",
-			value:     "123e4567-e89b-12d3-a456-426614174000",
+			value:     "123e4567-e89b-42d3-a456-426614174000",
 			tag:       "uuid",
 			wantError: false,
 		},
@@ -303,7 +303,7 @@ func TestValidateUUID(t *testing.T) {
 	}{
 		{
 			name:     "유효한 UUID v4",
-			uuid:     "123e4567-e89b-12d3-a456-426614174000",
+			uuid:     "123e4567-e89b-42d3-a456-426614174000",
 			expected: true,
 		},
 		{
@@ -438,24 +438,33 @@ type mockFieldLevel struct {
 	value interface{}
 }
 
-func (m *mockFieldLevel) Top() interface{} { return nil }
-func (m *mockFieldLevel) Parent() interface{} { return nil }
-func (m *mockFieldLevel) Field() reflect.Value { 
+func (m *mockFieldLevel) Top() reflect.Value    { return reflect.Value{} }
+func (m *mockFieldLevel) Parent() reflect.Value { return reflect.Value{} }
+func (m *mockFieldLevel) Field() reflect.Value {
 	if str, ok := m.value.(string); ok {
 		return reflect.ValueOf(str)
 	}
 	return reflect.Value{}
 }
-func (m *mockFieldLevel) FieldName() string { return "field" }
+func (m *mockFieldLevel) FieldName() string       { return "field" }
 func (m *mockFieldLevel) StructFieldName() string { return "Field" }
-func (m *mockFieldLevel) Param() string { return "" }
-func (m *mockFieldLevel) GetTag() string { return "" }
-func (m *mockFieldLevel) ExtractType(field reflect.Value) (reflect.Value, reflect.Kind, bool) { 
-	return reflect.Value{}, reflect.Invalid, false 
+func (m *mockFieldLevel) Param() string           { return "" }
+func (m *mockFieldLevel) GetTag() string          { return "" }
+func (m *mockFieldLevel) ExtractType(field reflect.Value) (reflect.Value, reflect.Kind, bool) {
+	return reflect.Value{}, reflect.Invalid, false
 }
-func (m *mockFieldLevel) GetStructFieldOK() (reflect.Value, reflect.Kind, bool) { return reflect.Value{}, reflect.Invalid, false }
-func (m *mockFieldLevel) GetStructFieldOK2() (reflect.Value, reflect.Kind, bool, bool) { return reflect.Value{}, reflect.Invalid, false, false }
-func (m *mockFieldLevel) GetStructFieldOKAdvanced(val interface{}, namespace string) (interface{}, string, bool) { return nil, "", false }
+func (m *mockFieldLevel) GetStructFieldOK() (reflect.Value, reflect.Kind, bool) {
+	return reflect.Value{}, reflect.Invalid, false
+}
+func (m *mockFieldLevel) GetStructFieldOK2() (reflect.Value, reflect.Kind, bool, bool) {
+	return reflect.Value{}, reflect.Invalid, false, false
+}
+func (m *mockFieldLevel) GetStructFieldOKAdvanced(val reflect.Value, namespace string) (reflect.Value, reflect.Kind, bool) {
+	return reflect.Value{}, reflect.Invalid, false
+}
+func (m *mockFieldLevel) GetStructFieldOKAdvanced2(val reflect.Value, namespace string) (reflect.Value, reflect.Kind, bool, bool) {
+	return reflect.Value{}, reflect.Invalid, false, false
+}
 
 func TestTranslateValidatorError(t *testing.T) {
 	// 실제 validator를 사용한 에러 번역 테스트
@@ -468,7 +477,7 @@ func TestTranslateValidatorError(t *testing.T) {
 
 	// 에러를 발생시키는 데이터
 	invalidModel := TestModel{
-		Name:  "ab", // 너무 짧음
+		Name:  "ab",      // 너무 짧음
 		Email: "invalid", // 잘못된 이메일
 	}
 
@@ -477,11 +486,11 @@ func TestTranslateValidatorError(t *testing.T) {
 
 	validationErrors, ok := err.(ValidationErrors)
 	require.True(t, ok)
-	
+
 	// 에러가 번역되었는지 확인
 	assert.Equal(t, "TestModel", validationErrors.Model)
 	assert.True(t, len(validationErrors.Errors) > 0)
-	
+
 	// 각 에러가 적절한 한국어 메시지를 가지고 있는지 확인
 	for _, fieldErr := range validationErrors.Errors {
 		assert.NotEmpty(t, fieldErr.Message)

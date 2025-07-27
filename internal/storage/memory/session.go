@@ -69,11 +69,11 @@ func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 
 	// 필터링된 세션 수집
 	filtered := make([]*models.Session, 0)
-	
+
 	for i := len(s.order) - 1; i >= 0; i-- { // 최신 순으로
 		id := s.order[i]
 		session := s.sessions[id]
-		
+
 		// 필터 적용
 		if filter != nil {
 			if filter.ProjectID != "" && session.ProjectID != filter.ProjectID {
@@ -89,7 +89,7 @@ func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 				}
 			}
 		}
-		
+
 		// 깊은 복사 (Clone 메서드 사용)
 		filtered = append(filtered, session.Clone())
 	}
@@ -98,16 +98,16 @@ func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 	total := len(filtered)
 	start := (paging.Page - 1) * paging.Limit
 	end := start + paging.Limit
-	
+
 	if start > total {
 		start = total
 	}
 	if end > total {
 		end = total
 	}
-	
+
 	items := filtered[start:end]
-	
+
 	return &models.PaginationResponse{
 		Data: items,
 		Meta: models.NewPaginationMeta(paging.Page, paging.Limit, total),
@@ -142,7 +142,7 @@ func (s *SessionStorage) Delete(ctx context.Context, id string) error {
 	}
 
 	delete(s.sessions, id)
-	
+
 	// order에서도 제거
 	newOrder := make([]string, 0, len(s.order)-1)
 	for _, oid := range s.order {

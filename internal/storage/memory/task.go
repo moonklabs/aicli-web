@@ -32,32 +32,32 @@ func newTaskStorage() *taskStorage {
 func (ts *taskStorage) Create(ctx context.Context, task *models.Task) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
-	
+
 	// ID 생성
 	if task.ID == "" {
 		task.ID = uuid.New().String()
 	}
-	
+
 	// 기본값 설정
 	now := time.Now()
 	if task.CreatedAt.IsZero() {
 		task.CreatedAt = now
 	}
 	task.UpdatedAt = now
-	
+
 	// 상태 기본값
 	if task.Status == "" {
 		task.Status = models.TaskPending
 	}
-	
+
 	// 중복 확인
 	if _, exists := ts.tasks[task.ID]; exists {
 		return ErrAlreadyExists
 	}
-	
+
 	// 복사본 저장 (Clone 메서드 사용)
 	ts.tasks[task.ID] = task.Clone()
-	
+
 	return nil
 }
 
@@ -65,63 +65,61 @@ func (ts *taskStorage) Create(ctx context.Context, task *models.Task) error {
 func (ts *taskStorage) GetByID(ctx context.Context, id string) (*models.Task, error) {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	task, exists := ts.tasks[id]
 	if !exists {
 		return nil, ErrNotFound
 	}
-	
-	// 복사본 반환
-	taskCopy := *task
-	return &taskCopy, nil
+
+	// 복사본 반환 (Clone 메서드 사용)
+	return task.Clone(), nil
 }
 
 // List 태스크 목록 조회
 func (ts *taskStorage) List(ctx context.Context, filter *models.TaskFilter, paging *models.PaginationRequest) ([]*models.Task, int, error) {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	// 모든 태스크 수집
 	var allTasks []*models.Task
 	for _, task := range ts.tasks {
 		allTasks = append(allTasks, task)
 	}
-	
+
 	// 필터링 적용
 	if filter != nil {
 		allTasks = ts.applyFilter(allTasks, filter)
 	}
-	
+
 	// 정렬 (최신순)
 	sort.Slice(allTasks, func(i, j int) bool {
 		return allTasks[i].CreatedAt.After(allTasks[j].CreatedAt)
 	})
-	
+
 	total := len(allTasks)
-	
+
 	// 페이징 적용
 	if paging != nil {
 		start := (paging.Page - 1) * paging.Limit
 		end := start + paging.Limit
-		
+
 		if start >= total {
 			return []*models.Task{}, total, nil
 		}
-		
+
 		if end > total {
 			end = total
 		}
-		
+
 		allTasks = allTasks[start:end]
 	}
-	
-	// 복사본 반환
+
+	// 복사본 반환 (Clone 메서드 사용)
 	result := make([]*models.Task, len(allTasks))
 	for i, task := range allTasks {
-		taskCopy := *task
-		result[i] = &taskCopy
+		result[i] = task.Clone()
 	}
-	
+
 	return result, total, nil
 }
 
@@ -129,18 +127,18 @@ func (ts *taskStorage) List(ctx context.Context, filter *models.TaskFilter, pagi
 func (ts *taskStorage) Update(ctx context.Context, task *models.Task) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
-	
+
 	_, exists := ts.tasks[task.ID]
 	if !exists {
 		return ErrNotFound
 	}
-	
+
 	// 업데이트 시간 설정
 	task.UpdatedAt = time.Now()
-	
+
 	// 복사본 저장 (Clone 메서드 사용)
 	ts.tasks[task.ID] = task.Clone()
-	
+
 	return nil
 }
 
@@ -148,15 +146,15 @@ func (ts *taskStorage) Update(ctx context.Context, task *models.Task) error {
 func (ts *taskStorage) Delete(ctx context.Context, id string) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
-	
+
 	_, exists := ts.tasks[id]
 	if !exists {
 		return ErrNotFound
 	}
-	
+
 	// Hard delete (메모리 스토리지는 단순 삭제)
 	delete(ts.tasks, id)
-	
+
 	return nil
 }
 
@@ -165,7 +163,7 @@ func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pag
 	filter := &models.TaskFilter{
 		SessionID: &sessionID,
 	}
-	
+
 	return ts.List(ctx, filter, paging)
 }
 
@@ -173,32 +171,32 @@ func (ts *taskStorage) GetBySessionID(ctx context.Context, sessionID string, pag
 func (ts *taskStorage) GetActiveCount(ctx context.Context, sessionID string) (int64, error) {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	count := int64(0)
 	for _, task := range ts.tasks {
 		if (sessionID == "" || task.SessionID == sessionID) && task.IsActive() {
 			count++
 		}
 	}
-	
+
 	return count, nil
 }
 
 // applyFilter 필터 적용
 func (ts *taskStorage) applyFilter(tasks []*models.Task, filter *models.TaskFilter) []*models.Task {
 	var filtered []*models.Task
-	
+
 	for _, task := range tasks {
 		// 세션 ID 필터
 		if filter.SessionID != nil && task.SessionID != *filter.SessionID {
 			continue
 		}
-		
+
 		// 상태 필터
 		if filter.Status != nil && task.Status != *filter.Status {
 			continue
 		}
-		
+
 		// 활성 태스크 필터
 		if filter.Active != nil {
 			if *filter.Active && !task.IsActive() {
@@ -208,10 +206,10 @@ func (ts *taskStorage) applyFilter(tasks []*models.Task, filter *models.TaskFilt
 				continue
 			}
 		}
-		
+
 		filtered = append(filtered, task)
 	}
-	
+
 	return filtered
 }
 
@@ -219,10 +217,10 @@ func (ts *taskStorage) applyFilter(tasks []*models.Task, filter *models.TaskFilt
 func (ts *taskStorage) searchTasks(keyword string) []*models.Task {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	var results []*models.Task
 	keyword = strings.ToLower(keyword)
-	
+
 	for _, task := range ts.tasks {
 		{
 			// 명령어에서 검색
@@ -230,13 +228,13 @@ func (ts *taskStorage) searchTasks(keyword string) []*models.Task {
 				results = append(results, task)
 				continue
 			}
-			
+
 			// 출력에서 검색
 			if strings.Contains(strings.ToLower(task.Output), keyword) {
 				results = append(results, task)
 				continue
 			}
-			
+
 			// 에러에서 검색
 			if strings.Contains(strings.ToLower(task.Error), keyword) {
 				results = append(results, task)
@@ -244,7 +242,7 @@ func (ts *taskStorage) searchTasks(keyword string) []*models.Task {
 			}
 		}
 	}
-	
+
 	return results
 }
 
@@ -252,17 +250,16 @@ func (ts *taskStorage) searchTasks(keyword string) []*models.Task {
 func (ts *taskStorage) getTasksByTimeRange(start, end time.Time) []*models.Task {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	var results []*models.Task
-	
+
 	for _, task := range ts.tasks {
-		if 
-		   task.CreatedAt.After(start) && 
-		   task.CreatedAt.Before(end) {
+		if task.CreatedAt.After(start) &&
+			task.CreatedAt.Before(end) {
 			results = append(results, task)
 		}
 	}
-	
+
 	return results
 }
 
@@ -270,28 +267,28 @@ func (ts *taskStorage) getTasksByTimeRange(start, end time.Time) []*models.Task 
 func (ts *taskStorage) getStats() map[string]interface{} {
 	ts.mutex.RLock()
 	defer ts.mutex.RUnlock()
-	
+
 	stats := map[string]interface{}{
-		"total": 0,
-		"by_status": make(map[models.TaskStatus]int),
+		"total":        0,
+		"by_status":    make(map[models.TaskStatus]int),
 		"active_count": 0,
 	}
-	
+
 	for _, task := range ts.tasks {
 		{
 			stats["total"] = stats["total"].(int) + 1
-			
+
 			// 상태별 카운트
 			statusMap := stats["by_status"].(map[models.TaskStatus]int)
 			statusMap[task.Status]++
-			
+
 			// 활성 태스크 카운트
 			if task.IsActive() {
 				stats["active_count"] = stats["active_count"].(int) + 1
 			}
 		}
 	}
-	
+
 	return stats
 }
 
@@ -299,21 +296,21 @@ func (ts *taskStorage) getStats() map[string]interface{} {
 func (ts *taskStorage) cleanup(maxAge time.Duration) int {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
-	
+
 	cutoff := time.Now().Add(-maxAge)
 	var toDelete []string
-	
+
 	for id, task := range ts.tasks {
-		if task.IsTerminal() && 
-		   task.CompletedAt != nil && 
-		   task.CompletedAt.Before(cutoff) {
+		if task.IsTerminal() &&
+			task.CompletedAt != nil &&
+			task.CompletedAt.Before(cutoff) {
 			toDelete = append(toDelete, id)
 		}
 	}
-	
+
 	for _, id := range toDelete {
 		delete(ts.tasks, id)
 	}
-	
+
 	return len(toDelete)
 }

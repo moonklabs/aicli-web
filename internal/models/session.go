@@ -33,20 +33,20 @@ type Session struct {
 	EndedAt    *time.Time        `json:"ended_at" validate:"-"`
 	LastActive time.Time         `json:"last_active" gorm:"not null" validate:"-"`
 	Metadata   map[string]string `json:"metadata" gorm:"serializer:json" validate:"-"`
-	
+
 	// 연관 관계
-	Project    *Project          `json:"project,omitempty" gorm:"foreignKey:ProjectID" validate:"-"`
-	
+	Project *Project `json:"project,omitempty" gorm:"foreignKey:ProjectID" validate:"-"`
+
 	// 세션 통계
-	CommandCount int64           `json:"command_count" gorm:"default:0" validate:"min=0"`
-	BytesIn      int64           `json:"bytes_in" gorm:"default:0" validate:"min=0"`
-	BytesOut     int64           `json:"bytes_out" gorm:"default:0" validate:"min=0"`
-	ErrorCount   int64           `json:"error_count" gorm:"default:0" validate:"min=0"`
-	
+	CommandCount int64 `json:"command_count" gorm:"default:0" validate:"min=0"`
+	BytesIn      int64 `json:"bytes_in" gorm:"default:0" validate:"min=0"`
+	BytesOut     int64 `json:"bytes_out" gorm:"default:0" validate:"min=0"`
+	ErrorCount   int64 `json:"error_count" gorm:"default:0" validate:"min=0"`
+
 	// 리소스 제한
-	MaxIdleTime  time.Duration   `json:"max_idle_time" gorm:"default:1800000000000" validate:"min=0"` // 30분
-	MaxLifetime  time.Duration   `json:"max_lifetime" gorm:"default:14400000000000" validate:"min=0"` // 4시간
-	
+	MaxIdleTime time.Duration `json:"max_idle_time" gorm:"default:1800000000000" validate:"min=0"` // 30분
+	MaxLifetime time.Duration `json:"max_lifetime" gorm:"default:14400000000000" validate:"min=0"` // 4시간
+
 	mu sync.RWMutex `json:"-" gorm:"-"` // 동시성 제어를 위한 뮤텍스
 }
 
@@ -87,7 +87,7 @@ func (s *Session) UpdateActivity() {
 func (s *Session) Clone() *Session {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	clone := &Session{
 		BaseModel:    s.BaseModel,
 		ProjectID:    s.ProjectID,
@@ -103,7 +103,7 @@ func (s *Session) Clone() *Session {
 		MaxIdleTime:  s.MaxIdleTime,
 		MaxLifetime:  s.MaxLifetime,
 	}
-	
+
 	// Metadata 깊은 복사
 	if s.Metadata != nil {
 		clone.Metadata = make(map[string]string)
@@ -111,10 +111,10 @@ func (s *Session) Clone() *Session {
 			clone.Metadata[k] = v
 		}
 	}
-	
+
 	// Project는 포인터 복사만 (깊은 복사 불필요)
 	clone.Project = s.Project
-	
+
 	return clone
 }
 
@@ -131,6 +131,15 @@ type SessionCreateRequest struct {
 	Metadata    map[string]string `json:"metadata" validate:"-"`
 	MaxIdleTime *time.Duration    `json:"max_idle_time" validate:"omitempty,min=0"`
 	MaxLifetime *time.Duration    `json:"max_lifetime" validate:"omitempty,min=0"`
+}
+
+// SessionUpdate 세션 업데이트 요청
+type SessionUpdate struct {
+	Status      *SessionStatus    `json:"status,omitempty" validate:"omitempty,session_status"`
+	ProcessID   *int              `json:"process_id,omitempty" validate:"omitempty,min=0"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+	MaxIdleTime *time.Duration    `json:"max_idle_time,omitempty" validate:"omitempty,min=0"`
+	MaxLifetime *time.Duration    `json:"max_lifetime,omitempty" validate:"omitempty,min=0"`
 }
 
 // SessionResponse 세션 응답

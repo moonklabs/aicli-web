@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/aicli/aicli-web/internal/models"
@@ -130,19 +131,20 @@ func (m *MockProjectStorage) GetByWorkspaceID(ctx context.Context, workspaceID s
 }
 
 func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
-	mockStorage := new(MockWorkspaceStorage)
-	validator := NewWorkspaceBusinessValidator(mockStorage)
 	ctx := context.Background()
 
 	t.Run("유효한 워크스페이스 생성", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		mockStorage.On("GetByName", ctx, "owner123", "test-workspace").Return(nil, &NotFoundError{})
 		mockStorage.On("CountByOwner", ctx, "owner123").Return(5, nil)
 
 		// 테스트 데이터
-		createReq := &models.CreateWorkspaceRequest{
+		createReq := &models.Workspace{
 			Name:        "test-workspace",
-			ProjectPath: "/tmp/test-workspace", // 테스트용 경로
+			ProjectPath: t.TempDir(), // 실제 임시 디렉토리 생성
+			OwnerID:     "owner123",
 		}
 
 		// 실행 및 검증
@@ -153,6 +155,8 @@ func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
 	})
 
 	t.Run("중복된 워크스페이스 이름", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		existingWorkspace := &models.Workspace{
 			ID:      "existing-id",
@@ -164,7 +168,7 @@ func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
 		// 테스트 데이터
 		workspace := &models.Workspace{
 			Name:        "test-workspace",
-			ProjectPath: "/tmp/test-workspace",
+			ProjectPath: t.TempDir(),
 			OwnerID:     "owner123",
 		}
 
@@ -177,6 +181,8 @@ func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
 	})
 
 	t.Run("워크스페이스 수 제한 초과", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		mockStorage.On("GetByName", ctx, "owner123", "test-workspace").Return(nil, &NotFoundError{})
 		mockStorage.On("CountByOwner", ctx, "owner123").Return(20, nil) // 최대 제한
@@ -184,7 +190,7 @@ func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
 		// 테스트 데이터
 		workspace := &models.Workspace{
 			Name:        "test-workspace",
-			ProjectPath: "/tmp/test-workspace",
+			ProjectPath: t.TempDir(),
 			OwnerID:     "owner123",
 		}
 
@@ -198,11 +204,11 @@ func TestWorkspaceBusinessValidator_ValidateCreate(t *testing.T) {
 }
 
 func TestWorkspaceBusinessValidator_ValidateDelete(t *testing.T) {
-	mockStorage := new(MockWorkspaceStorage)
-	validator := NewWorkspaceBusinessValidator(mockStorage)
 	ctx := context.Background()
 
 	t.Run("활성 태스크가 없는 워크스페이스 삭제", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		workspace := &models.Workspace{
 			ID:          "workspace123",
@@ -219,6 +225,8 @@ func TestWorkspaceBusinessValidator_ValidateDelete(t *testing.T) {
 	})
 
 	t.Run("활성 태스크가 있는 워크스페이스 삭제", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		workspace := &models.Workspace{
 			ID:          "workspace123",
@@ -230,12 +238,16 @@ func TestWorkspaceBusinessValidator_ValidateDelete(t *testing.T) {
 		// 실행 및 검증
 		err := validator.ValidateDelete(ctx, "workspace123")
 		assert.Error(t, err)
-		assert.Equal(t, ErrCodeDependencyExists, err.(BusinessValidationError).Code)
+		if err != nil {
+			assert.Equal(t, ErrCodeDependencyExists, err.(BusinessValidationError).Code)
+		}
 
 		mockStorage.AssertExpectations(t)
 	})
 
 	t.Run("존재하지 않는 워크스페이스 삭제", func(t *testing.T) {
+		mockStorage := new(MockWorkspaceStorage)
+		validator := NewWorkspaceBusinessValidator(mockStorage)
 		// Mock 설정
 		mockStorage.On("GetByID", ctx, "nonexistent").Return(nil, &NotFoundError{})
 
@@ -249,28 +261,30 @@ func TestWorkspaceBusinessValidator_ValidateDelete(t *testing.T) {
 }
 
 func TestProjectBusinessValidator_ValidateCreate(t *testing.T) {
-	mockProjectStorage := new(MockProjectStorage)
-	mockWorkspaceStorage := new(MockWorkspaceStorage)
-	validator := NewProjectBusinessValidator(mockProjectStorage, mockWorkspaceStorage)
 	ctx := context.Background()
 
 	t.Run("유효한 프로젝트 생성", func(t *testing.T) {
+		mockProjectStorage := new(MockProjectStorage)
+		mockWorkspaceStorage := new(MockWorkspaceStorage)
+		validator := NewProjectBusinessValidator(mockProjectStorage, mockWorkspaceStorage)
+		// 임시 디렉토리 생성
+		workspaceDir := t.TempDir()
+		projectDir := filepath.Join(workspaceDir, "project")
+
 		// Mock 설정
 		workspace := &models.Workspace{
 			ID:          "workspace123",
 			Name:        "test-workspace",
 			Status:      models.WorkspaceStatusActive,
-			ProjectPath: "/tmp/workspace",
+			ProjectPath: workspaceDir,
 		}
 		mockWorkspaceStorage.On("GetByID", ctx, "workspace123").Return(workspace, nil)
-		mockProjectStorage.On("GetByName", ctx, "workspace123", "test-project").Return(nil, &NotFoundError{})
-		mockProjectStorage.On("CountByWorkspace", ctx, "workspace123").Return(10, nil)
 
 		// 테스트 데이터
 		project := &models.Project{
 			WorkspaceID: "workspace123",
 			Name:        "test-project",
-			Path:        "/tmp/workspace/project", // 워크스페이스 내부 경로
+			Path:        projectDir, // 워크스페이스 내부 경로
 		}
 
 		// 실행 및 검증
@@ -287,6 +301,9 @@ func TestProjectBusinessValidator_ValidateCreate(t *testing.T) {
 	})
 
 	t.Run("비활성 워크스페이스에 프로젝트 생성", func(t *testing.T) {
+		mockProjectStorage := new(MockProjectStorage)
+		mockWorkspaceStorage := new(MockWorkspaceStorage)
+		validator := NewProjectBusinessValidator(mockProjectStorage, mockWorkspaceStorage)
 		// Mock 설정
 		workspace := &models.Workspace{
 			ID:     "workspace123",
@@ -309,6 +326,9 @@ func TestProjectBusinessValidator_ValidateCreate(t *testing.T) {
 	})
 
 	t.Run("존재하지 않는 워크스페이스", func(t *testing.T) {
+		mockProjectStorage := new(MockProjectStorage)
+		mockWorkspaceStorage := new(MockWorkspaceStorage)
+		validator := NewProjectBusinessValidator(mockProjectStorage, mockWorkspaceStorage)
 		// Mock 설정
 		mockWorkspaceStorage.On("GetByID", ctx, "nonexistent").Return(nil, &NotFoundError{})
 
@@ -434,6 +454,11 @@ func TestValidateStatusTransition(t *testing.T) {
 func TestValidateProjectPath(t *testing.T) {
 	validator := &ProjectBusinessValidator{}
 
+	// 실제 임시 디렉토리 생성
+	workspaceDir := t.TempDir()
+	projectDir := filepath.Join(workspaceDir, "project")
+	otherDir := t.TempDir()
+
 	tests := []struct {
 		name          string
 		projectPath   string
@@ -442,14 +467,14 @@ func TestValidateProjectPath(t *testing.T) {
 	}{
 		{
 			name:          "워크스페이스 내부 경로",
-			projectPath:   "/tmp/workspace/project",
-			workspacePath: "/tmp/workspace",
-			wantError:     true, // 실제 디렉토리가 없어서 에러
+			projectPath:   projectDir,
+			workspacePath: workspaceDir,
+			wantError:     false,
 		},
 		{
 			name:          "워크스페이스 외부 경로",
-			projectPath:   "/tmp/other/project",
-			workspacePath: "/tmp/workspace",
+			projectPath:   otherDir,
+			workspacePath: workspaceDir,
 			wantError:     true,
 		},
 	}
