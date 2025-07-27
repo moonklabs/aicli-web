@@ -55,9 +55,8 @@ func (ts *taskStorage) Create(ctx context.Context, task *models.Task) error {
 		return ErrAlreadyExists
 	}
 	
-	// 복사본 저장
-	taskCopy := *task
-	ts.tasks[task.ID] = &taskCopy
+	// 복사본 저장 (Clone 메서드 사용)
+	ts.tasks[task.ID] = task.Clone()
 	
 	return nil
 }
@@ -139,9 +138,8 @@ func (ts *taskStorage) Update(ctx context.Context, task *models.Task) error {
 	// 업데이트 시간 설정
 	task.UpdatedAt = time.Now()
 	
-	// 복사본 저장
-	taskCopy := *task
-	ts.tasks[task.ID] = &taskCopy
+	// 복사본 저장 (Clone 메서드 사용)
+	ts.tasks[task.ID] = task.Clone()
 	
 	return nil
 }

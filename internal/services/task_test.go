@@ -110,8 +110,9 @@ func TestTaskService_Create(t *testing.T) {
 				assert.NotNil(t, task)
 				assert.Equal(t, tt.request.SessionID, task.SessionID)
 				assert.Equal(t, tt.request.Command, task.Command)
-				// 태스크가 빠르게 실행될 수 있으므로 pending 또는 running 상태를 허용
-				assert.Contains(t, []models.TaskStatus{models.TaskPending, models.TaskRunning}, task.Status)
+				// ToResponse를 사용하여 안전하게 상태 확인
+				taskResponse := task.ToResponse()
+				assert.Contains(t, []models.TaskStatus{models.TaskPending, models.TaskRunning}, taskResponse.Status)
 			}
 		})
 	}
@@ -234,7 +235,11 @@ func TestTaskService_List(t *testing.T) {
 			result, err := taskService.List(context.Background(), tt.filter, tt.paging)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.Len(t, result.Data.([]*models.Task), tt.wantCount)
+			
+			// 안전하게 타입 assertion 수행
+			tasks, ok := result.Data.([]*models.Task)
+			assert.True(t, ok)
+			assert.Len(t, tasks, tt.wantCount)
 		})
 	}
 }
@@ -284,7 +289,9 @@ func TestTaskService_Cancel(t *testing.T) {
 				// 취소된 태스크 상태 확인
 				cancelledTask, getErr := taskService.GetByID(context.Background(), tt.taskID)
 				assert.NoError(t, getErr)
-				assert.Equal(t, models.TaskCancelled, cancelledTask.Status)
+				// ToResponse를 사용하여 안전하게 상태 확인
+				cancelledResponse := cancelledTask.ToResponse()
+				assert.Equal(t, models.TaskCancelled, cancelledResponse.Status)
 			}
 		})
 	}
@@ -309,8 +316,9 @@ func TestTaskService_GetActiveTasks(t *testing.T) {
 	assert.NotNil(t, activeTasks)
 	
 	// 모든 태스크가 활성 상태인지 확인
-	for _, task := range activeTasks {
-		assert.True(t, task.Status == models.TaskPending || task.Status == models.TaskRunning)
+	for _, taskResp := range activeTasks {
+		// activeTasks는 이미 TaskResponse 타입
+		assert.True(t, taskResp.Status == models.TaskPending || taskResp.Status == models.TaskRunning)
 	}
 }
 

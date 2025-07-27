@@ -249,7 +249,7 @@ func TestDefaultStorageFactoryHealthCheck(t *testing.T) {
 		// 매우 짧은 타임아웃으로 인해 컨텍스트가 취소될 가능성이 높음
 		time.Sleep(time.Millisecond) // 타임아웃 발생을 위한 대기
 		
-		err := factory.HealthCheck(ctx, memStorage)
+		_ = factory.HealthCheck(ctx, memStorage)
 		// 타임아웃이나 정상 완료 모두 허용 (컨텍스트 타이밍에 따라 다름)
 		// context deadline exceeded 오류가 발생할 수 있음
 	})

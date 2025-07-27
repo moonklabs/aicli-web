@@ -1,6 +1,7 @@
 package models
 
 import (
+	"sync"
 	"time"
 )
 
@@ -45,6 +46,8 @@ type Session struct {
 	// 리소스 제한
 	MaxIdleTime  time.Duration   `json:"max_idle_time" gorm:"default:1800000000000" validate:"min=0"` // 30분
 	MaxLifetime  time.Duration   `json:"max_lifetime" gorm:"default:14400000000000" validate:"min=0"` // 4시간
+	
+	mu sync.RWMutex `json:"-" gorm:"-"` // 동시성 제어를 위한 뮤텍스
 }
 
 // IsActive 세션이 활성 상태인지 확인
@@ -75,7 +78,44 @@ func (s *Session) IsLifetimeTimeout() bool {
 
 // UpdateActivity 활동 시간 업데이트
 func (s *Session) UpdateActivity() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.LastActive = time.Now()
+}
+
+// Clone Session의 깊은 복사본을 생성 (mutex는 제외)
+func (s *Session) Clone() *Session {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	
+	clone := &Session{
+		BaseModel:    s.BaseModel,
+		ProjectID:    s.ProjectID,
+		ProcessID:    s.ProcessID,
+		Status:       s.Status,
+		StartedAt:    s.StartedAt,
+		EndedAt:      s.EndedAt,
+		LastActive:   s.LastActive,
+		CommandCount: s.CommandCount,
+		BytesIn:      s.BytesIn,
+		BytesOut:     s.BytesOut,
+		ErrorCount:   s.ErrorCount,
+		MaxIdleTime:  s.MaxIdleTime,
+		MaxLifetime:  s.MaxLifetime,
+	}
+	
+	// Metadata 깊은 복사
+	if s.Metadata != nil {
+		clone.Metadata = make(map[string]string)
+		for k, v := range s.Metadata {
+			clone.Metadata[k] = v
+		}
+	}
+	
+	// Project는 포인터 복사만 (깊은 복사 불필요)
+	clone.Project = s.Project
+	
+	return clone
 }
 
 // SessionFilter 세션 필터링 옵션

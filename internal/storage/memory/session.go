@@ -41,9 +41,8 @@ func (s *SessionStorage) Create(ctx context.Context, session *models.Session) er
 	session.CreatedAt = now
 	session.UpdatedAt = now
 
-	// 깊은 복사
-	sessionCopy := *session
-	s.sessions[session.ID] = &sessionCopy
+	// 깊은 복사 (Clone 메서드 사용)
+	s.sessions[session.ID] = session.Clone()
 	s.order = append(s.order, session.ID)
 
 	return nil
@@ -59,9 +58,8 @@ func (s *SessionStorage) GetByID(ctx context.Context, id string) (*models.Sessio
 		return nil, ErrNotFound
 	}
 
-	// 깊은 복사하여 반환
-	sessionCopy := *session
-	return &sessionCopy, nil
+	// 깊은 복사하여 반환 (Clone 메서드 사용)
+	return session.Clone(), nil
 }
 
 // List 세션 목록 조회
@@ -92,9 +90,8 @@ func (s *SessionStorage) List(ctx context.Context, filter *models.SessionFilter,
 			}
 		}
 		
-		// 깊은 복사
-		sessionCopy := *session
-		filtered = append(filtered, &sessionCopy)
+		// 깊은 복사 (Clone 메서드 사용)
+		filtered = append(filtered, session.Clone())
 	}
 
 	// 페이징 적용
@@ -129,9 +126,8 @@ func (s *SessionStorage) Update(ctx context.Context, session *models.Session) er
 	// 업데이트 시간 설정
 	session.UpdatedAt = time.Now()
 
-	// 깊은 복사
-	sessionCopy := *session
-	s.sessions[session.ID] = &sessionCopy
+	// 깊은 복사 (Clone 메서드 사용)
+	s.sessions[session.ID] = session.Clone()
 
 	return nil
 }

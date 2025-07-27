@@ -1,6 +1,7 @@
 package models
 
 import (
+	"sync"
 	"time"
 )
 
@@ -37,6 +38,8 @@ type Task struct {
 	BytesIn  int64 `json:"bytes_in" gorm:"default:0" validate:"min=0"`
 	BytesOut int64 `json:"bytes_out" gorm:"default:0" validate:"min=0"`
 	Duration int64 `json:"duration" gorm:"default:0" validate:"min=0"` // 실행 시간 (밀리초)
+	
+	mu sync.RWMutex `json:"-" gorm:"-"` // 동시성 제어를 위한 뮤텍스
 }
 
 // TaskCreateRequest 태스크 생성 요청
@@ -89,11 +92,15 @@ func (t *Task) IsTerminal() bool {
 
 // CanCancel 태스크를 취소할 수 있는지 확인
 func (t *Task) CanCancel() bool {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
 	return t.Status == TaskPending || t.Status == TaskRunning
 }
 
 // SetRunning 태스크를 실행 중 상태로 변경
 func (t *Task) SetRunning() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	if t.Status == TaskPending {
 		t.Status = TaskRunning
 		now := time.Now()
@@ -103,6 +110,8 @@ func (t *Task) SetRunning() {
 
 // SetCompleted 태스크를 완료 상태로 변경
 func (t *Task) SetCompleted(output string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	if t.Status == TaskRunning {
 		t.Status = TaskCompleted
 		now := time.Now()
@@ -117,6 +126,8 @@ func (t *Task) SetCompleted(output string) {
 
 // SetFailed 태스크를 실패 상태로 변경
 func (t *Task) SetFailed(errorMsg string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	if t.Status == TaskRunning {
 		t.Status = TaskFailed
 		now := time.Now()
@@ -131,7 +142,9 @@ func (t *Task) SetFailed(errorMsg string) {
 
 // SetCancelled 태스크를 취소 상태로 변경
 func (t *Task) SetCancelled() {
-	if t.CanCancel() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.Status == TaskPending || t.Status == TaskRunning {
 		t.Status = TaskCancelled
 		now := time.Now()
 		t.CompletedAt = &now
@@ -144,6 +157,8 @@ func (t *Task) SetCancelled() {
 
 // ToResponse 태스크를 응답 모델로 변환
 func (t *Task) ToResponse() *TaskResponse {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
 	return &TaskResponse{
 		ID:          t.ID,
 		SessionID:   t.SessionID,
@@ -158,5 +173,25 @@ func (t *Task) ToResponse() *TaskResponse {
 		Duration:    t.Duration,
 		CreatedAt:   t.CreatedAt,
 		UpdatedAt:   t.UpdatedAt,
+	}
+}
+
+// Clone Task의 깊은 복사본을 생성 (mutex는 제외)
+func (t *Task) Clone() *Task {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	
+	return &Task{
+		BaseModel:   t.BaseModel,
+		SessionID:   t.SessionID,
+		Command:     t.Command,
+		Status:      t.Status,
+		Output:      t.Output,
+		Error:       t.Error,
+		StartedAt:   t.StartedAt,
+		CompletedAt: t.CompletedAt,
+		BytesIn:     t.BytesIn,
+		BytesOut:    t.BytesOut,
+		Duration:    t.Duration,
 	}
 }

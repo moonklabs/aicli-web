@@ -159,7 +159,7 @@ func TestGetWorkspace(t *testing.T) {
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		ClaudeKey:   "test-key",
+		ClaudeKey:   "", // 테스트에서는 빈 값 사용 (선택적 필드)
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
@@ -202,7 +202,7 @@ func TestUpdateWorkspace(t *testing.T) {
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		ClaudeKey:   "test-key",
+		ClaudeKey:   "", // 테스트에서는 빈 값 사용 (선택적 필드)
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
@@ -253,7 +253,7 @@ func TestDeleteWorkspace(t *testing.T) {
 	req := &models.CreateWorkspaceRequest{
 		Name:        "test-workspace",
 		ProjectPath: "/tmp/test-project",
-		ClaudeKey:   "test-key",
+		ClaudeKey:   "", // 테스트에서는 빈 값 사용 (선택적 필드)
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, userID)
 	assert.NoError(t, err)
@@ -297,7 +297,7 @@ func TestWorkspacePermissions(t *testing.T) {
 	req := &models.CreateWorkspaceRequest{
 		Name:        "owner-workspace",
 		ProjectPath: "/tmp/owner-project",
-		ClaudeKey:   "test-key",
+		ClaudeKey:   "", // 테스트에서는 빈 값 사용 (선택적 필드)
 	}
 	workspace, err := workspaceService.CreateWorkspace(context.Background(), req, ownerID)
 	assert.NoError(t, err)

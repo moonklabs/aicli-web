@@ -114,7 +114,7 @@ func (s *workspaceService) GetWorkspace(ctx context.Context, id string, ownerID 
 	
 	// 권한 확인
 	if workspace.OwnerID != ownerID {
-		return nil, NewWorkspaceError(ErrCodeUnauthorized, "워크스페이스에 접근할 권한이 없습니다", ErrUnauthorized)
+		return nil, NewWorkspaceError(ErrCodeOwnershipRequired, "워크스페이스에 접근할 권한이 없습니다", ErrUnauthorized)
 	}
 	
 	// API 키 마스킹

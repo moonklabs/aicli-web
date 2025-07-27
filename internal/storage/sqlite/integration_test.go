@@ -265,7 +265,7 @@ func testSessionOperations(t *testing.T, s storage.Storage) {
 		StartedAt:    &startedAt,
 		LastActive:   time.Now(),
 		CommandCount: 0,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]string{
 			"user_agent": "test-client",
 			"version":    "1.0.0",
 		},
