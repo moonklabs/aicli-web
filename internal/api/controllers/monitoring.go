@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"your-project/internal/monitoring"
-	"your-project/internal/middleware"
-	"your-project/internal/testing"
+	"github.com/aicli/aicli-web/internal/monitoring"
+	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/testing"
 )
 
 // MonitoringController는 모니터링 관련 API를 처리합니다
@@ -509,14 +509,4 @@ func getPerformanceGrade(score float64) string {
 	return "F"
 }
 
-// 응답 타입들
-
-type ErrorResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
-}
-
-type SuccessResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
+// 응답 타입들은 advanced_session.go에 정의되어 있음

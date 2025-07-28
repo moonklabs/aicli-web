@@ -186,6 +186,19 @@ aicli version dev
 
 5분 안에 AICode Manager를 시작하세요:
 
+#### 0. 프로젝트 설정 (최초 1회)
+
+```bash
+# pnpm 설치 (없는 경우)
+npm install -g pnpm
+
+# 루트 디렉토리에서 의존성 설치
+pnpm install
+
+# 전체 프로젝트 검증
+pnpm verify
+```
+
 #### 1. 빌드 후 실행
 
 ```bash
@@ -309,6 +322,108 @@ make build
 ```
 
 ## 사용법
+
+### 실행 방법 요약
+
+#### 1. CLI 실행 방법
+
+```bash
+# 프로젝트 빌드
+make build
+
+# 또는 간단한 버전 빌드 (빌드 에러가 있는 경우)
+go build -o ./build/aicli-simple ./simple_main.go
+
+# CLI 실행
+./build/aicli version
+./build/aicli help
+
+# 워크스페이스 관리
+./build/aicli workspace create my-project --path ./my-project
+./build/aicli workspace list
+./build/aicli workspace get my-project
+
+# Claude 태스크 실행
+./build/aicli task run --workspace my-project "코드를 분석해주세요"
+./build/aicli task list
+./build/aicli logs follow <task-id>
+```
+
+#### 2. API 서버 실행 방법
+
+```bash
+# API 서버 빌드
+make build-api
+
+# API 서버 시작 (포트 8080)
+./build/aicli-api serve --port 8080
+
+# 백그라운드 실행
+./build/aicli-api serve --port 8080 &
+
+# 헬스체크
+curl http://localhost:8080/health
+```
+
+#### 3. 웹 대시보드 실행 방법
+
+```bash
+# 프론트엔드 디렉토리로 이동
+cd web
+
+# 의존성 설치
+npm install
+
+# 개발 서버 실행 (포트 5173)
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# 빌드된 파일로 서빙
+npm run preview
+```
+
+#### 4. Docker로 전체 스택 실행
+
+```bash
+# Docker Compose로 전체 시스템 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+
+# 종료
+docker-compose down
+```
+
+#### 5. 개발 모드 실행
+
+```bash
+# Hot reload로 개발 모드 실행
+make dev
+
+# 또는 각각 실행
+# 터미널 1: API 서버
+go run cmd/api/main.go serve
+
+# 터미널 2: 웹 프론트엔드
+cd web && npm run dev
+```
+
+#### 주요 포트
+- **API 서버**: http://localhost:8080
+- **웹 대시보드**: http://localhost:5173 (개발 모드)
+- **WebSocket**: ws://localhost:8080/api/v1/logs/stream/:id
+
+#### 초기 설정
+```bash
+# 설정 초기화
+./build/aicli config init
+
+# Claude API 키 설정
+./build/aicli config set claude.api_key "your-claude-api-key"
+```
 
 ### CLI 명령어
 
@@ -570,6 +685,71 @@ make dev
 
 # Docker 개발 환경 실행
 docker-compose up -d
+```
+
+### 통합 검증 시스템
+
+AICode Manager는 루트 디렉토리에서 전체 프로젝트를 검증할 수 있는 통합 시스템을 제공합니다:
+
+#### 검증 명령어
+
+```bash
+# 기본 검증 (Go + 웹 빌드 및 린트)
+pnpm verify
+
+# 빠른 검증 (린트와 타입 체크만)
+pnpm verify:quick
+
+# 완전 검증 (빌드, 린트, 테스트, 통합 테스트)
+pnpm verify:all
+
+# 개별 검증
+pnpm verify:go      # Go 백엔드만
+pnpm verify:web     # 웹 프론트엔드만
+```
+
+#### 테스트 서버 실행
+
+```bash
+# API 서버만 실행
+pnpm start:test
+
+# API + 웹 프론트엔드 실행
+pnpm start:test:web
+
+# Docker로 실행
+pnpm start:test:docker
+
+# 서버 종료
+pnpm stop:test
+```
+
+#### 개발 워크플로우
+
+1. **코드 작성 중**
+   ```bash
+   pnpm verify:quick   # 빠른 린트 체크
+   ```
+
+2. **기능 완료 후**
+   ```bash
+   pnpm verify         # 전체 빌드 및 검증
+   pnpm start:test:web # 테스트 서버로 확인
+   ```
+
+3. **커밋 전**
+   ```bash
+   pnpm verify:all     # 모든 테스트 포함 완전 검증
+   ```
+
+#### 통합 테스트
+
+```bash
+# 전체 시스템 통합 테스트
+pnpm test:integration
+
+# E2E 테스트
+pnpm test:e2e
 ```
 
 ### 빌드 명령어

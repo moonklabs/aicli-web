@@ -283,6 +283,24 @@ func (as *AlertingSystem) FireAlert(ruleID string, message string, labels map[st
 	as.sendAlert(alert, rule.Channels)
 }
 
+// AddAlert는 알림을 직접 추가합니다
+func (as *AlertingSystem) AddAlert(alert Alert) {
+	as.mutex.Lock()
+	defer as.mutex.Unlock()
+
+	// ID가 없으면 생성
+	if alert.ID == "" {
+		alert.ID = fmt.Sprintf("alert-%d", time.Now().UnixNano())
+	}
+
+	as.alerts[alert.ID] = &alert
+}
+
+// GetAlerts는 모든 알림을 반환합니다
+func (as *AlertingSystem) GetAlerts() []*Alert {
+	return as.GetAllAlerts()
+}
+
 // ResolveAlert는 알림을 해결됨으로 표시합니다
 func (as *AlertingSystem) ResolveAlert(alertID string) {
 	as.mutex.Lock()

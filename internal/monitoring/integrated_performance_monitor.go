@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aicli-web/internal/profiling"
-	"github.com/aicli-web/internal/testing"
+	"github.com/aicli/aicli-web/internal/profiling"
+	"github.com/aicli/aicli-web/internal/testing"
 )
 
 // IntegratedPerformanceMonitor는 통합 성능 모니터링 시스템입니다
@@ -85,29 +85,7 @@ type Metric struct {
 	Metadata  map[string]interface{} `json:"metadata"`
 }
 
-// Alert는 경고 메시지입니다
-type Alert struct {
-	ID          string                 `json:"id"`
-	Level       AlertLevel             `json:"level"`
-	Title       string                 `json:"title"`
-	Message     string                 `json:"message"`
-	Source      string                 `json:"source"`
-	Metric      *Metric                `json:"metric,omitempty"`
-	Context     map[string]interface{} `json:"context"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Resolved    bool                   `json:"resolved"`
-	ResolvedAt  *time.Time             `json:"resolved_at,omitempty"`
-}
-
-// AlertLevel은 경고 수준입니다
-type AlertLevel string
-
-const (
-	AlertLevelInfo     AlertLevel = "info"
-	AlertLevelWarning  AlertLevel = "warning"
-	AlertLevelError    AlertLevel = "error"
-	AlertLevelCritical AlertLevel = "critical"
-)
+// Alert 타입은 alerting_system.go에서 정의됨
 
 // MetricsStore는 메트릭 저장소입니다
 type MetricsStore struct {
@@ -163,7 +141,7 @@ type MetricsSummary struct {
 // AlertsSummary는 경고 요약입니다
 type AlertsSummary struct {
 	TotalAlerts      int                    `json:"total_alerts"`
-	AlertsByLevel    map[AlertLevel]int     `json:"alerts_by_level"`
+	AlertsByLevel    map[AlertSeverity]int  `json:"alerts_by_level"`
 	AlertsBySource   map[string]int         `json:"alerts_by_source"`
 	RecentAlerts     []Alert                `json:"recent_alerts"`
 	UnresolvedAlerts []Alert                `json:"unresolved_alerts"`
@@ -271,10 +249,7 @@ func (ipm *IntegratedPerformanceMonitor) Start() error {
 		return fmt.Errorf("failed to start profiler: %w", err)
 	}
 	
-	// 알림 시스템 시작
-	if err := ipm.alertingSystem.Start(); err != nil {
-		return fmt.Errorf("failed to start alerting system: %w", err)
-	}
+	// 알림 시스템은 별도 시작 없이 즉시 사용 가능
 	
 	// 백그라운드 작업들 시작
 	ipm.wg.Add(3)
@@ -328,8 +303,8 @@ func (ipm *IntegratedPerformanceMonitor) SendAlert(alert Alert) {
 	case ipm.alertChan <- alert:
 	default:
 		// 채널이 가득 찬 경우 중요한 경고는 즉시 처리
-		if alert.Level == AlertLevelCritical {
-			go ipm.alertingSystem.ProcessAlert(alert)
+		if alert.Severity == SeverityCritical {
+			go ipm.alertingSystem.AddAlert(alert)
 		}
 	}
 }
@@ -407,7 +382,7 @@ func (ipm *IntegratedPerformanceMonitor) alertProcessor() {
 		case <-ipm.ctx.Done():
 			return
 		case alert := <-ipm.alertChan:
-			ipm.alertingSystem.ProcessAlert(alert)
+			ipm.alertingSystem.AddAlert(alert)
 		}
 	}
 }
@@ -500,11 +475,12 @@ func (ipm *IntegratedPerformanceMonitor) performHealthCheck() {
 	for _, issue := range issues {
 		alert := Alert{
 			ID:        issue.ID,
-			Level:     AlertLevelWarning,
-			Title:     issue.Title,
+			Name:      issue.Title,
 			Message:   issue.Description,
-			Source:    issue.Source,
-			Timestamp: time.Now(),
+			Severity:  SeverityError,
+			Status:    StatusFiring,
+			StartsAt:  time.Now(),
+			Labels:    map[string]string{"source": issue.Source},
 		}
 		ipm.SendAlert(alert)
 	}
@@ -556,7 +532,7 @@ func (ipm *IntegratedPerformanceMonitor) generateAlertsSummary() *AlertsSummary 
 	
 	summary := &AlertsSummary{
 		TotalAlerts:      len(alerts),
-		AlertsByLevel:    make(map[AlertLevel]int),
+		AlertsByLevel:    make(map[AlertSeverity]int),
 		AlertsBySource:   make(map[string]int),
 		RecentAlerts:     make([]Alert, 0),
 		UnresolvedAlerts: make([]Alert, 0),
@@ -565,15 +541,18 @@ func (ipm *IntegratedPerformanceMonitor) generateAlertsSummary() *AlertsSummary 
 	cutoff := time.Now().Add(-24 * time.Hour)
 	
 	for _, alert := range alerts {
-		summary.AlertsByLevel[alert.Level]++
-		summary.AlertsBySource[alert.Source]++
-		
-		if alert.Timestamp.After(cutoff) {
-			summary.RecentAlerts = append(summary.RecentAlerts, alert)
+		summary.AlertsByLevel[alert.Severity]++
+		// Alert 구조체에 Source 필드가 없으므로 Labels에서 가져옴
+		if source, ok := alert.Labels["source"]; ok {
+			summary.AlertsBySource[source]++
 		}
 		
-		if !alert.Resolved {
-			summary.UnresolvedAlerts = append(summary.UnresolvedAlerts, alert)
+		if alert.StartsAt.After(cutoff) {
+			summary.RecentAlerts = append(summary.RecentAlerts, *alert)
+		}
+		
+		if alert.Status != StatusResolved {
+			summary.UnresolvedAlerts = append(summary.UnresolvedAlerts, *alert)
 		}
 	}
 	
@@ -591,8 +570,8 @@ func (ipm *IntegratedPerformanceMonitor) calculateHealthScore(report *Monitoring
 	
 	// 알림 수준 반영
 	if report.AlertsSummary != nil {
-		criticalAlerts := report.AlertsSummary.AlertsByLevel[AlertLevelCritical]
-		errorAlerts := report.AlertsSummary.AlertsByLevel[AlertLevelError]
+		criticalAlerts := report.AlertsSummary.AlertsByLevel[SeverityCritical]
+		errorAlerts := report.AlertsSummary.AlertsByLevel[SeverityError]
 		score -= float64(criticalAlerts)*10 + float64(errorAlerts)*5
 	}
 	

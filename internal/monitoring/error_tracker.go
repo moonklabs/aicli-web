@@ -50,24 +50,17 @@ type ErrorInfo struct {
 	Metadata      map[string]string `json:"metadata,omitempty"`
 }
 
-// ErrorSeverity는 에러 심각도를 나타냅니다
-type ErrorSeverity string
-
-const (
-	SeverityLow      ErrorSeverity = "low"
-	SeverityMedium   ErrorSeverity = "medium"
-	SeverityHigh     ErrorSeverity = "high"
-	SeverityCritical ErrorSeverity = "critical"
-)
+// ErrorSeverity는 AlertSeverity를 사용합니다
+type ErrorSeverity = AlertSeverity
 
 // ErrorStatus는 에러 상태를 나타냅니다
 type ErrorStatus string
 
 const (
-	StatusNew      ErrorStatus = "new"
-	StatusOpen     ErrorStatus = "open"
-	StatusResolved ErrorStatus = "resolved"
-	StatusIgnored  ErrorStatus = "ignored"
+	ErrorStatusNew      ErrorStatus = "new"
+	ErrorStatusOpen     ErrorStatus = "open"
+	ErrorStatusResolved ErrorStatus = "resolved"
+	ErrorStatusIgnored  ErrorStatus = "ignored"
 )
 
 // ErrorEvent는 에러 이벤트입니다
@@ -132,7 +125,7 @@ func NewErrorTracker(config ErrorTrackerConfig) *ErrorTracker {
 
 // TrackError는 에러를 추적합니다
 func (et *ErrorTracker) TrackError(err error, context map[string]interface{}) string {
-	return et.TrackErrorWithSeverity(err, context, SeverityMedium)
+	return et.TrackErrorWithSeverity(err, context, SeverityWarning)
 }
 
 // TrackErrorWithSeverity는 심각도와 함께 에러를 추적합니다
@@ -167,7 +160,7 @@ func (et *ErrorTracker) TrackErrorWithSeverity(err error, context map[string]int
 			LastOccurred:  now,
 			Count:         1,
 			Severity:      severity,
-			Status:        StatusNew,
+			Status:        ErrorStatusNew,
 			Context:       context,
 			Metadata:      make(map[string]string),
 		}
@@ -279,7 +272,7 @@ func (et *ErrorTracker) ResolveError(errorID string) error {
 		return fmt.Errorf("error not found: %s", errorID)
 	}
 
-	errorInfo.Status = StatusResolved
+	errorInfo.Status = ErrorStatusResolved
 
 	// 리스너들에게 알림
 	et.notifyErrorResolved(errorID)
@@ -297,7 +290,7 @@ func (et *ErrorTracker) IgnoreError(errorID string) error {
 		return fmt.Errorf("error not found: %s", errorID)
 	}
 
-	errorInfo.Status = StatusIgnored
+	errorInfo.Status = ErrorStatusIgnored
 	return nil
 }
 

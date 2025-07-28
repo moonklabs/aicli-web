@@ -1,24 +1,73 @@
 {
   "name": "aicli-web",
-  "version": "1.0.0",
-  "description": "AI Code Manager - Web platform for managing Claude CLI",
+  "version": "0.1.0",
+  "description": "AICode Manager - Claude CLI를 웹 플랫폼으로 관리하는 로컬 우선 시스템",
   "type": "module",
-  "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
-    "preview": "pnpm --filter web preview",
-    "test": "pnpm --filter web test:unit",
-    "lint": "pnpm --filter web lint",
-    "format": "pnpm --filter web format",
-    "install:web": "pnpm --filter web install",
-    "clean": "pnpm -r clean && rm -rf node_modules"
-  },
-  "keywords": ["vue", "typescript", "claude", "ai", "cli", "workspace"],
-  "author": "AICLI Team",
+  "private": true,
+  "author": "Moonk Labs",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moonklabs/aicli-web.git"
+  },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=16.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@10.13.1"
+  "scripts": {
+    "// 통합 검증 명령어": "",
+    "verify": "pnpm verify:go && pnpm verify:web",
+    "verify:all": "pnpm verify && pnpm test:integration",
+    "verify:quick": "pnpm lint && pnpm type-check",
+    
+    "// Go 백엔드 검증": "",
+    "verify:go": "make lint && make test",
+    "build:go": "make build",
+    "test:go": "make test",
+    "lint:go": "make lint",
+    
+    "// 웹 프론트엔드 검증": "",
+    "verify:web": "cd web && pnpm build && pnpm lint && pnpm tsc",
+    "build:web": "cd web && pnpm build",
+    "dev:web": "cd web && pnpm dev",
+    "lint:web": "cd web && pnpm lint",
+    "type-check:web": "cd web && pnpm tsc",
+    
+    "// 통합 테스트": "",
+    "test:integration": "./scripts/run-integration-tests.sh",
+    "test:e2e": "cd web && pnpm test:e2e",
+    
+    "// 개발 서버 실행": "",
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:api": "air -c .air.api.toml",
+    "dev:docker": "docker-compose up -d",
+    
+    "// 테스트 서버": "",
+    "start:test": "./start-test-server.sh",
+    "start:test:web": "./start-test-server.sh --with-web",
+    "start:test:docker": "./start-test-server.sh --docker",
+    "stop:test": "./stop-test-server.sh",
+    
+    "// 빌드 명령어": "",
+    "build": "pnpm build:go && pnpm build:web",
+    "build:all": "make build-all",
+    
+    "// 코드 품질": "",
+    "lint": "pnpm lint:go && pnpm lint:web",
+    "type-check": "pnpm type-check:web",
+    "format": "make fmt && cd web && pnpm format",
+    
+    "// 유틸리티": "",
+    "clean": "make clean && cd web && pnpm clean",
+    "deps": "make deps && cd web && pnpm install",
+    "postinstall": "pnpm deps"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^5.4.0"
+    }
+  }
 }
