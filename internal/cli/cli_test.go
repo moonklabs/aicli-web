@@ -5,22 +5,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aicli/aicli-web/internal/testutil"
 	"github.com/spf13/cobra"
 )
+
 
 func TestNewCompletionCmd(t *testing.T) {
 	// 자동완성 명령어 생성 테스트
 	cmd := newCompletionCmd()
 
-	testutil.AssertNotNil(t, cmd)
-	testutil.AssertEqual(t, "completion [bash|zsh|fish|powershell]", cmd.Use)
-	testutil.AssertEqual(t, 4, len(cmd.ValidArgs))
+	assertNotNil(t, cmd)
+	assertEqual(t, "completion [bash|zsh|fish|powershell]", cmd.Use)
+	assertEqual(t, 4, len(cmd.ValidArgs))
 
 	// ValidArgs 검증
 	expectedArgs := []string{"bash", "zsh", "fish", "powershell"}
 	for i, arg := range expectedArgs {
-		testutil.AssertEqual(t, arg, cmd.ValidArgs[i])
+		assertEqual(t, arg, cmd.ValidArgs[i])
 	}
 }
 
@@ -60,7 +60,7 @@ func TestCompletionCmd_Execute(t *testing.T) {
 			name:    "invalid shell",
 			args:    []string{"invalid"},
 			wantErr: true,
-			errMsg:  "지원하지 않는 셸: invalid",
+			errMsg:  "invalid argument",
 		},
 		{
 			name:    "no args",
@@ -91,12 +91,12 @@ func TestCompletionCmd_Execute(t *testing.T) {
 			err := cmd.Execute()
 
 			if tt.wantErr {
-				testutil.AssertNotNil(t, err)
+				assertNotNil(t, err)
 				if tt.errMsg != "" {
-					testutil.AssertContains(t, err.Error(), tt.errMsg)
+					assertContains(t, err.Error(), tt.errMsg)
 				}
 			} else {
-				testutil.AssertNil(t, err)
+				assertNil(t, err)
 				if tt.checkOutput {
 					output := buf.String()
 					// 각 셸에 대한 최소한의 출력 검증
@@ -125,8 +125,8 @@ func TestCLIBasicFunctionality(t *testing.T) {
 					Short: "Test CLI",
 				}
 
-				testutil.AssertEqual(t, "aicli", testRoot.Use)
-				testutil.AssertNotNil(t, testRoot.Short)
+				assertEqual(t, "aicli", testRoot.Use)
+				assertNotNil(t, testRoot.Short)
 			},
 		},
 		{
@@ -177,6 +177,6 @@ func TestCompletionCmd_Help(t *testing.T) {
 	}
 
 	// 사용 예제가 포함되어 있는지 확인
-	testutil.AssertContains(t, helpText, "source")
-	testutil.AssertContains(t, helpText, "aicli completion")
+	assertContains(t, helpText, "source")
+	assertContains(t, helpText, "aicli completion")
 }

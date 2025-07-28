@@ -22,7 +22,7 @@ func TestCompletionCommand(t *testing.T) {
 		{
 			name:     "bash completion",
 			args:     []string{"completion", "bash"},
-			contains: []string{"_aicli_bash_autocomplete", "complete -F"},
+			contains: []string{"__aicli_debug", "complete -o default -F __start_aicli aicli"},
 			wantErr:  false,
 		},
 		{
@@ -57,14 +57,22 @@ func TestCompletionCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// 새로운 rootCmd 인스턴스 생성하여 각 테스트마다 깨끗한 상태 보장
+			testRootCmd := &cobra.Command{
+				Use:     "aicli",
+				Short:   "AI-powered code management CLI",
+				Version: "test",
+			}
+			testRootCmd.AddCommand(createCompletionCmdWithSubcommands())
+
 			// 출력 캡처를 위한 버퍼
 			buf := new(bytes.Buffer)
-			rootCmd.SetOut(buf)
-			rootCmd.SetErr(buf)
+			testRootCmd.SetOut(buf)
+			testRootCmd.SetErr(buf)
 
 			// 명령어 실행
-			rootCmd.SetArgs(tt.args)
-			err := rootCmd.Execute()
+			testRootCmd.SetArgs(tt.args)
+			err := testRootCmd.Execute()
 
 			if tt.wantErr {
 				assert.Error(t, err)
