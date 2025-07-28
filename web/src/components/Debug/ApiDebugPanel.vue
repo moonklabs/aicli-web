@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 // import { Icon } from '@iconify/vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 
@@ -213,9 +214,9 @@ interface ApiLog {
   cached?: boolean
   retryCount: number
   timestamp: Date
-  requestData?: any
-  responseData?: any
-  headers?: any
+  requestData?: Record<string, unknown>
+  responseData?: Record<string, unknown>
+  headers?: Record<string, string>
 }
 
 const isDev = computed(() => import.meta.env.DEV)
@@ -382,11 +383,11 @@ let requestInterceptor: number | null = null
 let responseInterceptor: number | null = null
 
 const installInterceptors = () => {
-  if (typeof window !== 'undefined' && (window as any).axios) {
-    const axios = (window as any).axios
+  if (typeof window !== 'undefined' && (window as Record<string, unknown>).axios) {
+    const axios = (window as Record<string, unknown>).axios as AxiosInstance
 
     // 요청 인터셉터
-    requestInterceptor = axios.interceptors.request.use((config: any) => {
+    requestInterceptor = axios.interceptors.request.use((config: AxiosRequestConfig) => {
       const logId = `req-${Date.now()}-${Math.random()}`
       config.logId = logId
 
@@ -403,7 +404,7 @@ const installInterceptors = () => {
 
     // 응답 인터셉터
     responseInterceptor = axios.interceptors.response.use(
-      (response: any) => {
+      (response: AxiosResponse) => {
         if (response.config.logId) {
           const log = logs.value.find(l =>
             l.url === response.config.url &&
@@ -422,7 +423,7 @@ const installInterceptors = () => {
 
         return response
       },
-      (error: any) => {
+      (error: AxiosError) => {
         if (error.config?.logId) {
           const log = logs.value.find(l =>
             l.url === error.config.url &&
@@ -460,7 +461,7 @@ onMounted(() => {
     window.addEventListener('keydown', handleKeyDown)
 
     // 전역 함수로 노출
-    ;(window as any).__apiDebugger = {
+    ;(window as Record<string, unknown>).__apiDebugger = {
       show: () => { isVisible.value = true },
       hide: () => { isVisible.value = false },
       toggle: () => { isVisible.value = !isVisible.value },
@@ -471,12 +472,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (requestInterceptor !== null && typeof window !== 'undefined' && (window as any).axios) {
-    (window as any).axios.interceptors.request.eject(requestInterceptor)
+  if (requestInterceptor !== null && typeof window !== 'undefined' && (window as Record<string, unknown>).axios) {
+    ((window as Record<string, unknown>).axios as AxiosInstance).interceptors.request.eject(requestInterceptor)
   }
 
-  if (responseInterceptor !== null && typeof window !== 'undefined' && (window as any).axios) {
-    (window as any).axios.interceptors.response.eject(responseInterceptor)
+  if (responseInterceptor !== null && typeof window !== 'undefined' && (window as Record<string, unknown>).axios) {
+    ((window as Record<string, unknown>).axios as AxiosInstance).interceptors.response.eject(responseInterceptor)
   }
 
   window.removeEventListener('keydown', handleKeyDown)

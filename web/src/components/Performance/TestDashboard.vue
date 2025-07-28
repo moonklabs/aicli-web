@@ -330,9 +330,9 @@ import { type PerformanceTestResult, testSuite } from '@/utils/test-helpers'
 
 interface TestResults {
   performance: PerformanceTestResult[]
-  render: any
-  network: any
-  accessibility: any
+  render: Record<string, unknown>
+  network: Record<string, unknown>
+  accessibility: Record<string, unknown>
   summary: {
     totalTests: number
     passedTests: number

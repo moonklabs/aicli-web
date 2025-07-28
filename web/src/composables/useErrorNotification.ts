@@ -184,7 +184,7 @@ export function useErrorNotification() {
     if (error.response) {
       // 서버 응답이 있는 경우
       const status = error.response.status
-      const data = error.response.data as any
+      const data = error.response.data as Record<string, unknown>
 
       switch (status) {
         case 401:

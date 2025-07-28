@@ -320,7 +320,7 @@ import Icon from '@/components/common/Icon.vue'
 
 // 에러 트래킹 composable
 const {
-  state,
+  state: _state,
   filteredErrors,
   errorStats,
   errorLevelColors,
@@ -549,12 +549,12 @@ function getShortUrl(url: string): string {
 }
 
 // 글로벌 메서드 등록 (테이블 액션용)
-;(window as any).showErrorDetails = (errorId: string) => {
+;(window as Record<string, unknown>).showErrorDetails = (errorId: string) => {
   const error = filteredErrors.value.find(e => e.id === errorId)
   if (error) showErrorDetails(error)
 }
 
-;(window as any).removeError = removeError
+;(window as Record<string, unknown>).removeError = removeError
 
 // 페이지 변경 감시
 watch(filteredErrors, () => {

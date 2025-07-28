@@ -108,7 +108,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 // import { Icon } from '@iconify/vue'
-import { useErrorNotification } from '@/composables/useErrorNotification'
+import { type ErrorNotification, type NotificationAction, useErrorNotification } from '@/composables/useErrorNotification'
 
 const {
   notifications,
@@ -167,7 +167,7 @@ const getNotificationTitle = (type: string): string => {
 }
 
 // 액션 핸들러
-const handleAction = async (notification: any, action: any) => {
+const handleAction = async (notification: ErrorNotification, action: NotificationAction) => {
   if (action.label === '재시도' && action.handler) {
     await retryAction(notification.id, action.handler)
   } else if (action.handler) {

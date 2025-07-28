@@ -418,7 +418,7 @@ const emit = defineEmits<{
 
 // 컴포저블
 const message = useMessage()
-const dialog = useDialog()
+const _dialog = useDialog()
 const router = useRouter()
 
 // 반응형 상태
@@ -482,7 +482,7 @@ const deletionRules = {
       trigger: ['blur', 'input'],
     },
     {
-      validator: (rule: any, value: string) => {
+      validator: (_rule: unknown, value: string) => {
         if (value !== '계정 삭제') {
           return new Error('정확히 \'계정 삭제\'를 입력해주세요')
         }
@@ -525,9 +525,10 @@ const reactivateAccount = async () => {
     message.success('계정이 재활성화되었습니다')
     // 페이지 새로고침 또는 사용자 정보 다시 로드
     window.location.reload()
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('계정 재활성화 실패:', error)
-    message.error(error.message || '계정 재활성화에 실패했습니다')
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    message.error(errorMessage || '계정 재활성화에 실패했습니다')
   } finally {
     reactivating.value = false
   }
@@ -558,9 +559,10 @@ const confirmDeactivation = async () => {
       router.push('/login')
     }, 2000)
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('계정 비활성화 실패:', error)
-    message.error(error.message || '계정 비활성화에 실패했습니다')
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    message.error(errorMessage || '계정 비활성화에 실패했습니다')
   } finally {
     deactivating.value = false
   }
@@ -595,9 +597,10 @@ const confirmDeletion = async () => {
       router.push('/login')
     }, 3000)
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('계정 삭제 실패:', error)
-    message.error(error.message || '계정 삭제 요청에 실패했습니다')
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    message.error(errorMessage || '계정 삭제 요청에 실패했습니다')
   } finally {
     deleting.value = false
   }

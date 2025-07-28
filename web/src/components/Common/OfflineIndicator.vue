@@ -142,12 +142,13 @@ import { useGlobalErrorNotification } from '@/composables/useErrorNotification'
 const {
   isOnline,
   lastOnlineTime,
-  lastOfflineTime,
   pendingRequests,
   forceReconnect,
 } = useNetworkStatus()
 
-const { showSuccess } = useGlobalErrorNotification()
+// 사용하지 않는 변수들을 언더스코어로 표시
+const { lastOfflineTime: _lastOfflineTime } = useNetworkStatus()
+const { showSuccess: _showSuccess } = useGlobalErrorNotification()
 
 const showOfflineOverlay = ref(false)
 const showReconnected = ref(false)
@@ -216,7 +217,7 @@ const showOfflineModal = () => {
 
 // 전역 함수로 노출 (다른 컴포넌트에서 호출 가능)
 if (typeof window !== 'undefined') {
-  (window as any).showOfflineModal = showOfflineModal
+  (window as Record<string, unknown>).showOfflineModal = showOfflineModal
 }
 
 onMounted(() => {

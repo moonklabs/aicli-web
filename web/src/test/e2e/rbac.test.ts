@@ -246,7 +246,7 @@ describe('RBAC Role-Based Access Control E2E Tests', () => {
 
       // 역할 변경 (user로 승격)
       userStore.setUser({
-        ...userStore.user!,
+        ...(userStore.user ?? {}),
         role: 'user',
         permissions: testRoles.user.permissions,
       })
@@ -262,7 +262,7 @@ describe('RBAC Role-Based Access Control E2E Tests', () => {
 
       // 역할 강등 (user로 변경)
       userStore.setUser({
-        ...userStore.user!,
+        ...(userStore.user ?? {}),
         role: 'user',
         permissions: testRoles.user.permissions,
       })
@@ -391,18 +391,18 @@ describe('RBAC Role-Based Access Control E2E Tests', () => {
 
       // Admin 사용자
       userStore.setUser(testUsers.admin)
-      expect(checkRoutePermission('/admin', userStore.user!.role)).toBe(true)
-      expect(checkRoutePermission('/users', userStore.user!.role)).toBe(true)
+      expect(checkRoutePermission('/admin', userStore.user?.role ?? '')).toBe(true)
+      expect(checkRoutePermission('/users', userStore.user?.role ?? '')).toBe(true)
 
       // User 사용자
       userStore.setUser(testUsers.user)
-      expect(checkRoutePermission('/admin', userStore.user!.role)).toBe(false)
-      expect(checkRoutePermission('/workspaces', userStore.user!.role)).toBe(true)
+      expect(checkRoutePermission('/admin', userStore.user?.role ?? '')).toBe(false)
+      expect(checkRoutePermission('/workspaces', userStore.user?.role ?? '')).toBe(true)
 
       // Guest 사용자
       userStore.setUser(testUsers.guest)
-      expect(checkRoutePermission('/users', userStore.user!.role)).toBe(false)
-      expect(checkRoutePermission('/projects', userStore.user!.role)).toBe(true)
+      expect(checkRoutePermission('/users', userStore.user?.role ?? '')).toBe(false)
+      expect(checkRoutePermission('/projects', userStore.user?.role ?? '')).toBe(true)
     })
   })
 
@@ -415,7 +415,7 @@ describe('RBAC Role-Based Access Control E2E Tests', () => {
       // 권한 업데이트 시뮬레이션
       const updatedPermissions = [...testRoles.user.permissions, 'users:create']
       userStore.setUser({
-        ...userStore.user!,
+        ...(userStore.user ?? {}),
         permissions: updatedPermissions,
       })
 

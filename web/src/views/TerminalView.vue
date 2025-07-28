@@ -196,7 +196,7 @@ const closeSession = async (id: string) => {
         router.push({ name: 'terminal' })
       }
     }
-  } catch (_error) {
+  } catch {
     message.error('터미널 세션 종료에 실패했습니다')
   }
 }
@@ -224,7 +224,7 @@ const handleCreateSession = async () => {
       selectSession(session.id)
       message.success('터미널 세션이 생성되었습니다')
     }
-  } catch (_error) {
+  } catch {
     message.error('터미널 세션 생성에 실패했습니다')
   }
 }
@@ -244,7 +244,7 @@ const reconnectSession = async () => {
       } else {
         message.error('터미널 재연결에 실패했습니다')
       }
-    } catch (_error) {
+    } catch {
       message.error('터미널 재연결에 실패했습니다')
     }
   }
@@ -258,7 +258,7 @@ const handleExecuteCommand = async (command: string) => {
       command,
       workingDir: activeSession.value.workspaceId, // 실제로는 워크스페이스 경로
     })
-  } catch (_error) {
+  } catch {
     message.error('명령 실행에 실패했습니다')
   }
 }
@@ -269,7 +269,7 @@ const handleStopExecution = () => {
   try {
     terminalStore.stopExecution(activeSession.value.id)
     message.success('명령 실행이 중단되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('명령 중단에 실패했습니다')
   }
 }
@@ -352,7 +352,7 @@ const handleExportLogs = (format: 'text' | 'html' | 'json') => {
     URL.revokeObjectURL(url)
 
     message.success(`로그가 ${format.toUpperCase()} 형식으로 내보내졌습니다`)
-  } catch (_error) {
+  } catch {
     message.error('로그 내보내기에 실패했습니다')
   }
 }

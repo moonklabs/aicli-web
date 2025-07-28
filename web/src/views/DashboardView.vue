@@ -205,7 +205,7 @@ const stopContainer = async (containerId: string) => {
   try {
     await dockerStore.stopContainer(containerId)
     message.success('컨테이너가 중지되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 중지에 실패했습니다')
   }
 }
@@ -218,7 +218,7 @@ const refreshData = async () => {
       // workspaceStore.fetchWorkspaces() - 실제 API 연동 시 사용
     ])
     message.success('데이터가 새로고침되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('데이터 새로고침에 실패했습니다')
   } finally {
     isRefreshing.value = false

@@ -47,7 +47,7 @@ const DEFAULT_CACHE_CONFIG: CacheConfig = {
 
 // 전역 상태
 const pendingRequests = new Map<string, Promise<AxiosResponse>>()
-const requestCache = new Map<string, { data: any; timestamp: number; maxAge: number }>()
+const requestCache = new Map<string, { data: unknown; timestamp: number; maxAge: number }>()
 let isOnline = navigator.onLine
 let globalRetryConfig = DEFAULT_RETRY_CONFIG
 let globalCacheConfig = DEFAULT_CACHE_CONFIG
@@ -80,7 +80,7 @@ const shouldCache = (config: AxiosRequestConfig): boolean => {
          !config.headers?.Authorization?.includes('Bearer')
 }
 
-const getCachedResponse = (cacheKey: string): any | null => {
+const getCachedResponse = (cacheKey: string): unknown | null => {
   const cached = requestCache.get(cacheKey)
   if (cached && Date.now() - cached.timestamp < cached.maxAge) {
     return cached.data
@@ -91,7 +91,7 @@ const getCachedResponse = (cacheKey: string): any | null => {
   return null
 }
 
-const setCachedResponse = (cacheKey: string, data: any, maxAge: number = globalCacheConfig.maxAge): void => {
+const setCachedResponse = (cacheKey: string, data: unknown, maxAge: number = globalCacheConfig.maxAge): void => {
   requestCache.set(cacheKey, {
     data,
     timestamp: Date.now(),
@@ -122,10 +122,10 @@ if (import.meta.env.DEV) {
 
 // 요청 인터셉터 설정
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig): Promise<any> => {
+  async (config: AxiosRequestConfig): Promise<AxiosRequestConfig> => {
     // 네트워크 연결 확인 (Mock API가 활성화되지 않은 경우에만)
     if (!isOnline && !(import.meta.env.DEV && mockApiMatcher.isActive())) {
-      const error = new Error('Network is offline') as any
+      const error = new Error('Network is offline') as Error & { code: string }
       error.code = 'NETWORK_OFFLINE'
       throw error
     }
@@ -238,7 +238,7 @@ api.interceptors.response.use(
       const retryCount = config.metadata?.retryCount || 0
       const shouldRetry = globalRetryConfig.retryCondition ?
         globalRetryConfig.retryCondition(error) :
-        DEFAULT_RETRY_CONFIG.retryCondition!(error)
+        (DEFAULT_RETRY_CONFIG.retryCondition?.(error) ?? false)
 
       if (shouldRetry && retryCount < globalRetryConfig.maxRetries) {
         const delay = calculateRetryDelay(
@@ -316,7 +316,7 @@ api.interceptors.response.use(
 )
 
 // API 래퍼 함수들 (고도화된 버전)
-export const apiGet = <T = any>(
+export const apiGet = <T = unknown>(
   url: string,
   config?: AxiosRequestConfig & { cache?: Partial<CacheConfig> },
 ): Promise<AxiosResponse<ApiResponse<T>>> => {
@@ -338,27 +338,27 @@ export const apiGet = <T = any>(
   return request
 }
 
-export const apiPost = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
+export const apiPost = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.post(url, data, config)
 }
 
-export const apiPut = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
+export const apiPut = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.put(url, data, config)
 }
 
-export const apiPatch = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
+export const apiPatch = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.patch(url, data, config)
 }
 
-export const apiDelete = <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
+export const apiDelete = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.delete(url, config)
 }
 
 // 파일 업로드용 API
-export const apiUpload = <T = any>(
+export const apiUpload = <T = unknown>(
   url: string,
   formData: FormData,
-  onUploadProgress?: (progressEvent: any) => void,
+  onUploadProgress?: (progressEvent: { loaded: number; total: number }) => void,
 ): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.post(url, formData, {
     headers: {
@@ -406,7 +406,7 @@ export const clearApiCache = (): void => {
   console.log('🗑️ API cache cleared')
 }
 
-export const removeFromCache = (url: string, method = 'GET', params?: any): void => {
+export const removeFromCache = (url: string, method = 'GET', params?: unknown): void => {
   const cacheKey = generateCacheKey({ method, url, params })
   requestCache.delete(cacheKey)
 }

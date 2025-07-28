@@ -249,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
   NBadge,
@@ -286,7 +286,6 @@ import {
   FolderOpen,
   GitBranch,
   Image,
-  Plus,
   RefreshCw,
   Scissors,
   Search,
@@ -585,7 +584,7 @@ const refreshTree = async (): Promise<void> => {
     await fileTreeStore.loadWorkspaceTree(props.workspaceId)
     await fileTreeStore.refreshGitStatus(props.workspaceId)
     message.success('파일 트리가 새로고침되었습니다')
-  } catch (error) {
+  } catch {
     message.error('파일 트리 새로고침에 실패했습니다')
   }
 }
@@ -679,7 +678,7 @@ const createNewFile = async (): Promise<void> => {
 
     showCreateModal.value = false
     message.success(`${createForm.value.type === 'directory' ? '폴더' : '파일'}가 생성되었습니다`)
-  } catch (error) {
+  } catch {
     message.error('생성에 실패했습니다')
   }
 }
@@ -698,7 +697,7 @@ const renameFile = async (): Promise<void> => {
 
     showRenameModal.value = false
     message.success('이름이 변경되었습니다')
-  } catch (error) {
+  } catch {
     message.error('이름 변경에 실패했습니다')
   }
 }
@@ -725,7 +724,7 @@ const deleteFile = async (): Promise<void> => {
   try {
     await fileTreeStore.deleteFile(props.workspaceId, selectedNode.value.path)
     message.success('삭제되었습니다')
-  } catch (error) {
+  } catch {
     message.error('삭제에 실패했습니다')
   }
 }

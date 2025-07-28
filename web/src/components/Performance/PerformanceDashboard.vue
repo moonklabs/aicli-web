@@ -177,7 +177,7 @@ const {
   startMonitoring,
   stopMonitoring,
   resetMetrics,
-  generateReport,
+  generateReport: _generateReport,
   exportMetrics,
   isMonitoring,
   hasErrors,
@@ -348,8 +348,8 @@ const metricsColumns = [
     key: 'status',
     title: '상태',
     width: 100,
-    render: (row: any) => {
-      const statusColors = {
+    render: (row: Record<string, unknown>) => {
+      const _statusColors = {
         good: 'success',
         'needs-improvement': 'warning',
         poor: 'error',

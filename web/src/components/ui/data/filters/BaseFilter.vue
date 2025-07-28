@@ -218,7 +218,7 @@ import type { AdvancedTableColumn, TableFilter } from '@/types/ui'
 interface Props {
   column: AdvancedTableColumn
   type: 'text' | 'number' | 'date' | 'select' | 'multiSelect' | 'boolean'
-  value?: any
+  value?: unknown
   placeholder?: string
   disabled?: boolean
 }
@@ -228,7 +228,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:value': [value: any]
+  'update:value': [value: unknown]
   'filter-change': [filter: TableFilter]
 }>()
 
@@ -237,7 +237,7 @@ const filterValue = ref(props.value || '')
 const filterValueEnd = ref('')
 const numberOperator = ref('equals')
 const dateOperator = ref('equals')
-const selectedValues = ref<any[]>(Array.isArray(props.value) ? props.value : [])
+const selectedValues = ref<unknown[]>(Array.isArray(props.value) ? props.value : [])
 const dropdownOpen = ref(false)
 const searchTerm = ref('')
 const dropdownMenu = ref<HTMLElement>()
@@ -350,7 +350,7 @@ const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
 }
 
-const handleOptionToggle = (value: any) => {
+const handleOptionToggle = (value: unknown) => {
   const index = selectedValues.value.indexOf(value)
   if (index > -1) {
     selectedValues.value.splice(index, 1)
@@ -360,7 +360,7 @@ const handleOptionToggle = (value: any) => {
   applyFilter()
 }
 
-const getOptionLabel = (value: any): string => {
+const getOptionLabel = (value: unknown): string => {
   const option = selectOptions.value.find(opt => opt.value === value)
   return option?.label || String(value)
 }

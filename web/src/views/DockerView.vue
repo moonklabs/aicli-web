@@ -336,7 +336,7 @@ const refreshContainers = async () => {
   try {
     await dockerStore.refreshContainers()
     message.success('컨테이너 목록이 새로고침되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 목록 새로고침에 실패했습니다')
   }
 }
@@ -345,7 +345,7 @@ const refreshImages = async () => {
   try {
     await dockerStore.refreshImages()
     message.success('이미지 목록이 새로고침되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('이미지 목록 새로고침에 실패했습니다')
   }
 }
@@ -354,7 +354,7 @@ const refreshNetworks = async () => {
   try {
     await dockerStore.refreshNetworks()
     message.success('네트워크 목록이 새로고침되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('네트워크 목록 새로고침에 실패했습니다')
   }
 }
@@ -363,7 +363,7 @@ const startContainer = async (id: string) => {
   try {
     await dockerStore.startContainer(id)
     message.success('컨테이너가 시작되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 시작에 실패했습니다')
   }
 }
@@ -372,7 +372,7 @@ const stopContainer = async (id: string) => {
   try {
     await dockerStore.stopContainer(id)
     message.success('컨테이너가 중지되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 중지에 실패했습니다')
   }
 }
@@ -381,7 +381,7 @@ const restartContainer = async (id: string) => {
   try {
     await dockerStore.restartContainer(id)
     message.success('컨테이너가 재시작되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 재시작에 실패했습니다')
   }
 }
@@ -390,7 +390,7 @@ const removeContainer = async (id: string) => {
   try {
     await dockerStore.removeContainer(id)
     message.success('컨테이너가 삭제되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 삭제에 실패했습니다')
   }
 }
@@ -399,7 +399,7 @@ const removeImage = async (id: string) => {
   try {
     await dockerStore.removeImage(id)
     message.success('이미지가 삭제되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('이미지 삭제에 실패했습니다')
   }
 }
@@ -408,7 +408,7 @@ const cleanupContainers = async () => {
   try {
     await dockerStore.cleanupContainers()
     message.success('중지된 컨테이너가 정리되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('컨테이너 정리에 실패했습니다')
   }
 }
@@ -417,7 +417,7 @@ const cleanupImages = async () => {
   try {
     await dockerStore.cleanupImages()
     message.success('사용하지 않는 이미지가 정리되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('이미지 정리에 실패했습니다')
   }
 }

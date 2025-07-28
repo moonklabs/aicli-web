@@ -100,7 +100,7 @@ export const claudeApi = {
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
     progress: number
     message?: string
-    result?: any
+    result?: unknown
     error?: string
     workspaceId?: string
     sessionId?: string
@@ -121,7 +121,7 @@ export const claudeApi = {
     status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
     progress: number
     message?: string
-    result?: any
+    result?: unknown
     error?: string
     workspaceId?: string
     sessionId?: string

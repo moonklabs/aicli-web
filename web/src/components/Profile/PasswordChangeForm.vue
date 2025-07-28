@@ -132,7 +132,8 @@ interface Props {
   loading?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
+  lastPasswordChange: undefined,
   loading: false,
 })
 
@@ -146,7 +147,7 @@ const emit = defineEmits<{
 const message = useMessage()
 
 // 반응형 상태
-const loading = ref(false)
+const isSubmitting = ref(false)
 const passwordStrength = ref<PasswordStrength | null>(null)
 const strengthCheckTimeout = ref<NodeJS.Timeout>()
 
@@ -272,7 +273,7 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
 
-    loading.value = true
+    isSubmitting.value = true
 
     await profileApi.changePassword({
       currentPassword: form.currentPassword,
@@ -294,7 +295,7 @@ const handleSubmit = async () => {
     message.error(error.message || '비밀번호 변경에 실패했습니다')
     emit('error', error)
   } finally {
-    loading.value = false
+    isSubmitting.value = false
   }
 }
 

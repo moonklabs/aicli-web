@@ -409,7 +409,7 @@ const toggleMonitoring = async (enabled: boolean): Promise<void> => {
       showConnectionStatus.value = false
       message.info('실시간 모니터링이 중지되었습니다')
     }
-  } catch (error) {
+  } catch {
     message.error('모니터링 설정을 변경할 수 없습니다')
     isMonitoringEnabled.value = !enabled // 원래 상태로 되돌림
   }
@@ -419,7 +419,7 @@ const refreshContainers = async (): Promise<void> => {
   try {
     await dockerStore.refreshContainers()
     message.success('컨테이너 목록이 새로고침되었습니다')
-  } catch (error) {
+  } catch {
     message.error('컨테이너 목록 새로고침에 실패했습니다')
   }
 }
@@ -430,7 +430,7 @@ const startContainer = async (containerId: string): Promise<void> => {
     if (success) {
       message.success('컨테이너가 시작되었습니다')
     }
-  } catch (error) {
+  } catch {
     message.error('컨테이너 시작에 실패했습니다')
   }
 }
@@ -441,7 +441,7 @@ const stopContainer = async (containerId: string): Promise<void> => {
     if (success) {
       message.success('컨테이너가 중지되었습니다')
     }
-  } catch (error) {
+  } catch {
     message.error('컨테이너 중지에 실패했습니다')
   }
 }
@@ -452,7 +452,7 @@ const restartContainer = async (containerId: string): Promise<void> => {
     if (success) {
       message.success('컨테이너가 재시작되었습니다')
     }
-  } catch (error) {
+  } catch {
     message.error('컨테이너 재시작에 실패했습니다')
   }
 }
@@ -463,7 +463,7 @@ const removeContainer = async (containerId: string): Promise<void> => {
     if (success) {
       message.success('컨테이너가 삭제되었습니다')
     }
-  } catch (error) {
+  } catch {
     message.error('컨테이너 삭제에 실패했습니다')
   }
 }

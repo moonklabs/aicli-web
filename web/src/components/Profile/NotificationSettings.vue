@@ -385,7 +385,7 @@ import {
   NotificationsSharp as Notifications,
   TimeSharp as Time,
 } from '@vicons/ionicons5'
-import { profileApi } from '@/api/services'
+import { profileApi as _profileApi } from '@/api/services'
 import { useUserStore } from '@/stores/user'
 import type { NotificationSettings, UpdateNotificationSettingsRequest } from '@/types/api'
 
