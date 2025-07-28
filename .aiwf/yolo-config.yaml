@@ -1,0 +1,22 @@
+# YOLO 모드 설정 파일
+engineering_level: minimal  # minimal, balanced, complete
+focus_rules:
+  - requirement_first     # 요구사항 우선
+  - simple_solution      # 간단한 해결책 선호
+  - no_gold_plating      # 골드 플레이팅 방지
+  - stay_on_track        # 트랙 유지
+
+complexity_limits:
+  max_file_lines: 300
+  max_function_lines: 50
+  max_nesting_depth: 4
+
+overengineering_prevention:
+  enabled: true
+  strict_mode: true
+  real_time_monitoring: true
+
+checkpoint_config:
+  auto_create: true
+  recovery_enabled: true
+  session_tracking: true
