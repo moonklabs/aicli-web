@@ -1,5 +1,5 @@
 ---
-task_id: T01_S03
+task_id: T01_S03_GitHub_Actions_CI_Pipeline
 sprint_sequence_id: S03
 status: completed
 complexity: Medium

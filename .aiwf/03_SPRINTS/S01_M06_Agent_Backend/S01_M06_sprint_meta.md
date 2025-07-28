@@ -51,17 +51,20 @@ last_updated: 2025-07-27T20:05:00+0900
 
 ## 태스크 목록
 1. **T01_S01_Agent_Model_Implementation** (복잡성: Medium) - 에이전트 데이터 모델 및 스토리지 구현
-2. **T02_S01_Git_Worktree_Manager** (복잡성: High) - Git worktree 관리 시스템 구현
-3. **T03_S01_Agent_Service_Layer** (복잡성: Medium) - 에이전트 비즈니스 로직 서비스 계층
-4. **T04_S01_Docker_Agent_Integration** (복잡성: High) - Docker 컨테이너와 에이전트 통합
-5. **T05_S01_Agent_API_Endpoints** (복잡성: Medium) - RESTful API 엔드포인트 구현
-6. **T06_S01_Performance_Optimization** (복잡성: Medium) - 성능 최적화 및 스케일링
-7. **T07_S01_Integration_Tests** (복잡성: Medium) - 통합 테스트 및 검증
-8. **T08_S01_Documentation** (복잡성: Low) - API 문서화 및 개발자 가이드
+2. **T02A_S01_Git_Worktree_Manager** (복잡성: Medium) - Git worktree 기본 관리자 구현
+3. **T02B_S01_Git_Worktree_Advanced** (복잡성: Medium) - Git worktree 고급 기능 및 최적화
+4. **T03_S01_Agent_Service_Layer** (복잡성: Medium) - 에이전트 비즈니스 로직 서비스 계층
+5. **T04A_S01_Docker_Agent_Integration** (복잡성: Medium) - Docker 에이전트 이미지 및 컨테이너 기본 구현
+6. **T04B_S01_Docker_Advanced_Integration** (복잡성: Medium) - Docker 고급 통합 및 관리
+7. **T05_S01_Agent_API_Endpoints** (복잡성: Medium) - RESTful API 엔드포인트 구현
+8. **T06_S01_Performance_Optimization** (복잡성: Medium) - 성능 최적화 및 스케일링
+9. **T07_S01_Integration_Tests** (복잡성: Medium) - 통합 테스트 및 검증
+10. **T08_S01_Documentation** (복잡성: Low) - API 문서화 및 개발자 가이드
 
 ## 태스크 분할 요약
-- 총 8개 태스크: High 2개, Medium 5개, Low 1개
-- Git worktree와 Docker 통합이 가장 복잡한 부분
+- 총 10개 태스크: Medium 9개, Low 1개
+- T02 Git worktree를 T02A(기본)과 T02B(고급)로 분할
+- T04 Docker 통합을 T04A(기본)과 T04B(고급)로 분할
 - 모든 태스크가 순차적 의존성보다는 병렬 개발 가능하도록 설계
 
 ## Notes / Retrospective Points

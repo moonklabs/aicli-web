@@ -29,12 +29,12 @@ GitHub Actions CI/CD 파이프라인을 구축하고 프로젝트 문서를 완�
 - 릴리스 자동화 프로세스 구축
 
 ## Tasks
-- T01_S03 - GitHub Actions CI 파이프라인 구축 (복잡성: 보통)
-- T02_S03 - 멀티 플랫폼 빌드 자동화 (복잡성: 보통)
-- T03_S03 - 릴리스 자동화 프로세스 구축 (복잡성: 낮음)
-- T04_S03 - README.md 업데이트 및 프로젝트 문서화 (복잡성: 낮음)
-- T05_S03 - CONTRIBUTING.md 작성 (복잡성: 낮음)
-- T06_S03 - 개발 가이드 문서 작성 (복잡성: 낮음)
+- T01_S03_GitHub_Actions_CI_Pipeline - GitHub Actions CI 파이프라인 구축 (복잡성: 보통)
+- T02_S03_Multi_Platform_Build - 멀티 플랫폼 빌드 자동화 (복잡성: 보통)
+- T03_S03_Release_Automation - 릴리스 자동화 프로세스 구축 (복잡성: 낮음)
+- T04_S03_README_Documentation - README.md 업데이트 및 프로젝트 문서화 (복잡성: 낮음)
+- T05_S03_Contributing_Guide - CONTRIBUTING.md 작성 (복잡성: 낮음)
+- T06_S03_Development_Guide - 개발 가이드 문서 작성 (복잡성: 낮음)
 
 ## Notes / Retrospective Points
 - GitHub Actions는 matrix 빌드로 멀티 플랫폼 지원

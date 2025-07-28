@@ -1,5 +1,5 @@
 ---
-task_id: T03_S03
+task_id: T03_S03_Release_Automation
 sprint_sequence_id: S03
 status: completed
 complexity: Low

@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "hierarchy": {
+    "milestone": {
+      "contains": "sprints",
+      "completion_rule": "all_sprints_completed",
+      "transition_rule": "manual_review_required"
+    },
+    "sprint": {
+      "contains": "tasks",
+      "completion_rule": "all_tasks_completed",
+      "transition_rule": "auto_when_complete",
+      "preparation_rule": "80_percent_trigger"
+    },
+    "task": {
+      "completion_rule": "acceptance_criteria_met",
+      "transition_rule": "immediate"
+    }
+  },
+  "priority_matrix": {
+    "factors": {
+      "urgency": {
+        "weight": 0.4,
+        "range": [
+          1,
+          5
+        ]
+      },
+      "importance": {
+        "weight": 0.3,
+        "range": [
+          1,
+          5
+        ]
+      },
+      "dependencies_blocking": {
+        "weight": 0.2,
+        "range": [
+          0,
+          10
+        ]
+      },
+      "effort": {
+        "weight": 0.1,
+        "range": [
+          1,
+          10
+        ]
+      }
+    },
+    "calculation": "weighted_sum"
+  },
+  "dependency_rules": {
+    "strict_mode": true,
+    "allow_circular": false,
+    "max_chain_length": 10
+  },
+  "transition_rules": {
+    "task_to_task": {
+      "conditions": [
+        "current_complete",
+        "next_unblocked"
+      ],
+      "auto_transition": true
+    },
+    "sprint_to_sprint": {
+      "conditions": [
+        "current_80_percent",
+        "next_planned"
+      ],
+      "auto_transition": false,
+      "requires_approval": true
+    },
+    "milestone_to_milestone": {
+      "conditions": [
+        "current_complete",
+        "review_passed"
+      ],
+      "auto_transition": false,
+      "requires_approval": true
+    }
+  },
+  "ai_behavior": {
+    "decision_mode": "conservative",
+    "auto_prioritize": true,
+    "suggest_parallelization": true,
+    "risk_tolerance": "low"
+  }
+}

@@ -1,5 +1,5 @@
 ---
-task_id: T05_S03
+task_id: T05_S03_Contributing_Guide
 sprint_sequence_id: S03
 status: completed
 complexity: Low
