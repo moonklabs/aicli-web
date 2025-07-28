@@ -36,7 +36,7 @@
 
       <NDescriptionsItem label="위치">
         <div v-if="login.location" class="location-info">
-          <NIcon :component="MapPin" size="14" style="margin-right: 4px" />
+          <span style="margin-right: 4px">📍</span>
           {{ [login.location.city, login.location.country].filter(Boolean).join(', ') }}
           <span v-if="login.location.timezone" class="timezone">
             ({{ login.location.timezone }})
@@ -96,11 +96,10 @@ import {
   NDescriptions,
   NDescriptionsItem,
   NDivider,
-  NIcon,
   NProgress,
   NTag,
 } from 'naive-ui'
-import { MapPin } from '@vicons/tabler'
+// import { MapPin } from '@vicons/tabler'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { LoginHistory } from '@/types/api'

@@ -55,7 +55,7 @@
           >
             <n-alert type="warning" style="margin-bottom: 16px">
               <template #icon>
-                <n-icon><AlertTriangle /></n-icon>
+                <span>⚠️</span>
               </template>
               Docker 설정 변경 시 컨테이너가 재시작됩니다
             </n-alert>
@@ -100,13 +100,13 @@
                     @click="removeEnvVar(index)"
                   >
                     <template #icon>
-                      <n-icon><X /></n-icon>
+                      <span>✕</span>
                     </template>
                   </n-button>
                 </div>
                 <n-button dashed block @click="addEnvVar">
                   <template #icon>
-                    <n-icon><Plus /></n-icon>
+                    <span>+</span>
                   </template>
                   환경 변수 추가
                 </n-button>
@@ -142,13 +142,13 @@
                     @click="removePort(index)"
                   >
                     <template #icon>
-                      <n-icon><X /></n-icon>
+                      <span>✕</span>
                     </template>
                   </n-button>
                 </div>
                 <n-button dashed block @click="addPort">
                   <template #icon>
-                    <n-icon><Plus /></n-icon>
+                    <span>+</span>
                   </template>
                   포트 매핑 추가
                 </n-button>
@@ -204,7 +204,7 @@
               <n-space vertical>
                 <n-alert type="error">
                   <template #icon>
-                    <n-icon><AlertTriangle /></n-icon>
+                    <span>⚠️</span>
                   </template>
                   아래 작업들은 되돌릴 수 없습니다. 신중하게 실행하세요.
                 </n-alert>
@@ -271,7 +271,7 @@ import {
   useMessage,
   type FormInst
 } from 'naive-ui'
-import { Plus, X, AlertTriangle } from '@vicons/lucide'
+// import { Plus, X, AlertTriangle } from '@vicons/lucide' // 이모지로 교체
 import type { Workspace } from '@/stores/workspace'
 
 interface Props {

@@ -15,7 +15,7 @@
         @close="handleDismiss(alert.id)"
       >
         <template #icon>
-          <NIcon :component="getAlertIcon(alert.type)" />
+          <span>{{ getAlertIcon(alert.type) }}</span>
         </template>
 
         <div class="alert-content">
@@ -37,7 +37,7 @@
 
           <div class="alert-details" v-if="alert.details">
             <div class="detail-item" v-if="alert.details.ipAddress">
-              <NIcon :component="MapPin" size="12" />
+              <span>📍</span>
               <span>{{ alert.details.ipAddress }}</span>
               <span v-if="alert.details.location" class="location">
                 ({{ alert.details.location }})
@@ -45,12 +45,12 @@
             </div>
 
             <div class="detail-item" v-if="alert.details.device">
-              <NIcon :component="DeviceDesktop" size="12" />
+              <span>💻</span>
               <span>{{ alert.details.device }}</span>
             </div>
 
             <div class="detail-item" v-if="alert.details.riskScore">
-              <NIcon :component="AlertTriangle" size="12" />
+              <span>⚠️</span>
               <span>위험도: {{ alert.details.riskScore }}/100</span>
             </div>
           </div>
@@ -91,22 +91,21 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   NAlert,
   NButton,
-  NIcon,
   NSpace,
   NTag,
   useMessage,
 } from 'naive-ui'
-import {
-  AlertTriangle,
-  CheckCircle,
-  DeviceDesktop,
-  ExclamationCircle,
-  InfoCircle,
-  Lock,
-  MapPin,
-  Shield,
-  XCircle,
-} from '@vicons/tabler'
+// import {
+//   AlertTriangle,
+//   CheckCircle,
+//   DeviceDesktop,
+//   ExclamationCircle,
+//   InfoCircle,
+//   Lock,
+//   MapPin,
+//   Shield,
+//   XCircle,
+// } from '@vicons/tabler'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
@@ -184,15 +183,15 @@ const getAlertType = (severity: string) => {
 
 const getAlertIcon = (type: string) => {
   const iconMap = {
-    suspicious_login: AlertTriangle,
-    new_device: DeviceDesktop,
-    location_change: MapPin,
-    brute_force: XCircle,
-    account_lockout: Lock,
-    password_breach: ExclamationCircle,
-    permission_change: Shield,
+    suspicious_login: '⚠️',
+    new_device: '💻',
+    location_change: '📍',
+    brute_force: '❌',
+    account_lockout: '🔒',
+    password_breach: '❗',
+    permission_change: '🛡️',
   }
-  return iconMap[type] || InfoCircle
+  return iconMap[type] || 'ℹ️'
 }
 
 const getSeverityTagType = (severity: string) => {

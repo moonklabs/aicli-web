@@ -39,6 +39,77 @@
   }
 }
 
+@mixin large-up {
+  @media (min-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+@mixin extra-large-up {
+  @media (min-width: #{$breakpoint-2xl}) {
+    @content;
+  }
+}
+
+// 고해상도 디스플레이
+@mixin retina {
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    @content;
+  }
+}
+
+// 세로/가로 방향
+@mixin portrait {
+  @media (orientation: portrait) {
+    @content;
+  }
+}
+
+@mixin landscape {
+  @media (orientation: landscape) {
+    @content;
+  }
+}
+
+// 터치 기기 감지
+@mixin touch {
+  @media (hover: none) and (pointer: coarse) {
+    @content;
+  }
+}
+
+@mixin no-touch {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+// 모션 선호도
+@mixin reduce-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin motion-ok {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+// 다크 모드 선호도
+@mixin prefers-dark {
+  @media (prefers-color-scheme: dark) {
+    @content;
+  }
+}
+
+@mixin prefers-light {
+  @media (prefers-color-scheme: light) {
+    @content;
+  }
+}
+
 // 플렉스박스 유틸리티
 @mixin flex-center {
   display: flex;
@@ -339,5 +410,176 @@
     background: $dark-bg-tertiary;
     color: $dark-text-primary;
     border-color: lighten($dark-bg-tertiary, 10%);
+  }
+}
+
+// 반응형 그리드 시스템
+@mixin grid-container($max-width: 1200px, $padding: $spacing-4) {
+  width: 100%;
+  max-width: $max-width;
+  margin: 0 auto;
+  padding: 0 $padding;
+
+  @include tablet-up {
+    padding: 0 $spacing-6;
+  }
+
+  @include desktop-up {
+    padding: 0 $spacing-8;
+  }
+}
+
+@mixin grid-columns($columns: 12, $gap: $spacing-4) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: $gap;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: $spacing-3;
+  }
+
+  @include tablet {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@mixin grid-item($span: 1, $mobile-span: 1) {
+  grid-column: span $span;
+
+  @include mobile {
+    grid-column: span $mobile-span;
+  }
+}
+
+// 터치 최적화 믹스인
+@mixin touch-target($size: 44px) {
+  min-height: $size;
+  min-width: $size;
+  
+  @include touch {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@mixin touch-feedback {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  @include reduce-motion {
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+@mixin safe-area-padding($property: padding, $direction: all) {
+  @if $direction == all {
+    #{$property}: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  } @else if $direction == top {
+    #{$property}-top: env(safe-area-inset-top);
+  } @else if $direction == bottom {
+    #{$property}-bottom: env(safe-area-inset-bottom);
+  } @else if $direction == left {
+    #{$property}-left: env(safe-area-inset-left);
+  } @else if $direction == right {
+    #{$property}-right: env(safe-area-inset-right);
+  }
+}
+
+// 모바일 전용 스타일
+@mixin mobile-optimized {
+  @include mobile {
+    @content;
+  }
+}
+
+// 터치 스크롤링 최적화
+@mixin smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  
+  @include reduce-motion {
+    scroll-behavior: auto;
+  }
+}
+
+// 모바일 입력 필드 최적화
+@mixin mobile-input {
+  @include mobile {
+    font-size: 16px; // iOS 줌 방지
+    padding: $spacing-3;
+    border-radius: $border-radius-lg;
+  }
+}
+
+// 모바일 버튼 최적화
+@mixin mobile-button {
+  @include touch-target;
+  @include touch-feedback;
+  
+  @include mobile {
+    padding: $spacing-3 $spacing-4;
+    font-size: $font-size-base;
+    border-radius: $border-radius-lg;
+  }
+}
+
+// 카드 호버 효과 (터치 기기에서는 비활성화)
+@mixin hover-lift {
+  transition: $transition-base;
+  
+  @include no-touch {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+  }
+}
+
+// 모바일 스택 레이아웃
+@mixin stack-mobile($gap: $spacing-4) {
+  @include mobile {
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+    
+    > * {
+      width: 100% !important;
+      flex: none !important;
+    }
+  }
+}
+
+// 반응형 텍스트 크기
+@mixin responsive-text($mobile-size, $desktop-size) {
+  font-size: $mobile-size;
+  
+  @include tablet-up {
+    font-size: calc(#{$mobile-size} + (#{$desktop-size} - #{$mobile-size}) * ((100vw - #{$breakpoint-sm}) / (#{$breakpoint-lg} - #{$breakpoint-sm})));
+  }
+  
+  @include desktop-up {
+    font-size: $desktop-size;
+  }
+}
+
+// 반응형 간격
+@mixin responsive-spacing($property, $mobile-value, $desktop-value) {
+  #{$property}: $mobile-value;
+  
+  @include tablet-up {
+    #{$property}: calc(#{$mobile-value} + (#{$desktop-value} - #{$mobile-value}) * ((100vw - #{$breakpoint-sm}) / (#{$breakpoint-lg} - #{$breakpoint-sm})));
+  }
+  
+  @include desktop-up {
+    #{$property}: $desktop-value;
   }
 }

@@ -10,7 +10,7 @@
           @update:value="handleSearch"
         >
           <template #prefix>
-            <NIcon><Search /></NIcon>
+            <span>🔍</span>
           </template>
         </NInput>
       </div>
@@ -50,7 +50,7 @@
             @click="handleExport"
           >
             <template #icon>
-              <NIcon><Download /></NIcon>
+              <span>📥</span>
             </template>
             내보내기
           </NButton>
@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import {
   type DataTableColumns,
   NButton,
@@ -100,7 +100,7 @@ import {
   NTooltip,
   useMessage,
 } from 'naive-ui'
-import { AlertTriangle, Download, Eye, MapPin, Search } from '@vicons/tabler'
+// import { AlertTriangle, Download, Eye, MapPin, Search } from '@vicons/tabler'
 import { authApi } from '@/api/services/auth'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -256,10 +256,9 @@ const columns: DataTableColumns<LoginHistory> = [
           size: 'small',
           style: { backgroundColor: `${config.color}20`, borderColor: config.color },
         }, { default: () => `${config.text} (${row.riskScore})` }),
-        row.isSuspicious && h(NIcon, {
-          component: AlertTriangle,
+        row.isSuspicious && h('span', {
           style: { color: '#e74c3c', marginLeft: '4px' },
-        }),
+        }, '⚠️'),
       ])
     },
   },
@@ -282,7 +281,7 @@ const columns: DataTableColumns<LoginHistory> = [
 
       const location = [row.location.city, row.location.country].filter(Boolean).join(', ')
       return h('div', { class: 'location-cell' }, [
-        h(NIcon, { component: MapPin, size: 14, style: { marginRight: '4px' } }),
+        h('span', { style: { marginRight: '4px' } }, '📍'),
         h('span', location || '알 수 없음'),
       ])
     },
@@ -329,7 +328,7 @@ const columns: DataTableColumns<LoginHistory> = [
         onClick: () => handleViewDetails(row),
       }, {
         default: () => '상세',
-        icon: () => h(NIcon, { component: Eye }),
+        icon: () => h('span', '👁️'),
       })
     },
   },

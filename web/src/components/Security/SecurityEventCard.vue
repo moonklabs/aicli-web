@@ -7,11 +7,11 @@
     <template #header>
       <div class="event-header">
         <div class="event-title">
-          <NIcon
-            :component="getEventIcon(event)"
-            :size="18"
-            :color="getSeverityColor(event.severity)"
-          />
+          <span
+            :style="{ color: getSeverityColor(event.severity) }"
+          >
+            {{ getEventIcon(event) }}
+          </span>
           <span class="title-text">{{ getEventTitle(event) }}</span>
           <NTag
             :type="getSeverityType(event.severity)"
@@ -42,7 +42,7 @@
           size="small"
         >
           <template #icon>
-            <NIcon><DotsVertical /></NIcon>
+            <span>⋮</span>
           </template>
         </NButton>
       </NDropdown>
@@ -57,7 +57,7 @@
       <!-- 위치 및 디바이스 정보 -->
       <div class="event-details">
         <div class="detail-row">
-          <NIcon :component="MapPin" size="14" />
+          <span>📍</span>
           <span class="detail-label">위치:</span>
           <span class="detail-value">
             <code class="ip-address">{{ event.ipAddress }}</code>
@@ -68,7 +68,7 @@
         </div>
 
         <div class="detail-row" v-if="event.userAgent">
-          <NIcon :component="DeviceDesktop" size="14" />
+          <span>💻</span>
           <span class="detail-label">디바이스:</span>
           <span class="detail-value device-info">
             {{ getDeviceInfo(event.userAgent) }}
@@ -77,7 +77,7 @@
 
         <!-- 위험도 (SuspiciousActivity인 경우) -->
         <div class="detail-row" v-if="isActivityType(event) && event.riskScore">
-          <NIcon :component="AlertTriangle" size="14" />
+          <span>⚠️</span>
           <span class="detail-label">위험도:</span>
           <div class="risk-score">
             <NProgress
@@ -94,7 +94,7 @@
 
         <!-- 활동 유형 (SuspiciousActivity인 경우) -->
         <div class="detail-row" v-if="isActivityType(event)">
-          <NIcon :component="Flag" size="14" />
+          <span>🚩</span>
           <span class="detail-label">유형:</span>
           <NTag size="small" type="warning">
             {{ getActivityTypeText(event.activityType) }}
@@ -103,7 +103,7 @@
 
         <!-- 해결 상태 (SuspiciousActivity인 경우) -->
         <div class="detail-row" v-if="isActivityType(event) && event.isResolved">
-          <NIcon :component="Check" size="14" />
+          <span>✅</span>
           <span class="detail-label">해결됨:</span>
           <span class="detail-value resolved-info">
             {{ formatDateTime(event.resolvedAt) }}
@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import {
   NButton,
   NCard,
@@ -194,20 +194,20 @@ import {
   NTag,
   useMessage,
 } from 'naive-ui'
-import {
-  AlertTriangle,
-  Check,
-  DeviceDesktop,
-  DotsVertical,
-  ExclamationCircle,
-  Eye,
-  Flag,
-  Lock,
-  Login,
-  Logout,
-  MapPin,
-  Shield,
-} from '@vicons/tabler'
+// import {
+//   AlertTriangle,
+//   Check,
+//   DeviceDesktop,
+//   DotsVertical,
+//   ExclamationCircle,
+//   Eye,
+//   Flag,
+//   Lock,
+//   Login,
+//   Logout,
+//   MapPin,
+//   Shield,
+// } from '@vicons/tabler'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { SessionSecurityEvent, SuspiciousActivity } from '@/types/api'
@@ -249,17 +249,17 @@ const actionOptions = computed(() => [
   {
     label: '상세 보기',
     key: 'details',
-    icon: () => h(NIcon, { component: Eye }),
+    icon: () => h('span', '👁️'),
   },
   {
     label: '내보내기',
     key: 'export',
-    icon: () => h(NIcon, { component: Download }),
+    icon: () => h('span', '📥'),
   },
   ...(isActivityType(props.event) && !props.event.isResolved ? [{
     label: '해결 처리',
     key: 'resolve',
-    icon: () => h(NIcon, { component: Check }),
+    icon: () => h('span', '✅'),
   }] : []),
 ])
 
@@ -272,25 +272,25 @@ const isActivityType = (event: any): event is SuspiciousActivity => {
 const getEventIcon = (event: SessionSecurityEvent | SuspiciousActivity) => {
   if (isActivityType(event)) {
     const iconMap = {
-      unusual_location: MapPin,
-      unusual_device: DeviceDesktop,
-      brute_force: AlertTriangle,
-      credential_stuffing: Lock,
-      account_takeover: ExclamationCircle,
-      privilege_escalation: Shield,
+      unusual_location: '📍',
+      unusual_device: '💻',
+      brute_force: '⚠️',
+      credential_stuffing: '🔒',
+      account_takeover: '❗',
+      privilege_escalation: '🛡️',
     }
-    return iconMap[event.activityType] || AlertTriangle
+    return iconMap[event.activityType] || '⚠️'
   }
 
   const iconMap = {
-    login: Login,
-    logout: Logout,
-    suspicious_activity: AlertTriangle,
-    password_change: Lock,
-    device_change: DeviceDesktop,
-    location_change: MapPin,
+    login: '🔐',
+    logout: '🔓',
+    suspicious_activity: '⚠️',
+    password_change: '🔒',
+    device_change: '💻',
+    location_change: '📍',
   }
-  return iconMap[event.eventType] || Shield
+  return iconMap[event.eventType] || '🛡️'
 }
 
 const getEventTitle = (event: SessionSecurityEvent | SuspiciousActivity) => {

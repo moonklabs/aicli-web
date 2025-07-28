@@ -20,6 +20,8 @@ import {
 import App from './App.vue'
 import router from './router'
 import { registerPermissionDirectives } from './directives/permission'
+import { createPerformancePlugin } from './utils/performance'
+import { registerServiceWorker } from './utils/sw-registration'
 
 const app = createApp(App)
 
@@ -32,6 +34,9 @@ app.use(router)
 
 // 권한 디렉티브 등록
 registerPermissionDirectives(app)
+
+// 성능 모니터링 플러그인 등록
+app.use(createPerformancePlugin())
 
 // Naive UI 전역 컴포넌트 등록
 app.component('NConfigProvider', NConfigProvider)
@@ -50,6 +55,23 @@ app.config.globalProperties.$message = message
 app.config.globalProperties.$notification = notification
 app.config.globalProperties.$dialog = dialog
 app.config.globalProperties.$loadingBar = loadingBar
+
+// Service Worker 등록
+registerServiceWorker({
+  onUpdate: (registration) => {
+    console.log('🔄 PWA 업데이트가 준비되었습니다')
+    // 업데이트 알림을 위한 이벤트 발송
+    window.dispatchEvent(new CustomEvent('pwa-update-available', {
+      detail: { registration }
+    }))
+  },
+  onInstalled: (registration) => {
+    console.log('✨ PWA가 설치되었습니다')
+  },
+  onError: (error) => {
+    console.error('❌ Service Worker 오류:', error)
+  }
+})
 
 // 개발 환경에서 터미널 테스트 활성화
 if (import.meta.env.DEV) {

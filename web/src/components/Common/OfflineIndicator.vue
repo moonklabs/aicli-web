@@ -7,14 +7,14 @@
         class="fixed top-0 left-0 right-0 z-40 bg-red-500 text-white py-2 px-4 text-center text-sm font-medium shadow-lg"
       >
         <div class="flex items-center justify-center gap-2">
-          <Icon name="mdi:wifi-off" size="16" />
+          📶❌
           <span>인터넷 연결이 끊어졌습니다</span>
           <button
             @click="checkConnection"
             :disabled="isChecking"
             class="ml-2 px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors disabled:opacity-50"
           >
-            <Icon v-if="isChecking" name="mdi:loading" class="animate-spin" size="12" />
+            <span v-if="isChecking">⏳</span>
             <span v-else>연결 확인</span>
           </button>
         </div>
@@ -33,7 +33,7 @@
           @click.stop
         >
           <div class="mb-4">
-            <Icon name="mdi:wifi-off" size="48" class="text-red-500 mx-auto mb-2" />
+            <div class="text-red-500 mx-auto mb-2 text-5xl">📶❌</div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
               오프라인 상태
             </h3>
@@ -67,15 +67,15 @@
             <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">오프라인에서 사용 가능:</h4>
             <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
               <li class="flex items-center gap-2">
-                <Icon name="mdi:check" size="14" class="text-green-500" />
+                <span class="text-green-500">✓</span>
                 <span>캐시된 데이터 조회</span>
               </li>
               <li class="flex items-center gap-2">
-                <Icon name="mdi:check" size="14" class="text-green-500" />
+                <span class="text-green-500">✓</span>
                 <span>로컬 설정 변경</span>
               </li>
               <li class="flex items-center gap-2">
-                <Icon name="mdi:check" size="14" class="text-green-500" />
+                <span class="text-green-500">✓</span>
                 <span>임시 저장 기능</span>
               </li>
             </ul>
@@ -85,15 +85,15 @@
             <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">제한되는 기능:</h4>
             <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
               <li class="flex items-center gap-2">
-                <Icon name="mdi:close" size="14" class="text-red-500" />
+                <span class="text-red-500">✗</span>
                 <span>실시간 데이터 동기화</span>
               </li>
               <li class="flex items-center gap-2">
-                <Icon name="mdi:close" size="14" class="text-red-500" />
+                <span class="text-red-500">✗</span>
                 <span>파일 업로드/다운로드</span>
               </li>
               <li class="flex items-center gap-2">
-                <Icon name="mdi:close" size="14" class="text-red-500" />
+                <span class="text-red-500">✗</span>
                 <span>서버 API 호출</span>
               </li>
             </ul>
@@ -106,7 +106,7 @@
               :disabled="isChecking"
               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors disabled:opacity-50"
             >
-              <Icon v-if="isChecking" name="mdi:loading" class="animate-spin mr-2" size="14" />
+              <span v-if="isChecking" class="mr-2">⏳</span>
               {{ isChecking ? '확인 중...' : '연결 재시도' }}
             </button>
             <button
@@ -126,7 +126,7 @@
         v-if="showReconnected"
         class="fixed bottom-4 right-4 z-50 bg-green-500 text-white py-3 px-4 rounded-lg shadow-lg flex items-center gap-2"
       >
-        <Icon name="mdi:wifi" size="16" />
+        📶
         <span class="font-medium">네트워크 연결이 복구되었습니다!</span>
       </div>
     </Transition>
@@ -135,7 +135,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Icon } from '@iconify/vue'
+// import { Icon } from '@iconify/vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 import { useGlobalErrorNotification } from '@/composables/useErrorNotification'
 

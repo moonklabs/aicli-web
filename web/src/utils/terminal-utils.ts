@@ -384,3 +384,105 @@ export function throttle<T extends (...args: any[]) => void>(
     }
   }
 }
+
+/**
+ * 터미널 출력 전처리
+ */
+export function processTerminalOutput(content: string): string {
+  if (!content) return ''
+  
+  // 기본적인 터미널 출력 정리
+  return content
+    .replace(/\r\n/g, '\n') // Windows 줄바꿈 정규화
+    .replace(/\r/g, '\n')   // Mac 줄바꿈 정규화
+    .replace(/\n+$/g, '')   // 끝의 빈 줄 제거
+    .trim()
+}
+
+/**
+ * 유니크한 세션 ID 생성
+ */
+export function generateSessionId(): string {
+  return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * 민감한 정보가 포함된 명령어 마스킹
+ */
+export function maskSensitiveCommand(command: string): string {
+  if (!command) return ''
+  
+  // 비밀번호, 토큰 등 민감한 정보 패턴 마스킹
+  return command
+    .replace(/--password[=\s]+\S+/gi, '--password=***')
+    .replace(/--token[=\s]+\S+/gi, '--token=***')
+    .replace(/--key[=\s]+\S+/gi, '--key=***')
+    .replace(/--secret[=\s]+\S+/gi, '--secret=***')
+    .replace(/--api-key[=\s]+\S+/gi, '--api-key=***')
+    .replace(/-p[=\s]+\S+/g, '-p=***')
+}
+
+/**
+ * TerminalHistory의 alias로 CommandHistory 제공
+ */
+export const CommandHistory = TerminalHistory
+
+/**
+ * 파일 크기 포맷팅
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
+}
+
+/**
+ * 터미널 타임스탬프 포맷팅
+ */
+export function formatTerminalTimestamp(timestamp: string): string {
+  return new Date(timestamp).toLocaleTimeString('ko-KR', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
+/**
+ * 터미널 상태 정보 가져오기
+ */
+export function getTerminalStatusInfo(lines: TerminalLine[]): {
+  totalLines: number
+  outputLines: number
+  errorLines: number
+  systemLines: number
+} {
+  const totalLines = lines.length
+  const outputLines = lines.filter(line => line.type === 'output').length
+  const errorLines = lines.filter(line => line.type === 'error').length
+  const systemLines = lines.filter(line => line.type === 'system').length
+  
+  return {
+    totalLines,
+    outputLines,
+    errorLines,
+    systemLines
+  }
+}
+
+/**
+ * 검색어 하이라이트
+ */
+export function highlightSearchTerm(text: string, searchTerm: string, caseSensitive = false): string {
+  if (!searchTerm.trim()) return text
+  
+  const flags = caseSensitive ? 'g' : 'gi'
+  const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(escapedTerm, flags)
+  
+  return text.replace(regex, '<mark class="search-highlight">$&</mark>')
+}

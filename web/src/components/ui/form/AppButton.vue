@@ -170,11 +170,13 @@ const handleBlur = (event: FocusEvent) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
 .app-button {
-  @apply relative inline-flex items-center justify-center;
-  @apply font-medium leading-none select-none cursor-pointer;
-  @apply border border-solid rounded-md transition-all duration-200;
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  @include button-base;
+  @include touch-target;
+  @include touch-feedback;
 
   // 기본 상태
   &:active {

@@ -112,7 +112,7 @@
                   :loading="loadingLoginHistory"
                 >
                   <template #icon>
-                    <NIcon><Refresh /></NIcon>
+                    새로고침
                   </template>
                   새로고침
                 </NButton>
@@ -145,7 +145,7 @@
                   :loading="loadingSuspiciousActivities"
                 >
                   <template #icon>
-                    <NIcon><Refresh /></NIcon>
+                    새로고침
                   </template>
                   새로고침
                 </NButton>
@@ -262,7 +262,7 @@ import {
   NTabPane,
   NTabs,
 } from 'naive-ui'
-import { Refresh } from '@vicons/tabler'
+// import { Refresh } from '@vicons/tabler'
 import { authApi } from '@/api/services/auth'
 import SecurityAlertBanner from '@/components/Security/SecurityAlertBanner.vue'
 import SecurityEventCard from '@/components/Security/SecurityEventCard.vue'

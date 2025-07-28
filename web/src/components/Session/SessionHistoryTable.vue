@@ -133,7 +133,7 @@ import {
   CheckmarkCircleSharp as CheckCircle,
   LogInSharp as Login,
   LogOutSharp as Logout,
-  PersonCheckmarkSharp as UserCheck,
+  PersonSharp as UserCheck,
   KeySharp as Key,
   PhonePortraitSharp as Smartphone,
   LocationSharp as MapPin

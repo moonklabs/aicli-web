@@ -13,6 +13,7 @@ import {
 import { useUserStore } from '@/stores/user'
 import ErrorNotification from '@/components/Common/ErrorNotification.vue'
 import OfflineIndicator from '@/components/Common/OfflineIndicator.vue'
+import PWAInstallPrompt from '@/components/Common/PWAInstallPrompt.vue'
 import ApiDebugPanel from '@/components/Debug/ApiDebugPanel.vue'
 
 const userStore = useUserStore()
@@ -42,8 +43,8 @@ const theme: GlobalTheme | null = null // null = 라이트 테마
               <!-- 전역 컴포넌트들 -->
               <ErrorNotification />
               <OfflineIndicator />
+              <PWAInstallPrompt />
               <ApiDebugPanel />
->>>>>>> task/T01_S01
             </div>
           </NMessageProvider>
         </NNotificationProvider>

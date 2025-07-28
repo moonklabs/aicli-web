@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 배경 -->
+  <rect width="512" height="512" rx="64" fill="#18a058"/>
+  
+  <!-- 그라데이션 정의 -->
+  <defs>
+    <linearGradient id="codeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.7"/>
+    </linearGradient>
+    <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#36ad6a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#18a058;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- AI 심볼 (뇌/네트워크 모양) -->
+  <g transform="translate(256,256)">
+    <!-- 중앙 노드 -->
+    <circle cx="0" cy="0" r="24" fill="url(#codeGradient)"/>
+    
+    <!-- 연결선들 -->
+    <g stroke="url(#codeGradient)" stroke-width="4" opacity="0.8">
+      <line x1="0" y1="0" x2="-60" y2="-40"/>
+      <line x1="0" y1="0" x2="60" y2="-40"/>
+      <line x1="0" y1="0" x2="-40" y2="60"/>
+      <line x1="0" y1="0" x2="40" y2="60"/>
+      <line x1="0" y1="0" x2="-80" y2="20"/>
+      <line x1="0" y1="0" x2="80" y2="20"/>
+    </g>
+    
+    <!-- 외부 노드들 -->
+    <circle cx="-60" cy="-40" r="12" fill="url(#codeGradient)"/>
+    <circle cx="60" cy="-40" r="12" fill="url(#codeGradient)"/>
+    <circle cx="-40" cy="60" r="12" fill="url(#codeGradient)"/>
+    <circle cx="40" cy="60" r="12" fill="url(#codeGradient)"/>
+    <circle cx="-80" cy="20" r="12" fill="url(#codeGradient)"/>
+    <circle cx="80" cy="20" r="12" fill="url(#codeGradient)"/>
+  </g>
+  
+  <!-- 코드 브래킷 -->
+  <g fill="url(#codeGradient)" opacity="0.9">
+    <!-- 좌측 브래킷 -->
+    <path d="M 140 180 L 120 180 L 120 200 L 120 312 L 120 332 L 140 332 M 120 200 L 100 220 L 120 240 M 120 272 L 100 292 L 120 312"/>
+    
+    <!-- 우측 브래킷 -->
+    <path d="M 372 180 L 392 180 L 392 200 L 392 312 L 392 332 L 372 332 M 392 200 L 412 220 L 392 240 M 392 272 L 412 292 L 392 312"/>
+  </g>
+  
+  <!-- 텍스트 "AI" -->
+  <text x="256" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#codeGradient)">AI</text>
+</svg>

@@ -478,7 +478,7 @@ export const useDockerStore = defineStore('docker', () => {
   }
 
   // 컨테이너 로그 가져오기
-  const getContainerLogs = async (id: string, tail?: number): Promise<string[]> => {
+  const fetchContainerLogs = async (id: string, tail?: number): Promise<string[]> => {
     try {
       // TODO: API 호출로 컨테이너 로그 가져오기
       console.log(`Getting logs for container ${id} (tail: ${tail})`)
@@ -630,6 +630,7 @@ export const useDockerStore = defineStore('docker', () => {
     totalImages,
     totalNetworks,
     getContainerLogs,
+    fetchContainerLogs,
 
     // 액션
     setContainers,

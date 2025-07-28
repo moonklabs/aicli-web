@@ -8,6 +8,10 @@ export { useKeyboardNavigation } from './useKeyboardNavigation'
 // 모바일 최적화 composables
 export { useTouchGestures } from './useTouchGestures'
 export { useNetworkStatus } from './useNetworkStatus'
+export { useVirtualScroll } from './useVirtualScroll'
+export { useTouchPerformance, useDeviceDetection } from './useTouchPerformance'
+export { useMobileOptimization, vLazyImage, usePerformanceMonitor } from './useMobileOptimization'
+export { useMobileAccessibility } from './useMobileAccessibility'
 
 // 성능 최적화 composables
 export { usePerformanceOptimization } from './usePerformanceOptimization'

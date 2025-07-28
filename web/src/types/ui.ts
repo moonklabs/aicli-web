@@ -52,7 +52,7 @@ export interface InputBaseProps {
   clearable?: boolean;
   maxlength?: number;
   showCount?: boolean;
-  onUpdate:value?: (value: string | number) => void;
+  'onUpdate:value'?: (value: string | number) => void;
   onFocus?: (event: FocusEvent) => void;
   onBlur?: (event: FocusEvent) => void;
   onChange?: (value: string | number) => void;

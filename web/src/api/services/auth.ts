@@ -22,6 +22,14 @@ import type {
 
 export const authApi = {
   /**
+   * CSRF 토큰 조회
+   */
+  getCsrfToken: async (): Promise<{ token: string; expiresAt: number }> => {
+    const response = await apiGet<{ token: string; expiresAt: number }>('/auth/csrf-token')
+    return response.data.data
+  },
+
+  /**
    * 로그인
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {

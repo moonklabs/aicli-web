@@ -16,7 +16,7 @@
             style="width: 240px"
           >
             <template #prefix>
-              <n-icon><Search /></n-icon>
+              검색
             </template>
           </n-input>
           <n-select
@@ -28,7 +28,7 @@
         
         <n-button type="primary" @click="showCreateModal = true">
           <template #icon>
-            <n-icon><Plus /></n-icon>
+            +
           </template>
           새 워크스페이스
         </n-button>
@@ -54,7 +54,7 @@
         >
           <n-button size="small" quaternary>
             <template #icon>
-              <n-icon><Filter /></n-icon>
+              필터
             </template>
             필터 추가
           </n-button>
@@ -67,7 +67,7 @@
           @click="workspaceStore.clearFilters()"
         >
           <template #icon>
-            <n-icon><X /></n-icon>
+            ✕
           </template>
           필터 초기화
         </n-button>
@@ -104,7 +104,7 @@
       class="workspace-empty"
     >
       <template #icon>
-        <n-icon size="48"><FolderOpen /></n-icon>
+        📁
       </template>
       <template #extra>
         <n-button type="primary" @click="showCreateModal = true">
@@ -178,13 +178,13 @@ import {
   NPagination,
   NModal
 } from 'naive-ui'
-import {
-  Search,
-  Plus,
-  Filter,
-  X,
-  FolderOpen
-} from '@vicons/lucide'
+// import {
+//   Search,
+//   Plus,
+//   Filter,
+//   X,
+//   FolderOpen
+// } from '@vicons/lucide'
 
 import { useWorkspaceStore } from '@/stores/workspace'
 import type { Workspace, WorkspaceFilter } from '@/stores/workspace'

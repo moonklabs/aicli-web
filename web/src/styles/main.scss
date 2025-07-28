@@ -304,6 +304,39 @@ input, textarea, select {
 .gap-6 { gap: $spacing-6; }
 .gap-8 { gap: $spacing-8; }
 
+// 반응형 그리드 유틸리티
+.responsive-grid {
+  @include grid-columns(3, $spacing-4);
+}
+
+.responsive-grid-2 {
+  @include grid-columns(2, $spacing-4);
+}
+
+.responsive-grid-4 {
+  @include grid-columns(4, $spacing-4);
+}
+
+// 반응형 컬럼
+@include mobile {
+  .mobile-grid-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .mobile-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@include tablet {
+  .tablet-grid-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .tablet-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tablet-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@include desktop {
+  .desktop-grid-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .desktop-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .desktop-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .desktop-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .desktop-grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
 // 숨김/표시 유틸리티
 .hidden { display: none; }
 .invisible { visibility: hidden; }
@@ -386,5 +419,161 @@ input, textarea, select {
 
   &::before {
     border-bottom-color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+// 터치 최적화 유틸리티
+.touch-target {
+  @include touch-target;
+}
+
+.touch-feedback {
+  @include touch-feedback;
+}
+
+.mobile-button {
+  @include mobile-button;
+}
+
+.mobile-input {
+  @include mobile-input;
+}
+
+.safe-area-top {
+  @include safe-area-padding(padding, top);
+}
+
+.safe-area-bottom {
+  @include safe-area-padding(padding, bottom);
+}
+
+.safe-area-left {
+  @include safe-area-padding(padding, left);
+}
+
+.safe-area-right {
+  @include safe-area-padding(padding, right);
+}
+
+.safe-area-all {
+  @include safe-area-padding(padding, all);
+}
+
+// 스크롤링 최적화
+.smooth-scroll {
+  @include smooth-scroll;
+}
+
+// 호버 효과 (터치 기기 제외)
+.hover-lift {
+  @include hover-lift;
+}
+
+// 모바일 스택 레이아웃
+.stack-mobile {
+  @include stack-mobile;
+}
+
+.stack-mobile-small {
+  @include stack-mobile($spacing-2);
+}
+
+.stack-mobile-large {
+  @include stack-mobile($spacing-6);
+}
+
+// 반응형 텍스트 크기
+.text-responsive-sm {
+  @include responsive-text($font-size-sm, $font-size-base);
+}
+
+.text-responsive-md {
+  @include responsive-text($font-size-base, $font-size-lg);
+}
+
+.text-responsive-lg {
+  @include responsive-text($font-size-lg, $font-size-xl);
+}
+
+.text-responsive-xl {
+  @include responsive-text($font-size-xl, $font-size-2xl);
+}
+
+// 반응형 간격
+.spacing-responsive {
+  @include responsive-spacing(padding, $spacing-4, $spacing-8);
+}
+
+.spacing-responsive-sm {
+  @include responsive-spacing(padding, $spacing-2, $spacing-4);
+}
+
+.spacing-responsive-lg {
+  @include responsive-spacing(padding, $spacing-6, $spacing-12);
+}
+
+// 터치 전용 스타일
+@include touch {
+  .touch-only {
+    display: block;
+  }
+  
+  .no-touch-only {
+    display: none;
+  }
+  
+  // 터치 기기에서 호버 효과 제거
+  .hover-disabled {
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+}
+
+@include no-touch {
+  .touch-only {
+    display: none;
+  }
+  
+  .no-touch-only {
+    display: block;
+  }
+}
+
+// 화면 방향별 스타일
+@include portrait {
+  .portrait-only {
+    display: block;
+  }
+  
+  .landscape-only {
+    display: none;
+  }
+}
+
+@include landscape {
+  .portrait-only {
+    display: none;
+  }
+  
+  .landscape-only {
+    display: block;
+  }
+}
+
+// 모션 감소 선호도
+@include reduce-motion {
+  .motion-reduce {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// 고해상도 디스플레이 최적화
+@include retina {
+  .retina-optimized {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 }

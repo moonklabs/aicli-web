@@ -18,7 +18,7 @@
 
       <NDescriptionsItem label="이벤트 유형">
         <div class="event-type">
-          <NIcon :component="getEventIcon()" style="margin-right: 4px" />
+          <span style="margin-right: 4px">{{ getEventIcon() }}</span>
           {{ getEventTypeText() }}
         </div>
       </NDescriptionsItem>
@@ -30,7 +30,7 @@
 
       <NDescriptionsItem label="위치" v-if="getLocationText()">
         <div class="location-info">
-          <NIcon :component="MapPin" size="14" style="margin-right: 4px" />
+          <span style="margin-right: 4px">📍</span>
           {{ getLocationText() }}
         </div>
       </NDescriptionsItem>
@@ -161,21 +161,20 @@ import {
   NDescriptions,
   NDescriptionsItem,
   NDivider,
-  NIcon,
   NProgress,
   NSpace,
   NTag,
 } from 'naive-ui'
-import {
-  AlertTriangle,
-  DeviceDesktop,
-  ExclamationCircle,
-  Lock,
-  Login,
-  Logout,
-  MapPin,
-  Shield,
-} from '@vicons/tabler'
+// import {
+//   AlertTriangle,
+//   DeviceDesktop,
+//   ExclamationCircle,
+//   Lock,
+//   Login,
+//   Logout,
+//   MapPin,
+//   Shield,
+// } from '@vicons/tabler'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { SessionSecurityEvent, SuspiciousActivity } from '@/types/api'
@@ -224,25 +223,25 @@ const getSeverityText = (severity: string) => {
 const getEventIcon = () => {
   if (isActivityType(props.event)) {
     const iconMap = {
-      unusual_location: MapPin,
-      unusual_device: DeviceDesktop,
-      brute_force: AlertTriangle,
-      credential_stuffing: Lock,
-      account_takeover: ExclamationCircle,
-      privilege_escalation: Shield,
+      unusual_location: '📍',
+      unusual_device: '💻',
+      brute_force: '⚠️',
+      credential_stuffing: '🔒',
+      account_takeover: '❗',
+      privilege_escalation: '🛡️',
     }
-    return iconMap[props.event.activityType] || AlertTriangle
+    return iconMap[props.event.activityType] || '⚠️'
   }
 
   const iconMap = {
-    login: Login,
-    logout: Logout,
-    suspicious_activity: AlertTriangle,
-    password_change: Lock,
-    device_change: DeviceDesktop,
-    location_change: MapPin,
+    login: '🔐',
+    logout: '🔓',
+    suspicious_activity: '⚠️',
+    password_change: '🔒',
+    device_change: '💻',
+    location_change: '📍',
   }
-  return iconMap[props.event.eventType] || Shield
+  return iconMap[props.event.eventType] || '🛡️'
 }
 
 const getEventTypeText = () => {

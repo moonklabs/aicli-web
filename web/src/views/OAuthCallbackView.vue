@@ -217,7 +217,7 @@ onMounted(() => {
   .success-title {
     font-size: $font-size-2xl;
     font-weight: $font-weight-semibold;
-    color: $success-color;
+    color: #18a058;
     margin: 0 0 $spacing-2 0;
   }
 
@@ -240,7 +240,7 @@ onMounted(() => {
   .error-title {
     font-size: $font-size-2xl;
     font-weight: $font-weight-semibold;
-    color: $error-color;
+    color: #e74c3c;
     margin: 0 0 $spacing-2 0;
   }
 

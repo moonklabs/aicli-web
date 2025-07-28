@@ -22,7 +22,7 @@
           <n-dropdown :options="actionOptions" @select="handleAction">
             <n-button quaternary circle size="small">
               <template #icon>
-                <n-icon><MoreHorizontal /></n-icon>
+                <span>⋯</span>
               </template>
             </n-button>
           </n-dropdown>
@@ -42,7 +42,7 @@
             size="small"
           >
             <template #icon>
-              <n-icon><Docker /></n-icon>
+              <span>🐳</span>
             </template>
             {{ workspace.containerStatus.text }}
           </n-tag>
@@ -50,7 +50,7 @@
           <!-- Git 브랜치 정보 -->
           <n-tag v-if="workspace.git?.branch" type="info" size="small">
             <template #icon>
-              <n-icon><GitBranch /></n-icon>
+              <span>🌿</span>
             </template>
             {{ workspace.git.branch }}
             <span v-if="workspace.git.hasChanges" class="git-changes">*</span>
@@ -63,7 +63,7 @@
             size="small"
           >
             <template #icon>
-              <n-icon><Terminal /></n-icon>
+              <span>💻</span>
             </template>
             Claude {{ workspace.claudeSession.status }}
           </n-tag>
@@ -121,20 +121,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import { NCard, NButton, NDropdown, NIcon, NTag, NSpace, NStatistic, NProgress } from 'naive-ui'
-import {
-  MoreHorizontal,
-  Docker,
-  GitBranch,
-  Terminal,
-  Play,
-  Pause,
-  Square,
-  Settings,
-  Trash2,
-  ExternalLink
-} from '@vicons/lucide'
 import type { Workspace } from '@/stores/workspace'
 
 interface Props {
@@ -158,19 +146,19 @@ const actionOptions = computed(() => [
   {
     label: '활성화',
     key: 'activate',
-    icon: () => h(NIcon, null, { default: () => h(Play) }),
+    icon: () => h('span', '▶️'),
     disabled: props.workspace.status === 'active'
   },
   {
     label: '일시정지',
     key: 'pause',
-    icon: () => h(NIcon, null, { default: () => h(Pause) }),
+    icon: () => h('span', '⏸️'),
     disabled: props.workspace.status !== 'active'
   },
   {
     label: '중지',
     key: 'stop',
-    icon: () => h(NIcon, null, { default: () => h(Square) }),
+    icon: () => h('span', '⏹️'),
     disabled: props.workspace.status === 'idle'
   },
   {
@@ -180,12 +168,12 @@ const actionOptions = computed(() => [
   {
     label: '설정',
     key: 'settings',
-    icon: () => h(NIcon, null, { default: () => h(Settings) })
+    icon: () => h('span', '⚙️')
   },
   {
     label: '브라우저에서 열기',
     key: 'open-browser',
-    icon: () => h(NIcon, null, { default: () => h(ExternalLink) })
+    icon: () => h('span', '🔗')
   },
   {
     type: 'divider',
@@ -194,7 +182,7 @@ const actionOptions = computed(() => [
   {
     label: '삭제',
     key: 'delete',
-    icon: () => h(NIcon, null, { default: () => h(Trash2) }),
+    icon: () => h('span', '🗑️'),
     props: {
       style: 'color: #d03050'
     }

@@ -7,7 +7,7 @@
       <!-- 헤더 -->
       <div class="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <Icon name="mdi:api" size="16" class="text-blue-500" />
+          <span class="text-blue-500">🔗</span>
           <h3 class="font-medium text-sm text-gray-900 dark:text-gray-100">API 디버거</h3>
           <div class="flex items-center gap-1">
             <!-- 네트워크 상태 표시 -->
@@ -35,7 +35,7 @@
             ]"
             title="자동 스크롤"
           >
-            <Icon name="mdi:arrow-down" size="12" />
+            <span>⬇️</span>
           </button>
 
           <!-- 일시정지/재개 -->
@@ -49,7 +49,7 @@
             ]"
             :title="isPaused ? '재개' : '일시정지'"
           >
-            <Icon :name="isPaused ? 'mdi:play' : 'mdi:pause'" size="12" />
+            <span>{{ isPaused ? '▶️' : '⏸️' }}</span>
           </button>
 
           <!-- 로그 지우기 -->
@@ -58,7 +58,7 @@
             class="p-1 rounded text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white transition-colors"
             title="로그 지우기"
           >
-            <Icon name="mdi:delete" size="12" />
+            <span>🗑️</span>
           </button>
 
           <!-- 최소화/닫기 -->
@@ -67,7 +67,7 @@
             class="p-1 rounded text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
             title="최소화"
           >
-            <Icon name="mdi:minus" size="12" />
+            <span>➖</span>
           </button>
 
           <button
@@ -75,7 +75,7 @@
             class="p-1 rounded text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white transition-colors"
             title="닫기"
           >
-            <Icon name="mdi:close" size="12" />
+            <span>✖️</span>
           </button>
         </div>
       </div>
@@ -133,7 +133,7 @@
         >
           <div class="flex items-center justify-between mb-1">
             <div class="flex items-center gap-2">
-              <Icon :name="getLogIcon(log)" size="12" />
+              <span>{{ getLogIcon(log) }}</span>
               <span class="font-medium">{{ log.method }}</span>
               <span class="text-gray-600 dark:text-gray-400">{{ getUrlPath(log.url) }}</span>
             </div>
@@ -176,7 +176,7 @@
             @click="closeDetails"
             class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
           >
-            <Icon name="mdi:close" size="16" />
+            <span>✖️</span>
           </button>
         </div>
 
@@ -193,14 +193,14 @@
       class="fixed bottom-4 left-4 z-50 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow-lg transition-colors"
       title="API 디버거 열기"
     >
-      <Icon name="mdi:api" size="16" />
+      <span>🔗</span>
     </button>
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { Icon } from '@iconify/vue'
+// import { Icon } from '@iconify/vue'
 import { useNetworkStatus } from '@/composables/useNetworkStatus'
 
 interface ApiLog {
@@ -285,10 +285,10 @@ const getLogStyles = (log: ApiLog): string => {
 
 // 로그 아이콘
 const getLogIcon = (log: ApiLog): string => {
-  if (!log.status) return 'mdi:loading'
-  if (log.status >= 200 && log.status < 300) return 'mdi:check'
-  if (log.status >= 400) return 'mdi:alert'
-  return 'mdi:information'
+  if (!log.status) return '⏳'
+  if (log.status >= 200 && log.status < 300) return '✅'
+  if (log.status >= 400) return '❌'
+  return 'ℹ️'
 }
 
 // 상태 코드 스타일

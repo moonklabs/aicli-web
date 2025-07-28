@@ -19,11 +19,11 @@
             <!-- 상단 헤더 -->
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
-                <Icon
-                  :name="getNotificationIcon(notification.type)"
+                <span
                   :class="getIconStyles(notification.type)"
-                  size="16"
-                />
+                >
+                  {{ getNotificationIcon(notification.type) }}
+                </span>
                 <span class="font-medium text-sm">
                   {{ getNotificationTitle(notification.type) }}
                 </span>
@@ -34,7 +34,7 @@
                 @click="removeNotification(notification.id)"
                 class="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <Icon name="x" size="14" />
+                <span>✕</span>
               </button>
             </div>
 
@@ -68,7 +68,7 @@
                   { 'opacity-50 cursor-not-allowed': notification.isRetrying }
                 ]"
               >
-                <Icon v-if="notification.isRetrying && action.label === '재시도'" name="loading" class="animate-spin mr-1" size="12" />
+                <span v-if="notification.isRetrying && action.label === '재시도'" class="animate-spin mr-1">⏳</span>
                 {{ action.label }}
               </button>
             </div>
@@ -107,7 +107,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Icon } from '@iconify/vue'
+// import { Icon } from '@iconify/vue'
 import { useErrorNotification } from '@/composables/useErrorNotification'
 
 const {
@@ -133,11 +133,11 @@ const getNotificationStyles = (type: string): string => {
 // 알림 타입별 아이콘
 const getNotificationIcon = (type: string): string => {
   const icons = {
-    error: 'mdi:alert-circle',
-    warning: 'mdi:alert',
-    info: 'mdi:information',
-    success: 'mdi:check-circle',
-    network: 'mdi:wifi-off',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️',
+    success: '✅',
+    network: '📶❌',
   }
   return icons[type as keyof typeof icons] || icons.error
 }

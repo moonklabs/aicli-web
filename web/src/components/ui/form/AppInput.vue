@@ -289,12 +289,17 @@ watch(() => props.type, (newType) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
 .app-input {
-  @apply relative inline-flex items-center w-full;
-  @apply bg-white border border-solid border-gray-300 rounded-md;
-  @apply transition-colors duration-200;
-  @apply focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20;
-  @apply focus-within:border-blue-500;
+  @include input-base;
+  @include mobile-input;
+  @include touch-target(40px);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
 
   // 비활성화 상태
   &--disabled {

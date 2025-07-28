@@ -25,7 +25,7 @@
           />
           <n-button @click="selectDirectory">
             <template #icon>
-              <n-icon><FolderOpen /></n-icon>
+              <span>📁</span>
             </template>
             찾아보기
           </n-button>
@@ -90,13 +90,13 @@
                   @click="removeEnvVar(index)"
                 >
                   <template #icon>
-                    <n-icon><X /></n-icon>
+                    <span>✕</span>
                   </template>
                 </n-button>
               </div>
               <n-button dashed block @click="addEnvVar">
                 <template #icon>
-                  <n-icon><Plus /></n-icon>
+                  <span>+</span>
                 </template>
                 환경 변수 추가
               </n-button>
@@ -132,13 +132,13 @@
                   @click="removePort(index)"
                 >
                   <template #icon>
-                    <n-icon><X /></n-icon>
+                    <span>✕</span>
                   </template>
                 </n-button>
               </div>
               <n-button dashed block @click="addPort">
                 <template #icon>
-                  <n-icon><Plus /></n-icon>
+                  <span>+</span>
                 </template>
                 포트 매핑 추가
               </n-button>
@@ -177,7 +177,7 @@ import {
   useMessage,
   type FormInst
 } from 'naive-ui'
-import { FolderOpen, Plus, X } from '@vicons/lucide'
+// import { FolderOpen, Plus, X } from '@vicons/lucide' // 이모지로 교체
 import { useWorkspaceStore } from '@/stores/workspace'
 import type { Workspace } from '@/stores/workspace'
 

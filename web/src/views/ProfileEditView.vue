@@ -266,7 +266,7 @@
 
         <!-- 알림 설정 탭 -->
         <n-tab-pane name="notifications" tab="알림 설정">
-          <NotificationSettings
+          <NotificationSettingsComponent
             :settings="notificationSettings"
             :loading="loadingNotifications"
             @update="handleNotificationUpdate"
@@ -329,7 +329,7 @@ import type {
 // 컴포넌트 import (아직 구현되지 않음)
 import ProfileImageUpload from '@/components/Profile/ProfileImageUpload.vue'
 import SecuritySettingsPanel from '@/components/Profile/SecuritySettingsPanel.vue'
-import NotificationSettings from '@/components/Profile/NotificationSettings.vue'
+import NotificationSettingsComponent from '@/components/Profile/NotificationSettings.vue'
 import PrivacySettingsPanel from '@/components/Profile/PrivacySettingsPanel.vue'
 import AccountDangerZone from '@/components/Profile/AccountDangerZone.vue'
 import EmailChangeModal from '@/components/Profile/EmailChangeModal.vue'
