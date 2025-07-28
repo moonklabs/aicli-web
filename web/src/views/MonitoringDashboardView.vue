@@ -282,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { NButton, NCard, NModal, NSelect, NSpace, NTabPane, NTabs } from 'naive-ui'
 import { usePerformanceMonitoring } from '@/composables/usePerformanceMonitoring'
 import { useErrorTracking } from '@/composables/useErrorTracking'
@@ -456,6 +456,7 @@ const resourceUsageData = computed(() => ({
   labels: ['메모리', 'CPU', '네트워크', '스토리지'],
   datasets: [
     {
+      label: '리소스 사용량',
       data: [65, 25, 15, 35],
       backgroundColor: ['#f56565', '#ed8936', '#48bb78', '#4299e1'],
     },

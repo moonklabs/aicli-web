@@ -19,6 +19,8 @@ export interface Workspace {
     hasChanges: boolean
     remoteUrl?: string
   }
+  gitBranch?: string  // 추가: 호환성을 위해
+  gitRemote?: string  // 추가: 호환성을 위해
 
   // Claude 세션 정보
   claudeSession?: {
@@ -46,6 +48,9 @@ export interface Workspace {
     text: string
     containerId?: string
   }
+
+  // 추가 필드
+  lastActivity?: string  // 추가: 마지막 활동 시간
 
   // 파일 트리
   fileTree?: FileTreeNode

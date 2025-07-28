@@ -356,12 +356,7 @@ onMounted(async () => {
   ])
 
   // WebSocket 연결
-  connect({
-    onMessage: handleWebSocketMessage,
-    onError: (error: any) => {
-      console.error('WebSocket 에러:', error)
-    },
-  })
+  connect()
 })
 
 // 탭 변경 시 데이터 로드

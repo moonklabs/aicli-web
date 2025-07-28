@@ -409,6 +409,13 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 사용자 업데이트 액션
+  const updateUser = (updates: Partial<User>) => {
+    if (user.value) {
+      user.value = { ...user.value, ...updates }
+    }
+  }
+
   return {
     // 상태
     user,
@@ -452,6 +459,7 @@ export const useUserStore = defineStore('user', () => {
     setError,
     refreshToken,
     initializeAuth,
+    updateUser,
 
     // OAuth 관련 액션
     setOAuthProviders,

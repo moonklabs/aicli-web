@@ -47,7 +47,7 @@ export interface ButtonProps {
   circle?: boolean;
   onClick?: (event: Event) => void;
   class?: string;
-  style?: string | Record<string, any>;
+  style?: string | Record<string, unknown>;
 }
 
 // 입력 컴포넌트 기본 속성
@@ -142,13 +142,13 @@ export interface TableColumn {
   filterable?: boolean;
   fixed?: 'left' | 'right';
   ellipsis?: boolean;
-  render?: (row: any, index: number) => any;
-  renderHeader?: () => any;
+  render?: (row: unknown, index: number) => unknown;
+  renderHeader?: () => unknown;
 }
 
 // 데이터 테이블 속성
 export interface DataTableProps {
-  data?: any[];
+  data?: unknown[];
   columns?: TableColumn[];
   loading?: boolean;
   pagination?: boolean;
@@ -159,13 +159,13 @@ export interface DataTableProps {
   bordered?: boolean;
   singleLine?: boolean;
   size?: Size;
-  rowKey?: string | ((row: any) => string | number);
-  rowClassName?: string | ((row: any, index: number) => string);
+  rowKey?: string | ((row: unknown) => string | number);
+  rowClassName?: string | ((row: unknown, index: number) => string);
   onUpdateCheckedRowKeys?: (keys: Array<string | number>) => void;
   onUpdatePage?: (page: number) => void;
   onUpdatePageSize?: (pageSize: number) => void;
-  onUpdateSorter?: (sorter: any) => void;
-  onUpdateFilters?: (filters: any) => void;
+  onUpdateSorter?: (sorter: TableSorter) => void;
+  onUpdateFilters?: (filters: TableFilter[]) => void;
 }
 
 // 테마 구성 타입
@@ -252,12 +252,12 @@ export interface FocusProps {
 
 // 반응형 속성
 export interface ResponsiveProps {
-  xs?: any;
-  sm?: any;
-  md?: any;
-  lg?: any;
-  xl?: any;
-  xxl?: any;
+  xs?: unknown;
+  sm?: unknown;
+  md?: unknown;
+  lg?: unknown;
+  xl?: unknown;
+  xxl?: unknown;
 }
 
 // 애니메이션 속성
@@ -270,7 +270,7 @@ export interface AnimationProps {
 // 데이터 테이블 고급 필터 타입
 export interface TableFilter {
   key: string;
-  value: any;
+  value: unknown;
   operator?: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' | 'in' | 'notIn';
   type?: 'text' | 'number' | 'date' | 'select' | 'boolean';
 }
@@ -279,7 +279,7 @@ export interface TableFilter {
 export interface TableSorter {
   key: string;
   order: 'asc' | 'desc';
-  sorter?: 'default' | 'alphanumeric' | 'numeric' | 'date' | ((a: any, b: any) => number);
+  sorter?: 'default' | 'alphanumeric' | 'numeric' | 'date' | ((a: unknown, b: unknown) => number);
 }
 
 // 가상 스크롤링 설정
@@ -310,17 +310,17 @@ export interface AdvancedTableColumn extends TableColumn {
   searchable?: boolean;
   filter?: {
     type: 'text' | 'number' | 'date' | 'select' | 'multiSelect' | 'dateRange';
-    options?: Array<{ label: string; value: any }>;
+    options?: Array<{ label: string; value: unknown }>;
     placeholder?: string;
     multiple?: boolean;
   };
   sort?: {
-    compare?: (a: any, b: any) => number;
+    compare?: (a: unknown, b: unknown) => number;
     multiple?: boolean;
   };
   export?: {
     exclude?: boolean;
-    formatter?: (value: any) => string;
+    formatter?: (value: unknown) => string;
   };
 }
 
@@ -355,19 +355,19 @@ export interface AdvancedDataTableProps extends Omit<DataTableProps, 'columns'> 
     throttleMs?: number;
     lazyLoading?: boolean;
   };
-  onRowClick?: (row: any, index: number, event: Event) => void;
-  onRowDoubleClick?: (row: any, index: number, event: Event) => void;
-  onCellClick?: (cell: any, row: any, column: AdvancedTableColumn, event: Event) => void;
+  onRowClick?: (row: unknown, index: number, event: Event) => void;
+  onRowDoubleClick?: (row: unknown, index: number, event: Event) => void;
+  onCellClick?: (cell: unknown, row: unknown, column: AdvancedTableColumn, event: Event) => void;
 }
 
 // 차트 데이터 포인트 타입
 export interface ChartDataPoint {
-  x?: any;
-  y?: any;
+  x?: unknown;
+  y?: unknown;
   label?: string;
   value?: number;
   color?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // 차트 데이터셋 타입
@@ -381,7 +381,7 @@ export interface ChartDataset {
   fill?: boolean;
   pointRadius?: number;
   pointHoverRadius?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // 차트 데이터 구조
@@ -393,19 +393,19 @@ export interface ChartData {
 // 차트 기본 속성
 export interface BaseChartProps extends BaseComponentProps {
   data: ChartData;
-  options?: any;
-  plugins?: any[];
+  options?: Record<string, unknown>;
+  plugins?: unknown[];
   width?: number;
   height?: number;
   responsive?: boolean;
   maintainAspectRatio?: boolean;
   redraw?: boolean;
   fallbackContent?: string;
-  onChartCreate?: (chart: any) => void;
-  onChartUpdate?: (chart: any) => void;
-  onChartDestroy?: (chart: any) => void;
-  onClick?: (event: Event, elements: any[]) => void;
-  onHover?: (event: Event, elements: any[]) => void;
+  onChartCreate?: (chart: unknown) => void;
+  onChartUpdate?: (chart: unknown) => void;
+  onChartDestroy?: (chart: unknown) => void;
+  onClick?: (event: Event, elements: unknown[]) => void;
+  onHover?: (event: Event, elements: unknown[]) => void;
 }
 
 // 라인 차트 속성
@@ -474,7 +474,7 @@ export interface RealTimeChartConfig {
   interval?: number;
   maxDataPoints?: number;
   animationDuration?: number;
-  onDataUpdate?: (newData: any) => void;
+  onDataUpdate?: (newData: unknown) => void;
 }
 
 // 차트 내보내기 설정
@@ -491,17 +491,17 @@ export interface ChartZoomConfig {
   enabled?: boolean;
   mode?: 'x' | 'y' | 'xy';
   rangeMin?: {
-    x?: any;
-    y?: any;
+    x?: unknown;
+    y?: unknown;
   };
   rangeMax?: {
-    x?: any;
-    y?: any;
+    x?: unknown;
+    y?: unknown;
   };
   speed?: number;
   threshold?: number;
-  onZoomComplete?: (context: any) => void;
-  onPanComplete?: (context: any) => void;
+  onZoomComplete?: (context: unknown) => void;
+  onPanComplete?: (context: unknown) => void;
 }
 
 // 차트-테이블 연동 설정
@@ -510,7 +510,7 @@ export interface ChartTableIntegration {
   syncSelection?: boolean;
   syncFiltering?: boolean;
   highlightOnHover?: boolean;
-  onSelectionSync?: (selection: any) => void;
+  onSelectionSync?: (selection: unknown) => void;
   onFilterSync?: (filters: TableFilter[]) => void;
 }
 
@@ -535,6 +535,6 @@ export interface AdvancedChartProps extends BaseChartProps {
 export interface BaseComponentProps extends AccessibilityProps, KeyboardEventProps, FocusProps {
   id?: string;
   class?: string | string[] | Record<string, boolean>;
-  style?: string | Record<string, any>;
+  style?: string | Record<string, unknown>;
   'data-testid'?: string;
 }

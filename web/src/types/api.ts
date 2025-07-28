@@ -1,6 +1,6 @@
 // API 공통 타입 정의
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data: T
   message?: string
@@ -8,7 +8,7 @@ export interface ApiResponse<T = any> {
   timestamp: string
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   items: T[]
   total: number
   page: number
@@ -21,7 +21,7 @@ export interface PaginatedResponse<T = any> {
 export interface ApiError {
   code: string
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   timestamp: string
 }
 
@@ -195,7 +195,7 @@ export interface TaskInfo {
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
   progress: number
   message?: string
-  result?: any
+  result?: unknown
   error?: string
   createdAt: string
   updatedAt: string
@@ -314,7 +314,7 @@ export interface SessionSecurityEvent {
   eventType: 'login' | 'logout' | 'suspicious_activity' | 'password_change' | 'device_change' | 'location_change'
   severity: 'low' | 'medium' | 'high' | 'critical'
   description: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   ipAddress: string
   userAgent: string
   createdAt: string
@@ -365,7 +365,7 @@ export interface SessionStatsResponse {
 // WebSocket 메시지 타입
 export interface WebSocketMessage {
   type: string
-  payload: any
+  payload: unknown
   timestamp: string
 }
 
@@ -577,7 +577,7 @@ export interface AuditLog {
     city?: string
     timezone?: string
   }
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   severity: 'low' | 'medium' | 'high' | 'critical'
   status: 'success' | 'failure' | 'blocked'
   createdAt: string
@@ -646,7 +646,7 @@ export interface SuspiciousActivity {
   description: string
   riskScore: number // 0-100
   indicators: string[]
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   ipAddress: string
   userAgent: string
   location?: {

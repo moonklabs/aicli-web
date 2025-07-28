@@ -19,7 +19,7 @@
 
       <div class="header-actions">
         <NButton
-          v-if="workspace?.status === 'inactive'"
+          v-if="workspace?.status === 'idle'"
           type="primary"
           @click="startWorkspace"
           :loading="isLoading"
@@ -206,12 +206,13 @@ const getStatusType = (status: Workspace['status']) => {
   switch (status) {
     case 'active':
       return 'success'
-    case 'inactive':
+    case 'idle':
       return 'default'
     case 'error':
       return 'error'
     case 'creating':
     case 'deleting':
+    case 'loading':
       return 'warning'
     default:
       return 'default'
@@ -222,14 +223,16 @@ const getStatusText = (status: Workspace['status']) => {
   switch (status) {
     case 'active':
       return '활성'
-    case 'inactive':
-      return '비활성'
+    case 'idle':
+      return '유휴'
     case 'error':
       return '오류'
     case 'creating':
       return '생성 중'
     case 'deleting':
       return '삭제 중'
+    case 'loading':
+      return '로딩 중'
     default:
       return '알 수 없음'
   }
@@ -271,7 +274,7 @@ const startWorkspace = async () => {
   try {
     await workspaceStore.startWorkspace(workspace.value.id)
     message.success('워크스페이스가 시작되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('워크스페이스 시작에 실패했습니다')
   }
 }
@@ -282,7 +285,7 @@ const stopWorkspace = async () => {
   try {
     await workspaceStore.stopWorkspace(workspace.value.id)
     message.success('워크스페이스가 중지되었습니다')
-  } catch (_error) {
+  } catch {
     message.error('워크스페이스 중지에 실패했습니다')
   }
 }
@@ -294,7 +297,7 @@ const deleteWorkspace = async () => {
     await workspaceStore.deleteWorkspace(workspace.value.id)
     message.success('워크스페이스가 삭제되었습니다')
     router.push({ name: 'workspaces' })
-  } catch (_error) {
+  } catch {
     message.error('워크스페이스 삭제에 실패했습니다')
   }
 }
@@ -308,7 +311,7 @@ const createTerminalSession = async () => {
       message.success('터미널 세션이 생성되었습니다')
       openTerminalSession(session.id)
     }
-  } catch (_error) {
+  } catch {
     message.error('터미널 세션 생성에 실패했습니다')
   }
 }
