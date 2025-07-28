@@ -60,6 +60,7 @@ lerna-debug.log*
 .pnpm-debug.log*
 
 # 웹 빌드 산출물
+web/dev-dist
 web/dist/
 web/build/
 web/coverage/
