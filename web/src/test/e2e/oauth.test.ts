@@ -3,7 +3,7 @@
  * OAuth 소셜 로그인 E2E 테스트
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia } from 'pinia'
 import { useUserStore } from '@/stores/user'
 import { authApi } from '@/api/services/auth'
@@ -13,7 +13,7 @@ const mockOAuthResponses = {
   google: {
     authUrl: {
       authUrl: 'https://accounts.google.com/oauth/authorize?client_id=test&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Foauth%2Fcallback%2Fgoogle&response_type=code&scope=openid%20profile%20email&state=random-state-123&code_challenge=PKCEcodeChallenge&code_challenge_method=S256',
-      state: 'random-state-123'
+      state: 'random-state-123',
     },
     callback: {
       access_token: 'google-access-token',
@@ -26,8 +26,8 @@ const mockOAuthResponses = {
         email: 'user@gmail.com',
         role: 'user',
         provider: 'google',
-        providerId: 'google-123456789'
-      }
+        providerId: 'google-123456789',
+      },
     },
     userInfo: {
       id: 'google-123456789',
@@ -36,13 +36,13 @@ const mockOAuthResponses = {
       picture: 'https://lh3.googleusercontent.com/avatar.jpg',
       given_name: 'Google',
       family_name: 'User',
-      locale: 'ko'
-    }
+      locale: 'ko',
+    },
   },
   github: {
     authUrl: {
       authUrl: 'https://github.com/login/oauth/authorize?client_id=test&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Foauth%2Fcallback%2Fgithub&scope=user%3Aemail&state=random-state-456&code_challenge=PKCEcodeChallenge&code_challenge_method=S256',
-      state: 'random-state-456'
+      state: 'random-state-456',
     },
     callback: {
       access_token: 'github-access-token',
@@ -55,8 +55,8 @@ const mockOAuthResponses = {
         email: 'user@example.com',
         role: 'user',
         provider: 'github',
-        providerId: 'github-987654321'
-      }
+        providerId: 'github-987654321',
+      },
     },
     userInfo: {
       id: 987654321,
@@ -65,9 +65,9 @@ const mockOAuthResponses = {
       name: 'GitHub User',
       avatar_url: 'https://avatars.githubusercontent.com/u/987654321',
       bio: 'Developer',
-      location: 'Seoul, Korea'
-    }
-  }
+      location: 'Seoul, Korea',
+    },
+  },
 }
 
 // OAuth 에러 응답
@@ -75,18 +75,18 @@ const mockOAuthErrors = {
   accessDenied: {
     error: 'access_denied',
     error_description: 'The user denied the request',
-    state: 'random-state-123'
+    state: 'random-state-123',
   },
   invalidState: {
     error: 'invalid_request',
     error_description: 'The state parameter is invalid',
-    state: 'invalid-state'
+    state: 'invalid-state',
   },
   serverError: {
     error: 'server_error',
     error_description: 'The authorization server encountered an error',
-    state: 'random-state-123'
-  }
+    state: 'random-state-123',
+  },
 }
 
 describe('OAuth Social Login E2E Tests', () => {
@@ -95,20 +95,20 @@ describe('OAuth Social Login E2E Tests', () => {
   beforeEach(() => {
     const pinia = createPinia()
     userStore = useUserStore(pinia)
-    
+
     // API Mock 설정
     vi.clearAllMocks()
-    
+
     // localStorage 초기화
     localStorage.clear()
     sessionStorage.clear()
-    
+
     // window.open Mock 설정
     vi.spyOn(window, 'open').mockImplementation(() => {
       const mockPopup = {
         closed: false,
         close: vi.fn(),
-        location: { href: '' }
+        location: { href: '' },
       }
       return mockPopup as any
     })
@@ -122,17 +122,17 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should generate Google OAuth authorization URL with PKCE', async () => {
       // Google OAuth URL 생성 API Mock
       const mockGetOAuthUrl = vi.spyOn(authApi, 'getOAuthAuthUrl').mockResolvedValue(mockOAuthResponses.google.authUrl)
-      
+
       // OAuth URL 요청
       const request = {
         provider: 'google' as const,
-        state: 'random-state-123'
+        state: 'random-state-123',
       }
       const response = await authApi.getOAuthAuthUrl(request)
-      
+
       // API 호출 확인
       expect(mockGetOAuthUrl).toHaveBeenCalledWith(request)
-      
+
       // URL 검증
       expect(response.authUrl).toContain('accounts.google.com/oauth/authorize')
       expect(response.authUrl).toContain('client_id=test')
@@ -145,18 +145,18 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should handle Google OAuth callback successfully', async () => {
       // Google OAuth 콜백 API Mock
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockResolvedValue(mockOAuthResponses.google.callback)
-      
+
       // OAuth 콜백 요청
       const request = {
         provider: 'google' as const,
         code: 'google-auth-code-123',
-        state: 'random-state-123'
+        state: 'random-state-123',
       }
       const response = await authApi.oAuthLogin(request)
-      
+
       // API 호출 확인
       expect(mockOAuthLogin).toHaveBeenCalledWith(request)
-      
+
       // 응답 검증
       expect(response.access_token).toBe('google-access-token')
       expect(response.user.email).toBe('user@gmail.com')
@@ -167,20 +167,20 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should handle Google user profile synchronization', async () => {
       // 사용자 정보 동기화 테스트
       const googleUser = mockOAuthResponses.google.callback.user
-      
+
       // Store에 OAuth 사용자 설정
       userStore.setUser(googleUser)
       userStore.setAuth({
         token: 'google-access-token',
         refreshToken: 'google-refresh-token',
-        expiresAt: Date.now() + 3600000
+        expiresAt: Date.now() + 3600000,
       })
-      
+
       // 상태 확인
       expect(userStore.isAuthenticated).toBe(true)
       expect(userStore.user?.email).toBe('user@gmail.com')
       expect(userStore.user?.provider).toBe('google')
-      
+
       // 프로필 정보 확인
       expect(userStore.user?.username).toBe('googleuser')
       expect(userStore.user?.role).toBe('user')
@@ -191,17 +191,17 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should generate GitHub OAuth authorization URL with PKCE', async () => {
       // GitHub OAuth URL 생성 API Mock
       const mockGetOAuthUrl = vi.spyOn(authApi, 'getOAuthAuthUrl').mockResolvedValue(mockOAuthResponses.github.authUrl)
-      
+
       // OAuth URL 요청
       const request = {
         provider: 'github' as const,
-        state: 'random-state-456'
+        state: 'random-state-456',
       }
       const response = await authApi.getOAuthAuthUrl(request)
-      
+
       // API 호출 확인
       expect(mockGetOAuthUrl).toHaveBeenCalledWith(request)
-      
+
       // URL 검증
       expect(response.authUrl).toContain('github.com/login/oauth/authorize')
       expect(response.authUrl).toContain('client_id=test')
@@ -214,18 +214,18 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should handle GitHub OAuth callback successfully', async () => {
       // GitHub OAuth 콜백 API Mock
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockResolvedValue(mockOAuthResponses.github.callback)
-      
+
       // OAuth 콜백 요청
       const request = {
         provider: 'github' as const,
         code: 'github-auth-code-456',
-        state: 'random-state-456'
+        state: 'random-state-456',
       }
       const response = await authApi.oAuthLogin(request)
-      
+
       // API 호출 확인
       expect(mockOAuthLogin).toHaveBeenCalledWith(request)
-      
+
       // 응답 검증
       expect(response.access_token).toBe('github-access-token')
       expect(response.user.email).toBe('user@example.com')
@@ -239,14 +239,14 @@ describe('OAuth Social Login E2E Tests', () => {
       // PKCE 테스트용 Mock
       const mockGetOAuthUrl = vi.spyOn(authApi, 'getOAuthAuthUrl').mockResolvedValue({
         authUrl: 'https://accounts.google.com/oauth/authorize?code_challenge=abc123&code_challenge_method=S256',
-        state: 'test-state'
+        state: 'test-state',
       })
-      
+
       const response = await authApi.getOAuthAuthUrl({
         provider: 'google',
-        state: 'test-state'
+        state: 'test-state',
       })
-      
+
       // PKCE 파라미터 확인
       expect(response.authUrl).toContain('code_challenge=')
       expect(response.authUrl).toContain('code_challenge_method=S256')
@@ -260,19 +260,19 @@ describe('OAuth Social Login E2E Tests', () => {
           data: {
             error: {
               code: 'INVALID_PKCE_VERIFIER',
-              message: 'PKCE code verifier is invalid'
-            }
-          }
-        }
+              message: 'PKCE code verifier is invalid',
+            },
+          },
+        },
       }
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockRejectedValue(pkceError)
-      
+
       try {
         await authApi.oAuthLogin({
           provider: 'google',
           code: 'invalid-code',
-          state: 'valid-state'
+          state: 'valid-state',
         })
         expect.fail('Should have thrown PKCE error')
       } catch (error: any) {
@@ -286,19 +286,19 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should validate OAuth state parameter', async () => {
       // 유효한 상태 매개변수 테스트
       const validState = 'valid-state-123'
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockResolvedValue(mockOAuthResponses.google.callback)
-      
+
       await authApi.oAuthLogin({
         provider: 'google',
         code: 'auth-code',
-        state: validState
+        state: validState,
       })
-      
+
       expect(mockOAuthLogin).toHaveBeenCalledWith({
         provider: 'google',
         code: 'auth-code',
-        state: validState
+        state: validState,
       })
     })
 
@@ -310,19 +310,19 @@ describe('OAuth Social Login E2E Tests', () => {
           data: {
             error: {
               code: 'INVALID_STATE',
-              message: 'OAuth state parameter is invalid'
-            }
-          }
-        }
+              message: 'OAuth state parameter is invalid',
+            },
+          },
+        },
       }
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockRejectedValue(stateError)
-      
+
       try {
         await authApi.oAuthLogin({
           provider: 'google',
           code: 'auth-code',
-          state: 'invalid-state'
+          state: 'invalid-state',
         })
         expect.fail('Should have thrown state error')
       } catch (error: any) {
@@ -339,35 +339,35 @@ describe('OAuth Social Login E2E Tests', () => {
         id: 'existing-user-123',
         username: 'existinguser',
         email: 'existing@example.com',
-        role: 'user'
+        role: 'user',
       })
-      
+
       // OAuth 계정 연결 API Mock
       const mockLinkAccount = vi.spyOn(authApi, 'linkOAuthAccount').mockResolvedValue()
-      
+
       await authApi.linkOAuthAccount({
         provider: 'google',
         code: 'auth-code',
-        state: 'link-state'
+        state: 'link-state',
       })
-      
+
       expect(mockLinkAccount).toHaveBeenCalledWith({
         provider: 'google',
         code: 'auth-code',
-        state: 'link-state'
+        state: 'link-state',
       })
     })
 
     it('should unlink OAuth account from user', async () => {
       // OAuth 계정 연결 해제 API Mock
       const mockUnlinkAccount = vi.spyOn(authApi, 'unlinkOAuthAccount').mockResolvedValue()
-      
+
       await authApi.unlinkOAuthAccount({
-        provider: 'google'
+        provider: 'google',
       })
-      
+
       expect(mockUnlinkAccount).toHaveBeenCalledWith({
-        provider: 'google'
+        provider: 'google',
       })
     })
 
@@ -379,21 +379,21 @@ describe('OAuth Social Login E2E Tests', () => {
           providerId: 'google-123456789',
           email: 'user@gmail.com',
           name: 'Google User',
-          linkedAt: new Date().toISOString()
+          linkedAt: new Date().toISOString(),
         },
         {
           provider: 'github',
           providerId: 'github-987654321',
           email: 'user@example.com',
           name: 'GitHub User',
-          linkedAt: new Date().toISOString()
-        }
+          linkedAt: new Date().toISOString(),
+        },
       ]
-      
+
       const mockGetLinkedAccounts = vi.spyOn(authApi, 'getLinkedOAuthAccounts').mockResolvedValue(mockLinkedAccounts)
-      
+
       const accounts = await authApi.getLinkedOAuthAccounts()
-      
+
       expect(mockGetLinkedAccounts).toHaveBeenCalled()
       expect(accounts).toHaveLength(2)
       expect(accounts[0].provider).toBe('google')
@@ -407,17 +407,17 @@ describe('OAuth Social Login E2E Tests', () => {
       const accessDeniedError = {
         response: {
           status: 400,
-          data: mockOAuthErrors.accessDenied
-        }
+          data: mockOAuthErrors.accessDenied,
+        },
       }
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockRejectedValue(accessDeniedError)
-      
+
       try {
         await authApi.oAuthLogin({
           provider: 'google',
           code: '',
-          state: 'random-state-123'
+          state: 'random-state-123',
         })
         expect.fail('Should have thrown access denied error')
       } catch (error: any) {
@@ -431,17 +431,17 @@ describe('OAuth Social Login E2E Tests', () => {
       const serverError = {
         response: {
           status: 500,
-          data: mockOAuthErrors.serverError
-        }
+          data: mockOAuthErrors.serverError,
+        },
       }
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockRejectedValue(serverError)
-      
+
       try {
         await authApi.oAuthLogin({
           provider: 'google',
           code: 'auth-code',
-          state: 'random-state-123'
+          state: 'random-state-123',
         })
         expect.fail('Should have thrown server error')
       } catch (error: any) {
@@ -453,14 +453,14 @@ describe('OAuth Social Login E2E Tests', () => {
     it('should handle network timeout during OAuth', async () => {
       // 네트워크 타임아웃 시뮬레이션
       const timeoutError = new Error('Network timeout')
-      
+
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockRejectedValue(timeoutError)
-      
+
       try {
         await authApi.oAuthLogin({
           provider: 'google',
           code: 'auth-code',
-          state: 'valid-state'
+          state: 'valid-state',
         })
         expect.fail('Should have thrown timeout error')
       } catch (error) {
@@ -477,17 +477,17 @@ describe('OAuth Social Login E2E Tests', () => {
       const oauthAuth = {
         token: mockOAuthResponses.google.callback.access_token,
         refreshToken: mockOAuthResponses.google.callback.refresh_token,
-        expiresAt: Date.now() + mockOAuthResponses.google.callback.expires_in * 1000
+        expiresAt: Date.now() + mockOAuthResponses.google.callback.expires_in * 1000,
       }
-      
+
       userStore.setUser(oauthUser)
       userStore.setAuth(oauthAuth)
-      
+
       // 토큰 저장 확인
       expect(userStore.auth?.token).toBe('google-access-token')
       expect(userStore.auth?.refreshToken).toBe('google-refresh-token')
       expect(userStore.auth?.expiresAt).toBeGreaterThan(Date.now())
-      
+
       // localStorage 저장 확인
       const storedAuth = JSON.parse(localStorage.getItem('auth') || '{}')
       expect(storedAuth.token).toBe('google-access-token')
@@ -498,22 +498,22 @@ describe('OAuth Social Login E2E Tests', () => {
       userStore.setAuth({
         token: 'expired-oauth-token',
         refreshToken: 'oauth-refresh-token',
-        expiresAt: Date.now() - 1000
+        expiresAt: Date.now() - 1000,
       })
-      
+
       // 토큰 갱신 API Mock
       const mockRefreshToken = vi.spyOn(authApi, 'refreshToken').mockResolvedValue({
         access_token: 'new-oauth-token',
         refresh_token: 'new-oauth-refresh-token',
         token_type: 'Bearer',
-        expires_in: 3600
+        expires_in: 3600,
       })
-      
+
       // 토큰 갱신 실행
       const refreshResult = await authApi.refreshToken({
-        refresh_token: 'oauth-refresh-token'
+        refresh_token: 'oauth-refresh-token',
       })
-      
+
       expect(mockRefreshToken).toHaveBeenCalled()
       expect(refreshResult.access_token).toBe('new-oauth-token')
     })
@@ -527,20 +527,20 @@ describe('OAuth Social Login E2E Tests', () => {
           name: 'Google',
           enabled: true,
           clientId: 'google-client-id',
-          scopes: ['openid', 'profile', 'email']
+          scopes: ['openid', 'profile', 'email'],
         },
         github: {
           name: 'GitHub',
           enabled: true,
           clientId: 'github-client-id',
-          scopes: ['user:email']
-        }
+          scopes: ['user:email'],
+        },
       }
-      
+
       const mockGetProviders = vi.spyOn(authApi, 'getOAuthProviders').mockResolvedValue(mockProviders)
-      
+
       const providers = await authApi.getOAuthProviders()
-      
+
       expect(mockGetProviders).toHaveBeenCalled()
       expect(providers.google.enabled).toBe(true)
       expect(providers.github.enabled).toBe(true)
@@ -552,26 +552,26 @@ describe('OAuth Social Login E2E Tests', () => {
   describe('Performance Tests', () => {
     it('should handle multiple concurrent OAuth requests', async () => {
       const mockOAuthLogin = vi.spyOn(authApi, 'oAuthLogin').mockResolvedValue(mockOAuthResponses.google.callback)
-      
+
       const startTime = Date.now()
-      
+
       // 3개의 동시 OAuth 요청
-      const promises = Array.from({ length: 3 }, (_, i) => 
+      const promises = Array.from({ length: 3 }, (_, i) =>
         authApi.oAuthLogin({
           provider: 'google',
           code: `auth-code-${i}`,
-          state: `state-${i}`
-        })
+          state: `state-${i}`,
+        }),
       )
-      
+
       const results = await Promise.all(promises)
       const endTime = Date.now()
-      
+
       // 모든 요청이 성공해야 함
       results.forEach(result => {
         expect(result.access_token).toBeTruthy()
       })
-      
+
       // 3개 요청이 3초 내에 완료되어야 함
       expect(endTime - startTime).toBeLessThan(3000)
     })

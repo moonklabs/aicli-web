@@ -3,7 +3,7 @@
  * 백엔드-프론트엔드 인증 통합 E2E 테스트
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia } from 'pinia'
@@ -21,7 +21,7 @@ const TEST_API_BASE_URL = process.env.VITE_TEST_API_URL || 'http://localhost:808
 const testApiClient = axios.create({
   baseURL: TEST_API_BASE_URL,
   timeout: 10000,
-  withCredentials: true
+  withCredentials: true,
 })
 
 // 테스트 데이터
@@ -30,20 +30,20 @@ const testUsers = {
     username: 'test-admin',
     email: 'admin@test.com',
     password: 'TestPassword123!',
-    role: 'admin'
+    role: 'admin',
   },
   user: {
     username: 'test-user',
-    email: 'user@test.com', 
+    email: 'user@test.com',
     password: 'TestPassword123!',
-    role: 'user'
+    role: 'user',
   },
   viewer: {
     username: 'test-viewer',
     email: 'viewer@test.com',
     password: 'TestPassword123!',
-    role: 'viewer'
-  }
+    role: 'viewer',
+  },
 }
 
 // Router 설정
@@ -52,8 +52,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'Home', component: { template: '<div>Home</div>' } },
     { path: '/login', name: 'Login', component: LoginView },
-    { path: '/dashboard', name: 'Dashboard', component: DashboardView }
-  ]
+    { path: '/dashboard', name: 'Dashboard', component: DashboardView },
+  ],
 })
 
 // 테스트 유틸리티
@@ -101,7 +101,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
   beforeEach(async () => {
     // 백엔드 서버 상태 확인
     backendAvailable = await checkBackendHealth()
-    
+
     if (!backendAvailable) {
       console.warn('⚠️ Backend server not available, skipping integration tests')
       return
@@ -109,7 +109,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
 
     // 테스트 사용자 생성
     await Promise.all(
-      Object.values(testUsers).map(user => createTestUser(user))
+      Object.values(testUsers).map(user => createTestUser(user)),
     )
 
     // localStorage 초기화
@@ -133,11 +133,11 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       }
 
       const { pinia } = createTestApp()
-      
+
       const wrapper = mount(LoginView, {
         global: {
-          plugins: [pinia, router]
-        }
+          plugins: [pinia, router],
+        },
       })
 
       const userStore = useUserStore()
@@ -188,27 +188,27 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // Admin 사용자로 로그인
       const adminLoginResponse = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
-        password: testUsers.admin.password
+        password: testUsers.admin.password,
       })
 
       userStore.setAuth({
         token: adminLoginResponse.data.access_token,
         refreshToken: adminLoginResponse.data.refresh_token,
-        expiresAt: Date.now() + adminLoginResponse.data.expires_in * 1000
+        expiresAt: Date.now() + adminLoginResponse.data.expires_in * 1000,
       })
 
       userStore.setUser({
         id: adminLoginResponse.data.user.id,
         username: adminLoginResponse.data.user.username,
         email: adminLoginResponse.data.user.email,
-        role: adminLoginResponse.data.user.role
+        role: adminLoginResponse.data.user.role,
       })
 
       // Admin 권한 API 호출 테스트
       const adminApiResponse = await testApiClient.get('/api/v1/admin/users', {
         headers: {
-          Authorization: `Bearer ${adminLoginResponse.data.access_token}`
-        }
+          Authorization: `Bearer ${adminLoginResponse.data.access_token}`,
+        },
       })
 
       expect(adminApiResponse.status).toBe(200)
@@ -217,15 +217,15 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // 일반 사용자로 로그인
       const userLoginResponse = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.user.username,
-        password: testUsers.user.password
+        password: testUsers.user.password,
       })
 
       // 일반 사용자로 Admin API 접근 시도 (실패해야 함)
       try {
         await testApiClient.get('/api/v1/admin/users', {
           headers: {
-            Authorization: `Bearer ${userLoginResponse.data.access_token}`
-          }
+            Authorization: `Bearer ${userLoginResponse.data.access_token}`,
+          },
         })
         expect.fail('Admin API should be forbidden for regular users')
       } catch (error) {
@@ -242,7 +242,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // 로그인
       const loginResponse = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
-        password: testUsers.admin.password
+        password: testUsers.admin.password,
       })
 
       const originalToken = loginResponse.data.access_token
@@ -250,13 +250,13 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
 
       userStore.setAuth({
         token: originalToken,
-        refreshToken: refreshToken,
-        expiresAt: Date.now() + loginResponse.data.expires_in * 1000
+        refreshToken,
+        expiresAt: Date.now() + loginResponse.data.expires_in * 1000,
       })
 
       // 토큰 갱신
       const refreshResponse = await testApiClient.post('/api/v1/auth/refresh', {
-        refresh_token: refreshToken
+        refresh_token: refreshToken,
       })
 
       expect(refreshResponse.status).toBe(200)
@@ -266,8 +266,8 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // 새 토큰으로 API 호출 테스트
       const apiResponse = await testApiClient.get('/api/v1/auth/profile', {
         headers: {
-          Authorization: `Bearer ${refreshResponse.data.access_token}`
-        }
+          Authorization: `Bearer ${refreshResponse.data.access_token}`,
+        },
       })
 
       expect(apiResponse.status).toBe(200)
@@ -283,11 +283,11 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       try {
         await testApiClient.post('/api/v1/auth/login', {
           username: testUsers.admin.username,
-          password: testUsers.admin.password
+          password: testUsers.admin.password,
         }, {
           headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
+            'X-Requested-With': 'XMLHttpRequest',
+          },
         })
       } catch (error) {
         // CSRF 보호가 활성화된 경우 403 또는 400 에러 예상
@@ -303,7 +303,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       const loginResponse = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
         password: testUsers.admin.password,
-        _csrf: csrfToken
+        _csrf: csrfToken,
       })
 
       expect(loginResponse.status).toBe(200)
@@ -319,13 +319,13 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
         attempts.push(
           testApiClient.post('/api/v1/auth/login', {
             username: testUsers.admin.username,
-            password: 'wrong-password'
-          }).catch(error => error.response)
+            password: 'wrong-password',
+          }).catch(error => error.response),
         )
       }
 
       const results = await Promise.all(attempts)
-      
+
       // 마지막 몇 개 요청에서 429 Rate Limit 에러 확인
       const rateLimitedResults = results.filter(result => result?.status === 429)
       expect(rateLimitedResults.length).toBeGreaterThan(0)
@@ -362,20 +362,20 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       const loginResponse = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
         password: testUsers.admin.password,
-        session_timeout: 2 // 2초
+        session_timeout: 2, // 2초
       })
 
       userStore.setAuth({
         token: loginResponse.data.access_token,
         refreshToken: loginResponse.data.refresh_token,
-        expiresAt: Date.now() + 2000 // 2초 후 만료
+        expiresAt: Date.now() + 2000, // 2초 후 만료
       })
 
       // 즉시 API 호출 (성공해야 함)
-      let apiResponse = await testApiClient.get('/api/v1/auth/profile', {
+      const apiResponse = await testApiClient.get('/api/v1/auth/profile', {
         headers: {
-          Authorization: `Bearer ${loginResponse.data.access_token}`
-        }
+          Authorization: `Bearer ${loginResponse.data.access_token}`,
+        },
       })
       expect(apiResponse.status).toBe(200)
 
@@ -385,8 +385,8 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       try {
         await testApiClient.get('/api/v1/auth/profile', {
           headers: {
-            Authorization: `Bearer ${loginResponse.data.access_token}`
-          }
+            Authorization: `Bearer ${loginResponse.data.access_token}`,
+          },
         })
         expect.fail('API call should fail with expired token')
       } catch (error) {
@@ -400,22 +400,22 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // 첫 번째 세션
       const session1 = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
-        password: testUsers.admin.password
+        password: testUsers.admin.password,
       })
 
       // 두 번째 세션
       const session2 = await testApiClient.post('/api/v1/auth/login', {
         username: testUsers.admin.username,
-        password: testUsers.admin.password
+        password: testUsers.admin.password,
       })
 
       // 두 세션 모두 유효한지 확인
       const profile1 = await testApiClient.get('/api/v1/auth/profile', {
-        headers: { Authorization: `Bearer ${session1.data.access_token}` }
+        headers: { Authorization: `Bearer ${session1.data.access_token}` },
       })
-      
+
       const profile2 = await testApiClient.get('/api/v1/auth/profile', {
-        headers: { Authorization: `Bearer ${session2.data.access_token}` }
+        headers: { Authorization: `Bearer ${session2.data.access_token}` },
       })
 
       expect(profile1.status).toBe(200)
@@ -423,13 +423,13 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
 
       // 첫 번째 세션 로그아웃
       await testApiClient.post('/api/v1/auth/logout', {}, {
-        headers: { Authorization: `Bearer ${session1.data.access_token}` }
+        headers: { Authorization: `Bearer ${session1.data.access_token}` },
       })
 
       // 첫 번째 세션 무효화 확인
       try {
         await testApiClient.get('/api/v1/auth/profile', {
-          headers: { Authorization: `Bearer ${session1.data.access_token}` }
+          headers: { Authorization: `Bearer ${session1.data.access_token}` },
         })
         expect.fail('First session should be invalidated')
       } catch (error) {
@@ -438,7 +438,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
 
       // 두 번째 세션은 여전히 유효
       const profile2Again = await testApiClient.get('/api/v1/auth/profile', {
-        headers: { Authorization: `Bearer ${session2.data.access_token}` }
+        headers: { Authorization: `Bearer ${session2.data.access_token}` },
       })
       expect(profile2Again.status).toBe(200)
     })
@@ -453,7 +453,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       try {
         await testApiClient.post('/api/v1/auth/login', {
           username: 'nonexistent-user',
-          password: 'any-password'
+          password: 'any-password',
         })
       } catch (error) {
         const response = (error as any).response
@@ -469,7 +469,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       try {
         await testApiClient.post('/api/v1/auth/login', {
           username: '', // 빈 사용자명
-          password: '' // 빈 비밀번호
+          password: '', // 빈 비밀번호
         })
       } catch (error) {
         const response = (error as any).response
@@ -480,7 +480,7 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       // 누락된 필드
       try {
         await testApiClient.post('/api/v1/auth/login', {
-          username: testUsers.admin.username
+          username: testUsers.admin.username,
           // password 누락
         })
       } catch (error) {
@@ -495,13 +495,13 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       if (!backendAvailable) return
 
       const startTime = Date.now()
-      
+
       // 10개의 동시 로그인 요청
-      const loginPromises = Array.from({ length: 10 }, () => 
+      const loginPromises = Array.from({ length: 10 }, () =>
         testApiClient.post('/api/v1/auth/login', {
           username: testUsers.admin.username,
-          password: testUsers.admin.password
-        })
+          password: testUsers.admin.password,
+        }),
       )
 
       const results = await Promise.all(loginPromises)
@@ -521,22 +521,22 @@ describe('Backend-Frontend Authentication Integration E2E Tests', () => {
       if (!backendAvailable) return
 
       const times = []
-      
+
       // 5번의 연속 API 호출로 평균 응답 시간 측정
       for (let i = 0; i < 5; i++) {
         const startTime = Date.now()
-        
+
         await testApiClient.post('/api/v1/auth/login', {
           username: testUsers.admin.username,
-          password: testUsers.admin.password
+          password: testUsers.admin.password,
         })
-        
+
         const endTime = Date.now()
         times.push(endTime - startTime)
       }
 
       const averageTime = times.reduce((a, b) => a + b, 0) / times.length
-      
+
       // 평균 응답 시간이 2초 이하여야 함
       expect(averageTime).toBeLessThan(2000)
     })

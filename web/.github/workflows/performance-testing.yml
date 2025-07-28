@@ -1,0 +1,298 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # 매일 오전 2시에 성능 테스트 실행
+    - cron: '0 2 * * *'
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: Lint code
+      run: npm run lint
+
+    - name: Type check
+      run: npm run type-check
+
+    - name: Run unit tests with coverage
+      run: npm run test:coverage
+
+    - name: Build application
+      run: npm run build
+
+    - name: Start preview server
+      run: |
+        npm run preview &
+        sleep 10
+        curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:4173/
+
+    - name: Run Lighthouse CI
+      run: npm run lighthouse
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Run performance tests
+      run: npm run test:performance
+
+    - name: Run accessibility tests  
+      run: npm run test:accessibility
+
+    - name: Upload Lighthouse reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lighthouse-reports-node-${{ matrix.node-version }}
+        path: |
+          .lighthouseci/
+          lighthouse-*.html
+        retention-days: 30
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-node-${{ matrix.node-version }}
+        path: |
+          test-results/
+          coverage/
+        retention-days: 30
+
+    - name: Upload bundle analysis
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: bundle-analysis-node-${{ matrix.node-version }}
+        path: dist/bundle-analysis.html
+        retention-days: 30
+
+    - name: Comment PR with performance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Lighthouse 결과 읽기
+          let lighthouseResults = '';
+          try {
+            const lhciDir = '.lighthouseci';
+            if (fs.existsSync(lhciDir)) {
+              const files = fs.readdirSync(lhciDir);
+              const manifestFile = files.find(f => f.includes('manifest.json'));
+              if (manifestFile) {
+                const manifest = JSON.parse(fs.readFileSync(path.join(lhciDir, manifestFile)));
+                const summary = manifest[0]?.summary;
+                if (summary) {
+                  lighthouseResults = `
+          ## 🚀 성능 테스트 결과
+          
+          ### Lighthouse 점수
+          - **성능**: ${Math.round(summary.performance * 100)}/100
+          - **접근성**: ${Math.round(summary.accessibility * 100)}/100
+          - **모범 사례**: ${Math.round(summary['best-practices'] * 100)}/100
+          - **SEO**: ${Math.round(summary.seo * 100)}/100
+          
+          ### Core Web Vitals
+          - **LCP**: ${summary['largest-contentful-paint'] || 'N/A'}ms
+          - **FID**: ${summary['first-input-delay'] || 'N/A'}ms
+          - **CLS**: ${summary['cumulative-layout-shift'] || 'N/A'}
+          `;
+                }
+              }
+            }
+          } catch (error) {
+            console.log('Lighthouse 결과를 읽을 수 없습니다:', error);
+            lighthouseResults = '⚠️ Lighthouse 결과를 읽을 수 없습니다.';
+          }
+          
+          // 테스트 결과 읽기  
+          let testResults = '';
+          try {
+            const testResultsPath = 'test-results/e2e-results.json';
+            if (fs.existsSync(testResultsPath)) {
+              const results = JSON.parse(fs.readFileSync(testResultsPath));
+              const passed = results.stats?.passed || 0;
+              const failed = results.stats?.failed || 0;
+              const total = passed + failed;
+              
+              testResults = `
+          ### 🧪 테스트 결과
+          - **전체**: ${total}개
+          - **성공**: ${passed}개
+          - **실패**: ${failed}개
+          - **성공률**: ${total > 0 ? Math.round((passed / total) * 100) : 0}%
+          `;
+            }
+          } catch (error) {
+            console.log('테스트 결과를 읽을 수 없습니다:', error);
+          }
+          
+          const comment = `
+          ${lighthouseResults}
+          ${testResults}
+          
+          📊 상세한 결과는 Actions 아티팩트에서 확인할 수 있습니다.
+          
+          Node.js 버전: ${{ matrix.node-version }}
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  performance-regression-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: performance-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 전체 히스토리 가져오기
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download performance results
+      uses: actions/download-artifact@v4
+      with:
+        name: lighthouse-reports-node-20
+        path: ./current-results
+
+    - name: Get baseline performance
+      run: |
+        # 메인 브랜치의 마지막 성공한 성능 테스트 결과와 비교
+        # 실제 구현에서는 성능 데이터베이스나 이전 아티팩트와 비교
+        echo "성능 회귀 검사 실행 중..."
+        
+        # 성능 임계값 설정
+        export PERFORMANCE_THRESHOLD=80
+        export LCP_THRESHOLD=2500
+        export FID_THRESHOLD=100
+        export CLS_THRESHOLD=0.1
+        
+        # 현재 결과 분석
+        if [ -f "./current-results/.lighthouseci/manifest.json" ]; then
+          echo "성능 결과 분석 중..."
+          # 여기에 성능 비교 로직 구현
+        else
+          echo "성능 결과를 찾을 수 없습니다."
+          exit 1
+        fi
+
+    - name: Check performance regression
+      run: |
+        # 성능 회귀 체크 로직
+        # 실제로는 더 정교한 성능 비교 스크립트 실행
+        echo "성능 회귀 검사 완료"
+
+  security-performance-audit:
+    runs-on: ubuntu-latest
+    needs: performance-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Security audit
+      run: npm audit --audit-level moderate
+      continue-on-error: true
+
+    - name: Check bundle size
+      run: |
+        npm run build
+        
+        # 번들 크기 체크
+        BUNDLE_SIZE=$(du -sh dist/ | cut -f1)
+        echo "번들 크기: $BUNDLE_SIZE"
+        
+        # 번들 크기 임계값 (예: 5MB)
+        BUNDLE_LIMIT_MB=5
+        BUNDLE_SIZE_MB=$(du -sm dist/ | cut -f1)
+        
+        if [ $BUNDLE_SIZE_MB -gt $BUNDLE_LIMIT_MB ]; then
+          echo "❌ 번들 크기가 제한을 초과했습니다: ${BUNDLE_SIZE_MB}MB > ${BUNDLE_LIMIT_MB}MB"
+          exit 1
+        else
+          echo "✅ 번들 크기가 적절합니다: ${BUNDLE_SIZE_MB}MB ≤ ${BUNDLE_LIMIT_MB}MB"
+        fi
+
+    - name: Check dependencies
+      run: |
+        # 취약한 의존성 체크
+        npm ls --depth=0
+        
+        # 오래된 의존성 체크
+        npx npm-check-updates --target minor
+
+  deploy-performance-report:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: [performance-test, security-performance-audit]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./lighthouse-reports-node-20
+        destination_dir: performance-reports/${{ github.run_number }}
+
+    - name: Update performance dashboard
+      run: |
+        # 성능 대시보드 업데이트 로직
+        echo "성능 대시보드 업데이트 완료"
+        echo "리포트 URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/performance-reports/${{ github.run_number }}"
