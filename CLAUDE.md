@@ -67,7 +67,7 @@ make clean              # 빌드 아티팩트 제거
 이 프로젝트는 AIWF(AI Workflow) 프레임워크를 사용합니다:
 
 - **마일스톤 기반 개발**: `M##_Milestone_Name/`
-- **스프린트 관리**: `S##_M##_Sprint_Name/`  
+- **스프린트 관리**: `S##_M##_Sprint_Name/`
 - **태스크 추적**: `T##_Task_Name.md`
 - **프로젝트 매니페스트**: `.aiwf/00_PROJECT_MANIFEST.md`
 
@@ -104,7 +104,7 @@ aicli-web/
 
 ## 개발 시 주의사항
 
-1. **명명 규칙**: 
+1. **명명 규칙**:
    - CLI 도구명은 `aicli`로 통일 (이전 `terry`에서 변경됨)
    - Docker 이미지명: `aicli-web`, `aicli-api`, `aicli-workspace`
 
@@ -120,6 +120,11 @@ aicli-web/
 4. **문서화**:
    - 모든 문서는 `/docs` 폴더에 저장
    - README.md는 루트와 각 설계 폴더에 위치
+
+5. **웹 개발 완료 시 검증**:
+   - 웹 개발 작업 완료 시 반드시 `pnpm build` 실행하여 빌드 에러 확인
+   - `pnpm lint` 실행하여 코드 스타일 및 품질 검증
+   - 빌드와 린트에서 발생하는 모든 오류를 수정해야 함
 
 ## 한국어 커뮤니케이션
 
