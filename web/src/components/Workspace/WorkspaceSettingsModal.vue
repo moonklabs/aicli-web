@@ -1,30 +1,30 @@
 <template>
-  <n-modal 
-    v-model:show="showModal" 
-    preset="card" 
-    style="width: 700px" 
+  <NModal
+    v-model:show="showModal"
+    preset="card"
+    style="width: 700px"
     :title="`${workspace?.name} 설정`"
   >
     <div v-if="workspace" class="workspace-settings">
-      <n-tabs type="line" animated>
-        <n-tab-pane name="general" tab="일반 설정">
-          <n-form
+      <NTabs type="line" animated>
+        <NTabPane name="general" tab="일반 설정">
+          <NForm
             ref="generalFormRef"
             :model="generalForm"
             :rules="generalRules"
             label-placement="top"
           >
-            <n-form-item label="워크스페이스 이름" path="name">
-              <n-input
+            <NFormItem label="워크스페이스 이름" path="name">
+              <NInput
                 v-model:value="generalForm.name"
                 placeholder="워크스페이스의 이름을 입력하세요"
                 :maxlength="50"
                 show-count
               />
-            </n-form-item>
+            </NFormItem>
 
-            <n-form-item label="설명" path="description">
-              <n-input
+            <NFormItem label="설명" path="description">
+              <NInput
                 v-model:value="generalForm.description"
                 type="textarea"
                 placeholder="워크스페이스에 대한 간단한 설명을 입력하세요"
@@ -32,68 +32,68 @@
                 show-count
                 :rows="3"
               />
-            </n-form-item>
+            </NFormItem>
 
-            <n-form-item label="프로젝트 경로">
-              <n-input
+            <NFormItem label="프로젝트 경로">
+              <NInput
                 :value="workspace.path"
                 disabled
                 placeholder="프로젝트 경로는 변경할 수 없습니다"
               />
-              <n-text depth="3" style="font-size: 12px; margin-top: 4px">
+              <NText depth="3" style="font-size: 12px; margin-top: 4px">
                 보안상의 이유로 프로젝트 경로는 워크스페이스 생성 후 변경할 수 없습니다
-              </n-text>
-            </n-form-item>
-          </n-form>
-        </n-tab-pane>
+              </NText>
+            </NFormItem>
+          </NForm>
+        </NTabPane>
 
-        <n-tab-pane name="docker" tab="Docker 설정">
-          <n-form
+        <NTabPane name="docker" tab="Docker 설정">
+          <NForm
             ref="dockerFormRef"
             :model="dockerForm"
             label-placement="top"
           >
-            <n-alert type="warning" style="margin-bottom: 16px">
+            <NAlert type="warning" style="margin-bottom: 16px">
               <template #icon>
                 <span>⚠️</span>
               </template>
               Docker 설정 변경 시 컨테이너가 재시작됩니다
-            </n-alert>
+            </NAlert>
 
-            <n-form-item label="베이스 이미지">
-              <n-select
+            <NFormItem label="베이스 이미지">
+              <NSelect
                 v-model:value="dockerForm.baseImage"
                 :options="baseImageOptions"
                 placeholder="Docker 베이스 이미지를 선택하세요"
               />
-            </n-form-item>
+            </NFormItem>
 
-            <n-form-item label="작업 디렉토리">
-              <n-input
+            <NFormItem label="작업 디렉토리">
+              <NInput
                 v-model:value="dockerForm.workingDir"
                 placeholder="/workspace"
               />
-            </n-form-item>
+            </NFormItem>
 
-            <n-form-item label="환경 변수">
+            <NFormItem label="환경 변수">
               <div class="env-vars">
                 <div
                   v-for="(env, index) in dockerForm.environment"
                   :key="index"
                   class="env-var-row"
                 >
-                  <n-input
+                  <NInput
                     v-model:value="env.key"
                     placeholder="변수명"
                     style="flex: 1"
                   />
                   <span>=</span>
-                  <n-input
+                  <NInput
                     v-model:value="env.value"
                     placeholder="값"
                     style="flex: 2"
                   />
-                  <n-button
+                  <NButton
                     quaternary
                     circle
                     type="error"
@@ -102,25 +102,25 @@
                     <template #icon>
                       <span>✕</span>
                     </template>
-                  </n-button>
+                  </NButton>
                 </div>
-                <n-button dashed block @click="addEnvVar">
+                <NButton dashed block @click="addEnvVar">
                   <template #icon>
                     <span>+</span>
                   </template>
                   환경 변수 추가
-                </n-button>
+                </NButton>
               </div>
-            </n-form-item>
+            </NFormItem>
 
-            <n-form-item label="포트 매핑">
+            <NFormItem label="포트 매핑">
               <div class="port-mappings">
                 <div
                   v-for="(port, index) in dockerForm.ports"
                   :key="index"
                   class="port-row"
                 >
-                  <n-input-number
+                  <NInputNumber
                     v-model:value="port.host"
                     placeholder="호스트 포트"
                     :min="1"
@@ -128,14 +128,14 @@
                     style="flex: 1"
                   />
                   <span>:</span>
-                  <n-input-number
+                  <NInputNumber
                     v-model:value="port.container"
                     placeholder="컨테이너 포트"
                     :min="1"
                     :max="65535"
                     style="flex: 1"
                   />
-                  <n-button
+                  <NButton
                     quaternary
                     circle
                     type="error"
@@ -144,91 +144,91 @@
                     <template #icon>
                       <span>✕</span>
                     </template>
-                  </n-button>
+                  </NButton>
                 </div>
-                <n-button dashed block @click="addPort">
+                <NButton dashed block @click="addPort">
                   <template #icon>
                     <span>+</span>
                   </template>
                   포트 매핑 추가
-                </n-button>
+                </NButton>
               </div>
-            </n-form-item>
-          </n-form>
-        </n-tab-pane>
+            </NFormItem>
+          </NForm>
+        </NTabPane>
 
-        <n-tab-pane name="info" tab="정보">
+        <NTabPane name="info" tab="정보">
           <div class="workspace-info">
-            <n-descriptions :column="2" bordered>
-              <n-descriptions-item label="ID">
+            <NDescriptions :column="2" bordered>
+              <NDescriptionsItem label="ID">
                 {{ workspace.id }}
-              </n-descriptions-item>
-              <n-descriptions-item label="상태">
-                <n-tag :type="getWorkspaceStatusType(workspace.status)">
+              </NDescriptionsItem>
+              <NDescriptionsItem label="상태">
+                <NTag :type="getWorkspaceStatusType(workspace.status)">
                   {{ getWorkspaceStatusText(workspace.status) }}
-                </n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item label="생성일">
+                </NTag>
+              </NDescriptionsItem>
+              <NDescriptionsItem label="생성일">
                 {{ formatDate(workspace.createdAt) }}
-              </n-descriptions-item>
-              <n-descriptions-item label="수정일">
+              </NDescriptionsItem>
+              <NDescriptionsItem label="수정일">
                 {{ formatDate(workspace.updatedAt) }}
-              </n-descriptions-item>
-              <n-descriptions-item label="컨테이너 ID">
-                <n-text code v-if="workspace.containerId">
+              </NDescriptionsItem>
+              <NDescriptionsItem label="컨테이너 ID">
+                <NText code v-if="workspace.containerId">
                   {{ workspace.containerId }}
-                </n-text>
-                <n-text depth="3" v-else>없음</n-text>
-              </n-descriptions-item>
-              <n-descriptions-item label="Git 브랜치">
-                <n-text v-if="workspace.git?.branch">
+                </NText>
+                <NText depth="3" v-else>없음</NText>
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Git 브랜치">
+                <NText v-if="workspace.git?.branch">
                   {{ workspace.git.branch }}
                   <span v-if="workspace.git.hasChanges" style="color: var(--n-color-warning)">
                     (변경사항 있음)
                   </span>
-                </n-text>
-                <n-text depth="3" v-else>Git 연결 안됨</n-text>
-              </n-descriptions-item>
-              <n-descriptions-item label="파일 수">
+                </NText>
+                <NText depth="3" v-else>Git 연결 안됨</NText>
+              </NDescriptionsItem>
+              <NDescriptionsItem label="파일 수">
                 {{ workspace.stats?.fileCount || 0 }}
-              </n-descriptions-item>
-              <n-descriptions-item label="코드 라인 수">
+              </NDescriptionsItem>
+              <NDescriptionsItem label="코드 라인 수">
                 {{ workspace.stats?.lineCount || 0 }}
-              </n-descriptions-item>
-            </n-descriptions>
+              </NDescriptionsItem>
+            </NDescriptions>
 
-            <n-divider />
+            <NDivider />
 
             <div class="danger-zone">
               <h4>위험한 작업</h4>
-              <n-space vertical>
-                <n-alert type="error">
+              <NSpace vertical>
+                <NAlert type="error">
                   <template #icon>
                     <span>⚠️</span>
                   </template>
                   아래 작업들은 되돌릴 수 없습니다. 신중하게 실행하세요.
-                </n-alert>
-                <n-button type="error" ghost @click="showResetConfirm = true">
+                </NAlert>
+                <NButton type="error" ghost @click="showResetConfirm = true">
                   워크스페이스 초기화
-                </n-button>
-              </n-space>
+                </NButton>
+              </NSpace>
             </div>
           </div>
-        </n-tab-pane>
-      </n-tabs>
+        </NTabPane>
+      </NTabs>
     </div>
 
     <template #footer>
-      <n-space justify="end">
-        <n-button @click="handleCancel">취소</n-button>
-        <n-button type="primary" :loading="saving" @click="handleSave">
+      <NSpace justify="end">
+        <NButton @click="handleCancel">취소</NButton>
+        <NButton type="primary" :loading="saving" @click="handleSave">
           저장
-        </n-button>
-      </n-space>
+        </NButton>
+      </NSpace>
     </template>
 
     <!-- 초기화 확인 대화상자 -->
-    <n-modal
+    <NModal
       v-model:show="showResetConfirm"
       preset="dialog"
       type="error"
@@ -244,32 +244,32 @@
         모든 컨테이너가 중지되고 삭제되며, 임시 데이터가 모두 손실됩니다.
         (프로젝트 파일은 보존됩니다)
       </p>
-    </n-modal>
-  </n-modal>
+    </NModal>
+  </NModal>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import {
-  NModal,
-  NTabs,
-  NTabPane,
-  NForm,
-  NFormItem,
-  NInput,
-  NInputNumber,
-  NSelect,
+  type FormInst,
+  NAlert,
   NButton,
-  NSpace,
-  NIcon,
-  NText,
-  NDivider,
   NDescriptions,
   NDescriptionsItem,
+  NDivider,
+  NForm,
+  NFormItem,
+  NIcon,
+  NInput,
+  NInputNumber,
+  NModal,
+  NSelect,
+  NSpace,
+  NTabPane,
+  NTabs,
   NTag,
-  NAlert,
+  NText,
   useMessage,
-  type FormInst
 } from 'naive-ui'
 // import { Plus, X, AlertTriangle } from '@vicons/lucide' // 이모지로 교체
 import type { Workspace } from '@/stores/workspace'
@@ -294,7 +294,7 @@ const dockerFormRef = ref<FormInst | null>(null)
 // 모달 표시 상태
 const showModal = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value)
+  set: (value) => emit('update:show', value),
 })
 
 const showResetConfirm = ref(false)
@@ -303,14 +303,14 @@ const saving = ref(false)
 // 폼 데이터
 const generalForm = reactive({
   name: '',
-  description: ''
+  description: '',
 })
 
 const dockerForm = reactive({
   baseImage: '',
   workingDir: '',
   environment: [] as Array<{ key: string; value: string }>,
-  ports: [] as Array<{ host: number | null; container: number | null }>
+  ports: [] as Array<{ host: number | null; container: number | null }>,
 })
 
 // 베이스 이미지 옵션
@@ -321,18 +321,18 @@ const baseImageOptions = [
   { label: 'Python 3.12', value: 'python:3.12-slim' },
   { label: 'Ubuntu 22.04', value: 'ubuntu:22.04' },
   { label: 'Debian 12', value: 'debian:12-slim' },
-  { label: 'Alpine Linux', value: 'alpine:latest' }
+  { label: 'Alpine Linux', value: 'alpine:latest' },
 ]
 
 // 유효성 검사 규칙
 const generalRules = {
   name: [
     { required: true, message: '워크스페이스 이름을 입력하세요' },
-    { min: 2, max: 50, message: '이름은 2-50자 사이여야 합니다' }
+    { min: 2, max: 50, message: '이름은 2-50자 사이여야 합니다' },
   ],
   description: [
-    { max: 200, message: '설명은 200자 이하여야 합니다' }
-  ]
+    { max: 200, message: '설명은 200자 이하여야 합니다' },
+  ],
 }
 
 // 환경 변수 관리
@@ -392,11 +392,11 @@ const initializeForms = (): void => {
   dockerForm.workingDir = '/workspace'
   dockerForm.environment = [
     { key: 'NODE_ENV', value: 'development' },
-    { key: 'PORT', value: '3000' }
+    { key: 'PORT', value: '3000' },
   ]
   dockerForm.ports = [
     { host: 3000, container: 3000 },
-    { host: 8080, container: 80 }
+    { host: 8080, container: 80 },
   ]
 }
 
@@ -412,7 +412,7 @@ const handleSave = async (): Promise<void> => {
       ...props.workspace,
       name: generalForm.name,
       description: generalForm.description || undefined,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     emit('updated', updatedWorkspace)

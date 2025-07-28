@@ -22,6 +22,8 @@ import router from './router'
 import { registerPermissionDirectives } from './directives/permission'
 import { createPerformancePlugin } from './utils/performance'
 import { registerServiceWorker } from './utils/sw-registration'
+import { errorTrackingPlugin } from './utils/error-tracker'
+import { analyticsPlugin } from './utils/analytics'
 
 const app = createApp(App)
 
@@ -37,6 +39,19 @@ registerPermissionDirectives(app)
 
 // 성능 모니터링 플러그인 등록
 app.use(createPerformancePlugin())
+
+// 에러 트래킹 플러그인 등록
+app.use(errorTrackingPlugin)
+
+// 분석 플러그인 등록 (환경 변수에 따라 조건부 활성화)
+app.use(analyticsPlugin, {
+  ga4: import.meta.env.VITE_GA4_MEASUREMENT_ID ? {
+    measurementId: import.meta.env.VITE_GA4_MEASUREMENT_ID,
+    debugMode: import.meta.env.DEV,
+  } : undefined,
+  local: true,
+  apiEndpoint: import.meta.env.VITE_ANALYTICS_ENDPOINT,
+})
 
 // Naive UI 전역 컴포넌트 등록
 app.component('NConfigProvider', NConfigProvider)
@@ -62,7 +77,7 @@ registerServiceWorker({
     console.log('🔄 PWA 업데이트가 준비되었습니다')
     // 업데이트 알림을 위한 이벤트 발송
     window.dispatchEvent(new CustomEvent('pwa-update-available', {
-      detail: { registration }
+      detail: { registration },
     }))
   },
   onInstalled: (registration) => {
@@ -70,7 +85,7 @@ registerServiceWorker({
   },
   onError: (error) => {
     console.error('❌ Service Worker 오류:', error)
-  }
+  },
 })
 
 // 개발 환경에서 터미널 테스트 활성화

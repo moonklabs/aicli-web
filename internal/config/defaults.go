@@ -9,7 +9,7 @@ import (
 // 기본값 상수 정의
 const (
 	// Claude 기본값
-	DefaultClaudeModel       = "claude-3-opus"
+	DefaultClaudeModel       = "claude-3-sonnet"
 	DefaultClaudeTemperature = 0.7
 	DefaultClaudeTimeout     = 30 // 30초
 	DefaultClaudeMaxTokens   = 100000

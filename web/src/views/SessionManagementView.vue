@@ -6,7 +6,7 @@
         <h1>세션 관리</h1>
         <p class="subtitle">활성 세션을 모니터링하고 보안 설정을 관리합니다</p>
       </div>
-      
+
       <div class="stats-section">
         <n-space>
           <n-statistic
@@ -77,7 +77,7 @@
             </div>
 
             <!-- 세션이 없을 때 -->
-            <n-empty 
+            <n-empty
               v-if="!loadingSessions && activeSessions.length === 0"
               description="활성 세션이 없습니다"
             />
@@ -137,17 +137,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import { LogOutSharp as LogOut, RefreshSharp as Refresh } from '@vicons/ionicons5'
 import { sessionApi } from '@/api/services'
 import { useWebSocket } from '@/composables/useWebSocket'
-import type { 
-  UserSession, 
-  SessionSecurityEvent, 
+import type {
+  SessionSecurityEvent,
   SessionSecuritySettings as SessionSettings,
   SessionStatsResponse,
-  SessionUpdateMessage
+  SessionUpdateMessage,
+  UserSession,
 } from '@/types/api'
 import ActiveSessionCard from '@/components/Session/ActiveSessionCard.vue'
 import SessionSecuritySettings from '@/components/Session/SessionSecuritySettings.vue'
@@ -173,7 +173,7 @@ const eventsPagination = ref({
   page: 1,
   limit: 20,
   total: 0,
-  totalPages: 0
+  totalPages: 0,
 })
 
 // 모달 상태
@@ -195,9 +195,9 @@ const loadSessionData = async () => {
   try {
     const [sessions, stats] = await Promise.all([
       sessionApi.getActiveSessions(),
-      sessionApi.getSessionStats()
+      sessionApi.getSessionStats(),
     ])
-    
+
     activeSessions.value = sessions
     sessionStats.value = stats
   } catch (error) {
@@ -225,15 +225,15 @@ const loadSecurityEvents = async (page = 1) => {
   try {
     const response = await sessionApi.getSecurityEvents({
       page,
-      limit: eventsPagination.value.limit
+      limit: eventsPagination.value.limit,
     })
-    
+
     securityEvents.value = response.items
     eventsPagination.value = {
       page: response.page,
       limit: response.limit,
       total: response.total,
-      totalPages: response.totalPages
+      totalPages: response.totalPages,
     }
   } catch (error) {
     console.error('보안 이벤트 로드 실패:', error)
@@ -270,9 +270,9 @@ const confirmTerminateSession = async () => {
   try {
     await sessionApi.terminateSession({
       sessionId: selectedSessionId.value,
-      reason: '사용자 요청'
+      reason: '사용자 요청',
     })
-    
+
     message.success('세션을 종료했습니다')
     await loadSessionData()
   } catch (error) {
@@ -290,9 +290,9 @@ const confirmTerminateAllSessions = async () => {
   try {
     await sessionApi.terminateAllSessions({
       excludeCurrentSession: true,
-      reason: '사용자 요청 - 모든 세션 종료'
+      reason: '사용자 요청 - 모든 세션 종료',
     })
-    
+
     message.success('다른 모든 세션을 종료했습니다')
     await loadSessionData()
   } catch (error) {
@@ -329,7 +329,7 @@ const handleWebSocketMessage = (message: any) => {
   if (message.type === 'session_update') {
     const sessionMessage = message as SessionUpdateMessage
     const { type } = sessionMessage.payload
-    
+
     switch (type) {
       case 'session_created':
       case 'session_terminated':
@@ -352,15 +352,15 @@ onMounted(async () => {
   await Promise.all([
     loadSessionData(),
     loadSecuritySettings(),
-    loadSecurityEvents()
+    loadSecurityEvents(),
   ])
-  
+
   // WebSocket 연결
   connect({
     onMessage: handleWebSocketMessage,
     onError: (error: any) => {
       console.error('WebSocket 에러:', error)
-    }
+    },
   })
 })
 

@@ -47,7 +47,7 @@
         <option value="lte">&lt;=</option>
         <option value="between">범위</option>
       </select>
-      
+
       <input
         v-model="filterValue"
         type="number"
@@ -57,7 +57,7 @@
         @input="handleInputChange"
         :aria-label="`${column.title} 필터 값`"
       />
-      
+
       <input
         v-if="numberOperator === 'between'"
         v-model="filterValueEnd"
@@ -68,7 +68,7 @@
         @input="handleInputChange"
         :aria-label="`${column.title} 필터 최대값`"
       />
-      
+
       <button
         v-if="hasValue"
         @click="clearFilter"
@@ -92,7 +92,7 @@
         <option value="before">이전</option>
         <option value="between">기간</option>
       </select>
-      
+
       <input
         v-model="filterValue"
         type="date"
@@ -101,7 +101,7 @@
         @input="handleInputChange"
         :aria-label="`${column.title} 필터 시작 날짜`"
       />
-      
+
       <input
         v-if="dateOperator === 'between'"
         v-model="filterValueEnd"
@@ -111,7 +111,7 @@
         @input="handleInputChange"
         :aria-label="`${column.title} 필터 종료 날짜`"
       />
-      
+
       <button
         v-if="hasValue"
         @click="clearFilter"
@@ -158,7 +158,7 @@
         </div>
         <span class="dropdown-arrow">▼</span>
       </div>
-      
+
       <div v-if="dropdownOpen" class="dropdown-menu" ref="dropdownMenu">
         <div class="dropdown-search">
           <input
@@ -169,7 +169,7 @@
             @click.stop
           />
         </div>
-        
+
         <div class="option-list">
           <label
             v-for="option in filteredOptions"
@@ -186,7 +186,7 @@
             <span>{{ option.label }}</span>
           </label>
         </div>
-        
+
         <div class="dropdown-actions">
           <button @click.stop="selectAll" class="action-btn">전체 선택</button>
           <button @click.stop="clearAll" class="action-btn">전체 해제</button>
@@ -212,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { AdvancedTableColumn, TableFilter } from '@/types/ui'
 
 interface Props {
@@ -224,7 +224,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -256,9 +256,9 @@ const selectOptions = computed(() => {
 
 const filteredOptions = computed(() => {
   if (!searchTerm.value) return selectOptions.value
-  
+
   return selectOptions.value.filter(option =>
-    option.label.toLowerCase().includes(searchTerm.value.toLowerCase())
+    option.label.toLowerCase().includes(searchTerm.value.toLowerCase()),
   )
 })
 
@@ -269,14 +269,14 @@ const getFilterValue = () => {
       return selectedValues.value.length > 0 ? selectedValues.value : null
     case 'number':
       if (numberOperator.value === 'between') {
-        return filterValue.value && filterValueEnd.value 
+        return filterValue.value && filterValueEnd.value
           ? [Number(filterValue.value), Number(filterValueEnd.value)]
           : null
       }
       return filterValue.value ? Number(filterValue.value) : null
     case 'date':
       if (dateOperator.value === 'between') {
-        return filterValue.value && filterValueEnd.value 
+        return filterValue.value && filterValueEnd.value
           ? [filterValue.value, filterValueEnd.value]
           : null
       }
@@ -293,7 +293,7 @@ const getFilterOperator = () => {
     case 'number':
       return numberOperator.value
     case 'date':
-      return dateOperator.value === 'after' ? 'gt' : 
+      return dateOperator.value === 'after' ? 'gt' :
              dateOperator.value === 'before' ? 'lt' :
              dateOperator.value
     case 'multiSelect':
@@ -317,15 +317,15 @@ const handleSelectChange = () => {
 const applyFilter = () => {
   const value = getFilterValue()
   const operator = getFilterOperator()
-  
+
   emit('update:value', value)
-  
+
   if (value !== null) {
     emit('filter-change', {
       key: props.column.key,
       value,
       operator,
-      type: props.type
+      type: props.type,
     })
   } else {
     // 빈 값일 때는 필터 제거
@@ -333,7 +333,7 @@ const applyFilter = () => {
       key: props.column.key,
       value: null,
       operator,
-      type: props.type
+      type: props.type,
     })
   }
 }
@@ -401,7 +401,7 @@ watch(
       filterValue.value = newValue || ''
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 </script>
 

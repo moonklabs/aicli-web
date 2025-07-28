@@ -1,7 +1,7 @@
 <template>
   <div class="workspace-switcher">
     <!-- 메인 워크스페이스 선택 버튼 -->
-    <n-dropdown
+    <NDropdown
       :options="workspaceOptions"
       :show-arrow="true"
       @select="switchWorkspace"
@@ -9,16 +9,16 @@
       placement="bottom-start"
       :disabled="isSwitching"
     >
-      <n-button
+      <NButton
         class="workspace-selector"
         :loading="isSwitching"
         size="large"
         ghost
       >
         <template #icon>
-          <n-icon><Layers /></n-icon>
+          <NIcon><Layers /></NIcon>
         </template>
-        
+
         <div class="workspace-info">
           <div class="workspace-name">
             {{ activeWorkspace?.name || '워크스페이스 선택' }}
@@ -27,22 +27,22 @@
             {{ truncatePath(activeWorkspace.path) }}
           </div>
         </div>
-        
+
         <template #suffix>
-          <n-icon><ChevronDown /></n-icon>
+          <NIcon><ChevronDown /></NIcon>
         </template>
-      </n-button>
-    </n-dropdown>
+      </NButton>
+    </NDropdown>
 
     <!-- 빠른 전환 힌트 -->
     <div class="quick-switch-hint" v-if="workspaces.length > 1">
-      <n-text depth="3" size="small">
+      <NText depth="3" size="small">
         <kbd>Ctrl</kbd> + <kbd>`</kbd>로 빠른 전환
-      </n-text>
+      </NText>
     </div>
 
     <!-- 빠른 전환 모달 -->
-    <n-modal
+    <NModal
       v-model:show="showQuickSwitcher"
       preset="card"
       style="width: 600px;"
@@ -53,7 +53,7 @@
       @keydown.esc="closeQuickSwitcher"
     >
       <div class="quick-switcher">
-        <n-input
+        <NInput
           v-model:value="quickSearchQuery"
           placeholder="워크스페이스 검색..."
           size="large"
@@ -64,18 +64,18 @@
           @keydown.down.prevent="navigateDown"
         >
           <template #prefix>
-            <n-icon><Search /></n-icon>
+            <NIcon><Search /></NIcon>
           </template>
-        </n-input>
+        </NInput>
 
         <div class="workspace-list">
           <div
             v-for="(workspace, index) in filteredWorkspaces"
             :key="workspace.id"
             class="workspace-item"
-            :class="{ 
+            :class="{
               'selected': selectedIndex === index,
-              'active': workspace.id === activeWorkspace?.id 
+              'active': workspace.id === activeWorkspace?.id
             }"
             @click="switchWorkspace(workspace.id)"
             @mouseenter="selectedIndex = index"
@@ -91,61 +91,61 @@
 
               <!-- 워크스페이스 상태 -->
               <div class="workspace-status">
-                <n-space size="small">
-                  <n-tag
+                <NSpace size="small">
+                  <NTag
                     :type="getWorkspaceStatusType(workspace.status)"
                     size="small"
                   >
                     {{ getWorkspaceStatusText(workspace.status) }}
-                  </n-tag>
-                  
-                  <n-tag v-if="workspace.git?.branch" type="info" size="small">
+                  </NTag>
+
+                  <NTag v-if="workspace.git?.branch" type="info" size="small">
                     <template #icon>
-                      <n-icon><GitBranch /></n-icon>
+                      <NIcon><GitBranch /></NIcon>
                     </template>
                     {{ workspace.git.branch }}
-                  </n-tag>
-                  
-                  <n-tag 
-                    v-if="workspace.claudeSession" 
+                  </NTag>
+
+                  <NTag
+                    v-if="workspace.claudeSession"
                     :type="workspace.claudeSession.status === 'active' ? 'success' : 'default'"
                     size="small"
                   >
                     <template #icon>
-                      <n-icon><Terminal /></n-icon>
+                      <NIcon><Terminal /></NIcon>
                     </template>
                     Claude {{ workspace.claudeSession.status === 'active' ? '활성' : '비활성' }}
-                  </n-tag>
-                </n-space>
+                  </NTag>
+                </NSpace>
               </div>
             </div>
 
             <div class="workspace-meta">
               <div class="last-accessed" v-if="workspace.lastAccessed">
-                <n-time :time="new Date(workspace.lastAccessed)" relative />
+                <NTime :time="new Date(workspace.lastAccessed)" relative />
               </div>
             </div>
           </div>
 
           <div v-if="filteredWorkspaces.length === 0" class="no-results">
-            <n-empty description="검색 결과가 없습니다" size="small">
+            <NEmpty description="검색 결과가 없습니다" size="small">
               <template #icon>
-                <n-icon><Search /></n-icon>
+                <NIcon><Search /></NIcon>
               </template>
-            </n-empty>
+            </NEmpty>
           </div>
         </div>
 
         <div class="quick-switcher-footer">
-          <n-text depth="3" size="small">
+          <NText depth="3" size="small">
             <kbd>↑</kbd><kbd>↓</kbd> 탐색 • <kbd>Enter</kbd> 선택 • <kbd>Esc</kbd> 닫기
-          </n-text>
+          </NText>
         </div>
       </div>
-    </n-modal>
+    </NModal>
 
     <!-- 전환 진행 상태 -->
-    <n-modal
+    <NModal
       v-model:show="showSwitchProgress"
       preset="card"
       style="width: 400px;"
@@ -155,62 +155,62 @@
       :mask-closable="false"
     >
       <div class="switch-progress">
-        <n-progress
+        <NProgress
           type="line"
           :percentage="switchProgress"
           :show-indicator="false"
           :height="8"
         />
-        
+
         <div class="progress-steps">
-          <div 
+          <div
             v-for="step in switchSteps"
             :key="step.key"
             class="progress-step"
-            :class="{ 
+            :class="{
               'completed': step.completed,
-              'active': step.active 
+              'active': step.active
             }"
           >
-            <n-icon class="step-icon">
+            <NIcon class="step-icon">
               <Check v-if="step.completed" />
               <LoaderCircle v-else-if="step.active" class="spin" />
               <Circle v-else />
-            </n-icon>
+            </NIcon>
             <span class="step-text">{{ step.text }}</span>
           </div>
         </div>
       </div>
-    </n-modal>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick, h } from 'vue'
+import { computed, h, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
   NButton,
   NDropdown,
+  NEmpty,
   NIcon,
-  NText,
-  NModal,
   NInput,
+  NModal,
+  NProgress,
   NSpace,
   NTag,
+  NText,
   NTime,
-  NEmpty,
-  NProgress
 } from 'naive-ui'
 import {
-  Layers,
-  ChevronDown,
-  Search,
-  GitBranch,
-  Terminal,
   Check,
+  ChevronDown,
   Circle,
-  LoaderCircle
+  GitBranch,
+  Layers,
+  LoaderCircle,
+  Search,
+  Terminal,
 } from '@vicons/lucide'
 
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -233,7 +233,7 @@ const switchSteps = ref([
   { key: 'validate', text: '워크스페이스 검증', completed: false, active: false },
   { key: 'load', text: '워크스페이스 로드', completed: false, active: false },
   { key: 'restore', text: '상태 복원', completed: false, active: false },
-  { key: 'complete', text: '전환 완료', completed: false, active: false }
+  { key: 'complete', text: '전환 완료', completed: false, active: false },
 ])
 
 // 키보드 이벤트 리스너
@@ -254,29 +254,29 @@ const workspaceOptions = computed(() => {
         label: workspace.path,
         key: `${workspace.id}-path`,
         disabled: true,
-        type: 'group'
-      }
-    ]
+        type: 'group',
+      },
+    ],
   }))
 })
 
 const filteredWorkspaces = computed(() => {
   if (!quickSearchQuery.value) return workspaces.value
-  
+
   const query = quickSearchQuery.value.toLowerCase()
-  return workspaces.value.filter(workspace => 
+  return workspaces.value.filter(workspace =>
     workspace.name.toLowerCase().includes(query) ||
-    workspace.path.toLowerCase().includes(query)
+    workspace.path.toLowerCase().includes(query),
   )
 })
 
 // 유틸리티 함수
 const truncatePath = (path: string, maxLength = 40): string => {
   if (path.length <= maxLength) return path
-  
+
   const parts = path.split('/')
   if (parts.length <= 2) return path
-  
+
   return `.../${parts.slice(-2).join('/')}`
 }
 
@@ -305,12 +305,12 @@ const getWorkspaceStatusText = (status: string): string => {
 const registerKeyboardShortcuts = (): void => {
   // Ctrl + ` : 빠른 전환 모달
   keyboardHandlers.set('ctrl+`', showQuickSwitcher)
-  
+
   // Ctrl + 1-9 : 직접 워크스페이스 전환
   for (let i = 1; i <= 9; i++) {
     keyboardHandlers.set(`ctrl+${i}`, () => switchToWorkspaceByIndex(i - 1))
   }
-  
+
   // 이벤트 리스너 등록
   document.addEventListener('keydown', handleKeyDown)
 }
@@ -326,10 +326,10 @@ const handleKeyDown = (event: KeyboardEvent): void => {
   if (event.altKey) key.push('alt')
   if (event.shiftKey) key.push('shift')
   key.push(event.key.toLowerCase())
-  
+
   const shortcut = key.join('+')
   const handler = keyboardHandlers.get(shortcut)
-  
+
   if (handler) {
     event.preventDefault()
     handler()
@@ -339,33 +339,33 @@ const handleKeyDown = (event: KeyboardEvent): void => {
 // 워크스페이스 전환 관련
 const switchWorkspace = async (workspaceId: string): Promise<void> => {
   if (isSwitching.value || workspaceId === activeWorkspace.value?.id) return
-  
+
   const targetWorkspace = workspaces.value.find(w => w.id === workspaceId)
   if (!targetWorkspace) {
     message.error('워크스페이스를 찾을 수 없습니다')
     return
   }
-  
+
   try {
     isSwitching.value = true
     showSwitchProgress.value = true
     switchProgress.value = 0
-    
+
     // 전환 단계 초기화
     switchSteps.value.forEach(step => {
       step.completed = false
       step.active = false
     })
-    
+
     // 단계 1: 현재 상태 저장
     switchSteps.value[0].active = true
     await workspaceStore.saveWorkspaceState()
     switchSteps.value[0].completed = true
     switchSteps.value[0].active = false
     switchProgress.value = 20
-    
+
     await delay(300)
-    
+
     // 단계 2: 워크스페이스 검증
     switchSteps.value[1].active = true
     const isValid = await workspaceStore.validateWorkspace(workspaceId)
@@ -375,41 +375,41 @@ const switchWorkspace = async (workspaceId: string): Promise<void> => {
     switchSteps.value[1].completed = true
     switchSteps.value[1].active = false
     switchProgress.value = 40
-    
+
     await delay(200)
-    
+
     // 단계 3: 워크스페이스 로드
     switchSteps.value[2].active = true
     await workspaceStore.activateWorkspace(workspaceId)
     switchSteps.value[2].completed = true
     switchSteps.value[2].active = false
     switchProgress.value = 70
-    
+
     await delay(200)
-    
+
     // 단계 4: 상태 복원
     switchSteps.value[3].active = true
     await workspaceStore.restoreWorkspaceState(workspaceId)
     switchSteps.value[3].completed = true
     switchSteps.value[3].active = false
     switchProgress.value = 90
-    
+
     await delay(200)
-    
+
     // 단계 5: 라우터 업데이트 및 완료
     switchSteps.value[4].active = true
     await router.push(`/workspace/${workspaceId}`)
     switchSteps.value[4].completed = true
     switchSteps.value[4].active = false
     switchProgress.value = 100
-    
+
     await delay(500)
-    
+
     // 빠른 전환 모달 닫기
     closeQuickSwitcher()
-    
+
     message.success(`'${targetWorkspace.name}' 워크스페이스로 전환되었습니다`)
-    
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '워크스페이스 전환에 실패했습니다'
     message.error(errorMessage)
@@ -433,7 +433,7 @@ const showQuickSwitcherModal = (): void => {
   showQuickSwitcher.value = true
   quickSearchQuery.value = ''
   selectedIndex.value = 0
-  
+
   nextTick(() => {
     // 포커스 설정은 모달이 열린 후에
     const input = document.querySelector('.quick-switcher input') as HTMLInputElement
@@ -499,7 +499,7 @@ watch(filteredWorkspaces, (newWorkspaces) => {
 // 빠른 전환 함수 노출
 defineExpose({
   showQuickSwitcher: showQuickSwitcherModal,
-  switchWorkspace
+  switchWorkspace,
 })
 </script>
 

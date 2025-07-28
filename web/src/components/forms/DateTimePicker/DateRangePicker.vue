@@ -20,7 +20,7 @@
         role="combobox"
         readonly
       />
-      
+
       <button
         v-if="clearable && modelValue && !disabled"
         @click="handleClear"
@@ -32,7 +32,7 @@
           <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
         </svg>
       </button>
-      
+
       <div class="date-range-picker__icon">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M6 2a1 1 0 00-2 0v1H3a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-1V2a1 1 0 10-2 0v1H6V2zM3 7h14v9H3V7z"/>
@@ -78,11 +78,11 @@
                     <path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
                   </svg>
                 </button>
-                
+
                 <div class="date-range-picker__month-year">
                   {{ monthNames[viewMonths[0].month] }} {{ viewMonths[0].year }}
                 </div>
-                
+
                 <div class="date-range-picker__nav-spacer"></div>
               </div>
 
@@ -123,11 +123,11 @@
             <div class="date-range-picker__calendar">
               <div class="date-range-picker__header">
                 <div class="date-range-picker__nav-spacer"></div>
-                
+
                 <div class="date-range-picker__month-year">
                   {{ monthNames[viewMonths[1].month] }} {{ viewMonths[1].year }}
                 </div>
-                
+
                 <button
                   @click="nextMonth(1)"
                   class="date-range-picker__nav-button"
@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface CalendarDay {
   date: Date
@@ -264,7 +264,7 @@ const props = withDefaults(defineProps<Props>(), {
   startPlaceholder: '시작일',
   endPlaceholder: '종료일',
   cancelButtonText: '취소',
-  confirmButtonText: '확인'
+  confirmButtonText: '확인',
 })
 
 const emit = defineEmits<{
@@ -281,7 +281,7 @@ const hoveredDate = ref<Date | null>(null)
 const selecting = ref<'start' | 'end'>('start')
 const viewMonths = ref([
   { month: new Date().getMonth(), year: new Date().getFullYear() },
-  { month: new Date().getMonth() + 1, year: new Date().getFullYear() }
+  { month: new Date().getMonth() + 1, year: new Date().getFullYear() },
 ])
 
 // Refs
@@ -296,7 +296,7 @@ const defaultPresets: Preset[] = [
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       return { start: today, end: today }
-    }
+    },
   },
   {
     label: '어제',
@@ -305,7 +305,7 @@ const defaultPresets: Preset[] = [
       yesterday.setDate(yesterday.getDate() - 1)
       yesterday.setHours(0, 0, 0, 0)
       return { start: yesterday, end: yesterday }
-    }
+    },
   },
   {
     label: '이번 주',
@@ -317,7 +317,7 @@ const defaultPresets: Preset[] = [
       const end = new Date(start)
       end.setDate(start.getDate() + 6)
       return { start, end }
-    }
+    },
   },
   {
     label: '이번 달',
@@ -326,7 +326,7 @@ const defaultPresets: Preset[] = [
       const start = new Date(now.getFullYear(), now.getMonth(), 1)
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
       return { start, end }
-    }
+    },
   },
   {
     label: '지난 7일',
@@ -336,7 +336,7 @@ const defaultPresets: Preset[] = [
       const start = new Date(end)
       start.setDate(end.getDate() - 6)
       return { start, end }
-    }
+    },
   },
   {
     label: '지난 30일',
@@ -346,8 +346,8 @@ const defaultPresets: Preset[] = [
       const start = new Date(end)
       start.setDate(end.getDate() - 29)
       return { start, end }
-    }
-  }
+    },
+  },
 ]
 
 // Computed
@@ -381,7 +381,7 @@ const formatDate = (date: Date): string => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  
+
   return props.format
     .replace('YYYY', String(year))
     .replace('MM', month)
@@ -403,10 +403,10 @@ const isToday = (day: CalendarDay): boolean => {
 
 const isSelected = (day: CalendarDay): boolean => {
   if (!startDate.value && !endDate.value) return false
-  
+
   if (startDate.value && isSameDay(day.date, startDate.value)) return true
   if (endDate.value && isSameDay(day.date, endDate.value)) return true
-  
+
   return false
 }
 
@@ -420,7 +420,7 @@ const isInRange = (day: CalendarDay): boolean => {
     }
     return false
   }
-  
+
   return day.date > startDate.value && day.date < endDate.value
 }
 
@@ -439,7 +439,7 @@ const getDayClasses = (day: CalendarDay) => {
     'date-range-picker__day--in-range': isInRange(day),
     'date-range-picker__day--disabled': isDisabled(day),
     'date-range-picker__day--start': startDate.value && isSameDay(day.date, startDate.value),
-    'date-range-picker__day--end': endDate.value && isSameDay(day.date, endDate.value)
+    'date-range-picker__day--end': endDate.value && isSameDay(day.date, endDate.value),
   }
 }
 
@@ -448,24 +448,24 @@ const getDayAriaLabel = (day: CalendarDay): string => {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
   return formatter.format(day.date)
 }
 
 const getCalendarDays = (calendarIndex: number): CalendarDay[][] => {
   const { month, year } = viewMonths.value[calendarIndex]
-  
+
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
-  
+
   const startDate = new Date(firstDay)
   const startOffset = (startDate.getDay() - props.firstDayOfWeek + 7) % 7
   startDate.setDate(startDate.getDate() - startOffset)
-  
+
   const weeks: CalendarDay[][] = []
   const currentDate = new Date(startDate)
-  
+
   for (let week = 0; week < 6; week++) {
     const days: CalendarDay[] = []
     for (let day = 0; day < 7; day++) {
@@ -474,24 +474,24 @@ const getCalendarDays = (calendarIndex: number): CalendarDay[][] => {
         day: currentDate.getDate(),
         month: currentDate.getMonth(),
         year: currentDate.getFullYear(),
-        otherMonth: currentDate.getMonth() !== month
+        otherMonth: currentDate.getMonth() !== month,
       })
       currentDate.setDate(currentDate.getDate() + 1)
     }
     weeks.push(days)
   }
-  
+
   return weeks
 }
 
 const normalizeMonth = () => {
   // Ensure right calendar is always after left calendar
   if (viewMonths.value[1].year < viewMonths.value[0].year ||
-      (viewMonths.value[1].year === viewMonths.value[0].year && 
+      (viewMonths.value[1].year === viewMonths.value[0].year &&
        viewMonths.value[1].month <= viewMonths.value[0].month)) {
     viewMonths.value[1] = {
       year: viewMonths.value[0].month === 11 ? viewMonths.value[0].year + 1 : viewMonths.value[0].year,
-      month: (viewMonths.value[0].month + 1) % 12
+      month: (viewMonths.value[0].month + 1) % 12,
     }
   }
 }
@@ -521,17 +521,17 @@ const nextMonth = (index: number) => {
 const toggleCalendar = () => {
   if (props.disabled) return
   isOpen.value = !isOpen.value
-  
+
   if (isOpen.value) {
     // Initialize from model value
     if (props.modelValue?.start && props.modelValue?.end) {
       startDate.value = new Date(props.modelValue.start)
       endDate.value = new Date(props.modelValue.end)
-      
+
       // Set view to show the selected range
       viewMonths.value[0] = {
         month: startDate.value.getMonth(),
-        year: startDate.value.getFullYear()
+        year: startDate.value.getFullYear(),
       }
       normalizeMonth()
     } else {
@@ -539,13 +539,13 @@ const toggleCalendar = () => {
       const now = new Date()
       viewMonths.value[0] = {
         month: now.getMonth(),
-        year: now.getFullYear()
+        year: now.getFullYear(),
       }
       normalizeMonth()
     }
-    
+
     selecting.value = 'start'
-    
+
     nextTick(() => {
       calendarRef.value?.focus()
     })
@@ -554,10 +554,10 @@ const toggleCalendar = () => {
 
 const selectDate = (day: CalendarDay) => {
   if (isDisabled(day)) return
-  
+
   const selectedDate = new Date(day.date)
   selectedDate.setHours(0, 0, 0, 0)
-  
+
   if (selecting.value === 'start' || !startDate.value) {
     startDate.value = selectedDate
     endDate.value = null
@@ -582,16 +582,16 @@ const applyPreset = (preset: Preset) => {
 
 const handleConfirm = () => {
   if (!startDate.value || !endDate.value) return
-  
+
   const value: DateRange = {
     start: new Date(startDate.value),
-    end: new Date(endDate.value)
+    end: new Date(endDate.value),
   }
-  
+
   emit('update:modelValue', value)
   emit('change', value)
   isOpen.value = false
-  
+
   nextTick(() => {
     inputRef.value?.focus()
   })
@@ -606,7 +606,7 @@ const handleCancel = () => {
     startDate.value = null
     endDate.value = null
   }
-  
+
   isOpen.value = false
   nextTick(() => {
     inputRef.value?.focus()
@@ -823,7 +823,7 @@ onUnmounted(() => {
 
     &--disabled {
       @apply text-gray-300 cursor-not-allowed;
-      
+
       &:hover {
         @apply bg-transparent;
       }
@@ -852,7 +852,7 @@ onUnmounted(() => {
     @apply border rounded-md;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-25;
     @apply transition-colors duration-150;
-    
+
     @apply bg-white text-gray-700 border-gray-300;
     @apply hover:bg-gray-50;
 

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 export interface PWAInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -52,13 +52,13 @@ export function usePWAInstall() {
   // 프롬프트를 표시해야 하는지 확인
   const shouldShowPrompt = computed(() => {
     if (isStandalone.value || isUserRejected.value) return false
-    
+
     const dismissedCount = parseInt(localStorage.getItem(STORAGE_KEYS.DISMISSED_COUNT) || '0')
     const lastPrompt = localStorage.getItem(STORAGE_KEYS.LAST_PROMPT)
-    
+
     // 3번 이상 무시했으면 더 이상 표시하지 않음
     if (dismissedCount >= 3) return false
-    
+
     // 마지막 프롬프트로부터 24시간이 지나지 않았으면 표시하지 않음
     if (lastPrompt) {
       const lastPromptTime = new Date(lastPrompt).getTime()
@@ -66,7 +66,7 @@ export function usePWAInstall() {
       const hoursDiff = (now - lastPromptTime) / (1000 * 60 * 60)
       if (hoursDiff < 24) return false
     }
-    
+
     return checkInstallability.value
   })
 
@@ -87,9 +87,9 @@ export function usePWAInstall() {
         // beforeinstallprompt 이벤트가 있는 경우
         await deferredPrompt.value.prompt()
         const choiceResult = await deferredPrompt.value.userChoice
-        
+
         console.log('PWA 설치 선택:', choiceResult.outcome)
-        
+
         if (choiceResult.outcome === 'accepted') {
           console.log('사용자가 PWA 설치를 수락했습니다.')
           isInstalled.value = true
@@ -121,7 +121,7 @@ export function usePWAInstall() {
             '브라우저 메뉴에서 "앱 설치" 또는 "홈 화면에 추가"를 찾으세요',
             '설치 버튼을 클릭하세요',
             '확인 대화상자에서 "설치"를 클릭하세요',
-          ]
+          ],
     }
   }
 
@@ -195,7 +195,7 @@ export function usePWAInstall() {
     // 플랫폼 감지
     isIOS.value = detectIOS()
     isStandalone.value = detectStandalone()
-    
+
     // 로컬 스토리지에서 상태 복원
     userDismissedCount.value = parseInt(localStorage.getItem(STORAGE_KEYS.DISMISSED_COUNT) || '0')
 

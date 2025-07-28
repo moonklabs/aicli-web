@@ -112,7 +112,7 @@
             </template>
             Google로 로그인
           </NButton>
-          
+
           <NButton
             secondary
             size="large"
@@ -319,42 +319,42 @@ const showSignup = () => {
 const handleOAuthLogin = async (provider: string) => {
   try {
     oauthLoading.value = provider
-    
+
     // 현재 경로를 세션에 저장 (리다이렉트용)
     const redirect = router.currentRoute.value.query.redirect as string
     if (redirect) {
       sessionStorage.setItem('oauth_redirect', redirect)
     }
-    
+
     // OAuth 인증 URL 생성 및 요청
     const state = generateOAuthState()
     const response = await authApi.getOAuthAuthUrl({
       provider,
       state,
     })
-    
+
     // 팝업으로 OAuth 인증 페이지 열기
     const popup = window.open(
       response.authUrl,
       `oauth-${provider}`,
-      'width=500,height=600,scrollbars=yes,resizable=yes'
+      'width=500,height=600,scrollbars=yes,resizable=yes',
     )
-    
+
     if (!popup) {
       throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.')
     }
-    
+
     // 팝업 상태 모니터링
     const checkClosed = setInterval(() => {
       if (popup.closed) {
         clearInterval(checkClosed)
         oauthLoading.value = null
-        
+
         // 팝업이 정상적으로 닫힌 경우 (OAuth 완료 또는 취소)
         // 별도 처리 없이 로딩 상태만 해제
       }
     }, 1000)
-    
+
   } catch (error: any) {
     console.error(`OAuth ${provider} login error:`, error)
     message.error(error.message || `${getProviderDisplayName(provider)} 로그인 중 오류가 발생했습니다`)
@@ -460,10 +460,10 @@ const getProviderDisplayName = (provider: string): string => {
   display: flex;
   flex-direction: column;
   gap: $spacing-3;
-  
+
   .n-button {
     transition: all 0.2s ease;
-    
+
     &:not(:disabled):hover {
       transform: translateY(-1px);
       box-shadow: $shadow-md;

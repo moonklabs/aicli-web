@@ -19,7 +19,7 @@
         class="mobile-nav__overlay"
         @click="closeDrawer"
       ></div>
-      
+
       <nav
         ref="drawerRef"
         :class="[
@@ -35,7 +35,7 @@
             <img src="/favicon.ico" alt="AICLI" class="mobile-nav__logo" />
             <span class="mobile-nav__title">AICLI Web</span>
           </div>
-          
+
           <button
             class="mobile-nav__close"
             @click="closeDrawer"
@@ -144,7 +144,7 @@
                 <span class="mobile-nav__user-email">{{ user.email }}</span>
               </div>
             </div>
-            
+
             <div class="mobile-nav__user-actions">
               <button
                 class="mobile-nav__user-action"
@@ -167,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTouchGestures } from '@/composables/useTouchGestures'
 import { useUserStore } from '@/stores/user'
@@ -242,12 +242,12 @@ const toggleDrawer = () => {
 const openDrawer = () => {
   isDrawerOpen.value = true
   emit('drawer-open')
-  
+
   // 포커스 트랩
   nextTick(() => {
     if (drawerRef.value) {
       const firstFocusable = drawerRef.value.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       ) as HTMLElement
       firstFocusable?.focus()
     }
@@ -262,7 +262,7 @@ const closeDrawer = () => {
 
 // 활성 라우트 확인
 const isActiveRoute = (path: string) => {
-  return route.path === path || route.path.startsWith(path + '/')
+  return route.path === path || route.path.startsWith(`${path}/`)
 }
 
 // 서브메뉴 토글
@@ -279,13 +279,13 @@ const toggleSubmenu = (path: string) => {
 const handleMenuItemClick = (event: Event) => {
   const target = event.target as HTMLElement
   const link = target.closest('a') as HTMLAnchorElement
-  
+
   if (link && props.autoClose) {
     closeDrawer()
   }
-  
-  emit('menu-item-click', props.menuItems.find(item => 
-    link?.getAttribute('href')?.includes(item.path)
+
+  emit('menu-item-click', props.menuItems.find(item =>
+    link?.getAttribute('href')?.includes(item.path),
   ) as MenuItem)
 }
 
@@ -315,7 +315,7 @@ watch(
     if (isDrawerOpen.value && props.autoClose) {
       closeDrawer()
     }
-  }
+  },
 )
 
 // ESC 키로 드로어 닫기
@@ -359,14 +359,14 @@ watch(isDrawerOpen, (isOpen) => {
     padding: 8px;
     background: transparent;
     border: none;
-    
+
     // 터치 친화적 크기
     min-width: 44px;
     min-height: 44px;
-    
+
     &:hover {
       background: rgba(0, 0, 0, 0.05);
-      
+
       .dark & {
         background: rgba(255, 255, 255, 0.05);
       }
@@ -409,12 +409,12 @@ watch(isDrawerOpen, (isOpen) => {
     display: flex;
     flex-direction: column;
     box-shadow: $shadow-xl;
-    
+
     .dark & {
       background: $dark-bg-secondary;
       border-right-color: $dark-bg-tertiary;
     }
-    
+
     &--open {
       transform: translateX(0);
     }
@@ -425,7 +425,7 @@ watch(isDrawerOpen, (isOpen) => {
     @include flex-between;
     padding: $spacing-4;
     border-bottom: 1px solid map-get($gray-colors, 200);
-    
+
     .dark & {
       border-bottom-color: $dark-bg-tertiary;
     }
@@ -446,7 +446,7 @@ watch(isDrawerOpen, (isOpen) => {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
     color: $light-text-primary;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -461,14 +461,14 @@ watch(isDrawerOpen, (isOpen) => {
     background: transparent;
     border: none;
     color: map-get($gray-colors, 600);
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
-    
+
     &:hover {
       background: map-get($gray-colors, 100);
-      
+
       .dark & {
         background: $dark-bg-tertiary;
       }
@@ -501,27 +501,27 @@ watch(isDrawerOpen, (isOpen) => {
     color: $light-text-primary;
     text-decoration: none;
     transition: $transition-base;
-    
+
     // 터치 친화적 높이
     min-height: 48px;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
-    
+
     &:hover {
       background: map-get($gray-colors, 50);
-      
+
       .dark & {
         background: $dark-bg-tertiary;
       }
     }
-    
+
     &--active {
       background: map-get($primary-colors, 50);
       color: map-get($primary-colors, 700);
       border-right: 3px solid map-get($primary-colors, 500);
-      
+
       .dark & {
         background: rgba(map-get($primary-colors, 500), 0.1);
         color: map-get($primary-colors, 300);
@@ -568,7 +568,7 @@ watch(isDrawerOpen, (isOpen) => {
 
   &__submenu-arrow {
     transition: transform 0.2s ease;
-    
+
     &--open {
       transform: rotate(90deg);
     }
@@ -579,7 +579,7 @@ watch(isDrawerOpen, (isOpen) => {
     padding: 0;
     margin: 0;
     background: map-get($gray-colors, 25);
-    
+
     .dark & {
       background: darken($dark-bg-secondary, 5%);
     }
@@ -588,7 +588,7 @@ watch(isDrawerOpen, (isOpen) => {
   &__submenu-item {
     border-left: 2px solid map-get($gray-colors, 200);
     margin-left: $spacing-8;
-    
+
     .dark & {
       border-left-color: $dark-bg-tertiary;
     }
@@ -601,28 +601,28 @@ watch(isDrawerOpen, (isOpen) => {
     text-decoration: none;
     font-size: $font-size-sm;
     transition: $transition-base;
-    
+
     // 터치 친화적 높이
     min-height: 40px;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
-    
+
     &:hover {
       background: map-get($gray-colors, 100);
       color: $light-text-primary;
-      
+
       .dark & {
         background: $dark-bg-tertiary;
         color: $dark-text-primary;
       }
     }
-    
+
     &--active {
       background: map-get($primary-colors, 50);
       color: map-get($primary-colors, 700);
-      
+
       .dark & {
         background: rgba(map-get($primary-colors, 500), 0.1);
         color: map-get($primary-colors, 300);
@@ -634,7 +634,7 @@ watch(isDrawerOpen, (isOpen) => {
   &__user {
     border-top: 1px solid map-get($gray-colors, 200);
     padding: $spacing-4;
-    
+
     .dark & {
       border-top-color: $dark-bg-tertiary;
     }
@@ -651,7 +651,7 @@ watch(isDrawerOpen, (isOpen) => {
     height: 48px;
     border-radius: $border-radius-full;
     overflow: hidden;
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -669,7 +669,7 @@ watch(isDrawerOpen, (isOpen) => {
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     color: $light-text-primary;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -678,7 +678,7 @@ watch(isDrawerOpen, (isOpen) => {
   &__user-email {
     font-size: $font-size-sm;
     color: $light-text-secondary;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -694,19 +694,19 @@ watch(isDrawerOpen, (isOpen) => {
     flex: 1;
     font-size: $font-size-sm;
     padding: $spacing-2 $spacing-3;
-    
+
     &--logout {
       background: lighten($error, 35%);
       color: darken($error, 10%);
-      
+
       &:hover:not(:disabled) {
         background: lighten($error, 25%);
       }
-      
+
       .dark & {
         background: rgba($error, 0.2);
         color: lighten($error, 20%);
-        
+
         &:hover:not(:disabled) {
           background: rgba($error, 0.3);
         }

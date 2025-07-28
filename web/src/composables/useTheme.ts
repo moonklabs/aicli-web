@@ -1,15 +1,41 @@
 /**
  * 테마 관리 컴포저블
  */
-import { computed, onMounted, ref, watch } from 'vue'
-import type { ThemeMode } from '@/types/ui'
+import { computed, onMounted, readonly, ref, watch } from 'vue'
+import type { AccessibilitySettings, AccessibilityTheme, FontSizePreference, MotionPreference, ThemeMode } from '@/types/ui'
 
 // 로컬 스토리지 키
 const THEME_STORAGE_KEY = 'aicli-theme-mode'
+const ACCESSIBILITY_STORAGE_KEY = 'aicli-accessibility-settings'
 
 // 전역 테마 상태
 const themeMode = ref<ThemeMode>('auto')
 const isDark = ref(false)
+
+// 접근성 설정 상태
+const accessibilitySettings = ref<AccessibilitySettings>({
+  // 시각적 접근성
+  highContrast: false,
+  reducedMotion: false,
+  reducedTransparency: false,
+  forceFocusVisible: false,
+  colorBlindnessFilter: 'default',
+  fontSize: 'medium',
+
+  // 키보드 네비게이션
+  keyboardNavigation: true,
+  skipLinks: true,
+  tabTrapEnabled: true,
+
+  // 스크린 리더
+  announcePageChanges: true,
+  announceFormErrors: true,
+  announceLiveRegions: true,
+
+  // 타이밍 설정
+  extendedTimeouts: false,
+  pauseAnimations: false,
+})
 
 /**
  * 시스템 다크 모드 감지
@@ -51,6 +77,65 @@ const saveThemeToStorage = (mode: ThemeMode): void => {
 }
 
 /**
+ * 접근성 설정 로드
+ */
+const loadAccessibilitySettings = (): AccessibilitySettings => {
+  if (typeof window === 'undefined') return accessibilitySettings.value
+
+  try {
+    const stored = localStorage.getItem(ACCESSIBILITY_STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return { ...accessibilitySettings.value, ...parsed }
+    }
+  } catch (error) {
+    console.warn('Failed to load accessibility settings from localStorage:', error)
+  }
+
+  return accessibilitySettings.value
+}
+
+/**
+ * 접근성 설정 저장
+ */
+const saveAccessibilitySettings = (settings: AccessibilitySettings): void => {
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.setItem(ACCESSIBILITY_STORAGE_KEY, JSON.stringify(settings))
+  } catch (error) {
+    console.warn('Failed to save accessibility settings to localStorage:', error)
+  }
+}
+
+/**
+ * 시스템 접근성 설정 감지
+ */
+const detectSystemAccessibilitySettings = (): Partial<AccessibilitySettings> => {
+  if (typeof window === 'undefined') return {}
+
+  const settings: Partial<AccessibilitySettings> = {}
+
+  // 고대비 모드 감지
+  if (window.matchMedia('(prefers-contrast: high)').matches) {
+    settings.highContrast = true
+  }
+
+  // 모션 감소 감지
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    settings.reducedMotion = true
+    settings.pauseAnimations = true
+  }
+
+  // 투명도 감소 감지
+  if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) {
+    settings.reducedTransparency = true
+  }
+
+  return settings
+}
+
+/**
  * DOM에 테마 적용
  */
 const applyThemeToDOM = (dark: boolean): void => {
@@ -66,6 +151,27 @@ const applyThemeToDOM = (dark: boolean): void => {
   const metaThemeColor = document.querySelector('meta[name="theme-color"]')
   if (metaThemeColor) {
     metaThemeColor.setAttribute('content', dark ? '#1a1a1a' : '#ffffff')
+  }
+}
+
+/**
+ * DOM에 접근성 설정 적용
+ */
+const applyAccessibilitySettingsToDOM = (settings: AccessibilitySettings): void => {
+  if (typeof document === 'undefined') return
+
+  const root = document.documentElement
+
+  // 접근성 속성 설정
+  root.setAttribute('data-accessibility-theme', settings.colorBlindnessFilter)
+  root.setAttribute('data-motion-preference', settings.reducedMotion ? 'reduce' : 'auto')
+  root.setAttribute('data-reduced-transparency', settings.reducedTransparency.toString())
+  root.setAttribute('data-force-focus-visible', settings.forceFocusVisible.toString())
+  root.setAttribute('data-font-size', settings.fontSize)
+
+  // 고대비 모드
+  if (settings.highContrast) {
+    root.setAttribute('data-accessibility-theme', 'high-contrast')
   }
 }
 
@@ -97,6 +203,46 @@ export function useTheme() {
   const toggleTheme = (): void => {
     const newMode = resolvedTheme.value === 'dark' ? 'light' : 'dark'
     setThemeMode(newMode)
+  }
+
+  /**
+   * 접근성 설정 업데이트
+   */
+  const updateAccessibilitySettings = (newSettings: Partial<AccessibilitySettings>): void => {
+    accessibilitySettings.value = { ...accessibilitySettings.value, ...newSettings }
+    saveAccessibilitySettings(accessibilitySettings.value)
+    applyAccessibilitySettingsToDOM(accessibilitySettings.value)
+  }
+
+  /**
+   * 고대비 모드 토글
+   */
+  const toggleHighContrast = (): void => {
+    updateAccessibilitySettings({ highContrast: !accessibilitySettings.value.highContrast })
+  }
+
+  /**
+   * 모션 감소 토글
+   */
+  const toggleReducedMotion = (): void => {
+    updateAccessibilitySettings({
+      reducedMotion: !accessibilitySettings.value.reducedMotion,
+      pauseAnimations: !accessibilitySettings.value.reducedMotion,
+    })
+  }
+
+  /**
+   * 색맹 필터 설정
+   */
+  const setColorBlindnessFilter = (filter: AccessibilityTheme): void => {
+    updateAccessibilitySettings({ colorBlindnessFilter: filter })
+  }
+
+  /**
+   * 폰트 크기 설정
+   */
+  const setFontSize = (size: FontSizePreference): void => {
+    updateAccessibilitySettings({ fontSize: size })
   }
 
   /**
@@ -133,12 +279,20 @@ export function useTheme() {
   const initTheme = (): void => {
     // 저장된 테마 설정 로드
     themeMode.value = loadThemeFromStorage()
+    accessibilitySettings.value = loadAccessibilitySettings()
+
+    // 시스템 접근성 설정 감지 및 마이그레이션
+    const systemSettings = detectSystemAccessibilitySettings()
+    if (Object.keys(systemSettings).length > 0) {
+      accessibilitySettings.value = { ...accessibilitySettings.value, ...systemSettings }
+    }
 
     // 초기 다크 모드 상태 설정
     isDark.value = resolvedTheme.value === 'dark'
 
-    // DOM에 테마 적용
+    // DOM에 테마 및 접근성 설정 적용
     applyThemeToDOM(isDark.value)
+    applyAccessibilitySettingsToDOM(accessibilitySettings.value)
 
     // 시스템 테마 변경 감지 시작
     watchSystemTheme()
@@ -198,13 +352,21 @@ export function useTheme() {
     isDark: readonly(isDark),
     resolvedTheme,
     themeClasses,
+    accessibilitySettings: readonly(accessibilitySettings),
 
-    // 메서드
+    // 테마 메서드
     setThemeMode,
     toggleTheme,
     initTheme,
     getThemeColor,
     setThemeColor,
+
+    // 접근성 메서드
+    updateAccessibilitySettings,
+    toggleHighContrast,
+    toggleReducedMotion,
+    setColorBlindnessFilter,
+    setFontSize,
 
     // 유틸리티
     isLight: computed(() => !isDark.value),
@@ -217,6 +379,12 @@ export function useTheme() {
         default: return '알 수 없음'
       }
     }),
+
+    // 접근성 상태 컴퓨티드
+    isHighContrast: computed(() => accessibilitySettings.value.highContrast),
+    isReducedMotion: computed(() => accessibilitySettings.value.reducedMotion),
+    currentFontSize: computed(() => accessibilitySettings.value.fontSize),
+    colorBlindnessFilter: computed(() => accessibilitySettings.value.colorBlindnessFilter),
   }
 }
 
@@ -227,4 +395,5 @@ export const globalTheme = {
   mode: themeMode,
   isDark,
   resolvedTheme,
+  accessibilitySettings,
 }

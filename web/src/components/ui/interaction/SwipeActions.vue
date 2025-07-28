@@ -103,25 +103,25 @@ const isAnimating = ref(false)
 // 터치 이벤트 핸들러
 const handleTouchStart = (event: TouchEvent) => {
   if (props.disabled || isAnimating.value) return
-  
+
   const touch = event.touches[0]
   startX.value = touch.clientX
   currentX.value = touch.clientX
   isDragging.value = true
-  
+
   emit('swipe-start')
 }
 
 const handleTouchMove = (event: TouchEvent) => {
   if (!isDragging.value || props.disabled) return
-  
+
   event.preventDefault()
-  
+
   const touch = event.touches[0]
   currentX.value = touch.clientX
-  
+
   let newOffset = currentX.value - startX.value
-  
+
   // 액션이 없는 방향으로의 스와이프 제한
   if (newOffset > 0 && props.leftActions.length === 0) {
     newOffset = props.allowBounce ? newOffset * 0.3 : 0
@@ -129,24 +129,24 @@ const handleTouchMove = (event: TouchEvent) => {
   if (newOffset < 0 && props.rightActions.length === 0) {
     newOffset = props.allowBounce ? newOffset * 0.3 : 0
   }
-  
+
   // 최대 스와이프 거리 제한
   const maxOffset = 120
   if (Math.abs(newOffset) > maxOffset) {
     newOffset = newOffset > 0 ? maxOffset : -maxOffset
   }
-  
+
   offset.value = newOffset
   emit('swipe-move', offset.value)
 }
 
 const handleTouchEnd = () => {
   if (!isDragging.value || props.disabled) return
-  
+
   isDragging.value = false
-  
+
   const absOffset = Math.abs(offset.value)
-  
+
   // 임계값을 넘으면 액션 실행
   if (absOffset >= props.threshold) {
     if (offset.value > 0 && props.leftActions.length > 0) {
@@ -157,7 +157,7 @@ const handleTouchEnd = () => {
       handleActionClick(props.rightActions[0])
     }
   }
-  
+
   // 원래 위치로 복귀
   resetPosition()
 }
@@ -171,11 +171,11 @@ const handleTouchCancel = () => {
 const resetPosition = () => {
   isAnimating.value = true
   offset.value = 0
-  
+
   setTimeout(() => {
     isAnimating.value = false
   }, 300)
-  
+
   emit('swipe-end', 0)
 }
 
@@ -183,7 +183,7 @@ const resetPosition = () => {
 const handleActionClick = (action: SwipeAction) => {
   emit('action-trigger', action)
   action.handler()
-  
+
   // 액션 실행 후 위치 초기화
   setTimeout(() => {
     resetPosition()
@@ -230,7 +230,7 @@ defineExpose({
   position: relative;
   overflow: hidden;
   background: $light-bg-primary;
-  
+
   .dark & {
     background: $dark-bg-secondary;
   }
@@ -241,13 +241,13 @@ defineExpose({
     bottom: 0;
     @include flex-center;
     z-index: 1;
-    
+
     &--left {
       left: 0;
       background: map-get($primary-colors, 500);
       border-radius: 0 $border-radius-lg 0 0;
     }
-    
+
     &--right {
       right: 0;
       background: $error;
@@ -260,11 +260,11 @@ defineExpose({
     align-items: center;
     gap: $spacing-2;
     padding: 0 $spacing-4;
-    
+
     &--left {
       flex-direction: row;
     }
-    
+
     &--right {
       flex-direction: row-reverse;
     }
@@ -282,41 +282,41 @@ defineExpose({
     border-radius: $border-radius-base;
     padding: $spacing-2;
     transition: $transition-base;
-    
+
     svg {
       width: 20px;
       height: 20px;
     }
-    
+
     span {
       font-size: $font-size-xs;
       font-weight: $font-weight-medium;
       white-space: nowrap;
     }
-    
+
     &:hover {
       @include no-touch {
         background: rgba(255, 255, 255, 0.1);
       }
     }
-    
+
     &:active {
       background: rgba(255, 255, 255, 0.2);
       transform: scale(0.95);
     }
-    
+
     &--primary {
       // 기본 프라이머리 색상 사용
     }
-    
+
     &--danger {
       // 부모의 배경색이 이미 위험 색상
     }
-    
+
     &--warning {
       color: darken($warning, 20%);
     }
-    
+
     &--success {
       color: darken($success, 20%);
     }
@@ -327,7 +327,7 @@ defineExpose({
     z-index: 2;
     background: inherit;
     will-change: transform;
-    
+
     // 터치 스크롤링 방지
     touch-action: pan-y;
   }
@@ -351,17 +351,17 @@ defineExpose({
     &__action {
       @include touch-target(56px);
       padding: $spacing-3;
-      
+
       svg {
         width: 24px;
         height: 24px;
       }
-      
+
       span {
         font-size: $font-size-sm;
       }
     }
-    
+
     &__actions {
       padding: 0 $spacing-6;
       gap: $spacing-3;

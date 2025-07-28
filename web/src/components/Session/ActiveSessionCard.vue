@@ -15,7 +15,7 @@
             <span class="device-type">{{ session.deviceInfo.device }}</span>
           </div>
         </div>
-        
+
         <div class="session-status">
           <n-tag
             v-if="session.isCurrentSession"
@@ -228,7 +228,7 @@
           </n-form-item>
         </n-form>
       </div>
-      
+
       <template #action>
         <n-space justify="end">
           <n-button @click="showReportModal = false">취소</n-button>
@@ -246,22 +246,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
+  WarningSharp as AlertTriangle,
+  CalendarSharp as Calendar,
+  TimeSharp as Clock,
   Desktop,
   PhonePortrait as DeviceMobile,
   TabletPortrait as DeviceTablet,
   HelpCircle as DeviceUnknown,
+  PricetagSharp as Hash,
+  Hourglass as HourglassHigh,
+  InformationCircleSharp as InfoCircle,
+  LogOutSharp as LogOut,
   LocationSharp as MapPin,
   Globe as Network,
-  TimeSharp as Clock,
-  CalendarSharp as Calendar,
-  Hourglass as HourglassHigh,
-  PricetagSharp as Hash,
-  WarningSharp as AlertTriangle,
-  InformationCircleSharp as InfoCircle,
-  LogOutSharp as LogOut
 } from '@vicons/ionicons5'
 
 // DeviceDesktop은 Desktop으로 별칭 설정
@@ -294,7 +294,7 @@ const showReportModal = ref(false)
 // 신고 폼 데이터
 const reportForm = ref({
   reason: '',
-  description: ''
+  description: '',
 })
 
 const reportFormRef = ref()
@@ -305,7 +305,7 @@ const suspiciousReasons = [
   { label: '알 수 없는 위치에서의 접근', value: 'unknown_location' },
   { label: '비정상적인 활동 패턴', value: 'abnormal_activity' },
   { label: '해킹 의심', value: 'suspected_hack' },
-  { label: '기타', value: 'other' }
+  { label: '기타', value: 'other' },
 ]
 
 // 신고 폼 유효성 검사 규칙
@@ -313,8 +313,8 @@ const reportRules = {
   reason: {
     required: true,
     message: '신고 사유를 선택해주세요',
-    trigger: ['blur', 'change']
-  }
+    trigger: ['blur', 'change'],
+  },
 }
 
 // 계산된 속성
@@ -331,7 +331,7 @@ const deviceType = computed(() => {
 
 const sessionStatusType = computed(() => {
   if (props.session.isCurrentSession) return 'success'
-  
+
   switch (props.session.status) {
     case 'active':
       return 'info'
@@ -346,7 +346,7 @@ const sessionStatusType = computed(() => {
 
 const sessionStatusText = computed(() => {
   if (props.session.isCurrentSession) return '현재 세션'
-  
+
   switch (props.session.status) {
     case 'active':
       return '활성'
@@ -389,7 +389,7 @@ const formatDate = (dateString: string) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -401,7 +401,7 @@ const formatDateTime = (dateString: string) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -416,20 +416,20 @@ const handleReportSuspicious = () => {
 const submitReport = async () => {
   try {
     await reportFormRef.value?.validate()
-    
+
     reporting.value = true
-    
+
     const reason = suspiciousReasons.find(r => r.value === reportForm.value.reason)?.label || reportForm.value.reason
-    const fullReason = reportForm.value.description 
+    const fullReason = reportForm.value.description
       ? `${reason}: ${reportForm.value.description}`
       : reason
-    
+
     emit('reportSuspicious', props.session.id, fullReason)
-    
+
     // 폼 초기화
     reportForm.value = { reason: '', description: '' }
     showReportModal.value = false
-    
+
     message.success('의심스러운 활동을 신고했습니다')
   } catch (error) {
     console.error('신고 실패:', error)
@@ -442,7 +442,7 @@ const submitReport = async () => {
 <style scoped lang="scss">
 .session-card {
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -450,8 +450,8 @@ const submitReport = async () => {
 
   &.current-session {
     border: 2px solid var(--primary-color);
-    background: linear-gradient(145deg, 
-      rgba(var(--primary-color-rgb), 0.02), 
+    background: linear-gradient(145deg,
+      rgba(var(--primary-color-rgb), 0.02),
       rgba(var(--primary-color-rgb), 0.05)
     );
   }
@@ -555,10 +555,10 @@ const submitReport = async () => {
     .session-actions {
       .n-space {
         width: 100%;
-        
+
         :deep(.n-space-item) {
           flex: 1;
-          
+
           .n-button {
             width: 100%;
           }

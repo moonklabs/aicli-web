@@ -482,17 +482,17 @@ export const RealTimeSimulation: Story = {
 
       const addRandomData = () => {
         if (isUpdating.value) return
-        
+
         isUpdating.value = true
         const newItem = generateSalesData(1)[0]
         newItem.id = data.value.length + 1
         data.value.push(newItem)
-        
+
         // 최대 100개 데이터 유지
         if (data.value.length > 100) {
           data.value.shift()
         }
-        
+
         setTimeout(() => {
           isUpdating.value = false
         }, 500)
@@ -504,9 +504,9 @@ export const RealTimeSimulation: Story = {
         clearInterval(interval)
       })
 
-      return { 
-        args: { ...args, data: data },
-        isUpdating 
+      return {
+        args: { ...args, data },
+        isUpdating,
       }
     },
     template: `
@@ -553,7 +553,7 @@ export const InteractiveDemo: Story = {
         interactions.value.unshift({
           type: 'selection',
           count: selected.length,
-          time: new Date().toLocaleTimeString()
+          time: new Date().toLocaleTimeString(),
         })
         if (interactions.value.length > 5) {
           interactions.value = interactions.value.slice(0, 5)
@@ -564,19 +564,19 @@ export const InteractiveDemo: Story = {
         interactions.value.unshift({
           type: `chart-${type}`,
           data: data.elements?.length || 0,
-          time: new Date().toLocaleTimeString()
+          time: new Date().toLocaleTimeString(),
         })
         if (interactions.value.length > 5) {
           interactions.value = interactions.value.slice(0, 5)
         }
       }
 
-      return { 
+      return {
         args,
         selectedData,
         interactions,
         handleSelectionChange,
-        handleChartInteraction
+        handleChartInteraction,
       }
     },
     template: `
@@ -683,15 +683,15 @@ export const ExportDemo: Story = {
         if (exportHistory.value.length > 3) {
           exportHistory.value = exportHistory.value.slice(0, 3)
         }
-        
+
         // 실제 내보내기 로직 시뮬레이션
         console.log(`Exporting ${data.length} rows as ${format}`)
       }
 
-      return { 
+      return {
         args,
         exportHistory,
-        handleDataExport
+        handleDataExport,
       }
     },
     template: `
@@ -720,4 +720,4 @@ export const ExportDemo: Story = {
   }),
 }
 
-import { ref, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'

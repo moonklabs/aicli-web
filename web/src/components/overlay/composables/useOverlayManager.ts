@@ -1,5 +1,5 @@
-import { ref, computed, onUnmounted, provide, inject, type InjectionKey, type Ref } from 'vue'
-import { allocateZIndex, releaseZIndex, getTopOverlayId } from '../utils/z-index'
+import { type InjectionKey, type Ref, computed, inject, onUnmounted, provide, ref } from 'vue'
+import { allocateZIndex, getTopOverlayId, releaseZIndex } from '../utils/z-index'
 
 export interface OverlayInstance {
   id: string
@@ -32,12 +32,12 @@ export function provideOverlayManager(): OverlayManager {
     register(overlay) {
       const zIndex = allocateZIndex(overlay.id, overlay.type.toUpperCase() as any)
       const instance: OverlayInstance = { ...overlay, zIndex }
-      
+
       overlayStack.value.push(instance)
-      
+
       return zIndex
     },
-    
+
     unregister(id) {
       const index = overlayStack.value.findIndex(o => o.id === id)
       if (index > -1) {
@@ -45,11 +45,11 @@ export function provideOverlayManager(): OverlayManager {
         releaseZIndex(id)
       }
     },
-    
+
     isTopOverlay(id) {
       return getTopOverlayId() === id
     },
-    
+
     closeTopOverlay() {
       const topId = getTopOverlayId()
       if (topId) {
@@ -59,14 +59,14 @@ export function provideOverlayManager(): OverlayManager {
         }
       }
     },
-    
+
     getActiveOverlays() {
       return [...overlayStack.value]
-    }
+    },
   }
-  
+
   provide(OverlayManagerKey, manager)
-  
+
   return manager
 }
 
@@ -90,7 +90,7 @@ export function useOverlay(options: {
   const manager = useOverlayManager()
   const zIndex = ref<number>(0)
   const isTop = computed(() => manager?.isTopOverlay(options.id) ?? false)
-  
+
   // 오버레이 등록
   if (manager) {
     zIndex.value = manager.register({
@@ -101,19 +101,19 @@ export function useOverlay(options: {
       onClose: options.onClose,
     })
   }
-  
+
   // ESC 키 핸들러
   const handleEsc = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isTop.value && options.closeOnEsc) {
       options.onClose?.()
     }
   }
-  
+
   // 전역 이벤트 리스너 등록
   if (typeof window !== 'undefined') {
     window.addEventListener('keydown', handleEsc)
   }
-  
+
   // 정리
   onUnmounted(() => {
     manager?.unregister(options.id)
@@ -121,7 +121,7 @@ export function useOverlay(options: {
       window.removeEventListener('keydown', handleEsc)
     }
   })
-  
+
   return {
     zIndex,
     isTop,

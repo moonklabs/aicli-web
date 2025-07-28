@@ -20,7 +20,7 @@
         role="combobox"
         readonly
       />
-      
+
       <button
         v-if="clearable && modelValue && !disabled"
         @click="handleClear"
@@ -32,7 +32,7 @@
           <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
         </svg>
       </button>
-      
+
       <div class="time-picker__icon">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM10 4a6 6 0 110 12 6 6 0 010-12z"/>
@@ -182,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
   modelValue: string | null // HH:mm format
@@ -214,7 +214,7 @@ const props = withDefaults(defineProps<Props>(), {
   hourGridAriaLabel: 'Select hour',
   minuteGridAriaLabel: 'Select minute',
   nowButtonText: '지금',
-  confirmButtonText: '확인'
+  confirmButtonText: '확인',
 })
 
 const emit = defineEmits<{
@@ -260,7 +260,7 @@ const displayMinute = computed(() => {
 
 const displayValue = computed(() => {
   if (!props.modelValue) return ''
-  
+
   const [h, m] = parseTime(props.modelValue)
   if (props.use24Hour) {
     return `${formatNumber(h)}:${formatNumber(m)}`
@@ -276,7 +276,7 @@ const isNowDisabled = computed(() => {
   const nowHour = now.getHours()
   const nowMinute = now.getMinutes()
   const nowTime = `${formatNumber(nowHour)}:${formatNumber(nowMinute)}`
-  
+
   if (props.min && nowTime < props.min) return true
   if (props.max && nowTime > props.max) return true
   return false
@@ -298,42 +298,42 @@ const formatTime = (h: number, m: number): string => {
 
 const isHourDisabled = (h: number): boolean => {
   if (!props.min && !props.max) return false
-  
+
   let actualHour = h
   if (!props.use24Hour) {
     if (period.value === 'PM' && h !== 12) actualHour = h + 12
     if (period.value === 'AM' && h === 12) actualHour = 0
   }
-  
+
   const testTime = formatTime(actualHour, minute.value)
-  
+
   if (props.min && testTime < props.min) return true
   if (props.max && testTime > props.max) return true
-  
+
   return false
 }
 
 const isMinuteDisabled = (m: number): boolean => {
   if (!props.min && !props.max) return false
-  
+
   let actualHour = hour.value
   if (!props.use24Hour) {
     if (period.value === 'PM' && hour.value !== 12) actualHour = hour.value + 12
     if (period.value === 'AM' && hour.value === 12) actualHour = 0
   }
-  
+
   const testTime = formatTime(actualHour, m)
-  
+
   if (props.min && testTime < props.min) return true
   if (props.max && testTime > props.max) return true
-  
+
   return false
 }
 
 const togglePicker = () => {
   if (props.disabled) return
   isOpen.value = !isOpen.value
-  
+
   if (isOpen.value) {
     if (props.modelValue) {
       const [h, m] = parseTime(props.modelValue)
@@ -346,9 +346,9 @@ const togglePicker = () => {
       minute.value = Math.floor(now.getMinutes() / props.minuteStep) * props.minuteStep
       period.value = now.getHours() >= 12 ? 'PM' : 'AM'
     }
-    
+
     activeSection.value = 'hour'
-    
+
     nextTick(() => {
       pickerRef.value?.focus()
     })
@@ -386,12 +386,12 @@ const handleConfirm = () => {
     if (period.value === 'PM' && hour.value !== 12) actualHour = hour.value + 12
     if (period.value === 'AM' && hour.value === 12) actualHour = 0
   }
-  
+
   const value = formatTime(actualHour, minute.value)
   emit('update:modelValue', value)
   emit('change', value)
   isOpen.value = false
-  
+
   nextTick(() => {
     inputRef.value?.focus()
   })
@@ -572,7 +572,7 @@ onUnmounted(() => {
 
     &--disabled {
       @apply text-gray-300 cursor-not-allowed;
-      
+
       &:hover {
         @apply bg-transparent;
       }
@@ -612,7 +612,7 @@ onUnmounted(() => {
     @apply border rounded-md;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-25;
     @apply transition-colors duration-150;
-    
+
     @apply bg-white text-gray-700 border-gray-300;
     @apply hover:bg-gray-50;
 

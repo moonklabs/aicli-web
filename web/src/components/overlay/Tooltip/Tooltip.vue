@@ -2,7 +2,7 @@
   <div ref="triggerRef" class="tooltip-trigger">
     <slot />
   </div>
-  
+
   <Teleport to="body">
     <Transition name="tooltip-fade">
       <div
@@ -26,7 +26,7 @@
           class="tooltip__arrow"
           :class="`tooltip__arrow--${arrowPlacement}`"
         />
-        
+
         <!-- 내용 -->
         <div class="tooltip__content">
           <slot name="content">
@@ -39,9 +39,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useOverlay } from '../composables/useOverlayManager'
-import { usePositioning, type Placement } from '../composables/usePositioning'
+import { type Placement, usePositioning } from '../composables/usePositioning'
 
 export interface TooltipProps {
   // 툴팁 내용
@@ -106,14 +106,14 @@ const { floatingStyles, position } = usePositioning(
     placement: props.placement,
     offset: props.offset,
     flip: true,
-  }
+  },
 )
 
 // 화살표 위치 계산
 const arrowPlacement = computed(() => {
   const placement = position.value.placement
   const [side] = placement.split('-')
-  
+
   // 반대 방향 반환
   const opposite = {
     top: 'bottom',
@@ -121,7 +121,7 @@ const arrowPlacement = computed(() => {
     bottom: 'top',
     left: 'right',
   }
-  
+
   return opposite[side as keyof typeof opposite]
 })
 
@@ -130,9 +130,9 @@ function show() {
   if (props.disabled || (!props.content && !tooltipRef.value?.querySelector('.tooltip__content')?.textContent)) {
     return
   }
-  
+
   clearTimeout(hideTimer!)
-  
+
   showTimer = setTimeout(() => {
     visible.value = true
   }, props.showDelay)
@@ -141,7 +141,7 @@ function show() {
 // 숨기기
 function hide() {
   clearTimeout(showTimer!)
-  
+
   hideTimer = setTimeout(() => {
     visible.value = false
   }, props.hideDelay)
@@ -167,15 +167,15 @@ function handleBlur() {
 // 이벤트 리스너 설정
 function setupEventListeners() {
   if (!triggerRef.value) return
-  
+
   // 마우스 이벤트
   triggerRef.value.addEventListener('mouseenter', handleMouseEnter)
   triggerRef.value.addEventListener('mouseleave', handleMouseLeave)
-  
+
   // 포커스 이벤트 (키보드 접근성)
   triggerRef.value.addEventListener('focus', handleFocus, true)
   triggerRef.value.addEventListener('blur', handleBlur, true)
-  
+
   // 툴팁에도 마우스 이벤트 추가 (hover 유지)
   if (tooltipRef.value) {
     tooltipRef.value.addEventListener('mouseenter', () => clearTimeout(hideTimer!))
@@ -191,7 +191,7 @@ function cleanupEventListeners() {
     triggerRef.value.removeEventListener('focus', handleFocus, true)
     triggerRef.value.removeEventListener('blur', handleBlur, true)
   }
-  
+
   if (tooltipRef.value) {
     tooltipRef.value.removeEventListener('mouseenter', () => clearTimeout(hideTimer!))
     tooltipRef.value.removeEventListener('mouseleave', hide)

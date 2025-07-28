@@ -35,7 +35,7 @@ func NewConfigCmd() *cobra.Command {
   aicli config set logging.level debug
   
   # 전역 설정 파일에 저장
-  aicli config set claude.model claude-3-opus --global
+  aicli config set claude.model claude-3-sonnet --global
   
   # 모든 설정 나열
   aicli config list`,
@@ -143,7 +143,7 @@ func newConfigSetCmd() *cobra.Command {
   aicli config set logging.level debug
   
   # Claude 모델 전역 설정
-  aicli config set claude.model claude-3-opus --global
+  aicli config set claude.model claude-3-sonnet --global
   
   # API 타임아웃 설정 (초 단위)
   aicli config set api.timeout 30
@@ -152,7 +152,7 @@ func newConfigSetCmd() *cobra.Command {
   aicli config set docker.registry myregistry.com
   
   # 환경 변수로도 설정 가능
-  export AICLI_CLAUDE_MODEL=claude-3-opus`,
+  export AICLI_CLAUDE_MODEL=claude-3-sonnet`,
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
@@ -179,7 +179,7 @@ func newConfigSetCmd() *cobra.Command {
 				case "logging.format":
 					return []string{"text", "json"}, cobra.ShellCompDirectiveNoFileComp
 				case "claude.model":
-					return []string{"claude-3-opus", "claude-3-sonnet", "claude-3-haiku"}, cobra.ShellCompDirectiveNoFileComp
+					return []string{"claude-3-sonnet", "claude-3-sonnet", "claude-3-haiku"}, cobra.ShellCompDirectiveNoFileComp
 				default:
 					return nil, cobra.ShellCompDirectiveNoFileComp
 				}

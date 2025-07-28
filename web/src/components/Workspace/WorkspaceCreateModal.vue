@@ -1,42 +1,42 @@
 <template>
-  <n-modal v-model:show="showModal" preset="card" style="width: 600px" title="새 워크스페이스 생성">
-    <n-form
+  <NModal v-model:show="showModal" preset="card" style="width: 600px" title="새 워크스페이스 생성">
+    <NForm
       ref="formRef"
       :model="formData"
       :rules="rules"
       label-placement="top"
       require-mark-placement="right-hanging"
     >
-      <n-form-item label="워크스페이스 이름" path="name">
-        <n-input
+      <NFormItem label="워크스페이스 이름" path="name">
+        <NInput
           v-model:value="formData.name"
           placeholder="워크스페이스의 이름을 입력하세요"
           :maxlength="50"
           show-count
         />
-      </n-form-item>
+      </NFormItem>
 
-      <n-form-item label="프로젝트 경로" path="path">
-        <n-input-group>
-          <n-input
+      <NFormItem label="프로젝트 경로" path="path">
+        <NInputGroup>
+          <NInput
             v-model:value="formData.path"
             placeholder="/workspace/my-project"
             :maxlength="200"
           />
-          <n-button @click="selectDirectory">
+          <NButton @click="selectDirectory">
             <template #icon>
               <span>📁</span>
             </template>
             찾아보기
-          </n-button>
-        </n-input-group>
-        <n-text depth="3" style="font-size: 12px; margin-top: 4px">
+          </NButton>
+        </NInputGroup>
+        <NText depth="3" style="font-size: 12px; margin-top: 4px">
           Docker 컨테이너에 마운트될 로컬 디렉토리 경로
-        </n-text>
-      </n-form-item>
+        </NText>
+      </NFormItem>
 
-      <n-form-item label="설명 (선택사항)" path="description">
-        <n-input
+      <NFormItem label="설명 (선택사항)" path="description">
+        <NInput
           v-model:value="formData.description"
           type="textarea"
           placeholder="워크스페이스에 대한 간단한 설명을 입력하세요"
@@ -44,46 +44,46 @@
           show-count
           :rows="3"
         />
-      </n-form-item>
+      </NFormItem>
 
-      <n-divider />
+      <NDivider />
 
-      <n-form-item label="Docker 설정">
-        <n-space vertical style="width: 100%">
-          <n-form-item label="베이스 이미지" path="config.baseImage">
-            <n-select
+      <NFormItem label="Docker 설정">
+        <NSpace vertical style="width: 100%">
+          <NFormItem label="베이스 이미지" path="config.baseImage">
+            <NSelect
               v-model:value="formData.config.baseImage"
               :options="baseImageOptions"
               placeholder="Docker 베이스 이미지를 선택하세요"
             />
-          </n-form-item>
+          </NFormItem>
 
-          <n-form-item label="작업 디렉토리" path="config.workingDir">
-            <n-input
+          <NFormItem label="작업 디렉토리" path="config.workingDir">
+            <NInput
               v-model:value="formData.config.workingDir"
               placeholder="/workspace"
             />
-          </n-form-item>
+          </NFormItem>
 
-          <n-form-item label="환경 변수">
+          <NFormItem label="환경 변수">
             <div class="env-vars">
               <div
                 v-for="(env, index) in formData.config.environment"
                 :key="index"
                 class="env-var-row"
               >
-                <n-input
+                <NInput
                   v-model:value="env.key"
                   placeholder="변수명"
                   style="flex: 1"
                 />
                 <span>=</span>
-                <n-input
+                <NInput
                   v-model:value="env.value"
                   placeholder="값"
                   style="flex: 2"
                 />
-                <n-button
+                <NButton
                   quaternary
                   circle
                   type="error"
@@ -92,25 +92,25 @@
                   <template #icon>
                     <span>✕</span>
                   </template>
-                </n-button>
+                </NButton>
               </div>
-              <n-button dashed block @click="addEnvVar">
+              <NButton dashed block @click="addEnvVar">
                 <template #icon>
                   <span>+</span>
                 </template>
                 환경 변수 추가
-              </n-button>
+              </NButton>
             </div>
-          </n-form-item>
+          </NFormItem>
 
-          <n-form-item label="포트 매핑">
+          <NFormItem label="포트 매핑">
             <div class="port-mappings">
               <div
                 v-for="(port, index) in formData.config.ports"
                 :key="index"
                 class="port-row"
               >
-                <n-input-number
+                <NInputNumber
                   v-model:value="port.host"
                   placeholder="호스트 포트"
                   :min="1"
@@ -118,14 +118,14 @@
                   style="flex: 1"
                 />
                 <span>:</span>
-                <n-input-number
+                <NInputNumber
                   v-model:value="port.container"
                   placeholder="컨테이너 포트"
                   :min="1"
                   :max="65535"
                   style="flex: 1"
                 />
-                <n-button
+                <NButton
                   quaternary
                   circle
                   type="error"
@@ -134,48 +134,48 @@
                   <template #icon>
                     <span>✕</span>
                   </template>
-                </n-button>
+                </NButton>
               </div>
-              <n-button dashed block @click="addPort">
+              <NButton dashed block @click="addPort">
                 <template #icon>
                   <span>+</span>
                 </template>
                 포트 매핑 추가
-              </n-button>
+              </NButton>
             </div>
-          </n-form-item>
-        </n-space>
-      </n-form-item>
-    </n-form>
+          </NFormItem>
+        </NSpace>
+      </NFormItem>
+    </NForm>
 
     <template #footer>
-      <n-space justify="end">
-        <n-button @click="handleCancel">취소</n-button>
-        <n-button type="primary" :loading="creating" @click="handleCreate">
+      <NSpace justify="end">
+        <NButton @click="handleCancel">취소</NButton>
+        <NButton type="primary" :loading="creating" @click="handleCreate">
           생성
-        </n-button>
-      </n-space>
+        </NButton>
+      </NSpace>
     </template>
-  </n-modal>
+  </NModal>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
-  NModal,
+  type FormInst,
+  NButton,
+  NDivider,
   NForm,
   NFormItem,
+  NIcon,
   NInput,
   NInputGroup,
   NInputNumber,
+  NModal,
   NSelect,
-  NButton,
   NSpace,
-  NIcon,
   NText,
-  NDivider,
   useMessage,
-  type FormInst
 } from 'naive-ui'
 // import { FolderOpen, Plus, X } from '@vicons/lucide' // 이모지로 교체
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -200,7 +200,7 @@ const formRef = ref<FormInst | null>(null)
 // 모달 표시 상태 (양방향 바인딩)
 const showModal = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value)
+  set: (value) => emit('update:show', value),
 })
 
 // 폼 데이터
@@ -212,8 +212,8 @@ const formData = ref({
     baseImage: 'node:18-alpine',
     workingDir: '/workspace',
     environment: [] as Array<{ key: string; value: string }>,
-    ports: [] as Array<{ host: number | null; container: number | null }>
-  }
+    ports: [] as Array<{ host: number | null; container: number | null }>,
+  },
 })
 
 const creating = ref(false)
@@ -227,7 +227,7 @@ const baseImageOptions = [
   { label: 'Ubuntu 22.04', value: 'ubuntu:22.04' },
   { label: 'Debian 12', value: 'debian:12-slim' },
   { label: 'Alpine Linux', value: 'alpine:latest' },
-  { label: '사용자 정의', value: 'custom' }
+  { label: '사용자 정의', value: 'custom' },
 ]
 
 // 유효성 검사 규칙
@@ -235,21 +235,21 @@ const rules = {
   name: [
     { required: true, message: '워크스페이스 이름을 입력하세요' },
     { min: 2, max: 50, message: '이름은 2-50자 사이여야 합니다' },
-    { 
-      pattern: /^[a-zA-Z0-9가-힣\-_\s]+$/, 
-      message: '이름에는 영문, 숫자, 한글, 하이픈, 언더스코어만 사용할 수 있습니다' 
-    }
+    {
+      pattern: /^[a-zA-Z0-9가-힣\-_\s]+$/,
+      message: '이름에는 영문, 숫자, 한글, 하이픈, 언더스코어만 사용할 수 있습니다',
+    },
   ],
   path: [
     { required: true, message: '프로젝트 경로를 입력하세요' },
-    { 
-      pattern: /^\/[^\s]*$/, 
-      message: '절대 경로를 입력하세요 (예: /workspace/my-project)' 
-    }
+    {
+      pattern: /^\/[^\s]*$/,
+      message: '절대 경로를 입력하세요 (예: /workspace/my-project)',
+    },
   ],
   description: [
-    { max: 200, message: '설명은 200자 이하여야 합니다' }
-  ]
+    { max: 200, message: '설명은 200자 이하여야 합니다' },
+  ],
 }
 
 // 환경 변수 관리
@@ -305,8 +305,8 @@ const handleCreate = async (): Promise<void> => {
         baseImage: formData.value.config.baseImage,
         workingDir: formData.value.config.workingDir,
         environment,
-        ports
-      }
+        ports,
+      },
     }
 
     const workspace = await workspaceStore.createWorkspace(workspaceData)
@@ -338,8 +338,8 @@ const resetForm = (): void => {
       baseImage: 'node:18-alpine',
       workingDir: '/workspace',
       environment: [],
-      ports: []
-    }
+      ports: [],
+    },
   }
 }
 

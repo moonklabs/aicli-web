@@ -1,10 +1,10 @@
 <template>
-  <n-card
+  <NCard
     class="workspace-card"
-    :class="{ 
-      'active': isActive, 
+    :class="{
+      'active': isActive,
       'loading': workspace.status === 'loading',
-      'error': workspace.status === 'error' 
+      'error': workspace.status === 'error'
     }"
     hoverable
     @click="selectWorkspace"
@@ -19,13 +19,13 @@
           </p>
         </div>
         <div class="workspace-actions">
-          <n-dropdown :options="actionOptions" @select="handleAction">
-            <n-button quaternary circle size="small">
+          <NDropdown :options="actionOptions" @select="handleAction">
+            <NButton quaternary circle size="small">
               <template #icon>
                 <span>⋯</span>
               </template>
-            </n-button>
-          </n-dropdown>
+            </NButton>
+          </NDropdown>
         </div>
       </div>
     </template>
@@ -33,9 +33,9 @@
     <div class="workspace-content">
       <!-- 상태 태그들 -->
       <div class="workspace-status">
-        <n-space>
+        <NSpace>
           <!-- Docker 컨테이너 상태 -->
-          <n-tag
+          <NTag
             v-if="workspace.containerStatus"
             :type="workspace.containerStatus.type"
             :bordered="false"
@@ -45,19 +45,19 @@
               <span>🐳</span>
             </template>
             {{ workspace.containerStatus.text }}
-          </n-tag>
+          </NTag>
 
           <!-- Git 브랜치 정보 -->
-          <n-tag v-if="workspace.git?.branch" type="info" size="small">
+          <NTag v-if="workspace.git?.branch" type="info" size="small">
             <template #icon>
               <span>🌿</span>
             </template>
             {{ workspace.git.branch }}
             <span v-if="workspace.git.hasChanges" class="git-changes">*</span>
-          </n-tag>
+          </NTag>
 
           <!-- Claude 세션 상태 -->
-          <n-tag
+          <NTag
             v-if="workspace.claudeSession"
             :type="getClaudeSessionType(workspace.claudeSession.status)"
             size="small"
@@ -66,63 +66,63 @@
               <span>💻</span>
             </template>
             Claude {{ workspace.claudeSession.status }}
-          </n-tag>
+          </NTag>
 
           <!-- 워크스페이스 상태 -->
-          <n-tag
+          <NTag
             :type="getWorkspaceStatusType(workspace.status)"
             size="small"
           >
             {{ getWorkspaceStatusText(workspace.status) }}
-          </n-tag>
-        </n-space>
+          </NTag>
+        </NSpace>
       </div>
 
       <!-- 통계 정보 -->
       <div class="workspace-stats">
-        <n-space>
-          <n-statistic 
-            label="파일 수" 
-            :value="workspace.stats?.fileCount || 0" 
+        <NSpace>
+          <NStatistic
+            label="파일 수"
+            :value="workspace.stats?.fileCount || 0"
             size="small"
           />
-          <n-statistic 
-            label="라인 수" 
-            :value="workspace.stats?.lineCount || 0" 
+          <NStatistic
+            label="라인 수"
+            :value="workspace.stats?.lineCount || 0"
             size="small"
           />
-          <n-statistic 
-            label="마지막 수정" 
-            :value="formatTimeAgo(workspace.lastModified)" 
+          <NStatistic
+            label="마지막 수정"
+            :value="formatTimeAgo(workspace.lastModified)"
             size="small"
           />
-        </n-space>
+        </NSpace>
       </div>
 
       <!-- 현재 진행 중인 태스크 -->
       <div v-if="workspace.currentTask" class="workspace-task">
         <div class="task-info">
           <span class="task-description">{{ workspace.currentTask.description }}</span>
-          <n-tag 
-            :type="getTaskStatusType(workspace.currentTask.status)" 
+          <NTag
+            :type="getTaskStatusType(workspace.currentTask.status)"
             size="tiny"
           >
             {{ workspace.currentTask.status }}
-          </n-tag>
+          </NTag>
         </div>
-        <n-progress
+        <NProgress
           :percentage="workspace.currentTask.progress"
           :status="getTaskProgressStatus(workspace.currentTask.status)"
           class="task-progress"
         />
       </div>
     </div>
-  </n-card>
+  </NCard>
 </template>
 
 <script setup lang="ts">
 import { computed, h } from 'vue'
-import { NCard, NButton, NDropdown, NIcon, NTag, NSpace, NStatistic, NProgress } from 'naive-ui'
+import { NButton, NCard, NDropdown, NIcon, NProgress, NSpace, NStatistic, NTag } from 'naive-ui'
 import type { Workspace } from '@/stores/workspace'
 
 interface Props {
@@ -136,7 +136,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isActive: false
+  isActive: false,
 })
 
 const emit = defineEmits<Emits>()
@@ -147,46 +147,46 @@ const actionOptions = computed(() => [
     label: '활성화',
     key: 'activate',
     icon: () => h('span', '▶️'),
-    disabled: props.workspace.status === 'active'
+    disabled: props.workspace.status === 'active',
   },
   {
     label: '일시정지',
     key: 'pause',
     icon: () => h('span', '⏸️'),
-    disabled: props.workspace.status !== 'active'
+    disabled: props.workspace.status !== 'active',
   },
   {
     label: '중지',
     key: 'stop',
     icon: () => h('span', '⏹️'),
-    disabled: props.workspace.status === 'idle'
+    disabled: props.workspace.status === 'idle',
   },
   {
     type: 'divider',
-    key: 'divider1'
+    key: 'divider1',
   },
   {
     label: '설정',
     key: 'settings',
-    icon: () => h('span', '⚙️')
+    icon: () => h('span', '⚙️'),
   },
   {
     label: '브라우저에서 열기',
     key: 'open-browser',
-    icon: () => h('span', '🔗')
+    icon: () => h('span', '🔗'),
   },
   {
     type: 'divider',
-    key: 'divider2'
+    key: 'divider2',
   },
   {
     label: '삭제',
     key: 'delete',
     icon: () => h('span', '🗑️'),
     props: {
-      style: 'color: #d03050'
-    }
-  }
+      style: 'color: #d03050',
+    },
+  },
 ])
 
 // 이벤트 핸들러
@@ -253,16 +253,16 @@ const getTaskProgressStatus = (status: string): 'success' | 'warning' | 'error' 
 const formatTimeAgo = (date: Date): string => {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   const minutes = Math.floor(diff / (1000 * 60))
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (minutes < 1) return '방금 전'
   if (minutes < 60) return `${minutes}분 전`
   if (hours < 24) return `${hours}시간 전`
   if (days < 7) return `${days}일 전`
-  
+
   return date.toLocaleDateString('ko-KR')
 }
 </script>

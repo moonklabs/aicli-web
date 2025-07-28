@@ -49,7 +49,7 @@
             <template #default="{ item: slotItem, index: slotIndex }">
               <slot :item="slotItem" :index="slotIndex" />
             </template>
-            
+
             <template v-if="$slots.actions" #actions="{ item: slotItem }">
               <slot name="actions" :item="slotItem" />
             </template>
@@ -76,7 +76,7 @@
         <template #default="{ item: slotItem, index: slotIndex }">
           <slot :item="slotItem" :index="slotIndex" />
         </template>
-        
+
         <template v-if="$slots.actions" #actions="{ item: slotItem }">
           <slot name="actions" :item="slotItem" />
         </template>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useTouchGestures } from '@/composables/useTouchGestures'
 import AppInput from './AppInput.vue'
 import AppSpinner from '../feedback/AppSpinner.vue'
@@ -236,7 +236,7 @@ const updateVirtualScroll = () => {
   startIndex.value = Math.floor(scrollTop.value / props.itemHeight)
   endIndex.value = Math.min(
     startIndex.value + visibleCount.value,
-    filteredItems.value.length
+    filteredItems.value.length,
   )
 
   emit('scroll', scrollTop.value)
@@ -256,7 +256,7 @@ const handleVirtualScroll = () => {
 // 아이템 이벤트 핸들러
 const handleItemClick = (item: ListItem, index: number) => {
   if (isDisabled(item)) return
-  
+
   emit('item-click', item, index)
 }
 
@@ -273,12 +273,12 @@ const handleItemTouchEnd = (item: ListItem, index: number) => {
 
 const handleItemLongPress = (item: ListItem, index: number) => {
   if (isDisabled(item)) return
-  
+
   // 롱 프레스 햅틱 피드백
   if ('vibrate' in navigator) {
     navigator.vibrate([50, 50, 50])
   }
-  
+
   emit('item-long-press', item, index)
 }
 
@@ -337,7 +337,7 @@ watch(
         updateVirtualScroll()
       })
     }
-  }
+  },
 )
 
 // 공개 메서드
@@ -359,7 +359,7 @@ defineExpose({
 
   &--bordered {
     border: 1px solid map-get($gray-colors, 200);
-    
+
     .dark & {
       border-color: $dark-bg-tertiary;
     }
@@ -375,7 +375,7 @@ defineExpose({
     padding: $spacing-3;
     border-bottom: 1px solid map-get($gray-colors, 200);
     background: map-get($gray-colors, 50);
-    
+
     .dark & {
       border-bottom-color: $dark-bg-tertiary;
       background: $dark-bg-tertiary;
@@ -417,7 +417,7 @@ defineExpose({
     gap: $spacing-3;
     padding: $spacing-8;
     color: $light-text-secondary;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -443,7 +443,7 @@ defineExpose({
     width: 48px;
     height: 48px;
     color: map-get($gray-colors, 400);
-    
+
     .dark & {
       color: $dark-text-tertiary;
     }
@@ -454,7 +454,7 @@ defineExpose({
     font-weight: $font-weight-semibold;
     color: $light-text-primary;
     margin: 0;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -464,7 +464,7 @@ defineExpose({
     font-size: $font-size-sm;
     color: $light-text-secondary;
     margin: 0;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -478,11 +478,11 @@ defineExpose({
     &__virtual-container {
       max-height: 60vh;
     }
-    
+
     &__search {
       padding: $spacing-4;
     }
-    
+
     &__loading,
     &__empty {
       padding: $spacing-6;

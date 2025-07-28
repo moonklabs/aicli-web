@@ -1,16 +1,16 @@
-import { ref, computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 export interface FormStateOptions {
   // 자동 저장 설정
   autoSave?: boolean
   autoSaveDelay?: number
-  
+
   // 변경 추적 설정
   trackChanges?: boolean
-  
+
   // 로컬 스토리지 설정
   persistKey?: string
-  
+
   // 콜백
   onSave?: (data: any) => void | Promise<void>
   onChange?: (data: any, changedField?: string) => void
@@ -19,7 +19,7 @@ export interface FormStateOptions {
 
 export function useFormState<T extends Record<string, any>>(
   initialData: T,
-  options: FormStateOptions = {}
+  options: FormStateOptions = {},
 ) {
   const {
     autoSave = false,
@@ -28,29 +28,29 @@ export function useFormState<T extends Record<string, any>>(
     persistKey,
     onSave,
     onChange,
-    onReset
+    onReset,
   } = options
 
   // 폼 데이터
   const data = reactive<T>({ ...initialData })
   const originalData = ref<T>({ ...initialData })
-  
+
   // 상태
   const isSaving = ref(false)
   const isSaved = ref(false)
   const saveError = ref<Error | null>(null)
-  
+
   // 변경 추적
   const changedFields = ref<Set<string>>(new Set())
   const changeHistory = ref<Array<{ field: string; oldValue: any; newValue: any; timestamp: Date }>>([])
-  
+
   // 자동 저장 타이머
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null
 
   // 로컬 스토리지에서 데이터 로드
   const loadFromStorage = () => {
     if (!persistKey) return
-    
+
     try {
       const stored = localStorage.getItem(persistKey)
       if (stored) {
@@ -66,7 +66,7 @@ export function useFormState<T extends Record<string, any>>(
   // 로컬 스토리지에 데이터 저장
   const saveToStorage = () => {
     if (!persistKey) return
-    
+
     try {
       localStorage.setItem(persistKey, JSON.stringify(data))
     } catch (error) {
@@ -78,17 +78,17 @@ export function useFormState<T extends Record<string, any>>(
   const save = async () => {
     isSaving.value = true
     saveError.value = null
-    
+
     try {
       if (onSave) {
         await onSave(data)
       }
-      
+
       saveToStorage()
       originalData.value = { ...data }
       changedFields.value.clear()
       isSaved.value = true
-      
+
       // 3초 후 저장 표시 제거
       setTimeout(() => {
         isSaved.value = false
@@ -104,11 +104,11 @@ export function useFormState<T extends Record<string, any>>(
   // 자동 저장 처리
   const handleAutoSave = () => {
     if (!autoSave) return
-    
+
     if (autoSaveTimer) {
       clearTimeout(autoSaveTimer)
     }
-    
+
     autoSaveTimer = setTimeout(() => {
       save().catch(console.error)
     }, autoSaveDelay)
@@ -117,24 +117,24 @@ export function useFormState<T extends Record<string, any>>(
   // 필드 값 설정
   const setFieldValue = (field: string, value: any) => {
     const oldValue = data[field as keyof T]
-    
+
     if (oldValue !== value) {
       data[field as keyof T] = value
-      
+
       if (trackChanges) {
         changedFields.value.add(field)
         changeHistory.value.push({
           field,
           oldValue,
           newValue: value,
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
-      
+
       if (onChange) {
         onChange(data, field)
       }
-      
+
       handleAutoSave()
     }
   }
@@ -151,15 +151,15 @@ export function useFormState<T extends Record<string, any>>(
     if (newInitialData) {
       originalData.value = { ...newInitialData }
     }
-    
+
     Object.assign(data, originalData.value)
     changedFields.value.clear()
     changeHistory.value = []
-    
+
     if (persistKey) {
       localStorage.removeItem(persistKey)
     }
-    
+
     if (onReset) {
       onReset()
     }
@@ -181,13 +181,13 @@ export function useFormState<T extends Record<string, any>>(
 
   // Computed 속성들
   const isDirty = computed(() => changedFields.value.size > 0)
-  
+
   const hasChanges = computed(() => changedFields.value.size > 0)
-  
+
   const changedFieldsList = computed(() => Array.from(changedFields.value))
-  
+
   const canSave = computed(() => !isSaving.value && isDirty.value)
-  
+
   const canRevert = computed(() => isDirty.value)
 
   // 데이터 변경 감지
@@ -197,7 +197,7 @@ export function useFormState<T extends Record<string, any>>(
       Object.keys(newData).forEach(field => {
         const originalValue = originalData.value[field as keyof T]
         const currentValue = newData[field as keyof T]
-        
+
         if (JSON.stringify(originalValue) !== JSON.stringify(currentValue)) {
           changedFields.value.add(field)
         } else {
@@ -224,7 +224,7 @@ export function useFormState<T extends Record<string, any>>(
     // 데이터
     data,
     originalData,
-    
+
     // 상태
     isSaving,
     isSaved,
@@ -235,7 +235,7 @@ export function useFormState<T extends Record<string, any>>(
     changeHistory,
     canSave,
     canRevert,
-    
+
     // 메서드
     setFieldValue,
     setFieldValues,
@@ -243,7 +243,7 @@ export function useFormState<T extends Record<string, any>>(
     reset,
     revert,
     revertField,
-    cleanup
+    cleanup,
   }
 }
 
@@ -262,19 +262,19 @@ export function useFormSteps(steps: FormStep[], initialStep = 0) {
   const isTransitioning = ref(false)
 
   const currentStep = computed(() => steps[currentStepIndex.value])
-  
+
   const isFirstStep = computed(() => currentStepIndex.value === 0)
-  
+
   const isLastStep = computed(() => currentStepIndex.value === steps.length - 1)
-  
+
   const canGoNext = computed(() => {
     if (isLastStep.value) return false
     const step = steps[currentStepIndex.value]
     return !step.isValid || step.isValid()
   })
-  
+
   const canGoPrevious = computed(() => !isFirstStep.value)
-  
+
   const progress = computed(() => {
     return ((currentStepIndex.value + 1) / steps.length) * 100
   })
@@ -325,9 +325,9 @@ export function useFormSteps(steps: FormStep[], initialStep = 0) {
   }
 
   const isStepVisited = (index: number) => visitedSteps.value.has(index)
-  
+
   const isStepActive = (index: number) => currentStepIndex.value === index
-  
+
   const isStepCompleted = (index: number) => {
     if (index >= currentStepIndex.value) return false
     const step = steps[index]
@@ -345,7 +345,7 @@ export function useFormSteps(steps: FormStep[], initialStep = 0) {
     progress,
     isTransitioning,
     visitedSteps: Array.from(visitedSteps.value),
-    
+
     // 메서드
     next,
     previous,
@@ -353,6 +353,6 @@ export function useFormSteps(steps: FormStep[], initialStep = 0) {
     reset,
     isStepVisited,
     isStepActive,
-    isStepCompleted
+    isStepCompleted,
   }
 }

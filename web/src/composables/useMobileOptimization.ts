@@ -1,5 +1,5 @@
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { useTouchPerformance, useDeviceDetection } from './useTouchPerformance'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useDeviceDetection, useTouchPerformance } from './useTouchPerformance'
 
 interface MobileOptimizationOptions {
   enableVirtualKeyboardOptimization?: boolean
@@ -49,7 +49,7 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
     const handleViewportChange = () => {
       currentViewportHeight.value = window.innerHeight
       const heightDiff = initialViewportHeight.value - currentViewportHeight.value
-      
+
       // 높이가 150px 이상 줄어들면 가상 키보드가 열린 것으로 간주
       isVirtualKeyboardOpen.value = heightDiff > 150
 
@@ -94,13 +94,13 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
           if (dataSrc) {
             // 고해상도 이미지 지원
             const devicePixelRatio = window.devicePixelRatio || 1
-            const src = devicePixelRatio > 1 && img.dataset.srcHd ? 
+            const src = devicePixelRatio > 1 && img.dataset.srcHd ?
               img.dataset.srcHd : dataSrc
 
             img.src = src
             img.classList.remove('lazy')
             img.classList.add('loaded')
-            
+
             lazyImageObserver.value?.unobserve(img)
             lazyImages.value.delete(img)
           }
@@ -131,7 +131,7 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
         link.href = url
         link.as = type
         document.head.appendChild(link)
-        
+
         prefetchedResources.value.add(url)
       })
     }
@@ -160,7 +160,7 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
     const checkMemoryPressure = () => {
       // @ts-ignore
       const memory = (performance as any).memory
-      
+
       if (memory) {
         const usageRatio = memory.usedJSHeapSize / memory.jsHeapSizeLimit
         memoryPressure.value = usageRatio > 0.8
@@ -219,15 +219,15 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
     try {
       // @ts-ignore
       const battery = await navigator.getBattery?.()
-      
+
       if (battery) {
         const optimizeForBattery = () => {
           const lowBattery = battery.level < 0.2 && !battery.charging
-          
+
           if (lowBattery) {
             // 저전력 모드 활성화
             document.body.classList.add('low-battery-mode')
-            
+
             // 애니메이션 비활성화
             const style = document.createElement('style')
             style.textContent = `
@@ -338,7 +338,7 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
 export const vLazyImage = {
   mounted(el: HTMLImageElement, binding: any) {
     const { registerLazyImage } = binding.instance?.setupState || {}
-    
+
     if (registerLazyImage) {
       // data-src 속성이 있으면 지연 로딩 적용
       if (el.dataset.src) {
@@ -347,10 +347,10 @@ export const vLazyImage = {
       }
     }
   },
-  
+
   beforeUnmount(el: HTMLImageElement, binding: any) {
     const { unregisterLazyImage } = binding.instance?.setupState || {}
-    
+
     if (unregisterLazyImage) {
       unregisterLazyImage(el)
     }
@@ -373,13 +373,13 @@ export function usePerformanceMonitor() {
     const measureFPS = () => {
       frameCount++
       const currentTime = performance.now()
-      
+
       if (currentTime - lastTime >= 1000) {
         metrics.value.fps = Math.round(frameCount * 1000 / (currentTime - lastTime))
         frameCount = 0
         lastTime = currentTime
       }
-      
+
       requestAnimationFrame(measureFPS)
     }
 

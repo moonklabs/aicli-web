@@ -4,6 +4,7 @@ export { useChartAccessibility } from './useChartAccessibility'
 export { useAriaLive } from './useAriaLive'
 export { useFocusTrap } from './useFocusTrap'
 export { useKeyboardNavigation } from './useKeyboardNavigation'
+export { useAccessibilityNavigation } from './useAccessibilityNavigation'
 
 // 모바일 최적화 composables
 export { useTouchGestures } from './useTouchGestures'

@@ -1,14 +1,14 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { 
-  OAuthAccount, 
-  OAuthProvider, 
-  Role, 
-  Permission, 
-  UserRole, 
-  UserPermissions,
+import type {
+  OAuthAccount,
+  OAuthProvider,
+  Permission,
   PermissionCheck,
-  PermissionCheckResponse 
+  PermissionCheckResponse,
+  Role,
+  UserPermissions,
+  UserRole,
 } from '@/types/api'
 import { PermissionUtils } from '@/utils/permission'
 
@@ -34,13 +34,13 @@ export const useUserStore = defineStore('user', () => {
   const authState = ref<AuthState>({})
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  
+
   // OAuth 관련 상태
   const oauthProviders = ref<OAuthProvider[]>([])
   const linkedOAuthAccounts = ref<OAuthAccount[]>([])
   const oauthLoading = ref(false)
   const oauthError = ref<string | null>(null)
-  
+
   // RBAC 관련 상태
   const userRoles = ref<UserRole[]>([])
   const availableRoles = ref<Role[]>([])
@@ -61,54 +61,54 @@ export const useUserStore = defineStore('user', () => {
   const currentUser = computed(() => user.value)
 
   // OAuth 관련 계산된 속성
-  const availableOAuthProviders = computed(() => 
-    oauthProviders.value.filter(provider => provider.enabled)
+  const availableOAuthProviders = computed(() =>
+    oauthProviders.value.filter(provider => provider.enabled),
   )
-  
-  const isOAuthAccountLinked = computed(() => (providerName: string) => 
-    linkedOAuthAccounts.value.some(account => 
-      account.provider === providerName && account.connected
-    )
+
+  const isOAuthAccountLinked = computed(() => (providerName: string) =>
+    linkedOAuthAccounts.value.some(account =>
+      account.provider === providerName && account.connected,
+    ),
   )
-  
+
   // RBAC 관련 계산된 속성
   const hasPermissions = computed(() => userPermissions.value !== null)
-  
-  const currentUserRoles = computed(() => 
-    userRoles.value.filter(ur => ur.isActive).map(ur => ur.role?.name).filter(Boolean)
+
+  const currentUserRoles = computed(() =>
+    userRoles.value.filter(ur => ur.isActive).map(ur => ur.role?.name).filter(Boolean),
   )
-  
-  const isAdmin = computed(() => 
-    currentUserRoles.value.includes('admin') || 
-    currentUserRoles.value.includes('super_admin')
+
+  const isAdmin = computed(() =>
+    currentUserRoles.value.includes('admin') ||
+    currentUserRoles.value.includes('super_admin'),
   )
-  
-  const isSuperAdmin = computed(() => 
-    currentUserRoles.value.includes('super_admin')
+
+  const isSuperAdmin = computed(() =>
+    currentUserRoles.value.includes('super_admin'),
   )
-  
+
   const permissionsSummary = computed(() => {
     if (!userPermissions.value) return null
-    
+
     const permissions = userPermissions.value.finalPermissions
     const summary = {
       total: Object.keys(permissions).length,
       allowed: 0,
       denied: 0,
-      byResource: {} as Record<string, number>
+      byResource: {} as Record<string, number>,
     }
-    
+
     Object.values(permissions).forEach(permission => {
       if (permission.effect === 'allow') {
         summary.allowed++
       } else {
         summary.denied++
       }
-      
+
       const resource = permission.resourceType
       summary.byResource[resource] = (summary.byResource[resource] || 0) + 1
     })
-    
+
     return summary
   })
 
@@ -133,7 +133,7 @@ export const useUserStore = defineStore('user', () => {
     authState.value = {}
     localStorage.removeItem('auth_token')
     localStorage.removeItem('refresh_token')
-    
+
     // RBAC 정보도 함께 초기화
     clearPermissions()
   }
@@ -169,15 +169,15 @@ export const useUserStore = defineStore('user', () => {
 
   const addLinkedOAuthAccount = (account: OAuthAccount) => {
     const existingIndex = linkedOAuthAccounts.value.findIndex(
-      acc => acc.provider === account.provider
+      acc => acc.provider === account.provider,
     )
-    
+
     if (existingIndex >= 0) {
       linkedOAuthAccounts.value[existingIndex] = account
     } else {
       linkedOAuthAccounts.value.push(account)
     }
-    
+
     // 사용자 정보에도 동기화
     if (user.value) {
       user.value.oauthAccounts = [...linkedOAuthAccounts.value]
@@ -186,15 +186,15 @@ export const useUserStore = defineStore('user', () => {
 
   const removeLinkedOAuthAccount = (provider: string) => {
     linkedOAuthAccounts.value = linkedOAuthAccounts.value.filter(
-      account => account.provider !== provider
+      account => account.provider !== provider,
     )
-    
+
     // 사용자 정보에도 동기화
     if (user.value) {
       user.value.oauthAccounts = [...linkedOAuthAccounts.value]
     }
   }
-  
+
   // RBAC 관련 액션
   const setUserRoles = (roles: UserRole[]) => {
     userRoles.value = roles
@@ -202,96 +202,96 @@ export const useUserStore = defineStore('user', () => {
     const roleObjects = roles.map(ur => ur.role).filter(Boolean) as Role[]
     PermissionUtils.setUserRoles(roleObjects)
   }
-  
+
   const setAvailableRoles = (roles: Role[]) => {
     availableRoles.value = roles
   }
-  
+
   const setUserPermissions = (permissions: UserPermissions) => {
     userPermissions.value = permissions
     lastPermissionUpdate.value = new Date()
-    
+
     // PermissionUtils에 권한 정보 동기화
     PermissionUtils.setUserPermissions(permissions)
   }
-  
+
   const clearPermissions = () => {
     userPermissions.value = null
     userRoles.value = []
     availableRoles.value = []
     permissionCache.value.clear()
     lastPermissionUpdate.value = null
-    
+
     // PermissionUtils도 초기화
     PermissionUtils.clearCache()
   }
-  
+
   const setPermissionsLoading = (loading: boolean) => {
     permissionsLoading.value = loading
   }
-  
+
   const setPermissionsError = (errorMessage: string | null) => {
     permissionsError.value = errorMessage
   }
-  
+
   const addUserRole = (userRole: UserRole) => {
     const existingIndex = userRoles.value.findIndex(ur => ur.roleId === userRole.roleId)
-    
+
     if (existingIndex >= 0) {
       userRoles.value[existingIndex] = userRole
     } else {
       userRoles.value.push(userRole)
     }
-    
+
     // 역할 변경 시 권한 정보 재로드 트리거
     refreshPermissions()
   }
-  
+
   const removeUserRole = (roleId: string) => {
     userRoles.value = userRoles.value.filter(ur => ur.roleId !== roleId)
-    
+
     // 역할 변경 시 권한 정보 재로드 트리거
     refreshPermissions()
   }
-  
+
   const checkPermission = (resourceType: string, action: string, resourceId?: string): boolean => {
     const cacheKey = `${resourceType}:${action}:${resourceId || '*'}`
-    
+
     // 캐시에서 먼저 확인
     if (permissionCache.value.has(cacheKey)) {
       return permissionCache.value.get(cacheKey)!
     }
-    
+
     // PermissionUtils를 통해 권한 체크
     const hasPermission = PermissionUtils.hasPermission(
-      resourceType as any, 
-      action as any, 
-      resourceId
+      resourceType as any,
+      action as any,
+      resourceId,
     )
-    
+
     // 캐시에 저장 (5분 후 자동 삭제)
     permissionCache.value.set(cacheKey, hasPermission)
     setTimeout(() => {
       permissionCache.value.delete(cacheKey)
     }, 5 * 60 * 1000)
-    
+
     return hasPermission
   }
-  
+
   const hasRole = (roleName: string): boolean => {
     return currentUserRoles.value.includes(roleName)
   }
-  
+
   const refreshPermissions = async (): Promise<void> => {
     if (!user.value) return
-    
+
     try {
       setPermissionsLoading(true)
       setPermissionsError(null)
-      
+
       // TODO: 실제 API 호출로 권한 정보 새로고침
       console.log('Refreshing user permissions...')
-      
+
       // 임시로 기본 권한 설정 (실제 구현에서는 API 호출)
       const mockPermissions: UserPermissions = {
         userId: user.value.id,
@@ -305,7 +305,7 @@ export const useUserStore = defineStore('user', () => {
             action: 'read',
             effect: 'allow',
             source: 'role',
-            reason: 'Basic user access'
+            reason: 'Basic user access',
           },
           'workspace:*:read': {
             resourceType: 'workspace',
@@ -313,12 +313,12 @@ export const useUserStore = defineStore('user', () => {
             action: 'read',
             effect: 'allow',
             source: 'role',
-            reason: 'Workspace access'
-          }
+            reason: 'Workspace access',
+          },
         },
-        computedAt: new Date().toISOString()
+        computedAt: new Date().toISOString(),
       }
-      
+
       setUserPermissions(mockPermissions)
     } catch (error) {
       console.error('Failed to refresh permissions:', error)
@@ -327,12 +327,12 @@ export const useUserStore = defineStore('user', () => {
       setPermissionsLoading(false)
     }
   }
-  
+
   const loadAvailableRoles = async (): Promise<void> => {
     try {
       // TODO: 실제 API 호출로 사용 가능한 역할 목록 로드
       console.log('Loading available roles...')
-      
+
       // 임시로 기본 역할 설정
       const mockRoles: Role[] = [
         {
@@ -343,7 +343,7 @@ export const useUserStore = defineStore('user', () => {
           isSystem: true,
           isActive: true,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         },
         {
           id: '2',
@@ -353,10 +353,10 @@ export const useUserStore = defineStore('user', () => {
           isSystem: true,
           isActive: true,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
+          updatedAt: new Date().toISOString(),
+        },
       ]
-      
+
       setAvailableRoles(mockRoles)
     } catch (error) {
       console.error('Failed to load available roles:', error)
@@ -395,7 +395,7 @@ export const useUserStore = defineStore('user', () => {
             refreshToken: refreshTokenValue || undefined,
             expiresAt,
           }
-          
+
           // 토큰이 유효한 경우 권한 정보도 로드
           await refreshPermissions()
           await loadAvailableRoles()
@@ -415,13 +415,13 @@ export const useUserStore = defineStore('user', () => {
     authState,
     isLoading,
     error,
-    
+
     // OAuth 관련 상태
     oauthProviders,
     linkedOAuthAccounts,
     oauthLoading,
     oauthError,
-    
+
     // RBAC 관련 상태
     userRoles,
     availableRoles,
@@ -436,7 +436,7 @@ export const useUserStore = defineStore('user', () => {
     currentUser,
     availableOAuthProviders,
     isOAuthAccountLinked,
-    
+
     // RBAC 관련 계산된 속성
     hasPermissions,
     currentUserRoles,
@@ -452,7 +452,7 @@ export const useUserStore = defineStore('user', () => {
     setError,
     refreshToken,
     initializeAuth,
-    
+
     // OAuth 관련 액션
     setOAuthProviders,
     setLinkedOAuthAccounts,
@@ -460,7 +460,7 @@ export const useUserStore = defineStore('user', () => {
     setOAuthError,
     addLinkedOAuthAccount,
     removeLinkedOAuthAccount,
-    
+
     // RBAC 관련 액션
     setUserRoles,
     setAvailableRoles,

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 interface VirtualScrollOptions {
   itemHeight: number
@@ -16,7 +16,7 @@ interface VirtualScrollItem {
 export function useVirtualScroll<T>(
   items: T[],
   containerRef: { value: HTMLElement | undefined },
-  options: VirtualScrollOptions
+  options: VirtualScrollOptions,
 ) {
   const {
     itemHeight,
@@ -176,7 +176,7 @@ export function useVirtualScroll<T>(
           setupEventListeners()
         })
       }
-    }
+    },
   )
 
   // 아이템 변화 감지
@@ -189,7 +189,7 @@ export function useVirtualScroll<T>(
           scrollToBottom('auto')
         }
       })
-    }
+    },
   )
 
   return {
@@ -223,7 +223,7 @@ export interface VirtualScrollItemProps {
 export function createVirtualScrollItem(
   index: number,
   top: number,
-  height: number
+  height: number,
 ): VirtualScrollItemProps {
   return {
     index,

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export interface FileTreeNode {
   key: string
@@ -44,7 +44,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     showHidden: false,
     showGitIgnored: true,
     fileExtensions: [],
-    searchQuery: ''
+    searchQuery: '',
   })
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -61,7 +61,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
   const filteredTree = computed(() => (workspaceId: string) => {
     const tree = workspaceTrees.value.get(workspaceId)
     if (!tree) return null
-    
+
     return filterTreeNode(tree, filter.value)
   })
 
@@ -91,8 +91,8 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     if (searchQuery && !node.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       // 디렉토리의 경우 자식 중에 매칭되는 것이 있는지 확인
       if (node.isDirectory && node.children) {
-        const hasMatchingChildren = node.children.some(child => 
-          filterTreeNode(child, filterOptions) !== null
+        const hasMatchingChildren = node.children.some(child =>
+          filterTreeNode(child, filterOptions) !== null,
         )
         if (!hasMatchingChildren) return null
       } else {
@@ -110,7 +110,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
 
     return {
       ...node,
-      children: filteredChildren
+      children: filteredChildren,
     }
   }
 
@@ -124,14 +124,14 @@ export const useFileTreeStore = defineStore('fileTree', () => {
   const loadWorkspaceTree = async (workspaceId: string, path?: string): Promise<void> => {
     isLoading.value = true
     error.value = null
-    
+
     const loadPath = path || '/'
     loadingPaths.value.add(loadPath)
 
     try {
       // TODO: API 호출로 파일 트리 가져오기
       // const response = await fileApi.getTree(workspaceId, path)
-      
+
       // 더미 데이터 생성
       const dummyTree = generateDummyFileTree(workspaceId, loadPath)
       workspaceTrees.value.set(workspaceId, dummyTree)
@@ -142,7 +142,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
         hasChanges: true,
         changedFiles: ['/src/components/FileTree/FileTreeView.vue', '/src/stores/fileTree.ts'],
         untrackedFiles: ['/temp/cache.tmp', '/logs/debug.log'],
-        stagedFiles: ['/src/stores/fileTree.ts']
+        stagedFiles: ['/src/stores/fileTree.ts'],
       })
 
     } catch (err) {
@@ -164,7 +164,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
       isModified: false,
       level,
       parentPath: path.substring(0, path.lastIndexOf('/')),
-      ...options
+      ...options,
     })
 
     // 루트 노드
@@ -176,7 +176,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
       createNode('.gitignore', '/.gitignore', false, 1, { size: 123, gitStatus: 'modified' }),
       createNode('README.md', '/README.md', false, 1, { size: 2048 }),
       createNode('package.json', '/package.json', false, 1, { size: 1024 }),
-      createNode('src', '/src', true, 1, { 
+      createNode('src', '/src', true, 1, {
         isExpanded: true,
         children: [
           createNode('components', '/src/components', true, 2, {
@@ -185,65 +185,65 @@ export const useFileTreeStore = defineStore('fileTree', () => {
               createNode('FileTree', '/src/components/FileTree', true, 3, {
                 isExpanded: false,
                 children: [
-                  createNode('FileTreeView.vue', '/src/components/FileTree/FileTreeView.vue', false, 4, { 
-                    size: 4096, 
+                  createNode('FileTreeView.vue', '/src/components/FileTree/FileTreeView.vue', false, 4, {
+                    size: 4096,
                     gitStatus: 'modified',
-                    isModified: true 
+                    isModified: true,
                   }),
-                  createNode('FileTreeNode.vue', '/src/components/FileTree/FileTreeNode.vue', false, 4, { size: 2048 })
-                ]
+                  createNode('FileTreeNode.vue', '/src/components/FileTree/FileTreeNode.vue', false, 4, { size: 2048 }),
+                ],
               }),
               createNode('Workspace', '/src/components/Workspace', true, 3, {
                 isExpanded: false,
                 children: [
                   createNode('WorkspaceCard.vue', '/src/components/Workspace/WorkspaceCard.vue', false, 4, { size: 3072 }),
-                  createNode('WorkspaceList.vue', '/src/components/Workspace/WorkspaceList.vue', false, 4, { size: 5120 })
-                ]
-              })
-            ]
+                  createNode('WorkspaceList.vue', '/src/components/Workspace/WorkspaceList.vue', false, 4, { size: 5120 }),
+                ],
+              }),
+            ],
           }),
           createNode('stores', '/src/stores', true, 2, {
             isExpanded: true,
             children: [
-              createNode('fileTree.ts', '/src/stores/fileTree.ts', false, 3, { 
-                size: 6144, 
+              createNode('fileTree.ts', '/src/stores/fileTree.ts', false, 3, {
+                size: 6144,
                 gitStatus: 'added',
-                isModified: true 
+                isModified: true,
               }),
               createNode('workspace.ts', '/src/stores/workspace.ts', false, 3, { size: 8192 }),
-              createNode('docker.ts', '/src/stores/docker.ts', false, 3, { size: 4096 })
-            ]
+              createNode('docker.ts', '/src/stores/docker.ts', false, 3, { size: 4096 }),
+            ],
           }),
           createNode('views', '/src/views', true, 2, {
             isExpanded: false,
             children: [
               createNode('WorkspaceView.vue', '/src/views/WorkspaceView.vue', false, 3, { size: 2048 }),
-              createNode('TerminalView.vue', '/src/views/TerminalView.vue', false, 3, { size: 3072 })
-            ]
-          })
-        ]
+              createNode('TerminalView.vue', '/src/views/TerminalView.vue', false, 3, { size: 3072 }),
+            ],
+          }),
+        ],
       }),
       createNode('public', '/public', true, 1, {
         isExpanded: false,
         children: [
           createNode('favicon.ico', '/public/favicon.ico', false, 2, { size: 4096 }),
-          createNode('index.html', '/public/index.html', false, 2, { size: 1024 })
-        ]
+          createNode('index.html', '/public/index.html', false, 2, { size: 1024 }),
+        ],
       }),
-      createNode('node_modules', '/node_modules', true, 1, { 
-        isGitIgnored: true, 
-        isExpanded: false 
+      createNode('node_modules', '/node_modules', true, 1, {
+        isGitIgnored: true,
+        isExpanded: false,
       }),
       createNode('temp', '/temp', true, 1, {
         isExpanded: false,
         children: [
-          createNode('cache.tmp', '/temp/cache.tmp', false, 2, { 
-            size: 512, 
+          createNode('cache.tmp', '/temp/cache.tmp', false, 2, {
+            size: 512,
             gitStatus: 'untracked',
-            isGitIgnored: true 
-          })
-        ]
-      })
+            isGitIgnored: true,
+          }),
+        ],
+      }),
     ]
 
     return root
@@ -285,10 +285,10 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     try {
       // TODO: API 호출로 디렉토리 내용 가져오기
       // const response = await fileApi.getDirectoryContents(workspaceId, path)
-      
+
       // 임시로 더미 자식 생성
       await new Promise(resolve => setTimeout(resolve, 500)) // 로딩 시뮬레이션
-      
+
       // 자식이 이미 있는 경우 스킵
       if (node.children && node.children.length > 0) {
         return
@@ -308,14 +308,14 @@ export const useFileTreeStore = defineStore('fileTree', () => {
   // 경로로 노드 찾기
   const findNodeByPath = (tree: FileTreeNode, path: string): FileTreeNode | null => {
     if (tree.path === path) return tree
-    
+
     if (tree.children) {
       for (const child of tree.children) {
         const found = findNodeByPath(child, path)
         if (found) return found
       }
     }
-    
+
     return null
   }
 
@@ -343,7 +343,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
       showHidden: false,
       showGitIgnored: true,
       fileExtensions: [],
-      searchQuery: ''
+      searchQuery: '',
     }
   }
 
@@ -352,7 +352,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     try {
       // TODO: API 호출로 Git 상태 가져오기
       // const response = await gitApi.getStatus(workspaceId)
-      
+
       // 더미 상태 업데이트
       const currentStatus = gitStatus.value.get(workspaceId)
       if (currentStatus) {
@@ -386,13 +386,13 @@ export const useFileTreeStore = defineStore('fileTree', () => {
       level: parentNode.level + 1,
       parentPath,
       size: isDirectory ? undefined : 0,
-      children: isDirectory ? [] : undefined
+      children: isDirectory ? [] : undefined,
     }
 
     if (!parentNode.children) {
       parentNode.children = []
     }
-    
+
     parentNode.children.push(newNode)
     parentNode.children.sort((a, b) => {
       // 디렉토리가 파일보다 먼저, 그 다음 알파벳 순
@@ -431,7 +431,7 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     if (!node || !node.parentPath) return
 
     const newPath = `${node.parentPath}/${newName}`.replace('//', '/')
-    
+
     // 노드 정보 업데이트
     node.name = newName
     node.path = newPath
@@ -489,6 +489,6 @@ export const useFileTreeStore = defineStore('fileTree', () => {
     createFile,
     deleteFile,
     renameFile,
-    cleanup
+    cleanup,
   }
 })

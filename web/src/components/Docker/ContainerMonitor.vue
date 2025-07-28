@@ -3,44 +3,44 @@
     <div class="monitor-header">
       <div class="header-left">
         <h3 class="monitor-title">Docker 컨테이너</h3>
-        <n-badge :value="totalContainers" type="info" />
+        <NBadge :value="totalContainers" type="info" />
       </div>
-      
+
       <div class="header-actions">
-        <n-switch
+        <NSwitch
           v-model:value="isMonitoringEnabled"
           @update:value="toggleMonitoring"
           :loading="connectionStatus === 'connecting'"
         >
           <template #checked>실시간 모니터링</template>
           <template #unchecked>정적 표시</template>
-        </n-switch>
-        
-        <n-button @click="refreshContainers" :loading="isLoading">
+        </NSwitch>
+
+        <NButton @click="refreshContainers" :loading="isLoading">
           <template #icon>
-            <n-icon><RefreshCw /></n-icon>
+            <NIcon><RefreshCw /></NIcon>
           </template>
           새로고침
-        </n-button>
+        </NButton>
       </div>
     </div>
 
     <!-- 연결 상태 표시 -->
     <div v-if="showConnectionStatus" class="connection-status">
-      <n-alert
+      <NAlert
         :type="getConnectionAlertType(connectionStatus)"
         :show-icon="true"
         closable
         @close="showConnectionStatus = false"
       >
         <template #icon>
-          <n-icon>
+          <NIcon>
             <Wifi v-if="connectionStatus === 'connected'" />
             <WifiOff v-else />
-          </n-icon>
+          </NIcon>
         </template>
         {{ getConnectionStatusText(connectionStatus) }}
-      </n-alert>
+      </NAlert>
     </div>
 
     <!-- 컨테이너 목록 -->
@@ -54,31 +54,31 @@
         <div class="container-info">
           <div class="container-header">
             <h4 class="container-name">{{ container.name }}</h4>
-            <n-tag
+            <NTag
               :type="getStatusType(container.status)"
               size="small"
               class="container-status-tag"
             >
               <template #icon>
-                <n-icon>
+                <NIcon>
                   <Play v-if="container.status === 'running'" />
                   <Square v-else-if="container.status === 'stopped'" />
                   <AlertCircle v-else-if="container.status === 'dead'" />
                   <Pause v-else-if="container.status === 'paused'" />
                   <RotateCw v-else-if="container.status === 'restarting'" />
-                </n-icon>
+                </NIcon>
               </template>
               {{ getStatusText(container.status) }}
-            </n-tag>
+            </NTag>
           </div>
-          
+
           <div class="container-details">
             <p class="container-image">
-              <n-icon><Box /></n-icon>
+              <NIcon><Box /></NIcon>
               {{ container.image }}
             </p>
             <p v-if="container.workspaceId" class="container-workspace">
-              <n-icon><Folder /></n-icon>
+              <NIcon><Folder /></NIcon>
               워크스페이스: {{ getWorkspaceName(container.workspaceId) }}
             </p>
           </div>
@@ -89,7 +89,7 @@
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-label">CPU</div>
-              <n-progress
+              <NProgress
                 :percentage="getStats(container.id)?.cpuPercent || 0"
                 type="line"
                 :show-indicator="false"
@@ -98,10 +98,10 @@
               />
               <span class="stat-value">{{ (getStats(container.id)?.cpuPercent || 0).toFixed(1) }}%</span>
             </div>
-            
+
             <div class="stat-item">
               <div class="stat-label">메모리</div>
-              <n-progress
+              <NProgress
                 :percentage="getStats(container.id)?.memoryPercent || 0"
                 type="line"
                 :show-indicator="false"
@@ -109,20 +109,20 @@
                 :color="getProgressColor(getStats(container.id)?.memoryPercent || 0)"
               />
               <span class="stat-value">
-                {{ formatBytes(getStats(container.id)?.memoryUsage || 0) }} / 
+                {{ formatBytes(getStats(container.id)?.memoryUsage || 0) }} /
                 {{ formatBytes(getStats(container.id)?.memoryLimit || 0) }}
               </span>
             </div>
-            
+
             <div class="stat-item">
               <div class="stat-label">네트워크</div>
               <div class="network-stats">
                 <span class="network-stat">
-                  <n-icon><ArrowDown /></n-icon>
+                  <NIcon><ArrowDown /></NIcon>
                   {{ formatBytes(getStats(container.id)?.networkRx || 0) }}
                 </span>
                 <span class="network-stat">
-                  <n-icon><ArrowUp /></n-icon>
+                  <NIcon><ArrowUp /></NIcon>
                   {{ formatBytes(getStats(container.id)?.networkTx || 0) }}
                 </span>
               </div>
@@ -133,120 +133,120 @@
         <!-- 포트 매핑 정보 -->
         <div v-if="container.ports.length > 0" class="container-ports">
           <div class="ports-label">포트:</div>
-          <n-space>
-            <n-tag
+          <NSpace>
+            <NTag
               v-for="port in container.ports"
               :key="`${port.privatePort}-${port.type}`"
               size="small"
               type="info"
             >
               {{ port.publicPort || 'none' }}:{{ port.privatePort }}/{{ port.type }}
-            </n-tag>
-          </n-space>
+            </NTag>
+          </NSpace>
         </div>
 
         <!-- 컨테이너 액션 -->
         <div class="container-actions">
-          <n-button-group size="small">
-            <n-button
+          <NButtonGroup size="small">
+            <NButton
               v-if="container.status === 'stopped'"
               type="primary"
               @click="startContainer(container.id)"
               :loading="isLoading"
             >
               <template #icon>
-                <n-icon><Play /></n-icon>
+                <NIcon><Play /></NIcon>
               </template>
               시작
-            </n-button>
-            
-            <n-button
+            </NButton>
+
+            <NButton
               v-if="container.status === 'running'"
               type="warning"
               @click="stopContainer(container.id)"
               :loading="isLoading"
             >
               <template #icon>
-                <n-icon><Square /></n-icon>
+                <NIcon><Square /></NIcon>
               </template>
               중지
-            </n-button>
-            
-            <n-button
+            </NButton>
+
+            <NButton
               v-if="['running', 'stopped'].includes(container.status)"
               @click="restartContainer(container.id)"
               :loading="isLoading"
             >
               <template #icon>
-                <n-icon><RotateCw /></n-icon>
+                <NIcon><RotateCw /></NIcon>
               </template>
               재시작
-            </n-button>
-            
-            <n-button @click="viewLogs(container.id)">
+            </NButton>
+
+            <NButton @click="viewLogs(container.id)">
               <template #icon>
-                <n-icon><FileText /></n-icon>
+                <NIcon><FileText /></NIcon>
               </template>
               로그
-            </n-button>
-            
-            <n-button @click="openTerminal(container.id)">
+            </NButton>
+
+            <NButton @click="openTerminal(container.id)">
               <template #icon>
-                <n-icon><Terminal /></n-icon>
+                <NIcon><Terminal /></NIcon>
               </template>
               터미널
-            </n-button>
-            
-            <n-popconfirm
+            </NButton>
+
+            <NPopconfirm
               @positive-click="removeContainer(container.id)"
               negative-text="취소"
               positive-text="삭제"
             >
               <template #trigger>
-                <n-button type="error" :loading="isLoading">
+                <NButton type="error" :loading="isLoading">
                   <template #icon>
-                    <n-icon><Trash2 /></n-icon>
+                    <NIcon><Trash2 /></NIcon>
                   </template>
                   삭제
-                </n-button>
+                </NButton>
               </template>
               <p>정말로 <strong>{{ container.name }}</strong> 컨테이너를 삭제하시겠습니까?</p>
               <p style="color: var(--n-color-error); font-size: 12px;">
                 이 작업은 되돌릴 수 없습니다.
               </p>
-            </n-popconfirm>
-          </n-button-group>
+            </NPopconfirm>
+          </NButtonGroup>
         </div>
       </div>
     </div>
 
     <!-- 빈 상태 -->
-    <n-empty
+    <NEmpty
       v-else-if="!isLoading"
       description="실행 중인 컨테이너가 없습니다"
       class="container-empty"
     >
       <template #icon>
-        <n-icon size="48"><Box /></n-icon>
+        <NIcon size="48"><Box /></NIcon>
       </template>
       <template #extra>
-        <n-button type="primary" @click="refreshContainers">
+        <NButton type="primary" @click="refreshContainers">
           컨테이너 목록 새로고침
-        </n-button>
+        </NButton>
       </template>
-    </n-empty>
+    </NEmpty>
 
     <!-- 로딩 상태 -->
     <div v-if="isLoading" class="loading-container">
-      <n-spin size="large">
+      <NSpin size="large">
         <template #description>
           컨테이너 정보를 불러오는 중...
         </template>
-      </n-spin>
+      </NSpin>
     </div>
 
     <!-- 컨테이너 로그 모달 -->
-    <container-logs-modal
+    <ContainerLogsModal
       v-model:show="showLogsModal"
       :container-id="selectedContainerId"
       :container-name="selectedContainerName"
@@ -255,39 +255,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
+  NAlert,
+  NBadge,
   NButton,
   NButtonGroup,
-  NIcon,
-  NTag,
-  NSpace,
-  NSwitch,
-  NBadge,
-  NProgress,
-  NPopconfirm,
   NEmpty,
+  NIcon,
+  NPopconfirm,
+  NProgress,
+  NSpace,
   NSpin,
-  NAlert
+  NSwitch,
+  NTag,
 } from 'naive-ui'
 import {
-  RefreshCw,
-  Play,
-  Square,
-  Pause,
-  RotateCw,
   AlertCircle,
-  Box,
-  Folder,
   ArrowDown,
   ArrowUp,
+  Box,
   FileText,
+  Folder,
+  Pause,
+  Play,
+  RefreshCw,
+  RotateCw,
+  Square,
   Terminal,
   Trash2,
   Wifi,
-  WifiOff
+  WifiOff,
 } from '@vicons/lucide'
 
 import { useDockerStore } from '@/stores/docker'
@@ -389,12 +389,12 @@ const getProgressColor = (percentage: number): string => {
 // 바이트 포맷팅
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B'
-  
+
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
 // 이벤트 핸들러

@@ -390,7 +390,7 @@ export function throttle<T extends (...args: any[]) => void>(
  */
 export function processTerminalOutput(content: string): string {
   if (!content) return ''
-  
+
   // 기본적인 터미널 출력 정리
   return content
     .replace(/\r\n/g, '\n') // Windows 줄바꿈 정규화
@@ -411,7 +411,7 @@ export function generateSessionId(): string {
  */
 export function maskSensitiveCommand(command: string): string {
   if (!command) return ''
-  
+
   // 비밀번호, 토큰 등 민감한 정보 패턴 마스킹
   return command
     .replace(/--password[=\s]+\S+/gi, '--password=***')
@@ -432,11 +432,11 @@ export const CommandHistory = TerminalHistory
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
-  
+
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
 }
 
@@ -448,7 +448,7 @@ export function formatTerminalTimestamp(timestamp: string): string {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -465,12 +465,12 @@ export function getTerminalStatusInfo(lines: TerminalLine[]): {
   const outputLines = lines.filter(line => line.type === 'output').length
   const errorLines = lines.filter(line => line.type === 'error').length
   const systemLines = lines.filter(line => line.type === 'system').length
-  
+
   return {
     totalLines,
     outputLines,
     errorLines,
-    systemLines
+    systemLines,
   }
 }
 
@@ -479,10 +479,10 @@ export function getTerminalStatusInfo(lines: TerminalLine[]): {
  */
 export function highlightSearchTerm(text: string, searchTerm: string, caseSensitive = false): string {
   if (!searchTerm.trim()) return text
-  
+
   const flags = caseSensitive ? 'g' : 'gi'
   const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const regex = new RegExp(escapedTerm, flags)
-  
+
   return text.replace(regex, '<mark class="search-highlight">$&</mark>')
 }

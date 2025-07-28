@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDeviceDetection } from './useTouchPerformance'
 
 interface AccessibilityOptions {
@@ -40,25 +40,25 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
     if (!isTouchDevice.value) return
 
     const interactiveElements = document.querySelectorAll(
-      'button, input, select, textarea, a, [role="button"], [role="link"], [tabindex]'
+      'button, input, select, textarea, a, [role="button"], [role="link"], [tabindex]',
     )
 
     interactiveElements.forEach((element) => {
       const el = element as HTMLElement
       const rect = el.getBoundingClientRect()
-      
+
       if (rect.width < touchTargetMinSize || rect.height < touchTargetMinSize) {
         // 터치 타겟이 작으면 패딩으로 확장
         const paddingH = Math.max(0, (touchTargetMinSize - rect.width) / 2)
         const paddingV = Math.max(0, (touchTargetMinSize - rect.height) / 2)
-        
+
         el.style.paddingLeft = `${paddingH}px`
         el.style.paddingRight = `${paddingH}px`
         el.style.paddingTop = `${paddingV}px`
         el.style.paddingBottom = `${paddingV}px`
         el.style.minWidth = `${touchTargetMinSize}px`
         el.style.minHeight = `${touchTargetMinSize}px`
-        
+
         // 접근성 개선을 위한 마킹
         el.setAttribute('data-touch-optimized', 'true')
       }
@@ -68,7 +68,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
   // 스크린 리더 감지
   const detectScreenReader = () => {
     // 스크린 리더가 활성화되어 있을 때의 여러 신호들을 감지
-    const hasScreenReader = 
+    const hasScreenReader =
       // NVDA, JAWS 등이 활성화되면 speechSynthesis가 활성화됨
       (window.speechSynthesis && window.speechSynthesis.getVoices().length > 0) ||
       // VoiceOver (iOS/macOS)
@@ -80,7 +80,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
 
     if (hasScreenReader) {
       document.body.classList.add('screen-reader-active')
-      
+
       // 스크린 리더용 최적화
       optimizeForScreenReader()
     }
@@ -130,10 +130,10 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
 
     // CSS 미디어 쿼리로 고대비 모드 감지
     const mediaQuery = window.matchMedia('(prefers-contrast: high)')
-    
+
     const updateHighContrastMode = (e: MediaQueryListEvent | MediaQueryList) => {
       isHighContrastMode.value = e.matches
-      
+
       if (e.matches) {
         document.body.classList.add('high-contrast-mode')
       } else {
@@ -154,10 +154,10 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
     if (!enableReducedMotion) return
 
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    
+
     const updateReducedMotion = (e: MediaQueryListEvent | MediaQueryList) => {
       isReducedMotionPreferred.value = e.matches
-      
+
       if (e.matches) {
         document.body.classList.add('reduced-motion')
         // 모든 애니메이션과 전환 효과 비활성화
@@ -202,11 +202,11 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
       `
       testElement.textContent = 'Test'
       document.body.appendChild(testElement)
-      
+
       const computedSize = window.getComputedStyle(testElement).fontSize
       const baseFontSize = 16 // 기본 폰트 크기 (16px)
       textScaleFactor.value = parseFloat(computedSize) / baseFontSize
-      
+
       document.body.removeChild(testElement)
     }
 
@@ -226,7 +226,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
 
     const handleFocusChange = (event: FocusEvent) => {
       const target = event.target as HTMLElement
-      
+
       if (target && target !== focusedElement.value) {
         if (focusedElement.value) {
           focusHistory.value.push(focusedElement.value)
@@ -257,7 +257,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
       if (event.key === 'Tab') {
         const focusableElements = getFocusableElements()
         const currentIndex = Array.from(focusableElements).indexOf(document.activeElement as HTMLElement)
-        
+
         if (event.shiftKey) {
           // Shift+Tab (이전 요소)
           if (currentIndex === 0) {
@@ -279,7 +279,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
         const activeElement = document.activeElement as HTMLElement
         const parent = activeElement.closest('[role="menu"], [role="listbox"], [role="grid"]')
-        
+
         if (parent) {
           event.preventDefault()
           navigateWithArrowKeys(event.key, parent)
@@ -306,7 +306,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
   // 포커스 가능한 요소들 찾기
   const getFocusableElements = () => {
     return document.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )
   }
 
@@ -314,9 +314,9 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
   const navigateWithArrowKeys = (key: string, container: Element) => {
     const items = container.querySelectorAll('[role="menuitem"], [role="option"], [role="gridcell"]')
     const currentIndex = Array.from(items).indexOf(document.activeElement!)
-    
+
     let nextIndex = currentIndex
-    
+
     switch (key) {
       case 'ArrowDown':
         nextIndex = (currentIndex + 1) % items.length
@@ -331,7 +331,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
         nextIndex = Math.max(currentIndex - 1, 0)
         break
     }
-    
+
     if (nextIndex !== currentIndex) {
       (items[nextIndex] as HTMLElement).focus()
     }
@@ -340,11 +340,11 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
   // 포커스 트랩 설정
   const trapFocus = (container: HTMLElement) => {
     focusTrapStack.value.push(container)
-    
+
     const focusableElements = container.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )
-    
+
     if (focusableElements.length > 0) {
       (focusableElements[0] as HTMLElement).focus()
     }
@@ -353,7 +353,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
   // 포커스 트랩 해제
   const releaseFocusTrap = () => {
     focusTrapStack.value.pop()
-    
+
     // 이전 포커스 복원
     if (focusHistory.value.length > 0) {
       const previousElement = focusHistory.value.pop()
@@ -367,7 +367,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
     if (liveRegion) {
       liveRegion.setAttribute('aria-live', priority)
       liveRegion.textContent = message
-      
+
       // 메시지를 읽은 후 정리
       setTimeout(() => {
         liveRegion.textContent = ''
@@ -406,7 +406,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
       const styles = window.getComputedStyle(element)
       const bgColor = styles.backgroundColor
       const textColor = styles.color
-      
+
       if (bgColor !== 'rgba(0, 0, 0, 0)' && textColor !== 'rgba(0, 0, 0, 0)') {
         // 실제 색상 대비 계산은 복잡하므로 여기서는 경고만 출력
         console.warn(`요소 ${index + 1}: 색상 대비를 확인하세요`, { bgColor, textColor })
@@ -423,7 +423,7 @@ export function useMobileAccessibility(options: AccessibilityOptions = {}) {
     nextTick(() => {
       detectScreenReader()
       validateTouchTargets()
-      
+
       const highContrastCleanup = detectHighContrastMode()
       const reducedMotionCleanup = detectReducedMotionPreference()
       const textScalingCleanup = setupTextScaling()

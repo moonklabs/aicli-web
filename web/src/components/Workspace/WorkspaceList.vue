@@ -4,12 +4,12 @@
     <div class="workspace-toolbar">
       <div class="toolbar-left">
         <h2 class="toolbar-title">워크스페이스</h2>
-        <n-badge :value="totalWorkspaces" type="info" />
+        <NBadge :value="totalWorkspaces" type="info" />
       </div>
-      
+
       <div class="toolbar-right">
-        <n-input-group>
-          <n-input 
+        <NInputGroup>
+          <NInput
             v-model:value="workspaceStore.searchQuery.value"
             placeholder="워크스페이스 검색..."
             clearable
@@ -18,76 +18,76 @@
             <template #prefix>
               검색
             </template>
-          </n-input>
-          <n-select
+          </NInput>
+          <NSelect
             v-model:value="workspaceStore.sortBy.value"
             :options="sortOptions"
             style="width: 150px"
           />
-        </n-input-group>
-        
-        <n-button type="primary" @click="showCreateModal = true">
+        </NInputGroup>
+
+        <NButton type="primary" @click="showCreateModal = true">
           <template #icon>
             +
           </template>
           새 워크스페이스
-        </n-button>
+        </NButton>
       </div>
     </div>
 
     <!-- 필터 및 정렬 -->
     <div v-if="activeFilters.length > 0 || showFilterMenu" class="workspace-filters">
-      <n-space>
-        <n-tag
+      <NSpace>
+        <NTag
           v-for="filter in activeFilters"
           :key="filter.key"
           closable
           @close="workspaceStore.removeFilter(filter.key)"
         >
           {{ filter.label }}: {{ filter.value }}
-        </n-tag>
-        
-        <n-dropdown 
-          :options="filterOptions" 
+        </NTag>
+
+        <NDropdown
+          :options="filterOptions"
           @select="handleAddFilter"
           trigger="click"
         >
-          <n-button size="small" quaternary>
+          <NButton size="small" quaternary>
             <template #icon>
               필터
             </template>
             필터 추가
-          </n-button>
-        </n-dropdown>
+          </NButton>
+        </NDropdown>
 
-        <n-button 
+        <NButton
           v-if="activeFilters.length > 0"
-          size="small" 
-          quaternary 
+          size="small"
+          quaternary
           @click="workspaceStore.clearFilters()"
         >
           <template #icon>
             ✕
           </template>
           필터 초기화
-        </n-button>
-      </n-space>
+        </NButton>
+      </NSpace>
     </div>
 
     <!-- 로딩 상태 -->
     <div v-if="isLoading" class="workspace-loading">
-      <n-space justify="center">
-        <n-spin size="large">
+      <NSpace justify="center">
+        <NSpin size="large">
           <template #description>
             워크스페이스 목록을 불러오는 중...
           </template>
-        </n-spin>
-      </n-space>
+        </NSpin>
+      </NSpace>
     </div>
 
     <!-- 워크스페이스 그리드 -->
     <div v-else-if="paginatedWorkspaces.length > 0" class="workspace-grid">
-      <workspace-card
+      <WorkspaceCard
         v-for="workspace in paginatedWorkspaces"
         :key="workspace.id"
         :workspace="workspace"
@@ -98,7 +98,7 @@
     </div>
 
     <!-- 빈 상태 -->
-    <n-empty
+    <NEmpty
       v-else
       description="워크스페이스가 없습니다"
       class="workspace-empty"
@@ -107,15 +107,15 @@
         📁
       </template>
       <template #extra>
-        <n-button type="primary" @click="showCreateModal = true">
+        <NButton type="primary" @click="showCreateModal = true">
           첫 워크스페이스 만들기
-        </n-button>
+        </NButton>
       </template>
-    </n-empty>
+    </NEmpty>
 
     <!-- 페이지네이션 -->
     <div v-if="totalPages > 1" class="workspace-pagination">
-      <n-pagination
+      <NPagination
         v-model:page="workspaceStore.currentPage.value"
         :page-count="totalPages"
         :page-size="workspaceStore.pageSize.value"
@@ -127,20 +127,20 @@
     </div>
 
     <!-- 워크스페이스 생성 모달 -->
-    <workspace-create-modal
+    <WorkspaceCreateModal
       v-model:show="showCreateModal"
       @created="handleWorkspaceCreated"
     />
 
     <!-- 워크스페이스 설정 모달 -->
-    <workspace-settings-modal
+    <WorkspaceSettingsModal
       v-model:show="showSettingsModal"
       :workspace="selectedWorkspace"
       @updated="handleWorkspaceUpdated"
     />
 
     <!-- 삭제 확인 대화상자 -->
-    <n-modal
+    <NModal
       v-model:show="showDeleteConfirm"
       preset="dialog"
       type="warning"
@@ -155,28 +155,28 @@
       <p class="delete-warning">
         이 작업은 되돌릴 수 없으며, 모든 데이터가 영구적으로 삭제됩니다.
       </p>
-    </n-modal>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
+  NBadge,
   NButton,
+  NDropdown,
+  NEmpty,
+  NIcon,
   NInput,
   NInputGroup,
-  NSelect,
-  NBadge,
-  NSpace,
-  NTag,
-  NDropdown,
-  NIcon,
-  NSpin,
-  NEmpty,
+  NModal,
   NPagination,
-  NModal
+  NSelect,
+  NSpace,
+  NSpin,
+  NTag,
 } from 'naive-ui'
 // import {
 //   Search,
@@ -218,7 +218,7 @@ const sortOptions = [
   { label: '최근 수정일', value: 'lastModified' },
   { label: '경로', value: 'path' },
   { label: '상태', value: 'status' },
-  { label: '파일 수', value: 'fileCount' }
+  { label: '파일 수', value: 'fileCount' },
 ]
 
 // 필터 옵션
@@ -230,26 +230,26 @@ const filterOptions = computed(() => [
     children: [
       { label: '활성', key: 'status-active', filterKey: 'status', filterValue: 'active' },
       { label: '대기', key: 'status-idle', filterKey: 'status', filterValue: 'idle' },
-      { label: '오류', key: 'status-error', filterKey: 'status', filterValue: 'error' }
-    ]
+      { label: '오류', key: 'status-error', filterKey: 'status', filterValue: 'error' },
+    ],
   },
   {
     label: 'Git',
-    key: 'git-group', 
+    key: 'git-group',
     type: 'group',
     children: [
       { label: 'Git 연결됨', key: 'has-git-true', filterKey: 'hasGit', filterValue: 'true' },
-      { label: 'Git 연결 안됨', key: 'has-git-false', filterKey: 'hasGit', filterValue: 'false' }
-    ]
+      { label: 'Git 연결 안됨', key: 'has-git-false', filterKey: 'hasGit', filterValue: 'false' },
+    ],
   },
   {
     label: 'Claude 세션',
     key: 'claude-group',
-    type: 'group', 
+    type: 'group',
     children: [
       { label: 'Claude 활성', key: 'has-claude-true', filterKey: 'hasClaudeSession', filterValue: 'true' },
-      { label: 'Claude 비활성', key: 'has-claude-false', filterKey: 'hasClaudeSession', filterValue: 'false' }
-    ]
+      { label: 'Claude 비활성', key: 'has-claude-false', filterKey: 'hasClaudeSession', filterValue: 'false' },
+    ],
   },
   {
     label: '컨테이너 상태',
@@ -258,8 +258,8 @@ const filterOptions = computed(() => [
     children: [
       { label: '실행중', key: 'container-success', filterKey: 'containerStatus', filterValue: 'success' },
       { label: '중지됨', key: 'container-warning', filterKey: 'containerStatus', filterValue: 'warning' },
-      { label: '오류', key: 'container-error', filterKey: 'containerStatus', filterValue: 'error' }
-    ]
+      { label: '오류', key: 'container-error', filterKey: 'containerStatus', filterValue: 'error' },
+    ],
   },
   {
     label: '작업',
@@ -267,9 +267,9 @@ const filterOptions = computed(() => [
     type: 'group',
     children: [
       { label: '작업 진행중', key: 'has-task-true', filterKey: 'hasCurrentTask', filterValue: 'true' },
-      { label: '작업 없음', key: 'has-task-false', filterKey: 'hasCurrentTask', filterValue: 'false' }
-    ]
-  }
+      { label: '작업 없음', key: 'has-task-false', filterKey: 'hasCurrentTask', filterValue: 'false' },
+    ],
+  },
 ])
 
 // 이벤트 핸들러
@@ -325,7 +325,7 @@ const handleAddFilter = (key: string, option: any): void => {
     const filter: WorkspaceFilter = {
       key: option.filterKey,
       label: option.label,
-      value: option.filterValue
+      value: option.filterValue,
     }
     workspaceStore.addFilter(filter)
   }

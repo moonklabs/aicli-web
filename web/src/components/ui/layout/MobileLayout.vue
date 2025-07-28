@@ -22,7 +22,7 @@
                 />
               </svg>
             </button>
-            
+
             <button
               v-else-if="showMenuButton"
               class="mobile-layout__menu-button"
@@ -63,7 +63,7 @@
                 <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2"/>
               </svg>
             </button>
-            
+
             <button
               v-if="showOptionsButton"
               class="mobile-layout__options-button"
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MobileTabBar from '../navigation/MobileTabBar.vue'
 import type { TabItem } from '../navigation'
@@ -241,11 +241,11 @@ const layoutClasses = computed(() => ({
 // 콘텐츠 스타일
 const contentStyle = computed(() => {
   const style: Record<string, string> = {}
-  
+
   if (props.pullToRefresh && isPulling.value) {
     style.transform = `translateY(${pullDistance.value}px)`
   }
-  
+
   return style
 })
 
@@ -284,16 +284,16 @@ const handleScroll = (event: Event) => {
 // Pull to refresh 구현
 const handleTouchStart = (event: TouchEvent) => {
   if (!props.pullToRefresh || scrollTop.value > 0) return
-  
+
   touchStartY.value = event.touches[0].clientY
 }
 
 const handleTouchMove = (event: TouchEvent) => {
   if (!props.pullToRefresh || scrollTop.value > 0 || isRefreshing.value) return
-  
+
   const currentY = event.touches[0].clientY
   const diff = currentY - touchStartY.value
-  
+
   if (diff > 0) {
     event.preventDefault()
     isPulling.value = true
@@ -304,11 +304,11 @@ const handleTouchMove = (event: TouchEvent) => {
 
 const handleTouchEnd = () => {
   if (!props.pullToRefresh || !isPulling.value) return
-  
+
   if (shouldRefresh.value && !isRefreshing.value) {
     isRefreshing.value = true
     emit('refresh')
-    
+
     // 새로고침 완료 후 상태 초기화
     setTimeout(() => {
       resetPullToRefresh()
@@ -335,7 +335,7 @@ const updateHeaderHeight = () => {
 // 스크롤 위치에 따른 헤더 투명도 조절
 const updateHeaderOpacity = () => {
   if (!props.headerTransparent || !headerRef.value) return
-  
+
   const opacity = Math.min(scrollTop.value / 100, 1)
   headerRef.value.style.backgroundColor = `rgba(255, 255, 255, ${opacity})`
 }
@@ -343,14 +343,14 @@ const updateHeaderOpacity = () => {
 // 생명주기
 onMounted(() => {
   updateHeaderHeight()
-  
+
   // 리사이즈 이벤트 리스너
   const handleResize = () => {
     updateHeaderHeight()
   }
-  
+
   window.addEventListener('resize', handleResize)
-  
+
   onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize)
   })
@@ -393,7 +393,7 @@ defineExpose({
   height: 100vh;
   background: $light-bg-primary;
   overflow: hidden;
-  
+
   .dark & {
     background: $dark-bg-primary;
   }
@@ -410,7 +410,7 @@ defineExpose({
       right: 0;
       z-index: $z-sticky;
     }
-    
+
     .mobile-layout__main {
       padding-top: $navbar-height;
     }
@@ -441,7 +441,7 @@ defineExpose({
     background: $light-bg-primary;
     border-bottom: 1px solid map-get($gray-colors, 200);
     z-index: $z-sticky;
-    
+
     .dark & {
       background: $dark-bg-secondary;
       border-bottom-color: $dark-bg-tertiary;
@@ -478,7 +478,7 @@ defineExpose({
     color: $light-text-primary;
     margin: 0;
     @include text-ellipsis;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -496,20 +496,20 @@ defineExpose({
     color: $light-text-primary;
     cursor: pointer;
     border-radius: $border-radius-lg;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
-    
+
     svg {
       width: 24px;
       height: 24px;
     }
-    
+
     &:hover {
       @include no-touch {
         background: rgba(0, 0, 0, 0.05);
-        
+
         .dark & {
           background: rgba(255, 255, 255, 0.05);
         }
@@ -542,11 +542,11 @@ defineExpose({
     gap: $spacing-2;
     background: $light-bg-primary;
     z-index: 10;
-    
+
     .dark & {
       background: $dark-bg-primary;
     }
-    
+
     &--active {
       .mobile-layout__pull-icon svg {
         animation: spin 1s linear infinite;
@@ -558,7 +558,7 @@ defineExpose({
     width: 24px;
     height: 24px;
     color: map-get($primary-colors, 500);
-    
+
     .dark & {
       color: map-get($primary-colors, 400);
     }
@@ -567,7 +567,7 @@ defineExpose({
   &__pull-text {
     font-size: $font-size-sm;
     color: $light-text-secondary;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -603,12 +603,12 @@ defineExpose({
     border-radius: $border-radius-full;
     box-shadow: $shadow-lg;
     cursor: pointer;
-    
+
     svg {
       width: 24px;
       height: 24px;
     }
-    
+
     &:hover {
       @include no-touch {
         transform: scale(1.05);
@@ -649,11 +649,11 @@ defineExpose({
     &__content {
       scroll-behavior: auto;
     }
-    
+
     &__fab-button:hover {
       transform: none;
     }
-    
+
     &__pull-indicator--active .mobile-layout__pull-icon svg {
       animation: none;
     }

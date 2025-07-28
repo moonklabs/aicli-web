@@ -12,6 +12,7 @@ const DockerView = () => import('@/views/DockerView.vue')
 const SessionManagementView = () => import('@/views/SessionManagementView.vue')
 const SecurityDashboardView = () => import('@/views/SecurityDashboardView.vue')
 const ProfileEditView = () => import('@/views/ProfileEditView.vue')
+const MonitoringDashboardView = () => import('@/views/MonitoringDashboardView.vue')
 const TerminalTest = () => import('@/views/TerminalTest.vue')
 const LoginView = () => import('@/views/LoginView.vue')
 const OAuthCallbackView = () => import('@/views/OAuthCallbackView.vue')
@@ -151,6 +152,19 @@ const router = createRouter({
         title: '보안 대시보드',
         permissions: [
           { resource: 'user', action: 'read' },
+        ],
+      },
+    },
+    {
+      path: '/monitoring',
+      name: 'monitoring-dashboard',
+      component: MonitoringDashboardView,
+      meta: {
+        requiresAuth: true,
+        title: '모니터링 대시보드',
+        adminOnly: true,
+        permissions: [
+          { resource: 'system', action: 'read' },
         ],
       },
     },

@@ -1,13 +1,13 @@
 import { apiGet, apiPost, apiPut } from '@/api'
 import type {
-  UserSession,
+  PaginatedResponse,
   SessionSecurityEvent,
   SessionSecuritySettings,
   SessionStatsResponse,
-  TerminateSessionRequest,
   TerminateAllSessionsRequest,
+  TerminateSessionRequest,
   UpdateSessionSettingsRequest,
-  PaginatedResponse
+  UserSession,
 } from '@/types/api'
 
 export const sessionApi = {
@@ -40,7 +40,7 @@ export const sessionApi = {
    */
   terminateSession: async (request: TerminateSessionRequest): Promise<void> => {
     await apiPost(`/auth/sessions/${request.sessionId}/terminate`, {
-      reason: request.reason
+      reason: request.reason,
     })
   },
 
@@ -79,7 +79,7 @@ export const sessionApi = {
     endDate?: string
   }): Promise<PaginatedResponse<SessionSecurityEvent>> => {
     const queryParams = new URLSearchParams()
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
@@ -87,9 +87,9 @@ export const sessionApi = {
         }
       })
     }
-    
+
     const response = await apiGet<PaginatedResponse<SessionSecurityEvent>>(
-      `/auth/security-events?${queryParams.toString()}`
+      `/auth/security-events?${queryParams.toString()}`,
     )
     return response.data.data
   },
@@ -107,7 +107,7 @@ export const sessionApi = {
    */
   reportSuspiciousActivity: async (sessionId: string, reason: string): Promise<void> => {
     await apiPost(`/auth/sessions/${sessionId}/report-suspicious`, {
-      reason
+      reason,
     })
   },
 
@@ -124,5 +124,5 @@ export const sessionApi = {
   getCurrentSession: async (): Promise<UserSession> => {
     const response = await apiGet<UserSession>('/auth/sessions/current')
     return response.data.data
-  }
+  },
 }

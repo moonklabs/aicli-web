@@ -1,6 +1,6 @@
 <template>
   <div class="workspace-view">
-    <workspace-list />
+    <WorkspaceList />
   </div>
 </template>
 

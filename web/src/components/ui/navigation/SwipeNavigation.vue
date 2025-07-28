@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useTouchGestures } from '@/composables/useTouchGestures'
 
 interface Page {
@@ -155,7 +155,7 @@ onGesture('pan', (event) => {
 onGesture('panend', (event) => {
   if (!isTransitioning.value) {
     const threshold = (containerRef.value?.clientWidth || 0) * 0.3
-    
+
     if (Math.abs(event.deltaX) > threshold) {
       if (event.deltaX > 0) {
         goToPrevPage()
@@ -178,7 +178,7 @@ const containerStyle = computed(() => ({
 // 페이지 이동 함수들
 const goToPage = async (index: number) => {
   if (index === currentIndex.value || isTransitioning.value) return
-  
+
   if (index < 0 || index >= props.pages.length) {
     if (!props.loop) return
     index = index < 0 ? props.pages.length - 1 : 0
@@ -186,19 +186,19 @@ const goToPage = async (index: number) => {
 
   isTransitioning.value = true
   translateX.value = 0
-  
+
   const prevIndex = currentIndex.value
   currentIndex.value = index
-  
+
   emit('page-change', index, props.pages[index])
-  
+
   await nextTick()
-  
+
   // 애니메이션 완료 후 상태 초기화
   setTimeout(() => {
     isTransitioning.value = false
   }, props.animationDuration)
-  
+
   resetAutoPlay()
 }
 
@@ -223,7 +223,7 @@ const goToPrevPage = () => {
 // 자동 재생 관리
 const startAutoPlay = () => {
   if (!props.autoPlay) return
-  
+
   autoPlayTimer.value = setInterval(() => {
     goToNextPage()
   }, props.autoPlayDelay)
@@ -251,7 +251,7 @@ watch(
       stopAutoPlay()
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 watch(
@@ -260,7 +260,7 @@ watch(
     if (currentIndex.value >= newLength) {
       currentIndex.value = Math.max(0, newLength - 1)
     }
-  }
+  },
 )
 
 // 컴포넌트 해제 시 타이머 정리
@@ -315,7 +315,7 @@ defineExpose({
   width: 100%;
   height: 100%;
   overflow: hidden;
-  
+
   &__indicator {
     position: absolute;
     bottom: $spacing-4;
@@ -333,12 +333,12 @@ defineExpose({
     background: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: $transition-base;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.8);
       transform: scale(1.2);
     }
-    
+
     &--active {
       background: white;
       transform: scale(1.3);
@@ -361,12 +361,12 @@ defineExpose({
     opacity: 0.7;
     transform: scale(0.9);
     transition: opacity 0.3s ease, transform 0.3s ease;
-    
+
     &--active {
       opacity: 1;
       transform: scale(1);
     }
-    
+
     &--prev,
     &--next {
       opacity: 0.5;
@@ -388,25 +388,25 @@ defineExpose({
     z-index: 10;
     transition: $transition-base;
     box-shadow: $shadow-md;
-    
+
     &:hover {
       background: white;
       transform: translateY(-50%) scale(1.1);
       box-shadow: $shadow-lg;
     }
-    
+
     &:active {
       transform: translateY(-50%) scale(0.95);
     }
-    
+
     &--left {
       left: $spacing-4;
     }
-    
+
     &--right {
       right: $spacing-4;
     }
-    
+
     svg {
       color: map-get($gray-colors, 700);
     }

@@ -2,13 +2,13 @@
   <div class="file-tree">
     <div class="tree-header">
       <div class="tree-title">
-        <n-icon class="title-icon"><Folder /></n-icon>
+        <NIcon class="title-icon"><Folder /></NIcon>
         <span class="title-text">{{ workspace?.name || 'Workspace' }}</span>
-        <n-badge :value="visibleFileCount" type="info" size="small" />
+        <NBadge :value="visibleFileCount" type="info" size="small" />
       </div>
-      
+
       <div class="tree-actions">
-        <n-input
+        <NInput
           v-model:value="searchQuery"
           placeholder="파일 검색..."
           size="small"
@@ -16,110 +16,110 @@
           class="search-input"
         >
           <template #prefix>
-            <n-icon><Search /></n-icon>
+            <NIcon><Search /></NIcon>
           </template>
-        </n-input>
-        
-        <n-button size="small" quaternary @click="refreshTree" :loading="isLoading">
+        </NInput>
+
+        <NButton size="small" quaternary @click="refreshTree" :loading="isLoading">
           <template #icon>
-            <n-icon><RefreshCw /></n-icon>
+            <NIcon><RefreshCw /></NIcon>
           </template>
-        </n-button>
-        
-        <n-button 
-          size="small" 
-          quaternary 
+        </NButton>
+
+        <NButton
+          size="small"
+          quaternary
           @click="toggleHiddenFiles"
           :type="showHidden ? 'primary' : 'default'"
         >
           <template #icon>
-            <n-icon><Eye :style="{ opacity: showHidden ? 1 : 0.5 }" /></n-icon>
+            <NIcon><Eye :style="{ opacity: showHidden ? 1 : 0.5 }" /></NIcon>
           </template>
-        </n-button>
-        
-        <n-dropdown 
-          :options="filterOptions" 
+        </NButton>
+
+        <NDropdown
+          :options="filterOptions"
           @select="handleFilterSelect"
           placement="bottom-end"
         >
-          <n-button size="small" quaternary>
+          <NButton size="small" quaternary>
             <template #icon>
-              <n-icon><Filter /></n-icon>
+              <NIcon><Filter /></NIcon>
             </template>
-          </n-button>
-        </n-dropdown>
+          </NButton>
+        </NDropdown>
       </div>
     </div>
 
     <!-- Git 상태 요약 -->
     <div v-if="gitStatus" class="git-status-summary">
-      <n-space size="small">
-        <n-tag size="small" type="info">
+      <NSpace size="small">
+        <NTag size="small" type="info">
           <template #icon>
-            <n-icon><GitBranch /></n-icon>
+            <NIcon><GitBranch /></NIcon>
           </template>
           {{ gitStatus.branch }}
-        </n-tag>
-        
-        <n-tag 
-          v-if="gitStatus.changedFiles.length > 0" 
-          size="small" 
+        </NTag>
+
+        <NTag
+          v-if="gitStatus.changedFiles.length > 0"
+          size="small"
           type="warning"
         >
           <template #icon>
-            <n-icon><FileEdit /></n-icon>
+            <NIcon><FileEdit /></NIcon>
           </template>
           {{ gitStatus.changedFiles.length }}개 수정됨
-        </n-tag>
-        
-        <n-tag 
-          v-if="gitStatus.untrackedFiles.length > 0" 
-          size="small" 
+        </NTag>
+
+        <NTag
+          v-if="gitStatus.untrackedFiles.length > 0"
+          size="small"
           type="info"
         >
           <template #icon>
-            <n-icon><FilePlus /></n-icon>
+            <NIcon><FilePlus /></NIcon>
           </template>
           {{ gitStatus.untrackedFiles.length }}개 추가됨
-        </n-tag>
-        
-        <n-tag 
-          v-if="gitStatus.stagedFiles.length > 0" 
-          size="small" 
+        </NTag>
+
+        <NTag
+          v-if="gitStatus.stagedFiles.length > 0"
+          size="small"
           type="success"
         >
           <template #icon>
-            <n-icon><Check /></n-icon>
+            <NIcon><Check /></NIcon>
           </template>
           {{ gitStatus.stagedFiles.length }}개 스테이징됨
-        </n-tag>
-      </n-space>
+        </NTag>
+      </NSpace>
     </div>
 
     <!-- 파일 트리 -->
     <div class="tree-content">
       <div v-if="isLoading" class="tree-loading">
-        <n-spin size="small">
+        <NSpin size="small">
           <template #description>
             파일 트리를 불러오는 중...
           </template>
-        </n-spin>
+        </NSpin>
       </div>
 
       <div v-else-if="!treeData || treeData.length === 0" class="tree-empty">
-        <n-empty description="파일이 없습니다" size="small">
+        <NEmpty description="파일이 없습니다" size="small">
           <template #icon>
-            <n-icon size="48"><Folder /></n-icon>
+            <NIcon size="48"><Folder /></NIcon>
           </template>
           <template #extra>
-            <n-button size="small" @click="refreshTree">
+            <NButton size="small" @click="refreshTree">
               새로고침
-            </n-button>
+            </NButton>
           </template>
-        </n-empty>
+        </NEmpty>
       </div>
 
-      <n-tree
+      <NTree
         v-else
         :data="treeData"
         :selectable="true"
@@ -135,9 +135,9 @@
         :height="400"
       >
         <template #default="{ option }">
-          <div 
+          <div
             class="tree-node"
-            :class="{ 
+            :class="{
               'is-file': !option.isDirectory,
               'is-directory': option.isDirectory,
               'is-git-ignored': option.isGitIgnored,
@@ -148,24 +148,24 @@
             @dblclick="handleDoubleClick(option)"
           >
             <div class="node-content">
-              <n-icon class="node-icon" :class="{ 'expanded': option.isExpanded }">
+              <NIcon class="node-icon" :class="{ 'expanded': option.isExpanded }">
                 <component :is="getFileIcon(option)" />
-              </n-icon>
-              
+              </NIcon>
+
               <span class="node-label">{{ option.name }}</span>
-              
+
               <!-- Git 상태 표시 -->
-              <n-tag
+              <NTag
                 v-if="option.gitStatus"
                 :type="getGitStatusType(option.gitStatus)"
                 size="tiny"
                 class="git-status"
               >
                 {{ getGitStatusText(option.gitStatus) }}
-              </n-tag>
-              
+              </NTag>
+
               <!-- 파일 크기 표시 -->
-              <span 
+              <span
                 v-if="!option.isDirectory && option.size !== undefined"
                 class="file-size"
               >
@@ -173,15 +173,15 @@
               </span>
 
               <!-- 로딩 스피너 -->
-              <n-spin v-if="option.isLoading" size="tiny" class="node-loading" />
+              <NSpin v-if="option.isLoading" size="tiny" class="node-loading" />
             </div>
           </div>
         </template>
-      </n-tree>
+      </NTree>
     </div>
 
     <!-- 컨텍스트 메뉴 -->
-    <n-dropdown
+    <NDropdown
       :show="showContextMenuFlag"
       :options="contextMenuOptions"
       :x="contextMenuX"
@@ -192,7 +192,7 @@
     />
 
     <!-- 파일 생성 모달 -->
-    <n-modal
+    <NModal
       v-model:show="showCreateModal"
       preset="dialog"
       title="새 파일/폴더 만들기"
@@ -200,34 +200,34 @@
       negative-text="취소"
       @positive-click="createNewFile"
     >
-      <n-form ref="createFormRef" :model="createForm" :rules="createFormRules">
-        <n-form-item label="유형" path="type">
-          <n-radio-group v-model:value="createForm.type">
-            <n-radio value="file">파일</n-radio>
-            <n-radio value="directory">폴더</n-radio>
-          </n-radio-group>
-        </n-form-item>
-        
-        <n-form-item label="이름" path="name">
-          <n-input
+      <NForm ref="createFormRef" :model="createForm" :rules="createFormRules">
+        <NFormItem label="유형" path="type">
+          <NRadioGroup v-model:value="createForm.type">
+            <NRadio value="file">파일</NRadio>
+            <NRadio value="directory">폴더</NRadio>
+          </NRadioGroup>
+        </NFormItem>
+
+        <NFormItem label="이름" path="name">
+          <NInput
             v-model:value="createForm.name"
             placeholder="파일 또는 폴더 이름을 입력하세요"
             @keydown.enter="createNewFile"
           />
-        </n-form-item>
-        
-        <n-form-item label="위치">
-          <n-input
+        </NFormItem>
+
+        <NFormItem label="위치">
+          <NInput
             :value="createForm.parentPath"
             readonly
             placeholder="선택된 위치"
           />
-        </n-form-item>
-      </n-form>
-    </n-modal>
+        </NFormItem>
+      </NForm>
+    </NModal>
 
     <!-- 이름 변경 모달 -->
-    <n-modal
+    <NModal
       v-model:show="showRenameModal"
       preset="dialog"
       title="이름 바꾸기"
@@ -235,65 +235,65 @@
       negative-text="취소"
       @positive-click="renameFile"
     >
-      <n-form ref="renameFormRef" :model="renameForm" :rules="renameFormRules">
-        <n-form-item label="새 이름" path="name">
-          <n-input
+      <NForm ref="renameFormRef" :model="renameForm" :rules="renameFormRules">
+        <NFormItem label="새 이름" path="name">
+          <NInput
             v-model:value="renameForm.name"
             placeholder="새 이름을 입력하세요"
             @keydown.enter="renameFile"
           />
-        </n-form-item>
-      </n-form>
-    </n-modal>
+        </NFormItem>
+      </NForm>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
-  NTree,
-  NIcon,
-  NButton,
   NBadge,
-  NInput,
+  NButton,
   NDropdown,
-  NSpace,
-  NTag,
-  NSpin,
   NEmpty,
-  NModal,
   NForm,
   NFormItem,
+  NIcon,
+  NInput,
+  NModal,
+  NRadio,
   NRadioGroup,
-  NRadio
+  NSpace,
+  NSpin,
+  NTag,
+  NTree,
 } from 'naive-ui'
 import {
-  Folder,
-  FolderOpen,
-  File,
-  FileText,
-  Image,
-  Code,
-  Database,
   Archive,
-  RefreshCw,
+  Check,
+  Code,
+  Copy,
+  Database,
+  Download,
+  Edit,
   Eye,
-  Search,
-  Filter,
-  GitBranch,
+  File,
   FileEdit,
   FilePlus,
-  Check,
+  FileText,
+  Filter,
+  Folder,
+  FolderOpen,
+  GitBranch,
+  Image,
   Plus,
-  Edit,
-  Trash2,
-  Copy,
+  RefreshCw,
   Scissors,
-  Download
+  Search,
+  Trash2,
 } from '@vicons/lucide'
 
-import { useFileTreeStore, type FileTreeNode } from '@/stores/fileTree'
+import { type FileTreeNode, useFileTreeStore } from '@/stores/fileTree'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 interface Props {
@@ -326,27 +326,27 @@ const renameFormRef = ref()
 const createForm = ref({
   type: 'file' as 'file' | 'directory',
   name: '',
-  parentPath: '/'
+  parentPath: '/',
 })
 
 const renameForm = ref({
   name: '',
-  oldPath: ''
+  oldPath: '',
 })
 
 // 폼 규칙
 const createFormRules = {
   name: [
     { required: true, message: '이름을 입력해주세요' },
-    { pattern: /^[^/\\:*?"<>|]+$/, message: '파일명에 사용할 수 없는 문자가 포함되어 있습니다' }
-  ]
+    { pattern: /^[^/\\:*?"<>|]+$/, message: '파일명에 사용할 수 없는 문자가 포함되어 있습니다' },
+  ],
 }
 
 const renameFormRules = {
   name: [
     { required: true, message: '이름을 입력해주세요' },
-    { pattern: /^[^/\\:*?"<>|]+$/, message: '파일명에 사용할 수 없는 문자가 포함되어 있습니다' }
-  ]
+    { pattern: /^[^/\\:*?"<>|]+$/, message: '파일명에 사용할 수 없는 문자가 포함되어 있습니다' },
+  ],
 }
 
 // 계산된 속성
@@ -364,13 +364,13 @@ const gitStatus = computed(() => {
 
 const filteredTree = computed(() => {
   if (!props.workspaceId) return null
-  
+
   // 필터 업데이트
   fileTreeStore.updateFilter({
     showHidden: showHidden.value,
-    searchQuery: searchQuery.value
+    searchQuery: searchQuery.value,
   })
-  
+
   return fileTreeStore.filteredTree(props.workspaceId)
 })
 
@@ -394,53 +394,53 @@ const filterOptions = [
       { label: 'Vue 파일', key: 'vue' },
       { label: '스타일시트', key: 'css,scss,sass,less' },
       { label: '이미지', key: 'png,jpg,jpeg,gif,svg,webp' },
-      { label: '문서', key: 'md,txt,json,yaml,yml' }
-    ]
+      { label: '문서', key: 'md,txt,json,yaml,yml' },
+    ],
   },
   {
     label: '필터 초기화',
-    key: 'reset'
-  }
+    key: 'reset',
+  },
 ]
 
 // 컨텍스트 메뉴 옵션
 const contextMenuOptions = computed(() => {
   if (!selectedNode.value) return []
-  
+
   const options = []
-  
+
   if (selectedNode.value.isDirectory) {
     options.push(
       { label: '새 파일', key: 'create-file', icon: () => h(NIcon, null, { default: () => h(File) }) },
       { label: '새 폴더', key: 'create-folder', icon: () => h(NIcon, null, { default: () => h(Folder) }) },
-      { type: 'divider' }
+      { type: 'divider' },
     )
   }
-  
+
   options.push(
     { label: '이름 바꾸기', key: 'rename', icon: () => h(NIcon, null, { default: () => h(Edit) }) },
     { label: '복사', key: 'copy', icon: () => h(NIcon, null, { default: () => h(Copy) }) },
-    { label: '잘라내기', key: 'cut', icon: () => h(NIcon, null, { default: () => h(Scissors) }) }
+    { label: '잘라내기', key: 'cut', icon: () => h(NIcon, null, { default: () => h(Scissors) }) },
   )
-  
+
   if (!selectedNode.value.isDirectory) {
     options.push(
-      { label: '다운로드', key: 'download', icon: () => h(NIcon, null, { default: () => h(Download) }) }
+      { label: '다운로드', key: 'download', icon: () => h(NIcon, null, { default: () => h(Download) }) },
     )
   }
-  
+
   options.push(
     { type: 'divider' },
-    { label: '삭제', key: 'delete', icon: () => h(NIcon, null, { default: () => h(Trash2) }) }
+    { label: '삭제', key: 'delete', icon: () => h(NIcon, null, { default: () => h(Trash2) }) },
   )
-  
+
   return options
 })
 
 // 트리 데이터 변환
 const buildTreeData = (node: FileTreeNode): any[] => {
   if (!node.children) return []
-  
+
   return node.children
     .sort((a, b) => {
       // 디렉토리 우선, 그 다음 알파벳 순
@@ -461,7 +461,7 @@ const buildTreeData = (node: FileTreeNode): any[] => {
       size: child.size,
       isLoading: child.isLoading,
       isExpanded: child.isExpanded,
-      children: child.isDirectory ? buildTreeData(child) : undefined
+      children: child.isDirectory ? buildTreeData(child) : undefined,
     }))
 }
 
@@ -482,7 +482,7 @@ const getFileIcon = (node: any) => {
   if (node.isDirectory) {
     return node.isExpanded ? FolderOpen : Folder
   }
-  
+
   const ext = getFileExtension(node.name)
   switch (ext) {
     case 'vue': return Code
@@ -529,12 +529,12 @@ const getGitStatusText = (status: string): string => {
 // 바이트 포맷팅
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B'
-  
+
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
 // 이벤트 핸들러
@@ -547,10 +547,10 @@ const handleSelect = (keys: string[]): void => {
 
 const handleExpand = async (keys: string[]): Promise<void> => {
   expandedKeys.value = keys
-  
+
   // 새로 확장된 디렉토리 찾기
   const newlyExpanded = keys.filter(key => !fileTreeStore.expandedKeys.has(key))
-  
+
   for (const key of newlyExpanded) {
     if (props.workspaceId) {
       await fileTreeStore.toggleExpanded(key, props.workspaceId)
@@ -580,7 +580,7 @@ const toggleHiddenFiles = (): void => {
 
 const refreshTree = async (): Promise<void> => {
   if (!props.workspaceId) return
-  
+
   try {
     await fileTreeStore.loadWorkspaceTree(props.workspaceId)
     await fileTreeStore.refreshGitStatus(props.workspaceId)
@@ -616,9 +616,9 @@ const closeContextMenu = (): void => {
 
 const handleContextMenuSelect = (key: string): void => {
   closeContextMenu()
-  
+
   if (!selectedNode.value) return
-  
+
   switch (key) {
     case 'create-file':
       openCreateModal('file')
@@ -649,34 +649,34 @@ const openCreateModal = (type: 'file' | 'directory'): void => {
   createForm.value = {
     type,
     name: '',
-    parentPath: selectedNode.value?.path || '/'
+    parentPath: selectedNode.value?.path || '/',
   }
   showCreateModal.value = true
 }
 
 const openRenameModal = (): void => {
   if (!selectedNode.value) return
-  
+
   renameForm.value = {
     name: selectedNode.value.name,
-    oldPath: selectedNode.value.path
+    oldPath: selectedNode.value.path,
   }
   showRenameModal.value = true
 }
 
 const createNewFile = async (): Promise<void> => {
   if (!createFormRef.value || !props.workspaceId) return
-  
+
   try {
     await createFormRef.value.validate()
-    
+
     await fileTreeStore.createFile(
       props.workspaceId,
       createForm.value.parentPath,
       createForm.value.name,
-      createForm.value.type === 'directory'
+      createForm.value.type === 'directory',
     )
-    
+
     showCreateModal.value = false
     message.success(`${createForm.value.type === 'directory' ? '폴더' : '파일'}가 생성되었습니다`)
   } catch (error) {
@@ -686,16 +686,16 @@ const createNewFile = async (): Promise<void> => {
 
 const renameFile = async (): Promise<void> => {
   if (!renameFormRef.value || !props.workspaceId) return
-  
+
   try {
     await renameFormRef.value.validate()
-    
+
     await fileTreeStore.renameFile(
       props.workspaceId,
       renameForm.value.oldPath,
-      renameForm.value.name
+      renameForm.value.name,
     )
-    
+
     showRenameModal.value = false
     message.success('이름이 변경되었습니다')
   } catch (error) {
@@ -721,7 +721,7 @@ const downloadFile = (): void => {
 
 const deleteFile = async (): Promise<void> => {
   if (!selectedNode.value || !props.workspaceId) return
-  
+
   try {
     await fileTreeStore.deleteFile(props.workspaceId, selectedNode.value.path)
     message.success('삭제되었습니다')

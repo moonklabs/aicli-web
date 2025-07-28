@@ -16,7 +16,7 @@ export * from './overlay'
 // 네비게이션 컴포넌트
 export * from './navigation'
 
-// 레이아웃 컴포넌트  
+// 레이아웃 컴포넌트
 export { default as MobileLayout } from './layout/MobileLayout.vue'
 export { default as MobileCard } from './layout/MobileCard.vue'
 

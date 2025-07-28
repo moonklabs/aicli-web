@@ -107,7 +107,7 @@ vet:
 # 테스트 타겟
 test: test-unit test-integration
 
-test-all: test-unit test-integration test-e2e test-benchmark
+test-all: test-unit test-integration test-e2e test-auth-e2e test-benchmark
 
 test-unit:
 	@printf "${BLUE}Running unit tests...${NC}\n"
@@ -154,7 +154,27 @@ test-bench:
 test-docker:
 	@printf "${BLUE}Running Docker integration tests...${NC}\n"
 	${GO} test -v -race -timeout=5m ./internal/docker/...
-	@printf "${GREEN}✓ Docker tests completed${NC}\n"
+
+# 인증 E2E 테스트
+test-auth-e2e:
+	@printf "${BLUE}Running Authentication E2E tests...${NC}\n"
+	@${SCRIPTS_DIR}/test-auth-e2e.sh
+	@printf "${GREEN}✓ Authentication E2E tests completed${NC}\n"
+
+test-auth-e2e-backend:
+	@printf "${BLUE}Running Authentication E2E backend tests only...${NC}\n"
+	@${SCRIPTS_DIR}/test-auth-e2e.sh --backend-only
+	@printf "${GREEN}✓ Authentication E2E backend tests completed${NC}\n"
+
+test-auth-e2e-frontend:
+	@printf "${BLUE}Running Authentication E2E frontend tests only...${NC}\n"
+	@${SCRIPTS_DIR}/test-auth-e2e.sh --frontend-only
+	@printf "${GREEN}✓ Authentication E2E frontend tests completed${NC}\n"
+
+test-auth-e2e-coverage:
+	@printf "${BLUE}Running Authentication E2E tests with coverage...${NC}\n"
+	@${SCRIPTS_DIR}/test-auth-e2e.sh --coverage
+	@printf "${GREEN}✓ Authentication E2E tests with coverage completed${NC}\n"
 
 test-docker-skip:
 	@printf "${BLUE}Running tests without Docker...${NC}\n"

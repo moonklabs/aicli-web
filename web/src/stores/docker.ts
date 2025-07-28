@@ -92,7 +92,7 @@ export const useDockerStore = defineStore('docker', () => {
   const containerLogs = ref<Map<string, ContainerLogs>>(new Map())
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  
+
   // WebSocket 모니터링 상태
   const isMonitoring = ref(false)
   const wsConnection = ref<WebSocket | null>(null)
@@ -122,8 +122,8 @@ export const useDockerStore = defineStore('docker', () => {
   const totalNetworks = computed(() => networks.value.length)
 
   // 로그 관련 계산된 속성
-  const getContainerLogs = computed(() => (containerId: string) => 
-    containerLogs.value.get(containerId)
+  const getContainerLogs = computed(() => (containerId: string) =>
+    containerLogs.value.get(containerId),
   )
 
   // 액션
@@ -178,20 +178,20 @@ export const useDockerStore = defineStore('docker', () => {
 
     try {
       connectionStatus.value = 'connecting'
-      
+
       // WebSocket 연결 URL 구성
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = window.location.host
       const wsUrl = `${protocol}//${host}/ws/docker-status${workspaceId ? `/${workspaceId}` : ''}`
-      
+
       wsConnection.value = new WebSocket(wsUrl)
-      
+
       wsConnection.value.onopen = () => {
         connectionStatus.value = 'connected'
         isMonitoring.value = true
         console.log('Docker monitoring WebSocket connected')
       }
-      
+
       wsConnection.value.onmessage = (event) => {
         try {
           const data: DockerStatusMessage = JSON.parse(event.data)
@@ -200,19 +200,19 @@ export const useDockerStore = defineStore('docker', () => {
           console.error('Failed to parse WebSocket message:', err)
         }
       }
-      
+
       wsConnection.value.onerror = (error) => {
         connectionStatus.value = 'error'
         console.error('Docker monitoring WebSocket error:', error)
       }
-      
+
       wsConnection.value.onclose = () => {
         connectionStatus.value = 'disconnected'
         isMonitoring.value = false
         wsConnection.value = null
         console.log('Docker monitoring WebSocket disconnected')
       }
-      
+
     } catch (err) {
       connectionStatus.value = 'error'
       setError(err instanceof Error ? err.message : 'WebSocket 연결 실패')
@@ -234,26 +234,26 @@ export const useDockerStore = defineStore('docker', () => {
     switch (data.type) {
       case 'container_status':
         if (data.containerId && data.status) {
-          updateContainer(data.containerId, { 
+          updateContainer(data.containerId, {
             status: data.status as DockerContainer['status'],
             startedAt: data.status === 'running' ? new Date().toISOString() : undefined,
-            finishedAt: ['stopped', 'dead'].includes(data.status) ? new Date().toISOString() : undefined
+            finishedAt: ['stopped', 'dead'].includes(data.status) ? new Date().toISOString() : undefined,
           })
         }
         break
-      
+
       case 'container_stats':
         if (data.containerId && data.stats) {
           setStats(data.containerId, data.stats)
         }
         break
-      
+
       case 'container_logs':
         if (data.containerId && data.logs) {
           appendContainerLogs(data.containerId, data.logs)
         }
         break
-      
+
       case 'container_list':
         if (data.containers) {
           setContainers(data.containers)
@@ -275,7 +275,7 @@ export const useDockerStore = defineStore('docker', () => {
       containerLogs.value.set(containerId, {
         containerId,
         logs: newLogs,
-        isStreaming: false
+        isStreaming: false,
       })
     }
   }
@@ -313,17 +313,17 @@ export const useDockerStore = defineStore('docker', () => {
           workspaceId: '1',
           ports: [
             { privatePort: 3000, publicPort: 3000, type: 'tcp' },
-            { privatePort: 8080, publicPort: 8080, type: 'tcp' }
+            { privatePort: 8080, publicPort: 8080, type: 'tcp' },
           ],
           mounts: [
-            { source: '/workspace/aicli-web', destination: '/app', mode: 'rw', type: 'bind' }
+            { source: '/workspace/aicli-web', destination: '/app', mode: 'rw', type: 'bind' },
           ],
           createdAt: '2025-07-23T10:00:00Z',
           startedAt: '2025-07-23T10:05:00Z',
           environment: {
             NODE_ENV: 'development',
-            PORT: '3000'
-          }
+            PORT: '3000',
+          },
         },
         {
           id: 'container-sample-project',
@@ -333,16 +333,16 @@ export const useDockerStore = defineStore('docker', () => {
           state: 'exited',
           workspaceId: '2',
           ports: [
-            { privatePort: 3000, publicPort: 3001, type: 'tcp' }
+            { privatePort: 3000, publicPort: 3001, type: 'tcp' },
           ],
           mounts: [
-            { source: '/workspace/sample-project', destination: '/app', mode: 'rw', type: 'bind' }
+            { source: '/workspace/sample-project', destination: '/app', mode: 'rw', type: 'bind' },
           ],
           createdAt: '2025-07-22T14:00:00Z',
-          finishedAt: '2025-07-22T18:30:00Z'
-        }
+          finishedAt: '2025-07-22T18:30:00Z',
+        },
       ]
-      
+
       setContainers(dummyContainers)
 
       // 더미 통계 데이터
@@ -357,7 +357,7 @@ export const useDockerStore = defineStore('docker', () => {
         blockRead: 512000,
         blockWrite: 256000,
         pids: 10,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
 
       // 더미 로그 데이터
@@ -367,20 +367,20 @@ export const useDockerStore = defineStore('docker', () => {
           {
             timestamp: new Date('2025-07-23T12:30:00'),
             stream: 'stdout',
-            message: '[INFO] Server started on port 3000'
+            message: '[INFO] Server started on port 3000',
           },
           {
             timestamp: new Date('2025-07-23T12:31:00'),
             stream: 'stdout',
-            message: '[INFO] WebSocket server listening on port 8080'
+            message: '[INFO] WebSocket server listening on port 8080',
           },
           {
             timestamp: new Date('2025-07-23T12:32:00'),
             stream: 'stderr',
-            message: '[WARN] High memory usage detected'
-          }
+            message: '[WARN] High memory usage detected',
+          },
         ],
-        isStreaming: false
+        isStreaming: false,
       })
 
       console.log('Container list refreshed with dummy data')

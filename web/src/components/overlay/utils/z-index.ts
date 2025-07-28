@@ -23,10 +23,10 @@ let currentMaxZIndex = Math.max(...Object.values(Z_INDEX_BASE))
 export function allocateZIndex(overlayId: string, type: keyof typeof Z_INDEX_BASE): number {
   const baseZIndex = Z_INDEX_BASE[type]
   const zIndex = Math.max(baseZIndex, currentMaxZIndex + 1)
-  
+
   activeOverlays.set(overlayId, zIndex)
   currentMaxZIndex = zIndex
-  
+
   return zIndex
 }
 
@@ -35,7 +35,7 @@ export function allocateZIndex(overlayId: string, type: keyof typeof Z_INDEX_BAS
  */
 export function releaseZIndex(overlayId: string): void {
   activeOverlays.delete(overlayId)
-  
+
   // 현재 활성화된 오버레이 중 최대 z-index 재계산
   if (activeOverlays.size > 0) {
     currentMaxZIndex = Math.max(...activeOverlays.values())
@@ -64,13 +64,13 @@ export function getActiveOverlayIds(): string[] {
 export function getTopOverlayId(): string | undefined {
   let topId: string | undefined
   let maxZ = -1
-  
+
   activeOverlays.forEach((zIndex, id) => {
     if (zIndex > maxZ) {
       maxZ = zIndex
       topId = id
     }
   })
-  
+
   return topId
 }

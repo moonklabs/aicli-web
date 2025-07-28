@@ -145,7 +145,7 @@ func (fm *FileManager) ValidatePermissions() error {
 
 	mode := info.Mode().Perm()
 	if mode != 0600 {
-		return fmt.Errorf("config file has insecure permissions: %o", mode)
+		return fmt.Errorf("설정 파일의 권한이 안전하지 않습니다: %o", mode)
 	}
 
 	return nil

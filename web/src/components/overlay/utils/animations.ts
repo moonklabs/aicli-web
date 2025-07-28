@@ -29,12 +29,12 @@ export const ANIMATION_EASING = {
  */
 export function getTransitionClasses(
   type: AnimationType,
-  direction?: AnimationDirection
+  direction?: AnimationDirection,
 ): Record<string, string> {
   const baseClass = `overlay-${type}`
   const directionClass = direction ? `-${direction}` : ''
   const prefix = `${baseClass}${directionClass}`
-  
+
   return {
     enterActiveClass: `${prefix}-enter-active`,
     leaveActiveClass: `${prefix}-leave-active`,
@@ -49,7 +49,7 @@ export function getTransitionClasses(
 export function getAnimationStyles(
   type: AnimationType,
   duration: number = ANIMATION_DURATION.normal,
-  easing: string = ANIMATION_EASING.easeInOut
+  easing: string = ANIMATION_EASING.easeInOut,
 ): Record<string, any> {
   return {
     transition: `all ${duration}ms ${easing}`,
@@ -66,6 +66,6 @@ export function getSlideTransform(direction: AnimationDirection): string {
     bottom: 'translateY(100%)',
     left: 'translateX(-100%)',
   }
-  
+
   return transforms[direction]
 }

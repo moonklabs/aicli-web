@@ -27,7 +27,7 @@ export function registerServiceWorker(options: ServiceWorkerRegistrationOptions 
     wb.addEventListener('controlling', (event) => {
       console.log('🎮 Service Worker가 제어권을 갖게 되었습니다')
       options.onControllerChange?.(event.sw as any)
-      
+
       // 페이지 새로고침 여부를 사용자에게 물어볼 수 있음
       if (event.isUpdate) {
         // 자동 새로고침 또는 사용자 선택 UI 표시
@@ -38,7 +38,7 @@ export function registerServiceWorker(options: ServiceWorkerRegistrationOptions 
     // Service Worker 대기 상태 이벤트
     wb.addEventListener('waiting', (event) => {
       console.log('⏳ 새로운 Service Worker가 대기 중입니다')
-      
+
       // 사용자에게 업데이트 알림을 표시할 수 있음
       showUpdateAvailable(event.sw as any)
     })
@@ -51,7 +51,7 @@ export function registerServiceWorker(options: ServiceWorkerRegistrationOptions 
     // 오프라인 대비 이벤트
     wb.addEventListener('message', (event) => {
       console.log('📨 Service Worker로부터 메시지:', event.data)
-      
+
       if (event.data && event.data.type === 'CACHE_UPDATED') {
         console.log('📦 캐시가 업데이트되었습니다:', event.data.payload)
       }
@@ -61,7 +61,7 @@ export function registerServiceWorker(options: ServiceWorkerRegistrationOptions 
     wb.register()
       .then((registration) => {
         console.log('✅ Service Worker 등록 성공:', registration)
-        
+
         // 주기적으로 업데이트 확인 (24시간마다)
         setInterval(() => {
           registration.update()
@@ -84,10 +84,10 @@ function showUpdateAvailable(worker: ServiceWorker) {
   // 사용자에게 업데이트 알림을 표시
   // 이는 UI 컴포넌트에서 처리하거나 전역 이벤트로 발송할 수 있음
   console.log('📢 앱 업데이트가 준비되었습니다')
-  
+
   // 커스텀 이벤트 발송
   window.dispatchEvent(new CustomEvent('sw-update-available', {
-    detail: { worker }
+    detail: { worker },
   }))
 }
 
@@ -100,7 +100,7 @@ export function sendMessageToSW(message: any): Promise<any> {
     }
 
     const messageChannel = new MessageChannel()
-    
+
     messageChannel.port1.onmessage = (event) => {
       if (event.data.error) {
         reject(event.data.error)
@@ -160,7 +160,7 @@ export class PWAUpdateManager {
   private notifyUpdateAvailable() {
     // 사용자에게 업데이트 알림
     console.log('🔔 앱 업데이트가 준비되었습니다')
-    
+
     // UI에서 업데이트 프롬프트 표시
     // 예: 토스트 메시지, 배너, 모달 등
   }

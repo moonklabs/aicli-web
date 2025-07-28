@@ -60,7 +60,7 @@ function evaluateTextFilter(value: any, filterValue: string, operator: string): 
 
 function evaluateNumberFilter(value: any, filterValue: number | number[], operator: string): boolean {
   const numValue = Number(value)
-  
+
   if (Array.isArray(filterValue) && operator === 'between') {
     const [min, max] = filterValue
     return numValue >= min && numValue <= max
@@ -86,7 +86,7 @@ function evaluateNumberFilter(value: any, filterValue: number | number[], operat
 
 function evaluateDateFilter(value: any, filterValue: string | string[], operator: string): boolean {
   const dateValue = new Date(value)
-  
+
   if (Array.isArray(filterValue) && operator === 'between') {
     const [startDate, endDate] = filterValue.map(d => new Date(d))
     return dateValue >= startDate && dateValue <= endDate
@@ -137,7 +137,7 @@ function evaluateMultiSelectFilter(value: any, filterValue: any[], operator: str
 // 필터 상태 관리 헬퍼
 export function createFilterState() {
   const filters = ref<any[]>([])
-  
+
   const addFilter = (filter: any) => {
     const existingIndex = filters.value.findIndex(f => f.key === filter.key)
     if (existingIndex >= 0) {
@@ -153,31 +153,31 @@ export function createFilterState() {
       filters.value.push(filter)
     }
   }
-  
+
   const removeFilter = (key: string) => {
     const index = filters.value.findIndex(f => f.key === key)
     if (index >= 0) {
       filters.value.splice(index, 1)
     }
   }
-  
+
   const clearAllFilters = () => {
     filters.value = []
   }
-  
+
   const getFilter = (key: string) => {
     return filters.value.find(f => f.key === key)
   }
-  
+
   const hasFilters = computed(() => filters.value.length > 0)
-  
+
   return {
     filters: readonly(filters),
     addFilter,
     removeFilter,
     clearAllFilters,
     getFilter,
-    hasFilters
+    hasFilters,
   }
 }
 

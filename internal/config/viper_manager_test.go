@@ -27,7 +27,7 @@ func TestConfigManager_Basic(t *testing.T) {
 	require.NoError(t, err)
 
 	// 기본값 테스트
-	assert.Equal(t, "claude-3-opus", cm.GetString("claude.model"))
+	assert.Equal(t, "claude-3-sonnet", cm.GetString("claude.model"))
 	assert.Equal(t, 0.7, cm.GetFloat64("claude.temperature"))
 	assert.Equal(t, 30, cm.GetInt("claude.timeout"))
 	assert.Equal(t, "table", cm.GetString("output.format"))
@@ -213,7 +213,7 @@ func TestConfigManager_Reset(t *testing.T) {
 	require.NoError(t, err)
 
 	// 기본값으로 복원되었는지 확인
-	assert.Equal(t, "claude-3-opus", cm.GetString("claude.model"))
+	assert.Equal(t, "claude-3-sonnet", cm.GetString("claude.model"))
 	assert.Equal(t, "info", cm.GetString("logging.level"))
 }
 
@@ -256,7 +256,7 @@ func TestConfigManager_Watcher(t *testing.T) {
 	select {
 	case <-changed:
 		assert.Equal(t, "claude.model", lastKey)
-		assert.Equal(t, "claude-3-opus", lastOldValue)
+		assert.Equal(t, "claude-3-sonnet", lastOldValue)
 		assert.Equal(t, "claude-3-sonnet", lastNewValue)
 	case <-time.After(time.Second):
 		t.Fatal("Watcher notification timeout")

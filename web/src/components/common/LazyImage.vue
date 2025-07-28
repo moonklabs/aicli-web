@@ -25,14 +25,14 @@
           <span>이미지를 불러올 수 없습니다</span>
         </div>
       </slot>
-      
+
       <slot v-else name="loading">
         <div class="lazy-image__loading">
           <div class="lazy-image__skeleton" />
         </div>
       </slot>
     </div>
-    
+
     <!-- 실제 이미지 -->
     <img
       v-show="isLoaded"
@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 export interface LazyImageProps {
   // 이미지 소스
@@ -96,12 +96,12 @@ const imageRef = ref<HTMLImageElement>()
 // 현재 사용할 이미지 소스
 const currentSrc = computed(() => {
   if (!shouldLoad.value) return ''
-  
+
   // WebP 지원 확인
   if (props.webpSrc && supportsWebP.value) {
     return props.webpSrc
   }
-  
+
   return props.src
 })
 
@@ -159,7 +159,7 @@ let observer: IntersectionObserver | null = null
 
 function createObserver() {
   if (!props.lazy || !containerRef.value) return
-  
+
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -171,9 +171,9 @@ function createObserver() {
     },
     {
       rootMargin: props.threshold,
-    }
+    },
   )
-  
+
   observer.observe(containerRef.value)
 }
 
@@ -188,7 +188,7 @@ function destroyObserver() {
 onMounted(async () => {
   // WebP 지원 확인
   supportsWebP.value = await checkWebPSupport()
-  
+
   // Intersection Observer 설정
   if (props.lazy) {
     createObserver()
@@ -202,7 +202,7 @@ onUnmounted(() => {
 // src 변경 감지
 watch(() => props.src, () => {
   resetState()
-  
+
   if (props.lazy) {
     shouldLoad.value = false
     createObserver()
@@ -324,7 +324,7 @@ watch(shouldLoad, (newValue) => {
     padding: 12px;
     font-size: 11px;
   }
-  
+
   .lazy-image__error svg {
     width: 24px;
     height: 24px;

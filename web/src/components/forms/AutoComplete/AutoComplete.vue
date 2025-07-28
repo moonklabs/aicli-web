@@ -22,13 +22,13 @@
         :aria-describedby="ariaDescribedby"
         role="combobox"
       />
-      
+
       <div v-if="loading" class="auto-complete__loader">
         <svg class="auto-complete__spinner" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" />
         </svg>
       </div>
-      
+
       <button
         v-if="clearable && inputValue && !disabled"
         @click="handleClear"
@@ -67,7 +67,7 @@
             <span v-html="highlightMatch(getSuggestionLabel(suggestion))"></span>
           </slot>
         </div>
-        
+
         <div v-if="showCreateOption && inputValue" class="auto-complete__create-option">
           <button
             @click="createNewItem"
@@ -80,7 +80,7 @@
           </button>
         </div>
       </div>
-      
+
       <div
         v-else-if="showSuggestions && inputValue && !loading"
         class="auto-complete__empty"
@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
 interface Props {
@@ -133,7 +133,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: 'No results found',
   clearAriaLabel: 'Clear selection',
   caseSensitive: false,
-  highlightMatches: true
+  highlightMatches: true,
 })
 
 const emit = defineEmits<{
@@ -257,7 +257,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       } else if (filteredSuggestions.value.length > 0) {
         highlightedIndex.value = Math.min(
           highlightedIndex.value + 1,
-          filteredSuggestions.value.length - 1
+          filteredSuggestions.value.length - 1,
         )
       }
       break
@@ -295,11 +295,11 @@ const handleKeydown = (event: KeyboardEvent) => {
 const selectSuggestion = (item: any) => {
   const value = getSuggestionValue(item)
   const label = getSuggestionLabel(item)
-  
+
   inputValue.value = label
   emit('update:modelValue', value)
   emit('select', item)
-  
+
   showSuggestions.value = false
   highlightedIndex.value = -1
 }
@@ -321,8 +321,8 @@ const createNewItem = () => {
 // Initialize input value from modelValue
 const initializeInputValue = () => {
   if (props.modelValue && props.suggestions.length > 0) {
-    const selected = props.suggestions.find(item => 
-      getSuggestionValue(item) === props.modelValue
+    const selected = props.suggestions.find(item =>
+      getSuggestionValue(item) === props.modelValue,
     )
     if (selected) {
       inputValue.value = getSuggestionLabel(selected)
@@ -385,7 +385,7 @@ onUnmounted(() => {
 
   &__spinner {
     @apply w-5 h-5 animate-spin;
-    
+
     circle {
       stroke-dasharray: 62.83;
       stroke-dashoffset: 47.12;

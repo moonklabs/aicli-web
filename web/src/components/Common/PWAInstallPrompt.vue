@@ -14,7 +14,7 @@
               <div class="text-xs opacity-90">더 빠르고 편리한 접근을 위해 홈 화면에 추가하세요</div>
             </div>
           </div>
-          
+
           <div class="flex items-center gap-2">
             <button
               @click="handleInstall"
@@ -131,7 +131,7 @@
               </span>
               <span v-else>지금 설치하기</span>
             </button>
-            
+
             <button
               v-if="!isInstallable"
               @click="closeModal"
@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { usePWAInstall } from '@/composables/usePWAInstall'
 
 const {
@@ -248,7 +248,7 @@ const handleInstall = async () => {
 const dismissBanner = () => {
   showBanner.value = false
   incrementDismissedCount()
-  
+
   // 플로팅 버튼 표시 (옵션)
   if (props.showFloatingDefault) {
     setTimeout(() => {
@@ -267,7 +267,7 @@ const openModal = () => {
 const closeModal = () => {
   showModal.value = false
   incrementDismissedCount()
-  
+
   // 플로팅 버튼 다시 표시
   if (props.showFloatingDefault) {
     setTimeout(() => {

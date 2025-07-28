@@ -55,7 +55,7 @@
           <h3 v-else-if="item.label" class="touch-list-item__title">
             {{ item.label }}
           </h3>
-          
+
           <p v-if="item.subtitle" class="touch-list-item__subtitle">
             {{ item.subtitle }}
           </p>
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useTouchGestures } from '@/composables/useTouchGestures'
 
 interface ListItem {
@@ -180,28 +180,28 @@ onGesture('longpress', () => {
 // 시간 포맷팅
 const formatTime = (time: string | Date) => {
   if (!time) return ''
-  
+
   const date = new Date(time)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   // 1분 미만
   if (diff < 60000) {
     return '방금 전'
   }
-  
+
   // 1시간 미만
   if (diff < 3600000) {
     const minutes = Math.floor(diff / 60000)
     return `${minutes}분 전`
   }
-  
+
   // 24시간 미만
   if (diff < 86400000) {
     const hours = Math.floor(diff / 3600000)
     return `${hours}시간 전`
   }
-  
+
   // 그 이상은 날짜 표시
   return date.toLocaleDateString('ko-KR', {
     month: 'short',
@@ -212,7 +212,7 @@ const formatTime = (time: string | Date) => {
 // 이벤트 핸들러
 const handleClick = (event?: Event) => {
   if (props.disabled) return
-  
+
   emit('click', props.item, props.index)
 }
 
@@ -239,7 +239,7 @@ const handleBlur = () => {
 
 const handleLongPress = () => {
   if (props.disabled) return
-  
+
   emit('long-press', props.item, props.index)
 }
 
@@ -251,10 +251,10 @@ const handleCheckboxChange = (event: Event) => {
 // 터치 이벤트 처리
 const handleTouchStart = () => {
   if (props.disabled) return
-  
+
   isPressed.value = true
   emit('touch-start', props.item, props.index)
-  
+
   // 롱 프레스 타이머 시작
   longPressTimer.value = setTimeout(() => {
     handleLongPress()
@@ -264,7 +264,7 @@ const handleTouchStart = () => {
 const handleTouchEnd = () => {
   isPressed.value = false
   emit('touch-end', props.item, props.index)
-  
+
   if (longPressTimer.value) {
     clearTimeout(longPressTimer.value)
   }
@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: $transition-base;
   position: relative;
-  
+
   .dark & {
     background: $dark-bg-secondary;
     border-bottom-color: $dark-bg-tertiary;
@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
   &:hover {
     @include no-touch {
       background: map-get($gray-colors, 50);
-      
+
       .dark & {
         background: lighten($dark-bg-secondary, 5%);
       }
@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
   &:focus {
     outline: none;
     background: map-get($gray-colors, 50);
-    
+
     .dark & {
       background: lighten($dark-bg-secondary, 5%);
     }
@@ -325,14 +325,14 @@ onBeforeUnmount(() => {
 
   &--selected {
     background: map-get($primary-colors, 50);
-    
+
     .dark & {
       background: rgba(map-get($primary-colors, 500), 0.1);
     }
 
     &:hover {
       background: map-get($primary-colors, 100);
-      
+
       .dark & {
         background: rgba(map-get($primary-colors, 500), 0.2);
       }
@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
   &--pressed {
     background: map-get($gray-colors, 100);
     transform: scale(0.98);
-    
+
     .dark & {
       background: lighten($dark-bg-secondary, 10%);
     }
@@ -362,7 +362,7 @@ onBeforeUnmount(() => {
   &__checkbox {
     display: flex;
     align-items: center;
-    
+
     input[type="checkbox"] {
       @include touch-target(20px);
       width: 20px;
@@ -380,12 +380,12 @@ onBeforeUnmount(() => {
     overflow: hidden;
     background: map-get($gray-colors, 100);
     @include flex-center;
-    
+
     .touch-list-item--dense & {
       width: 32px;
       height: 32px;
     }
-    
+
     .dark & {
       background: $dark-bg-tertiary;
     }
@@ -401,7 +401,7 @@ onBeforeUnmount(() => {
     width: 20px;
     height: 20px;
     color: map-get($gray-colors, 500);
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -422,11 +422,11 @@ onBeforeUnmount(() => {
     color: $light-text-primary;
     margin: 0 0 2px 0;
     @include text-ellipsis;
-    
+
     .touch-list-item--dense & {
       font-size: $font-size-sm;
     }
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -437,12 +437,12 @@ onBeforeUnmount(() => {
     color: $light-text-secondary;
     margin: 0;
     @include text-clamp(2);
-    
+
     .touch-list-item--dense & {
       font-size: $font-size-xs;
       @include text-clamp(1);
     }
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -459,7 +459,7 @@ onBeforeUnmount(() => {
   &__meta-text {
     font-size: $font-size-xs;
     color: $light-text-tertiary;
-    
+
     .dark & {
       color: $dark-text-tertiary;
     }
@@ -471,22 +471,22 @@ onBeforeUnmount(() => {
     padding: 2px 6px;
     border-radius: $border-radius-full;
     text-transform: uppercase;
-    
+
     &--active {
       background: lighten($success, 35%);
       color: darken($success, 10%);
     }
-    
+
     &--pending {
       background: lighten($warning, 35%);
       color: darken($warning, 10%);
     }
-    
+
     &--error {
       background: lighten($error, 35%);
       color: darken($error, 10%);
     }
-    
+
     &--inactive {
       background: lighten(map-get($gray-colors, 500), 35%);
       color: darken(map-get($gray-colors, 500), 10%);
@@ -505,15 +505,15 @@ onBeforeUnmount(() => {
     height: 16px;
     color: map-get($gray-colors, 400);
     transition: $transition-base;
-    
+
     .touch-list-item:hover & {
       color: map-get($gray-colors, 600);
     }
-    
+
     .dark & {
       color: $dark-text-tertiary;
     }
-    
+
     .dark .touch-list-item:hover & {
       color: $dark-text-secondary;
     }
@@ -526,7 +526,7 @@ onBeforeUnmount(() => {
     bottom: 0;
     width: 3px;
     background: map-get($primary-colors, 500);
-    
+
     .dark & {
       background: map-get($primary-colors, 400);
     }
@@ -538,16 +538,16 @@ onBeforeUnmount(() => {
   .touch-list-item {
     @include touch-target(60px);
     padding: $spacing-4;
-    
+
     &--dense {
       @include touch-target(48px);
       padding: $spacing-3;
     }
-    
+
     &__avatar {
       width: 48px;
       height: 48px;
-      
+
       .touch-list-item--dense & {
         width: 36px;
         height: 36px;
@@ -560,7 +560,7 @@ onBeforeUnmount(() => {
 @include reduce-motion {
   .touch-list-item {
     transition: none;
-    
+
     &--pressed {
       transform: none;
     }

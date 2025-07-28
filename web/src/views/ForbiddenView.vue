@@ -1,19 +1,19 @@
 <template>
   <div class="forbidden-view">
-    <n-card class="forbidden-card">
+    <NCard class="forbidden-card">
       <div class="forbidden-content">
         <div class="forbidden-icon">
           <Icon name="shield-alert" size="64" />
         </div>
-        
+
         <h1 class="forbidden-title">접근 권한이 없습니다</h1>
-        
+
         <p class="forbidden-message">
           {{ errorMessage }}
         </p>
-        
+
         <div class="forbidden-details" v-if="showDetails">
-          <n-divider />
+          <NDivider />
           <div class="details-section">
             <h3>접근 시도 정보</h3>
             <div class="info-grid">
@@ -35,17 +35,17 @@
               </div>
             </div>
           </div>
-          
+
           <div class="debug-section" v-if="isDev">
             <h3>디버그 정보</h3>
             <pre class="debug-info">{{ debugInfo }}</pre>
           </div>
         </div>
-        
+
         <div class="forbidden-actions">
-          <n-space>
-            <n-button 
-              type="primary" 
+          <NSpace>
+            <NButton
+              type="primary"
               @click="goBack"
               :disabled="!canGoBack"
             >
@@ -53,30 +53,30 @@
                 <Icon name="arrow-left" />
               </template>
               이전 페이지로
-            </n-button>
-            
-            <n-button 
-              type="default" 
+            </NButton>
+
+            <NButton
+              type="default"
               @click="goHome"
             >
               <template #icon>
                 <Icon name="home" />
               </template>
               홈으로 가기
-            </n-button>
-            
-            <n-button 
-              type="default" 
+            </NButton>
+
+            <NButton
+              type="default"
               @click="toggleDetails"
             >
               <template #icon>
                 <Icon :name="showDetails ? 'eye-off' : 'eye'" />
               </template>
               {{ showDetails ? '세부정보 숨기기' : '세부정보 보기' }}
-            </n-button>
-            
-            <n-button 
-              type="warning" 
+            </NButton>
+
+            <NButton
+              type="warning"
               @click="requestAccess"
               v-if="!isAdmin"
             >
@@ -84,21 +84,21 @@
                 <Icon name="mail" />
               </template>
               권한 요청하기
-            </n-button>
-          </n-space>
+            </NButton>
+          </NSpace>
         </div>
-        
+
         <div class="forbidden-help" v-if="!isAdmin">
-          <n-alert type="info" title="권한이 필요하신가요?">
-            이 페이지에 접근하려면 특별한 권한이 필요합니다. 
+          <NAlert type="info" title="권한이 필요하신가요?">
+            이 페이지에 접근하려면 특별한 권한이 필요합니다.
             관리자에게 권한 요청을 보내거나 시스템 관리자에게 문의하세요.
-          </n-alert>
+          </NAlert>
         </div>
       </div>
-    </n-card>
-    
+    </NCard>
+
     <!-- 권한 요청 모달 -->
-    <n-modal 
+    <NModal
       v-model:show="showRequestModal"
       preset="dialog"
       title="권한 요청"
@@ -106,44 +106,44 @@
       negative-text="취소"
       @positive-click="submitAccessRequest"
     >
-      <n-form :model="accessRequest" ref="requestFormRef">
-        <n-form-item label="요청 사유" path="reason">
-          <n-input
+      <NForm :model="accessRequest" ref="requestFormRef">
+        <NFormItem label="요청 사유" path="reason">
+          <NInput
             v-model:value="accessRequest.reason"
             type="textarea"
             placeholder="권한이 필요한 이유를 입력해주세요..."
             :rows="4"
           />
-        </n-form-item>
-        
-        <n-form-item label="긴급도" path="urgency">
-          <n-select
+        </NFormItem>
+
+        <NFormItem label="긴급도" path="urgency">
+          <NSelect
             v-model:value="accessRequest.urgency"
             :options="urgencyOptions"
           />
-        </n-form-item>
-      </n-form>
-    </n-modal>
+        </NFormItem>
+      </NForm>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { PermissionUtils } from '@/utils/permission'
-import { 
-  NCard, 
-  NButton, 
-  NSpace, 
-  NDivider, 
-  NAlert, 
-  NModal, 
-  NForm, 
-  NFormItem, 
-  NInput, 
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NForm,
+  NFormItem,
+  NInput,
+  NModal,
   NSelect,
-  useMessage 
+  NSpace,
+  useMessage,
 } from 'naive-ui'
 import Icon from '@/components/common/Icon.vue'
 
@@ -159,7 +159,7 @@ const showRequestModal = ref(false)
 const currentTime = ref(new Date())
 const accessRequest = ref({
   reason: '',
-  urgency: 'normal'
+  urgency: 'normal',
 })
 
 // 계산된 속성
@@ -174,7 +174,7 @@ const errorMessage = computed(() => {
   if (customReason) {
     return customReason
   }
-  
+
   // 기본 메시지
   return '요청하신 페이지에 접근할 권한이 없습니다. 필요한 권한을 확인하고 관리자에게 문의하세요.'
 })
@@ -193,27 +193,27 @@ const canGoBack = computed(() => {
 
 const debugInfo = computed(() => {
   if (!isDev.value) return null
-  
+
   return JSON.stringify({
     route: {
       path: route.path,
       params: route.params,
       query: route.query,
-      meta: route.meta
+      meta: route.meta,
     },
     user: {
       id: userInfo.value?.id,
       roles: userRoles.value,
-      permissions: PermissionUtils.permissions
+      permissions: PermissionUtils.permissions,
     },
-    timestamp: currentTime.value.toISOString()
+    timestamp: currentTime.value.toISOString(),
   }, null, 2)
 })
 
 const urgencyOptions = [
   { label: '일반', value: 'normal' },
   { label: '높음', value: 'high' },
-  { label: '긴급', value: 'urgent' }
+  { label: '긴급', value: 'urgent' },
 ]
 
 // 메서드
@@ -242,19 +242,19 @@ const submitAccessRequest = async () => {
     // TODO: 실제 API 호출로 권한 요청 제출
     console.log('Access request submitted:', {
       path: attemptedPath.value,
-      reason: accessRequest.reason,
-      urgency: accessRequest.urgency,
+      reason: accessRequest.value.reason,
+      urgency: accessRequest.value.urgency,
       user: userInfo.value?.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
-    
+
     message.success('권한 요청이 관리자에게 전송되었습니다.')
     showRequestModal.value = false
-    
+
     // 폼 초기화
     accessRequest.value = {
       reason: '',
-      urgency: 'normal'
+      urgency: 'normal',
     }
   } catch (error) {
     console.error('Failed to submit access request:', error)
@@ -269,7 +269,7 @@ const formatTime = (date: Date) => {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -281,7 +281,7 @@ onMounted(() => {
       path: attemptedPath.value,
       user: userInfo.value?.username,
       reason: errorMessage.value,
-      timestamp: currentTime.value.toISOString()
+      timestamp: currentTime.value.toISOString(),
     })
   }
 })
@@ -349,12 +349,12 @@ onMounted(() => {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #e2e8f0;
-  
+
   strong {
     color: #4a5568;
     min-width: 100px;
   }
-  
+
   span {
     color: #2d3748;
     text-align: right;
@@ -364,7 +364,7 @@ onMounted(() => {
 
 .debug-section {
   margin-top: 24px;
-  
+
   h3 {
     color: #e53e3e;
     margin-bottom: 12px;
@@ -395,27 +395,27 @@ onMounted(() => {
   .forbidden-title {
     color: #f7fafc;
   }
-  
+
   .forbidden-message {
     color: #cbd5e0;
   }
-  
+
   .details-section h3 {
     color: #f7fafc;
   }
-  
+
   .info-item {
     border-bottom-color: #4a5568;
-    
+
     strong {
       color: #cbd5e0;
     }
-    
+
     span {
       color: #f7fafc;
     }
   }
-  
+
   .debug-info {
     background: #2d3748;
     color: #f7fafc;
@@ -428,20 +428,20 @@ onMounted(() => {
   .forbidden-content {
     padding: 24px 16px;
   }
-  
+
   .forbidden-title {
     font-size: 1.5rem;
   }
-  
+
   .forbidden-message {
     font-size: 1rem;
   }
-  
+
   .info-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    
+
     span {
       text-align: left;
     }

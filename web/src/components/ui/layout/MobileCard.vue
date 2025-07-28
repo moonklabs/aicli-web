@@ -14,7 +14,7 @@
             <h3 v-if="title" class="mobile-card__title">{{ title }}</h3>
             <p v-if="subtitle" class="mobile-card__subtitle">{{ subtitle }}</p>
           </div>
-          
+
           <div v-if="$slots.actions" class="mobile-card__header-actions">
             <slot name="actions" />
           </div>
@@ -120,29 +120,29 @@ const rippleStyle = computed(() => ({
 // 이벤트 핸들러
 const handleClick = (event: Event) => {
   if (props.disabled || props.loading) return
-  
+
   emit('click', event)
 }
 
 const handleTouchStart = (event: TouchEvent) => {
   if (props.disabled || props.loading) return
-  
+
   emit('touch-start', event)
-  
+
   // 리플 효과 생성
   if (props.ripple && props.clickable) {
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
     const touch = event.touches[0]
-    
+
     rippleX.value = touch.clientX - rect.left
     rippleY.value = touch.clientY - rect.top
     showRipple.value = true
-    
+
     // 햅틱 피드백
     if ('vibrate' in navigator) {
       navigator.vibrate(10)
     }
-    
+
     setTimeout(() => {
       showRipple.value = false
     }, 600)
@@ -151,7 +151,7 @@ const handleTouchStart = (event: TouchEvent) => {
 
 const handleTouchEnd = (event: TouchEvent) => {
   if (props.disabled || props.loading) return
-  
+
   emit('touch-end', event)
 }
 </script>
@@ -165,11 +165,11 @@ const handleTouchEnd = (event: TouchEvent) => {
   position: relative;
   overflow: hidden;
   transition: $transition-base;
-  
+
   &--clickable {
     @include touch-feedback;
     cursor: pointer;
-    
+
     &:hover {
       @include hover-lift;
     }
@@ -192,7 +192,7 @@ const handleTouchEnd = (event: TouchEvent) => {
   &--flat {
     box-shadow: none;
     border: 1px solid map-get($gray-colors, 200);
-    
+
     .dark & {
       border-color: $dark-bg-tertiary;
     }
@@ -207,7 +207,7 @@ const handleTouchEnd = (event: TouchEvent) => {
     background: transparent;
     border: 2px solid map-get($gray-colors, 200);
     box-shadow: none;
-    
+
     .dark & {
       border-color: $dark-bg-tertiary;
     }
@@ -215,7 +215,7 @@ const handleTouchEnd = (event: TouchEvent) => {
 
   &--elevated {
     box-shadow: $shadow-lg;
-    
+
     &:hover {
       @include no-touch {
         box-shadow: $shadow-xl;
@@ -226,7 +226,7 @@ const handleTouchEnd = (event: TouchEvent) => {
 
   &--filled {
     background: map-get($gray-colors, 100);
-    
+
     .dark & {
       background: lighten($dark-bg-secondary, 5%);
     }
@@ -235,15 +235,15 @@ const handleTouchEnd = (event: TouchEvent) => {
   // 크기 변형
   &--small {
     padding: $spacing-3;
-    
+
     .mobile-card__header {
       padding-bottom: $spacing-2;
     }
-    
+
     .mobile-card__title {
       font-size: $font-size-base;
     }
-    
+
     .mobile-card__subtitle {
       font-size: $font-size-xs;
     }
@@ -251,7 +251,7 @@ const handleTouchEnd = (event: TouchEvent) => {
 
   &--medium {
     padding: $spacing-4;
-    
+
     .mobile-card__header {
       padding-bottom: $spacing-3;
     }
@@ -259,15 +259,15 @@ const handleTouchEnd = (event: TouchEvent) => {
 
   &--large {
     padding: $spacing-6;
-    
+
     .mobile-card__header {
       padding-bottom: $spacing-4;
     }
-    
+
     .mobile-card__title {
       font-size: $font-size-xl;
     }
-    
+
     .mobile-card__subtitle {
       font-size: $font-size-base;
     }
@@ -278,15 +278,15 @@ const handleTouchEnd = (event: TouchEvent) => {
     border-bottom: 1px solid map-get($gray-colors, 100);
     padding-bottom: $spacing-3;
     margin-bottom: $spacing-4;
-    
+
     .mobile-card--small & {
       margin-bottom: $spacing-3;
     }
-    
+
     .mobile-card--large & {
       margin-bottom: $spacing-5;
     }
-    
+
     .dark & {
       border-bottom-color: $dark-bg-tertiary;
     }
@@ -313,7 +313,7 @@ const handleTouchEnd = (event: TouchEvent) => {
     color: $light-text-primary;
     margin: 0 0 $spacing-1 0;
     @include text-ellipsis;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -324,7 +324,7 @@ const handleTouchEnd = (event: TouchEvent) => {
     color: $light-text-secondary;
     margin: 0;
     @include text-clamp(2);
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -334,15 +334,15 @@ const handleTouchEnd = (event: TouchEvent) => {
   &__image {
     margin: -#{$spacing-4} -#{$spacing-4} $spacing-4 -#{$spacing-4};
     overflow: hidden;
-    
+
     .mobile-card--small & {
       margin: -#{$spacing-3} -#{$spacing-3} $spacing-3 -#{$spacing-3};
     }
-    
+
     .mobile-card--large & {
       margin: -#{$spacing-6} -#{$spacing-6} $spacing-6 -#{$spacing-6};
     }
-    
+
     .mobile-card--rounded & {
       border-radius: $border-radius-2xl $border-radius-2xl 0 0;
     }
@@ -353,11 +353,11 @@ const handleTouchEnd = (event: TouchEvent) => {
     height: 200px;
     object-fit: cover;
     display: block;
-    
+
     .mobile-card--small & {
       height: 120px;
     }
-    
+
     .mobile-card--large & {
       height: 240px;
     }
@@ -367,14 +367,14 @@ const handleTouchEnd = (event: TouchEvent) => {
   &__content {
     color: $light-text-primary;
     line-height: $line-height-relaxed;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
-    
+
     p {
       margin: 0 0 $spacing-3 0;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
@@ -386,15 +386,15 @@ const handleTouchEnd = (event: TouchEvent) => {
     border-top: 1px solid map-get($gray-colors, 100);
     padding-top: $spacing-3;
     margin-top: $spacing-4;
-    
+
     .mobile-card--small & {
       margin-top: $spacing-3;
     }
-    
+
     .mobile-card--large & {
       margin-top: $spacing-5;
     }
-    
+
     .dark & {
       border-top-color: $dark-bg-tertiary;
     }
@@ -422,7 +422,7 @@ const handleTouchEnd = (event: TouchEvent) => {
     background: rgba($light-bg-primary, 0.8);
     @include flex-center;
     z-index: 10;
-    
+
     .dark & {
       background: rgba($dark-bg-primary, 0.8);
     }
@@ -441,21 +441,21 @@ const handleTouchEnd = (event: TouchEvent) => {
 @include mobile {
   .mobile-card {
     margin-bottom: $spacing-4;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     // 터치 영역 확대
     &--clickable {
       @include touch-target(auto);
       min-height: 60px;
     }
-    
+
     &__title {
       @include responsive-text($font-size-base, $font-size-lg);
     }
-    
+
     &__subtitle {
       @include responsive-text($font-size-xs, $font-size-sm);
     }
@@ -466,11 +466,11 @@ const handleTouchEnd = (event: TouchEvent) => {
 @include reduce-motion {
   .mobile-card {
     transition: none;
-    
+
     &__ripple {
       animation: none;
     }
-    
+
     &--elevated:hover {
       transform: none;
     }
@@ -481,7 +481,7 @@ const handleTouchEnd = (event: TouchEvent) => {
 @media (prefers-contrast: high) {
   .mobile-card {
     border: 2px solid currentColor;
-    
+
     &--outlined {
       border-width: 3px;
     }

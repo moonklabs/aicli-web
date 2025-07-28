@@ -14,7 +14,7 @@
       >
         <!-- 백드롭 -->
         <div class="drawer-backdrop" :class="{ 'drawer-backdrop--transparent': !mask }" />
-        
+
         <!-- 드로어 본체 -->
         <div
           class="drawer"
@@ -42,12 +42,12 @@
               </svg>
             </button>
           </div>
-          
+
           <!-- 본문 -->
           <div class="drawer__body" :style="bodyStyle">
             <slot />
           </div>
-          
+
           <!-- 푸터 -->
           <div v-if="!hideFooter && $slots.footer" class="drawer__footer">
             <slot name="footer" />
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useOverlay } from '../composables/useOverlayManager'
 import { useFocusTrap } from '../composables/useFocusTrap'
 
@@ -145,13 +145,13 @@ const sizeMap = {
 const drawerStyle = computed(() => {
   const style: Record<string, any> = {}
   const isHorizontal = props.placement === 'left' || props.placement === 'right'
-  
+
   if (isHorizontal && props.width) {
     style.width = typeof props.width === 'number' ? `${props.width}px` : props.width
   } else if (!isHorizontal && props.height) {
     style.height = typeof props.height === 'number' ? `${props.height}px` : props.height
   }
-  
+
   return style
 })
 
@@ -438,7 +438,7 @@ watch(() => props.visible, (visible) => {
     width: 80vw !important;
     max-width: 400px;
   }
-  
+
   .drawer--top,
   .drawer--bottom {
     height: 50vh !important;

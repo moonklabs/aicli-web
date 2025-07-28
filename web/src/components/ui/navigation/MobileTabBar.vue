@@ -23,9 +23,9 @@
             {{ tab.badge }}
           </div>
         </div>
-        
+
         <span class="mobile-tab-bar__label">{{ tab.label }}</span>
-        
+
         <!-- 활성 상태 인디케이터 -->
         <div
           v-if="isActiveTab(tab.path)"
@@ -33,7 +33,7 @@
         ></div>
       </router-link>
     </div>
-    
+
     <!-- 플로팅 액션 버튼 (선택사항) -->
     <button
       v-if="showFab"
@@ -118,12 +118,12 @@ const handleFabClick = () => {
   background: $light-bg-primary;
   border-top: 1px solid map-get($gray-colors, 200);
   backdrop-filter: blur(10px);
-  
+
   .dark & {
     background: rgba($dark-bg-secondary, 0.95);
     border-top-color: $dark-bg-tertiary;
   }
-  
+
   // 안전 영역 처리 (iPhone X 이상)
   padding-bottom: env(safe-area-inset-bottom);
 
@@ -146,30 +146,30 @@ const handleFabClick = () => {
     transition: $transition-base;
     position: relative;
     border-radius: $border-radius-lg;
-    
+
     // 터치 친화적 크기
     min-height: 48px;
     min-width: 48px;
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
-    
+
     &:hover {
       background: map-get($gray-colors, 50);
-      
+
       .dark & {
         background: rgba(255, 255, 255, 0.05);
       }
     }
-    
+
     &--active {
       color: map-get($primary-colors, 600);
-      
+
       .dark & {
         color: map-get($primary-colors, 400);
       }
-      
+
       .mobile-tab-bar__icon {
         transform: scale(1.1);
       }
@@ -199,27 +199,27 @@ const handleFabClick = () => {
     font-weight: $font-weight-bold;
     line-height: 16px;
     text-align: center;
-    
+
     &--primary {
       background: map-get($primary-colors, 500);
       color: white;
     }
-    
+
     &--success {
       background: $success;
       color: white;
     }
-    
+
     &--warning {
       background: $warning;
       color: white;
     }
-    
+
     &--error {
       background: $error;
       color: white;
     }
-    
+
     &--info {
       background: $info;
       color: white;
@@ -243,7 +243,7 @@ const handleFabClick = () => {
     height: 4px;
     background: map-get($primary-colors, 500);
     border-radius: $border-radius-full;
-    
+
     .dark & {
       background: map-get($primary-colors, 400);
     }
@@ -264,16 +264,16 @@ const handleFabClick = () => {
     @include flex-center;
     transition: all 0.3s ease;
     cursor: pointer;
-    
+
     &:hover {
       transform: scale(1.05);
       box-shadow: $shadow-xl;
     }
-    
+
     &:active {
       transform: scale(0.95);
     }
-    
+
     &--expanded {
       transform: scale(1.1) rotate(45deg);
     }
@@ -283,7 +283,7 @@ const handleFabClick = () => {
     width: 24px;
     height: 24px;
     transition: transform 0.3s ease;
-    
+
     &--rotated {
       transform: rotate(45deg);
     }

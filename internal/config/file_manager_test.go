@@ -65,7 +65,10 @@ func TestFileManager(t *testing.T) {
 		err = fm.EnsureConfigDir()
 		require.NoError(t, err)
 
-		err = os.WriteFile(fm.GetConfigPath(), []byte("test"), 0600)
+		validYaml := `claude:
+  model: "claude-3-sonnet"
+  temperature: 0.7`
+		err = os.WriteFile(fm.GetConfigPath(), []byte(validYaml), 0600)
 		require.NoError(t, err)
 
 		// 이제 존재해야 함
@@ -93,7 +96,7 @@ func TestFileManager(t *testing.T) {
 		// 설정 생성
 		config := &Config{}
 		config.Claude.APIKey = "test-api-key"
-		config.Claude.Model = "claude-3-opus"
+		config.Claude.Model = "claude-3-sonnet"
 		config.Claude.Temperature = 0.5
 		config.Claude.Timeout = 60
 
@@ -121,7 +124,7 @@ func TestFileManager(t *testing.T) {
 		// 원본 설정
 		config1 := &Config{}
 		config1.Claude.APIKey = "original-key"
-		config1.Claude.Model = "claude-3-opus"
+		config1.Claude.Model = "claude-3-sonnet"
 
 		err = fm.WriteConfig(config1)
 		require.NoError(t, err)

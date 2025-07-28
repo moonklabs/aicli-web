@@ -12,26 +12,26 @@ export interface Workspace {
   lastModified: Date
   lastAccessed?: string
   containerId?: string
-  
+
   // Git 정보
   git?: {
     branch: string
     hasChanges: boolean
     remoteUrl?: string
   }
-  
+
   // Claude 세션 정보
   claudeSession?: {
     id: string
     status: 'active' | 'idle' | 'error'
   }
-  
+
   // 통계 정보
   stats?: {
     fileCount: number
     lineCount: number
   }
-  
+
   // 현재 진행 중인 태스크
   currentTask?: {
     id: string
@@ -39,14 +39,14 @@ export interface Workspace {
     progress: number
     status: 'running' | 'paused' | 'completed' | 'error'
   }
-  
+
   // Docker 컨테이너 상태
   containerStatus?: {
     type: 'success' | 'warning' | 'error' | 'info'
     text: string
     containerId?: string
   }
-  
+
   // 파일 트리
   fileTree?: FileTreeNode
 }
@@ -82,12 +82,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const activeWorkspace = ref<Workspace | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  
+
   // 검색 및 필터링
   const searchQuery = ref('')
   const sortBy = ref('name')
   const activeFilters = ref<WorkspaceFilter[]>([])
-  
+
   // 페이지네이션
   const currentPage = ref(1)
   const pageSize = ref(12)
@@ -114,10 +114,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     // 검색 필터링
     if (searchQuery.value) {
       const query = searchQuery.value.toLowerCase()
-      filtered = filtered.filter(workspace => 
+      filtered = filtered.filter(workspace =>
         workspace.name.toLowerCase().includes(query) ||
         workspace.path.toLowerCase().includes(query) ||
-        workspace.description?.toLowerCase().includes(query)
+        workspace.description?.toLowerCase().includes(query),
       )
     }
 
@@ -235,7 +235,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       // TODO: API 호출로 워크스페이스 목록 가져오기
       // const response = await workspaceApi.list()
       // setWorkspaces(response.data)
-      
+
       // 임시 더미 데이터 (태스크 요구사항에 맞게)
       const dummyWorkspaces: Workspace[] = [
         {
@@ -251,27 +251,27 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           git: {
             branch: 'main',
             hasChanges: true,
-            remoteUrl: 'https://github.com/user/aicli-web.git'
+            remoteUrl: 'https://github.com/user/aicli-web.git',
           },
           claudeSession: {
             id: 'session-1',
-            status: 'active'
+            status: 'active',
           },
           stats: {
             fileCount: 156,
-            lineCount: 12340
+            lineCount: 12340,
           },
           currentTask: {
             id: 'T03_S01',
             description: '워크스페이스 관리 UI 구현',
             progress: 30,
-            status: 'running'
+            status: 'running',
           },
           containerStatus: {
             type: 'success',
             text: 'Running',
-            containerId: 'container-123'
-          }
+            containerId: 'container-123',
+          },
         },
         {
           id: '2',
@@ -286,16 +286,16 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           git: {
             branch: 'develop',
             hasChanges: false,
-            remoteUrl: 'https://github.com/user/sample-project.git'
+            remoteUrl: 'https://github.com/user/sample-project.git',
           },
           stats: {
             fileCount: 45,
-            lineCount: 2800
+            lineCount: 2800,
           },
           containerStatus: {
             type: 'warning',
-            text: 'Stopped'
-          }
+            text: 'Stopped',
+          },
         },
         {
           id: '3',
@@ -309,15 +309,15 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           lastAccessed: '2025-07-21T09:15:00Z',
           stats: {
             fileCount: 23,
-            lineCount: 890
+            lineCount: 890,
           },
           containerStatus: {
             type: 'error',
-            text: 'Failed'
-          }
-        }
+            text: 'Failed',
+          },
+        },
       ]
-      
+
       setWorkspaces(dummyWorkspaces)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '워크스페이스를 불러오는데 실패했습니다'
@@ -347,12 +347,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
         lastModified: new Date(),
         stats: {
           fileCount: 0,
-          lineCount: 0
+          lineCount: 0,
         },
         containerStatus: {
           type: 'info',
-          text: 'Not Started'
-        }
+          text: 'Not Started',
+        },
       }
 
       addWorkspace(newWorkspace)
@@ -461,15 +461,15 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     if (!workspace) return
 
     workspace.status = 'loading'
-    
+
     try {
       // TODO: API 호출 구현
       // await workspaceApi.activate(workspaceId)
-      
+
       // 임시로 상태 변경
       workspace.status = 'active'
       setActiveWorkspace(workspace)
-      
+
       // 다른 워크스페이스는 idle로 변경
       workspaces.value.forEach(w => {
         if (w.id !== workspaceId && w.status === 'active') {
@@ -491,7 +491,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   // 워크스페이스 상태 저장
   const saveWorkspaceState = async (): Promise<void> => {
     if (!activeWorkspace.value) return
-    
+
     try {
       // 현재 워크스페이스 상태를 로컬 스토리지에 저장
       const stateToSave = {
@@ -504,16 +504,16 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           expandedFolders: [], // TODO: 확장된 폴더 목록
         },
         claudeSession: activeWorkspace.value.claudeSession,
-        lastTask: activeWorkspace.value.currentTask
+        lastTask: activeWorkspace.value.currentTask,
       }
-      
+
       localStorage.setItem(`workspace_state_${activeWorkspace.value.id}`, JSON.stringify(stateToSave))
-      
+
       // 워크스페이스의 lastAccessed 시간 업데이트
       updateWorkspace(activeWorkspace.value.id, {
-        lastAccessed: new Date().toISOString()
+        lastAccessed: new Date().toISOString(),
       })
-      
+
       console.log(`Workspace state saved for: ${activeWorkspace.value.name}`)
     } catch (error) {
       console.error('Failed to save workspace state:', error)
@@ -528,21 +528,21 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       if (!workspace) {
         throw new Error('워크스페이스를 찾을 수 없습니다')
       }
-      
+
       // 워크스페이스 상태 검증
       if (workspace.status === 'error') {
         throw new Error('워크스페이스가 오류 상태입니다')
       }
-      
+
       if (workspace.status === 'deleting') {
         throw new Error('삭제 중인 워크스페이스입니다')
       }
-      
+
       // TODO: 실제 파일 시스템 검증
       // - 워크스페이스 디렉토리 존재 확인
       // - 필요한 권한 확인
       // - 디스크 공간 확인
-      
+
       console.log(`Workspace validation passed for: ${workspace.name}`)
       return true
     } catch (error) {
@@ -558,41 +558,41 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       if (!workspace) {
         throw new Error('워크스페이스를 찾을 수 없습니다')
       }
-      
+
       // 로컬 스토리지에서 저장된 상태 복원
       const savedStateJson = localStorage.getItem(`workspace_state_${workspaceId}`)
       if (savedStateJson) {
         const savedState = JSON.parse(savedStateJson)
-        
+
         // UI 상태 복원
         if (savedState.uiState) {
           // TODO: 실제 UI 상태 복원 구현
           // - 열린 파일 복원
-          // - 선택된 파일 복원  
+          // - 선택된 파일 복원
           // - 확장된 폴더 복원
           console.log('Restoring UI state:', savedState.uiState)
         }
-        
+
         // Claude 세션 상태 복원
         if (savedState.claudeSession) {
           updateWorkspace(workspaceId, {
-            claudeSession: savedState.claudeSession
+            claudeSession: savedState.claudeSession,
           })
         }
-        
+
         // 마지막 태스크 복원
         if (savedState.lastTask) {
           updateWorkspace(workspaceId, {
-            currentTask: savedState.lastTask
+            currentTask: savedState.lastTask,
           })
         }
       }
-      
+
       // lastAccessed 시간 업데이트
       updateWorkspace(workspaceId, {
-        lastAccessed: new Date().toISOString()
+        lastAccessed: new Date().toISOString(),
       })
-      
+
       console.log(`Workspace state restored for: ${workspace.name}`)
     } catch (error) {
       console.error('Failed to restore workspace state:', error)

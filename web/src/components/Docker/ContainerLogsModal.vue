@@ -1,5 +1,5 @@
 <template>
-  <n-modal
+  <NModal
     v-model:show="showModal"
     preset="card"
     style="width: 90vw; max-width: 1200px; height: 80vh"
@@ -10,55 +10,55 @@
     aria-modal="true"
   >
     <template #header-extra>
-      <n-space>
-        <n-switch
+      <NSpace>
+        <NSwitch
           v-model:value="isStreaming"
           @update:value="toggleStreaming"
           size="small"
         >
           <template #checked>실시간</template>
           <template #unchecked>정적</template>
-        </n-switch>
-        
-        <n-button size="small" @click="clearLogs">
+        </NSwitch>
+
+        <NButton size="small" @click="clearLogs">
           <template #icon>
-            <n-icon><Trash2 /></n-icon>
+            <NIcon><Trash2 /></NIcon>
           </template>
           지우기
-        </n-button>
-        
-        <n-button size="small" @click="downloadLogs">
+        </NButton>
+
+        <NButton size="small" @click="downloadLogs">
           <template #icon>
-            <n-icon><Download /></n-icon>
+            <NIcon><Download /></NIcon>
           </template>
           다운로드
-        </n-button>
-      </n-space>
+        </NButton>
+      </NSpace>
     </template>
 
     <div class="logs-container">
       <!-- 로그 필터 -->
       <div class="logs-toolbar">
-        <n-input
+        <NInput
           v-model:value="searchQuery"
           placeholder="로그 검색..."
           clearable
           size="small"
         >
           <template #prefix>
-            <n-icon><Search /></n-icon>
+            <NIcon><Search /></NIcon>
           </template>
-        </n-input>
-        
-        <n-select
+        </NInput>
+
+        <NSelect
           v-model:value="logLevel"
           :options="logLevelOptions"
           size="small"
           style="width: 120px"
           placeholder="레벨"
         />
-        
-        <n-select
+
+        <NSelect
           v-model:value="streamFilter"
           :options="streamOptions"
           size="small"
@@ -70,18 +70,18 @@
       <!-- 로그 내용 -->
       <div class="logs-content" ref="logsContentRef">
         <div v-if="isLoading" class="logs-loading">
-          <n-spin size="small" />
+          <NSpin size="small" />
           <span>로그를 불러오는 중...</span>
         </div>
-        
+
         <div v-else-if="filteredLogs.length === 0" class="logs-empty">
-          <n-empty description="로그가 없습니다" size="small">
+          <NEmpty description="로그가 없습니다" size="small">
             <template #icon>
-              <n-icon><FileText /></n-icon>
+              <NIcon><FileText /></NIcon>
             </template>
-          </n-empty>
+          </NEmpty>
         </div>
-        
+
         <div v-else class="logs-list">
           <div
             v-for="(log, index) in displayedLogs"
@@ -107,66 +107,66 @@
       <!-- 자동 스크롤 및 페이지네이션 -->
       <div class="logs-footer">
         <div class="footer-left">
-          <n-checkbox v-model:checked="autoScroll" size="small">
+          <NCheckbox v-model:checked="autoScroll" size="small">
             자동 스크롤
-          </n-checkbox>
+          </NCheckbox>
           <span class="log-count">
             {{ filteredLogs.length }}개 로그 ({{ displayedLogs.length }}개 표시)
           </span>
         </div>
-        
+
         <div class="footer-right">
-          <n-button-group size="small">
-            <n-button
+          <NButtonGroup size="small">
+            <NButton
               @click="loadMoreLogs"
               :disabled="displayedLogs.length >= filteredLogs.length"
               :loading="isLoadingMore"
             >
               더 보기
-            </n-button>
-            <n-button @click="scrollToTop">
+            </NButton>
+            <NButton @click="scrollToTop">
               <template #icon>
-                <n-icon><ArrowUp /></n-icon>
+                <NIcon><ArrowUp /></NIcon>
               </template>
-            </n-button>
-            <n-button @click="scrollToBottom">
+            </NButton>
+            <NButton @click="scrollToBottom">
               <template #icon>
-                <n-icon><ArrowDown /></n-icon>
+                <NIcon><ArrowDown /></NIcon>
               </template>
-            </n-button>
-          </n-button-group>
+            </NButton>
+          </NButtonGroup>
         </div>
       </div>
     </div>
-  </n-modal>
+  </NModal>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import {
-  NModal,
-  NSpace,
-  NSwitch,
   NButton,
   NButtonGroup,
+  NCheckbox,
+  NEmpty,
   NIcon,
   NInput,
+  NModal,
   NSelect,
+  NSpace,
   NSpin,
-  NEmpty,
-  NCheckbox,
-  useMessage
+  NSwitch,
+  useMessage,
 } from 'naive-ui'
 import {
-  Trash2,
-  Download,
-  Search,
-  FileText,
+  ArrowDown,
   ArrowUp,
-  ArrowDown
+  Download,
+  FileText,
+  Search,
+  Trash2,
 } from '@vicons/lucide'
 
-import { useDockerStore, type LogEntry } from '@/stores/docker'
+import { type LogEntry, useDockerStore } from '@/stores/docker'
 
 interface Props {
   show: boolean
@@ -187,7 +187,7 @@ const message = useMessage()
 // 모달 표시 상태
 const showModal = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value)
+  set: (value) => emit('update:show', value),
 })
 
 // 로컬 상태
@@ -207,13 +207,13 @@ const logLevelOptions = [
   { label: 'ERROR', value: 'error' },
   { label: 'WARN', value: 'warn' },
   { label: 'INFO', value: 'info' },
-  { label: 'DEBUG', value: 'debug' }
+  { label: 'DEBUG', value: 'debug' },
 ]
 
 const streamOptions = [
   { label: '전체', value: null },
   { label: 'STDOUT', value: 'stdout' },
-  { label: 'STDERR', value: 'stderr' }
+  { label: 'STDERR', value: 'stderr' },
 ]
 
 // 계산된 속성
@@ -320,7 +320,7 @@ const formatTimestamp = (timestamp: Date): string => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    fractionalSecondDigits: 3
+    fractionalSecondDigits: 3,
   })
 }
 
@@ -331,7 +331,7 @@ const isHighlighted = (message: string): boolean => {
 
 const highlightSearchTerm = (message: string): string => {
   if (!searchQuery.value) return escapeHtml(message)
-  
+
   const escapedMessage = escapeHtml(message)
   const regex = new RegExp(`(${escapeRegExp(searchQuery.value)})`, 'gi')
   return escapedMessage.replace(regex, '<mark>$1</mark>')

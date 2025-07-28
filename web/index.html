@@ -1,13 +1,105 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="ko">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    
+    <!-- 접근성 및 메타데이터 -->
+    <title>AI CLI Web - Claude 기반 개발 도구</title>
+    <meta name="description" content="Claude CLI를 웹 인터페이스로 관리하는 AI 기반 개발 도구">
+    <meta name="keywords" content="AI, CLI, Claude, 개발도구, 웹인터페이스, 접근성">
+    <meta name="author" content="AI CLI Web Team">
+    
+    <!-- 접근성 향상을 위한 메타데이터 -->
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="AI CLI Web">
+    <meta property="og:description" content="Claude CLI를 웹 인터페이스로 관리하는 AI 기반 개발 도구">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ko_KR">
+    
+    <!-- 접근성 향상을 위한 프리로드 -->
+    <link rel="preload" href="/src/styles/themes.scss" as="style">
+    
+    <!-- 고대비 모드 지원 -->
+    <style>
+      /* 페이지 로딩 중 기본 스타일 */
+      html {
+        background-color: #ffffff;
+        color: #000000;
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        html {
+          background-color: #0f0f0f;
+          color: #ffffff;
+        }
+      }
+      
+      @media (prefers-contrast: high) {
+        html {
+          background-color: #ffffff;
+          color: #000000;
+        }
+      }
+      
+      /* 로딩 중 표시 */
+      #app:empty::before {
+        content: "로딩 중...";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        font-size: 16px;
+        color: inherit;
+      }
+      
+      /* 접근성 - 화면 판독기 전용 텍스트 */
+      .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+      
+      /* 모션 감소 설정 */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <!-- 메인 애플리케이션 컨테이너 -->
+    <div id="app" role="application" aria-label="AI CLI Web 애플리케이션">
+      <!-- 자바스크립트 비활성화 시 메시지 -->
+      <noscript>
+        <div style="padding: 2rem; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;">
+          <h1>자바스크립트가 필요합니다</h1>
+          <p>이 애플리케이션을 사용하려면 브라우저에서 자바스크립트를 활성화해주세요.</p>
+          <p>This application requires JavaScript to be enabled in your browser.</p>
+        </div>
+      </noscript>
+    </div>
+    
+    <!-- 스크린 리더를 위한 라이브 리전 -->
+    <div id="announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <div id="alerts" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+    
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

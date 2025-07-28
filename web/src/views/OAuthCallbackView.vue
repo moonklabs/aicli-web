@@ -116,11 +116,11 @@ const handleOAuthCallback = async () => {
 
   } catch (error: any) {
     console.error('OAuth callback error:', error)
-    
+
     isProcessing.value = false
     hasError.value = true
     errorMessage.value = error.message || 'OAuth 로그인 처리 중 오류가 발생했습니다.'
-    
+
     message.error(errorMessage.value)
   }
 }

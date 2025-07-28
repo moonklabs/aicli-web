@@ -24,6 +24,9 @@ type Config struct {
 
 	// 스토리지 관련 설정
 	Storage StorageConfig `yaml:"storage" mapstructure:"storage" json:"storage"`
+
+	// JWT 인증 관련 설정
+	JWT JWTConfig `yaml:"jwt" mapstructure:"jwt" json:"jwt"`
 }
 
 // ClaudeConfig는 Claude CLI 관련 설정을 정의합니다
@@ -201,6 +204,24 @@ type StorageConfig struct {
 
 	// RetryInterval 재시도 간격
 	RetryInterval time.Duration `yaml:"retry_interval" mapstructure:"retry_interval" json:"retry_interval"`
+}
+
+// JWTConfig는 JWT 인증 관련 설정을 정의합니다
+type JWTConfig struct {
+	// Secret JWT 서명에 사용할 비밀키
+	Secret string `yaml:"secret" mapstructure:"secret" json:"secret"`
+
+	// AccessTokenExpiry 액세스 토큰 만료 시간
+	AccessTokenExpiry time.Duration `yaml:"access_token_expiry" mapstructure:"access_token_expiry" json:"access_token_expiry"`
+
+	// RefreshTokenExpiry 리프레시 토큰 만료 시간
+	RefreshTokenExpiry time.Duration `yaml:"refresh_token_expiry" mapstructure:"refresh_token_expiry" json:"refresh_token_expiry"`
+
+	// Issuer JWT 발급자
+	Issuer string `yaml:"issuer" mapstructure:"issuer" json:"issuer"`
+
+	// Audience JWT 대상
+	Audience string `yaml:"audience" mapstructure:"audience" json:"audience"`
 }
 
 // OAuthConfig는 OAuth 인증 관련 설정을 정의합니다

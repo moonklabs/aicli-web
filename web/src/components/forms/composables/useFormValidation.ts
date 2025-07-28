@@ -1,4 +1,4 @@
-import { ref, computed, reactive, Ref, ComputedRef } from 'vue'
+import { ComputedRef, Ref, computed, reactive, ref } from 'vue'
 
 // 유효성 검사 규칙 타입
 export interface ValidationRule {
@@ -37,7 +37,7 @@ const defaultMessages = {
   maxLength: (value: number) => `최대 ${value}자까지 입력 가능합니다`,
   pattern: '올바른 형식으로 입력해주세요',
   email: '올바른 이메일 주소를 입력해주세요',
-  url: '올바른 URL을 입력해주세요'
+  url: '올바른 URL을 입력해주세요',
 }
 
 // 이메일 정규식
@@ -48,17 +48,17 @@ const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$
 
 export function useFormValidation<T extends Record<string, any>>(
   initialValues: T,
-  rules: Partial<Record<keyof T, ValidationRule>>
+  rules: Partial<Record<keyof T, ValidationRule>>,
 ) {
   // 폼 데이터
   const formData = reactive<T>({ ...initialValues })
-  
+
   // 에러 상태
   const errors = ref<Record<string, string[]>>({})
-  
+
   // 터치된 필드
   const touched = ref<Set<string>>(new Set())
-  
+
   // 폼 상태
   const isDirty = ref(false)
   const isValidating = ref(false)
@@ -72,9 +72,9 @@ export function useFormValidation<T extends Record<string, any>>(
 
     // Required 검사
     if (fieldRules.required) {
-      const isEmpty = value === null || value === undefined || value === '' || 
+      const isEmpty = value === null || value === undefined || value === '' ||
                      (Array.isArray(value) && value.length === 0)
-      
+
       if (isEmpty) {
         const message = typeof fieldRules.required === 'object' && fieldRules.required.message
           ? fieldRules.required.message
@@ -92,7 +92,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.min === 'object' && fieldRules.min.message
         ? fieldRules.min.message
         : defaultMessages.min(minValue)
-      
+
       if (Number(value) < minValue) {
         fieldErrors.push(message)
       }
@@ -104,7 +104,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.max === 'object' && fieldRules.max.message
         ? fieldRules.max.message
         : defaultMessages.max(maxValue)
-      
+
       if (Number(value) > maxValue) {
         fieldErrors.push(message)
       }
@@ -116,7 +116,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.minLength === 'object' && fieldRules.minLength.message
         ? fieldRules.minLength.message
         : defaultMessages.minLength(minLength)
-      
+
       if (String(value).length < minLength) {
         fieldErrors.push(message)
       }
@@ -128,7 +128,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.maxLength === 'object' && fieldRules.maxLength.message
         ? fieldRules.maxLength.message
         : defaultMessages.maxLength(maxLength)
-      
+
       if (String(value).length > maxLength) {
         fieldErrors.push(message)
       }
@@ -140,7 +140,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.pattern === 'object' && fieldRules.pattern.message
         ? fieldRules.pattern.message
         : defaultMessages.pattern
-      
+
       if (!pattern.test(String(value))) {
         fieldErrors.push(message)
       }
@@ -151,7 +151,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.email === 'object' && fieldRules.email.message
         ? fieldRules.email.message
         : defaultMessages.email
-      
+
       if (!emailRegex.test(String(value))) {
         fieldErrors.push(message)
       }
@@ -162,7 +162,7 @@ export function useFormValidation<T extends Record<string, any>>(
       const message = typeof fieldRules.url === 'object' && fieldRules.url.message
         ? fieldRules.url.message
         : defaultMessages.url
-      
+
       if (!urlRegex.test(String(value))) {
         fieldErrors.push(message)
       }
@@ -195,7 +195,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
     errors.value = newErrors
     isValidating.value = false
-    
+
     return Object.keys(newErrors).length === 0
   }
 
@@ -207,7 +207,7 @@ export function useFormValidation<T extends Record<string, any>>(
 
     // 필드 유효성 검사
     const fieldErrors = await validateField(field, value)
-    
+
     if (fieldErrors.length > 0) {
       errors.value[field] = fieldErrors
     } else {
@@ -240,9 +240,9 @@ export function useFormValidation<T extends Record<string, any>>(
 
   // Computed 속성들
   const isValid = computed(() => Object.keys(errors.value).length === 0)
-  
+
   const hasErrors = computed(() => Object.keys(errors.value).length > 0)
-  
+
   const firstError = computed(() => {
     const firstField = Object.keys(errors.value)[0]
     return firstField ? errors.value[firstField][0] : null
@@ -257,13 +257,13 @@ export function useFormValidation<T extends Record<string, any>>(
     errors: errors.value[field] || [],
     hasError: !!errors.value[field]?.length,
     isTouched: touched.value.has(field),
-    isValid: !errors.value[field]?.length && touched.value.has(field)
+    isValid: !errors.value[field]?.length && touched.value.has(field),
   })
 
   return {
     // 폼 데이터
     formData,
-    
+
     // 상태
     errors,
     touched,
@@ -272,7 +272,7 @@ export function useFormValidation<T extends Record<string, any>>(
     isValid,
     hasErrors,
     firstError,
-    
+
     // 메서드
     validate,
     handleFieldChange,
@@ -280,14 +280,14 @@ export function useFormValidation<T extends Record<string, any>>(
     reset,
     clearFieldError,
     clearErrors,
-    getFieldProps
+    getFieldProps,
   }
 }
 
 // 개별 필드 유효성 검사 훅
 export function useFieldValidation(
   initialValue: any,
-  rules: ValidationRule
+  rules: ValidationRule,
 ) {
   const value = ref(initialValue)
   const errors = ref<string[]>([])
@@ -336,6 +336,6 @@ export function useFieldValidation(
     validate,
     handleChange,
     handleBlur,
-    reset
+    reset,
   }
 }

@@ -1,10 +1,10 @@
 <template>
   <div class="multi-select" :class="{ 'multi-select--disabled': disabled }">
-    <div 
+    <div
       class="multi-select__trigger"
-      :class="{ 
+      :class="{
         'multi-select__trigger--focused': isFocused,
-        'multi-select__trigger--disabled': disabled 
+        'multi-select__trigger--disabled': disabled
       }"
       @click="toggleDropdown"
       @keydown="handleTriggerKeydown"
@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
 interface Props {
@@ -142,7 +142,7 @@ const props = withDefaults(defineProps<Props>(), {
   searchable: true,
   maxDisplay: 3,
   showSelectAll: true,
-  emptyText: 'No options available'
+  emptyText: 'No options available',
 })
 
 const emit = defineEmits<{
@@ -163,8 +163,8 @@ const optionsList = ref<HTMLUListElement>()
 
 // Computed
 const selectedItems = computed(() => {
-  return props.options.filter(option => 
-    props.modelValue.includes(getOptionValue(option))
+  return props.options.filter(option =>
+    props.modelValue.includes(getOptionValue(option)),
   )
 })
 
@@ -218,7 +218,7 @@ const isSelected = (option: any): boolean => {
 const toggleDropdown = () => {
   if (props.disabled) return
   isOpen.value = !isOpen.value
-  
+
   if (isOpen.value) {
     nextTick(() => {
       if (props.searchable && searchInput.value) {
@@ -251,7 +251,7 @@ const selectAll = () => {
   const allValues = filteredOptions.value
     .filter(option => !getOptionDisabled(option))
     .map(option => getOptionValue(option))
-  
+
   emit('update:modelValue', allValues)
   emit('change', allValues)
 }

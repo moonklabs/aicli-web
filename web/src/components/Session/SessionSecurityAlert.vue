@@ -21,7 +21,7 @@
             <n-tag type="error" size="small">위험</n-tag>
           </n-space>
         </template>
-        
+
         <div class="alert-content">
           <p>{{ alert.message }}</p>
           <div class="alert-details">
@@ -77,7 +77,7 @@
             <n-tag type="warning" size="small">주의</n-tag>
           </n-space>
         </template>
-        
+
         <div class="alert-content">
           <p>{{ alert.message }}</p>
           <div class="alert-details">
@@ -126,7 +126,7 @@
             <n-tag type="info" size="small">정보</n-tag>
           </n-space>
         </template>
-        
+
         <div class="alert-content">
           <p>{{ alert.message }}</p>
           <div class="alert-details">
@@ -193,12 +193,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useMessage } from 'naive-ui'
 import {
+  InformationCircleSharp as InfoCircle,
   ShieldCheckmarkSharp as ShieldExclamation,
   WarningSharp as Warning,
-  InformationCircleSharp as InfoCircle
 } from '@vicons/ionicons5'
 
 // 보안 알림 인터페이스
@@ -222,7 +222,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  alerts: () => []
+  alerts: () => [],
 })
 
 // Emits
@@ -241,16 +241,16 @@ const selectedAlert = ref<SecurityAlert | null>(null)
 // 계산된 속성
 const hasAlerts = computed(() => props.alerts.length > 0)
 
-const criticalAlerts = computed(() => 
-  props.alerts.filter(alert => alert.severity === 'critical')
+const criticalAlerts = computed(() =>
+  props.alerts.filter(alert => alert.severity === 'critical'),
 )
 
-const warningAlerts = computed(() => 
-  props.alerts.filter(alert => alert.severity === 'warning')
+const warningAlerts = computed(() =>
+  props.alerts.filter(alert => alert.severity === 'warning'),
 )
 
-const infoAlerts = computed(() => 
-  props.alerts.filter(alert => alert.severity === 'info')
+const infoAlerts = computed(() =>
+  props.alerts.filter(alert => alert.severity === 'info'),
 )
 
 // 메서드
@@ -259,16 +259,16 @@ const formatTime = (timestamp: string) => {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  
+
   if (diffMinutes < 1) return '방금 전'
   if (diffMinutes < 60) return `${diffMinutes}분 전`
   if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}시간 전`
-  
+
   return date.toLocaleString('ko-KR', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -279,7 +279,7 @@ const formatDateTime = (timestamp: string) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -370,10 +370,10 @@ const viewDetails = (alert: SecurityAlert) => {
           .n-alert__action {
             .n-space {
               flex-wrap: wrap;
-              
+
               .n-space-item {
                 flex: 1;
-                
+
                 .n-button {
                   width: 100%;
                 }

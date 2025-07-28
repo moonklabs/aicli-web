@@ -8,7 +8,7 @@
           로그인, 로그아웃 및 보안 관련 활동 기록을 확인할 수 있습니다.
         </p>
       </div>
-      
+
       <div class="filter-section">
         <n-space>
           <!-- 이벤트 타입 필터 -->
@@ -20,7 +20,7 @@
             style="width: 150px"
             @update:value="handleFilterChange"
           />
-          
+
           <!-- 심각도 필터 -->
           <n-select
             v-model:value="filters.severity"
@@ -30,7 +30,7 @@
             style="width: 120px"
             @update:value="handleFilterChange"
           />
-          
+
           <!-- 날짜 범위 필터 -->
           <n-date-picker
             v-model:value="dateRange"
@@ -39,19 +39,19 @@
             :shortcuts="dateShortcuts"
             @update:value="handleDateRangeChange"
           />
-          
+
           <!-- 새로고침 버튼 -->
-          <n-button
+          <NButton
             type="primary"
             ghost
             :loading="loading"
             @click="handleRefresh"
           >
             <template #icon>
-              <n-icon><Refresh /></n-icon>
+              <NIcon><Refresh /></NIcon>
             </template>
             새로고침
-          </n-button>
+          </NButton>
         </n-space>
       </div>
     </div>
@@ -88,14 +88,14 @@
             <n-text code>{{ selectedEvent.sessionId }}</n-text>
           </n-descriptions-item>
           <n-descriptions-item label="이벤트 타입">
-            <n-tag :type="getEventTypeTagType(selectedEvent.eventType)" size="small">
+            <NTag :type="getEventTypeTagType(selectedEvent.eventType)" size="small">
               {{ getEventTypeLabel(selectedEvent.eventType) }}
-            </n-tag>
+            </NTag>
           </n-descriptions-item>
           <n-descriptions-item label="심각도">
-            <n-tag :type="getSeverityTagType(selectedEvent.severity)" size="small">
+            <NTag :type="getSeverityTagType(selectedEvent.severity)" size="small">
               {{ getSeverityLabel(selectedEvent.severity) }}
-            </n-tag>
+            </NTag>
           </n-descriptions-item>
           <n-descriptions-item label="설명" :span="2">
             {{ selectedEvent.description }}
@@ -121,22 +121,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted, watch } from 'vue'
-import { NButton, NTag, NIcon, useMessage } from 'naive-ui'
-import { 
-  RefreshSharp as Refresh, 
-  EyeSharp as Eye, 
-  ShieldSharp as Shield, 
-  WarningSharp as AlertTriangle, 
-  InformationCircleSharp as Info, 
-  CloseCircleSharp as XCircle,
+import { computed, h, onMounted, ref, watch } from 'vue'
+import { NButton, NIcon, NTag, useMessage } from 'naive-ui'
+import {
+  WarningSharp as AlertTriangle,
   CheckmarkCircleSharp as CheckCircle,
+  EyeSharp as Eye,
+  InformationCircleSharp as Info,
+  KeySharp as Key,
   LogInSharp as Login,
   LogOutSharp as Logout,
-  PersonSharp as UserCheck,
-  KeySharp as Key,
+  LocationSharp as MapPin,
+  RefreshSharp as Refresh,
+  ShieldSharp as Shield,
   PhonePortraitSharp as Smartphone,
-  LocationSharp as MapPin
+  PersonSharp as UserCheck,
+  CloseCircleSharp as XCircle,
 } from '@vicons/ionicons5'
 // date-fns 대신 내장 함수 사용
 import type { SessionSecurityEvent } from '@/types/api'
@@ -154,7 +154,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -174,7 +174,7 @@ const dateRange = ref<[number, number] | null>(null)
 // 필터 상태
 const filters = ref({
   eventType: null as string | null,
-  severity: null as string | null
+  severity: null as string | null,
 })
 
 // 이벤트 타입 옵션
@@ -184,7 +184,7 @@ const eventTypeOptions = [
   { label: '의심스러운 활동', value: 'suspicious_activity' },
   { label: '비밀번호 변경', value: 'password_change' },
   { label: '디바이스 변경', value: 'device_change' },
-  { label: '위치 변경', value: 'location_change' }
+  { label: '위치 변경', value: 'location_change' },
 ]
 
 // 심각도 옵션
@@ -192,7 +192,7 @@ const severityOptions = [
   { label: '낮음', value: 'low' },
   { label: '보통', value: 'medium' },
   { label: '높음', value: 'high' },
-  { label: '위험', value: 'critical' }
+  { label: '위험', value: 'critical' },
 ]
 
 // 날짜 단축키
@@ -225,7 +225,7 @@ const dateShortcuts = {
     const startOfDay = new Date(monthAgo.getFullYear(), monthAgo.getMonth(), monthAgo.getDate())
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
     return [startOfDay.getTime(), endOfDay.getTime()]
-  }
+  },
 }
 
 // 테이블 컬럼 정의
@@ -237,12 +237,12 @@ const columns = [
     render: (row: SessionSecurityEvent) => {
       return h(NTag, {
         type: getEventTypeTagType(row.eventType),
-        size: 'small'
+        size: 'small',
       }, {
         icon: () => h(NIcon, { size: 14 }, { default: () => getEventTypeIcon(row.eventType) }),
-        default: () => getEventTypeLabel(row.eventType)
+        default: () => getEventTypeLabel(row.eventType),
       })
-    }
+    },
   },
   {
     title: '심각도',
@@ -251,24 +251,24 @@ const columns = [
     render: (row: SessionSecurityEvent) => {
       return h(NTag, {
         type: getSeverityTagType(row.severity),
-        size: 'small'
+        size: 'small',
       }, {
-        default: () => getSeverityLabel(row.severity)
+        default: () => getSeverityLabel(row.severity),
       })
-    }
+    },
   },
   {
     title: '설명',
     key: 'description',
     minWidth: 200,
     ellipsis: {
-      tooltip: true
-    }
+      tooltip: true,
+    },
   },
   {
     title: 'IP 주소',
     key: 'ipAddress',
-    width: 140
+    width: 140,
   },
   {
     title: '발생 시간',
@@ -280,9 +280,9 @@ const columns = [
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       })
-    }
+    },
   },
   {
     title: '작업',
@@ -293,13 +293,13 @@ const columns = [
         size: 'small',
         type: 'primary',
         ghost: true,
-        onClick: () => showEventDetails(row)
+        onClick: () => showEventDetails(row),
       }, {
         icon: () => h(NIcon, {}, { default: () => h(Eye) }),
-        default: () => '상세'
+        default: () => '상세',
       })
-    }
-  }
+    },
+  },
 ]
 
 // 계산된 속성
@@ -315,7 +315,7 @@ const paginationConfig = computed(() => ({
   onUpdatePageSize: (pageSize: number) => {
     // 페이지 크기 변경 시 첫 페이지로 이동
     emit('pageChange', 1)
-  }
+  },
 }))
 
 // 메서드
@@ -370,7 +370,7 @@ const formatDateTime = (dateString: string) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -397,13 +397,13 @@ const handleDateRangeChange = (value: [number, number] | null) => {
 watch([
   () => filters.value.eventType,
   () => filters.value.severity,
-  () => dateRange.value
+  () => dateRange.value,
 ], () => {
   // 실제 구현에서는 부모 컴포넌트에서 필터 파라미터를 받아 API 호출
   console.log('필터 변경:', {
     eventType: filters.value.eventType,
     severity: filters.value.severity,
-    dateRange: dateRange.value
+    dateRange: dateRange.value,
   })
 }, { deep: true })
 
@@ -462,7 +462,7 @@ onMounted(() => {
       .filter-section {
         .n-space {
           flex-wrap: wrap;
-          
+
           :deep(.n-space-item) {
             flex: 1;
             min-width: 120px;
@@ -486,7 +486,7 @@ onMounted(() => {
         .n-space {
           :deep(.n-space-item) {
             width: 100%;
-            
+
             .n-select,
             .n-date-picker,
             .n-button {

@@ -20,7 +20,7 @@
         role="combobox"
         readonly
       />
-      
+
       <button
         v-if="clearable && modelValue && !disabled"
         @click="handleClear"
@@ -32,7 +32,7 @@
           <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
         </svg>
       </button>
-      
+
       <div class="date-picker__icon">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <path d="M6 2a1 1 0 00-2 0v1H3a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2h-1V2a1 1 0 10-2 0v1H6V2zM3 7h14v9H3V7z"/>
@@ -62,7 +62,7 @@
               <path d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
             </svg>
           </button>
-          
+
           <div class="date-picker__month-year">
             <select
               v-model="viewMonth"
@@ -77,7 +77,7 @@
                 {{ month }}
               </option>
             </select>
-            
+
             <select
               v-model="viewYear"
               class="date-picker__select"
@@ -92,7 +92,7 @@
               </option>
             </select>
           </div>
-          
+
           <button
             @click="nextMonth"
             class="date-picker__nav-button"
@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
 interface CalendarDay {
@@ -216,7 +216,7 @@ const props = withDefaults(defineProps<Props>(), {
   monthSelectAriaLabel: 'Select month',
   yearSelectAriaLabel: 'Select year',
   gridAriaLabel: 'Calendar dates',
-  todayButtonText: '오늘'
+  todayButtonText: '오늘',
 })
 
 const emit = defineEmits<{
@@ -274,17 +274,17 @@ const displayValue = computed(() => {
 const calendarDays = computed((): CalendarDay[][] => {
   const year = viewYear.value
   const month = viewMonth.value
-  
+
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
-  
+
   const startDate = new Date(firstDay)
   const startOffset = (startDate.getDay() - props.firstDayOfWeek + 7) % 7
   startDate.setDate(startDate.getDate() - startOffset)
-  
+
   const weeks: CalendarDay[][] = []
   const currentDate = new Date(startDate)
-  
+
   for (let week = 0; week < 6; week++) {
     const days: CalendarDay[] = []
     for (let day = 0; day < 7; day++) {
@@ -293,13 +293,13 @@ const calendarDays = computed((): CalendarDay[][] => {
         day: currentDate.getDate(),
         month: currentDate.getMonth(),
         year: currentDate.getFullYear(),
-        otherMonth: currentDate.getMonth() !== month
+        otherMonth: currentDate.getMonth() !== month,
       })
       currentDate.setDate(currentDate.getDate() + 1)
     }
     weeks.push(days)
   }
-  
+
   return weeks
 })
 
@@ -314,7 +314,7 @@ const formatDate = (date: Date): string => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  
+
   return props.format
     .replace('YYYY', String(year))
     .replace('MM', month)
@@ -363,7 +363,7 @@ const getDayAriaLabel = (day: CalendarDay): string => {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
   return formatter.format(day.date)
 }
@@ -371,13 +371,13 @@ const getDayAriaLabel = (day: CalendarDay): string => {
 const toggleCalendar = () => {
   if (props.disabled) return
   isOpen.value = !isOpen.value
-  
+
   if (isOpen.value) {
     const date = props.modelValue || new Date()
     viewMonth.value = date.getMonth()
     viewYear.value = date.getFullYear()
     focusedDate.value = date
-    
+
     nextTick(() => {
       calendarRef.value?.focus()
     })
@@ -386,12 +386,12 @@ const toggleCalendar = () => {
 
 const selectDate = (day: CalendarDay) => {
   if (isDisabled(day)) return
-  
+
   const newDate = new Date(day.date)
   emit('update:modelValue', newDate)
   emit('change', newDate)
   isOpen.value = false
-  
+
   nextTick(() => {
     inputRef.value?.focus()
   })
@@ -405,7 +405,7 @@ const selectToday = () => {
     day: today.getDate(),
     month: today.getMonth(),
     year: today.getFullYear(),
-    otherMonth: false
+    otherMonth: false,
   })
 }
 
@@ -456,10 +456,10 @@ const handleCalendarKeydown = (event: KeyboardEvent) => {
   if (!focusedDate.value) {
     focusedDate.value = props.modelValue || new Date()
   }
-  
+
   let newDate = new Date(focusedDate.value)
   let handled = true
-  
+
   switch (event.key) {
     case 'ArrowLeft':
       newDate.setDate(newDate.getDate() - 1)
@@ -502,7 +502,7 @@ const handleCalendarKeydown = (event: KeyboardEvent) => {
           day: focusedDate.value.getDate(),
           month: focusedDate.value.getMonth(),
           year: focusedDate.value.getFullYear(),
-          otherMonth: false
+          otherMonth: false,
         })
       }
       return
@@ -516,11 +516,11 @@ const handleCalendarKeydown = (event: KeyboardEvent) => {
     default:
       handled = false
   }
-  
+
   if (handled) {
     event.preventDefault()
     focusedDate.value = newDate
-    
+
     // Update view if needed
     if (newDate.getMonth() !== viewMonth.value || newDate.getFullYear() !== viewYear.value) {
       viewMonth.value = newDate.getMonth()
@@ -674,7 +674,7 @@ watch(isOpen, (newValue) => {
 
     &--disabled {
       @apply text-gray-300 cursor-not-allowed;
-      
+
       &:hover {
         @apply bg-transparent;
       }

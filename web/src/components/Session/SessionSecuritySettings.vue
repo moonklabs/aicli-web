@@ -58,8 +58,8 @@
             :rail-style="railStyle"
           />
           <div class="setting-description">
-            {{ formData.allowMultipleDevices 
-              ? '여러 디바이스에서 동시에 로그인할 수 있습니다.' 
+            {{ formData.allowMultipleDevices
+              ? '여러 디바이스에서 동시에 로그인할 수 있습니다.'
               : '한 번에 하나의 디바이스에서만 로그인할 수 있습니다.'
             }}
           </div>
@@ -80,7 +80,7 @@
       </n-form-item>
 
       <!-- 비활성 타임아웃 (비활성 세션 자동 종료가 활성화된 경우) -->
-      <n-form-item 
+      <n-form-item
         v-if="formData.autoTerminateInactiveSessions"
         label="비활성 타임아웃"
         path="inactivityTimeoutMinutes"
@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useMessage } from 'naive-ui'
 import type { SessionSecuritySettings, UpdateSessionSettingsRequest } from '@/types/api'
 
@@ -209,7 +209,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false
+  loading: false,
 })
 
 // Emits
@@ -234,7 +234,7 @@ const formData = ref({
   notifyOnNewDevice: true,
   notifyOnSuspiciousActivity: true,
   autoTerminateInactiveSessions: false,
-  inactivityTimeoutMinutes: 120
+  inactivityTimeoutMinutes: 120,
 })
 
 // 폼 유효성 검사 규칙
@@ -245,7 +245,7 @@ const formRules = {
     min: 15,
     max: 1440,
     message: '세션 타임아웃은 15분에서 1440분(24시간) 사이여야 합니다',
-    trigger: ['blur', 'change']
+    trigger: ['blur', 'change'],
   },
   maxConcurrentSessions: {
     required: true,
@@ -253,7 +253,7 @@ const formRules = {
     min: 1,
     max: 10,
     message: '최대 동시 세션 수는 1개에서 10개 사이여야 합니다',
-    trigger: ['blur', 'change']
+    trigger: ['blur', 'change'],
   },
   inactivityTimeoutMinutes: {
     required: true,
@@ -261,14 +261,14 @@ const formRules = {
     min: 30,
     max: 720,
     message: '비활성 타임아웃은 30분에서 720분(12시간) 사이여야 합니다',
-    trigger: ['blur', 'change']
-  }
+    trigger: ['blur', 'change'],
+  },
 }
 
 // 계산된 속성
 const hasChanges = computed(() => {
   if (!originalSettings.value) return false
-  
+
   return (
     formData.value.sessionTimeoutMinutes !== originalSettings.value.sessionTimeoutMinutes ||
     formData.value.maxConcurrentSessions !== originalSettings.value.maxConcurrentSessions ||
@@ -304,7 +304,7 @@ const loadSettings = () => {
       notifyOnNewDevice: props.settings.notifyOnNewDevice,
       notifyOnSuspiciousActivity: props.settings.notifyOnSuspiciousActivity,
       autoTerminateInactiveSessions: props.settings.autoTerminateInactiveSessions,
-      inactivityTimeoutMinutes: props.settings.inactivityTimeoutMinutes
+      inactivityTimeoutMinutes: props.settings.inactivityTimeoutMinutes,
     }
     originalSettings.value = { ...props.settings }
   }
@@ -320,7 +320,7 @@ const resetForm = () => {
       notifyOnNewDevice: originalSettings.value.notifyOnNewDevice,
       notifyOnSuspiciousActivity: originalSettings.value.notifyOnSuspiciousActivity,
       autoTerminateInactiveSessions: originalSettings.value.autoTerminateInactiveSessions,
-      inactivityTimeoutMinutes: originalSettings.value.inactivityTimeoutMinutes
+      inactivityTimeoutMinutes: originalSettings.value.inactivityTimeoutMinutes,
     }
   }
 }
@@ -328,11 +328,11 @@ const resetForm = () => {
 const saveSettings = async () => {
   try {
     await formRef.value?.validate()
-    
+
     saving.value = true
-    
+
     const changedSettings: UpdateSessionSettingsRequest = {}
-    
+
     if (formData.value.sessionTimeoutMinutes !== originalSettings.value?.sessionTimeoutMinutes) {
       changedSettings.sessionTimeoutMinutes = formData.value.sessionTimeoutMinutes
     }
@@ -357,7 +357,7 @@ const saveSettings = async () => {
     if (formData.value.inactivityTimeoutMinutes !== originalSettings.value?.inactivityTimeoutMinutes) {
       changedSettings.inactivityTimeoutMinutes = formData.value.inactivityTimeoutMinutes
     }
-    
+
     emit('update', changedSettings)
   } catch (error) {
     console.error('설정 유효성 검사 실패:', error)
@@ -424,7 +424,7 @@ onMounted(() => {
     ul {
       margin: 8px 0 0 0;
       padding-left: 20px;
-      
+
       li {
         margin-bottom: 4px;
         font-size: 14px;
@@ -462,7 +462,7 @@ onMounted(() => {
             .n-descriptions-table-content {
               .n-descriptions-table-row {
                 flex-direction: column;
-                
+
                 .n-descriptions-table-content-cell {
                   width: 100% !important;
                 }

@@ -2,7 +2,7 @@
   <div ref="triggerRef" class="popover-trigger" @click="handleTriggerClick">
     <slot name="trigger" />
   </div>
-  
+
   <Teleport to="body">
     <Transition name="popover-fade">
       <div
@@ -21,7 +21,7 @@
           class="popover__arrow"
           :class="`popover__arrow--${arrowPlacement}`"
         />
-        
+
         <!-- 헤더 -->
         <div v-if="title || $slots.header" class="popover__header">
           <slot name="header">
@@ -39,12 +39,12 @@
             </svg>
           </button>
         </div>
-        
+
         <!-- 본문 -->
         <div class="popover__body">
           <slot />
         </div>
-        
+
         <!-- 푸터 -->
         <div v-if="$slots.footer" class="popover__footer">
           <slot name="footer" />
@@ -55,9 +55,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useOverlay } from '../composables/useOverlayManager'
-import { usePositioning, type Placement } from '../composables/usePositioning'
+import { type Placement, usePositioning } from '../composables/usePositioning'
 
 export interface PopoverProps {
   // 표시 상태
@@ -111,7 +111,7 @@ const visible = computed({
   set: (value) => {
     internalVisible.value = value
     emit('update:visible', value)
-  }
+  },
 })
 
 // 타이머
@@ -138,14 +138,14 @@ const { floatingStyles, position } = usePositioning(
     placement: props.placement,
     offset: props.offset,
     flip: true,
-  }
+  },
 )
 
 // 화살표 위치 계산
 const arrowPlacement = computed(() => {
   const placement = position.value.placement
   const [side] = placement.split('-')
-  
+
   // 반대 방향 반환
   const opposite = {
     top: 'bottom',
@@ -153,14 +153,14 @@ const arrowPlacement = computed(() => {
     bottom: 'top',
     left: 'right',
   }
-  
+
   return opposite[side as keyof typeof opposite]
 })
 
 // 표시
 function show() {
   clearTimeout(hideTimer!)
-  
+
   if (props.trigger === 'hover') {
     showTimer = setTimeout(() => {
       visible.value = true
@@ -175,7 +175,7 @@ function show() {
 // 숨기기
 function hide() {
   clearTimeout(showTimer!)
-  
+
   if (props.trigger === 'hover') {
     hideTimer = setTimeout(() => {
       visible.value = false
@@ -202,9 +202,9 @@ function handleClose() {
 // 외부 클릭 핸들러
 function handleClickOutside(event: MouseEvent) {
   if (!props.closeOnClickOutside || props.trigger === 'manual') return
-  
+
   const target = event.target as Node
-  
+
   if (
     triggerRef.value &&
     popoverRef.value &&
@@ -218,7 +218,7 @@ function handleClickOutside(event: MouseEvent) {
 // 이벤트 리스너 설정
 function setupEventListeners() {
   if (!triggerRef.value) return
-  
+
   switch (props.trigger) {
     case 'hover':
       triggerRef.value.addEventListener('mouseenter', show)
@@ -226,13 +226,13 @@ function setupEventListeners() {
       popoverRef.value?.addEventListener('mouseenter', () => clearTimeout(hideTimer!))
       popoverRef.value?.addEventListener('mouseleave', hide)
       break
-      
+
     case 'focus':
       triggerRef.value.addEventListener('focus', show, true)
       triggerRef.value.addEventListener('blur', hide, true)
       break
   }
-  
+
   // 외부 클릭 리스너
   document.addEventListener('click', handleClickOutside)
 }
@@ -245,12 +245,12 @@ function cleanupEventListeners() {
     triggerRef.value.removeEventListener('focus', show, true)
     triggerRef.value.removeEventListener('blur', hide, true)
   }
-  
+
   if (popoverRef.value) {
     popoverRef.value.removeEventListener('mouseenter', () => clearTimeout(hideTimer!))
     popoverRef.value.removeEventListener('mouseleave', hide)
   }
-  
+
   document.removeEventListener('click', handleClickOutside)
 }
 
@@ -392,7 +392,7 @@ watch(() => props.visible, (newVisible) => {
     --border-color: #4b5563;
     --bg-color-hover: #4b5563;
   }
-  
+
   .popover__arrow {
     background-color: #374151;
   }

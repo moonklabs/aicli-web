@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 interface TouchPerformanceOptions {
   // 터치 지연 최소화
@@ -55,12 +55,12 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
 
     // CSS touch-action 설정
     document.documentElement.style.touchAction = 'manipulation'
-    
+
     // iOS Safari의 300ms 지연 제거
     const meta = document.createElement('meta')
     meta.name = 'viewport'
     meta.content = 'width=device-width, initial-scale=1, user-scalable=no'
-    
+
     if (!document.querySelector('meta[name="viewport"]')) {
       document.head.appendChild(meta)
     }
@@ -105,7 +105,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
   // 디바운스 함수
   const debounce = <T extends (...args: any[]) => any>(
     func: T,
-    delay: number = debounceMs
+    delay: number = debounceMs,
   ): T => {
     let timeoutId: NodeJS.Timeout
     return ((...args: any[]) => {
@@ -117,7 +117,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
   // 쓰로틀 함수
   const throttle = <T extends (...args: any[]) => any>(
     func: T,
-    delay: number = throttleMs
+    delay: number = throttleMs,
   ): T => {
     let lastCall = 0
     return ((...args: any[]) => {
@@ -147,7 +147,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
     try {
       // @ts-ignore - Battery API는 실험적 기능
       const battery = await navigator.getBattery?.()
-      
+
       if (battery) {
         const updatePerformanceMode = () => {
           // 배터리가 20% 이하이거나 충전 중이 아닐 때 고성능 모드 비활성화
@@ -191,7 +191,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
   const getMemoryUsage = () => {
     // @ts-ignore - memory API는 Chrome에서만 지원
     const memory = (performance as any).memory
-    
+
     if (memory) {
       return {
         used: Math.round(memory.usedJSHeapSize / 1048576), // MB
@@ -199,7 +199,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
         limit: Math.round(memory.jsHeapSizeLimit / 1048576), // MB
       }
     }
-    
+
     return null
   }
 
@@ -226,7 +226,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
   }
 
   // RequestIdleCallback 폴리필
-  const requestIdleCallback = window.requestIdleCallback || 
+  const requestIdleCallback = window.requestIdleCallback ||
     ((callback: IdleRequestCallback) => {
       const start = Date.now()
       return setTimeout(() => {
@@ -252,7 +252,7 @@ export function useTouchPerformance(options: TouchPerformanceOptions = {}) {
     optimizeScrollPerformance()
     adaptPerformanceMode()
     measureFrameRate()
-    
+
     return optimizeTouchEvents()
   }
 
@@ -298,8 +298,8 @@ export function useDeviceDetection() {
 
   const detectDevice = () => {
     // 터치 지원 감지
-    isTouchDevice.value = 'ontouchstart' in window || 
-      navigator.maxTouchPoints > 0 || 
+    isTouchDevice.value = 'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
       (navigator as any).msMaxTouchPoints > 0
 
     // OS 감지
@@ -322,12 +322,12 @@ export function useDeviceDetection() {
 
   onMounted(() => {
     detectDevice()
-    
+
     // 화면 방향 변경 감지
     window.addEventListener('orientationchange', () => {
       setTimeout(detectDevice, 100)
     })
-    
+
     window.addEventListener('resize', detectDevice)
   })
 

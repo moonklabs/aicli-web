@@ -28,9 +28,9 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'google-fonts-cache',
                 expiration: {
                   maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1년
-                }
-              }
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1년
+                },
+              },
             },
             {
               urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
@@ -39,9 +39,9 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'gstatic-fonts-cache',
                 expiration: {
                   maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1년
-                }
-              }
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1년
+                },
+              },
             },
             {
               urlPattern: /\/api\/.*/i,
@@ -50,10 +50,10 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'api-cache',
                 expiration: {
                   maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 // 1일
+                  maxAgeSeconds: 60 * 60 * 24, // 1일
                 },
-                networkTimeoutSeconds: 10
-              }
+                networkTimeoutSeconds: 10,
+              },
             },
             {
               urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/,
@@ -62,11 +62,11 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'images-cache',
                 expiration: {
                   maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 30 // 30일
-                }
-              }
-            }
-          ]
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30일
+                },
+              },
+            },
+          ],
         },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
@@ -85,60 +85,60 @@ export default defineConfig(({ mode }) => {
             {
               src: '/icons/icon-72x72.png',
               sizes: '72x72',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-96x96.png',
               sizes: '96x96',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-128x128.png',
               sizes: '128x128',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-144x144.png',
               sizes: '144x144',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-152x152.png',
               sizes: '152x152',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-192x192.png',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-384x384.png',
               sizes: '384x384',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-512x512.png',
               sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: '/icons/icon-maskable-192x192.png',
               sizes: '192x192',
               type: 'image/png',
-              purpose: 'maskable'
+              purpose: 'maskable',
             },
             {
               src: '/icons/icon-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'maskable'
-            }
-          ]
+              purpose: 'maskable',
+            },
+          ],
         },
         devOptions: {
-          enabled: true // 개발 모드에서도 PWA 기능 테스트 가능
-        }
+          enabled: true, // 개발 모드에서도 PWA 기능 테스트 가능
+        },
       }),
       // 번들 분석기 (프로덕션 빌드 시)
       mode === 'production' ? visualizer({
@@ -243,7 +243,7 @@ export default defineConfig(({ mode }) => {
               // 나머지 vendor
               return 'vendor'
             }
-            
+
             // 컴포넌트 청크 분리
             if (id.includes('/src/components/')) {
               if (id.includes('/forms/')) {
@@ -260,15 +260,15 @@ export default defineConfig(({ mode }) => {
               }
               return 'ui-components'
             }
-            
+
             // 뷰/페이지 청크 분리
             if (id.includes('/src/views/')) {
               return 'views'
             }
-            
+
             return undefined
           },
-          
+
           // 파일명 패턴 최적화
           chunkFileNames: (chunkInfo) => {
             const facadeModuleId = chunkInfo.facadeModuleId
@@ -283,12 +283,12 @@ export default defineConfig(({ mode }) => {
             }
             return 'chunks/[name].[hash].js'
           },
-          
+
           entryFileNames: 'assets/[name].[hash].js',
           assetFileNames: (assetInfo) => {
             const info = assetInfo.name!.split('.')
             const ext = info[info.length - 1]
-            
+
             if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(assetInfo.name!)) {
               return 'assets/media/[name].[hash].[ext]'
             }
@@ -301,11 +301,11 @@ export default defineConfig(({ mode }) => {
             if (ext === 'css') {
               return 'assets/styles/[name].[hash].[ext]'
             }
-            
+
             return 'assets/[name].[hash].[ext]'
           },
         },
-        
+
         // Tree-shaking 최적화
         treeshake: {
           moduleSideEffects: false,

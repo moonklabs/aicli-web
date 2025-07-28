@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     class="file-upload"
     :class="{
       'file-upload--disabled': disabled,
@@ -34,7 +34,7 @@
         @change="handleFileSelect"
         :aria-describedby="ariaDescribedby"
       />
-      
+
       <div class="file-upload__drop-content">
         <slot name="drop-zone" :is-dragging="isDragging">
           <svg class="file-upload__icon" viewBox="0 0 48 48" fill="none">
@@ -95,10 +95,10 @@
               {{ file.error }}
             </span>
           </p>
-          
+
           <!-- 진행률 바 -->
           <div v-if="file.status === 'uploading'" class="file-upload__progress">
-            <div 
+            <div
               class="file-upload__progress-bar"
               :style="{ width: `${file.progress}%` }"
             />
@@ -117,7 +117,7 @@
               <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM7.172 7.172a.5.5 0 01.656 0L10 9.344l2.172-2.172a.5.5 0 11.656.656L10.656 10l2.172 2.172a.5.5 0 01-.656.656L10 10.656l-2.172 2.172a.5.5 0 01-.656-.656L9.344 10 7.172 7.828a.5.5 0 010-.656z"/>
             </svg>
           </button>
-          
+
           <button
             v-else
             @click="removeFile(file)"
@@ -145,7 +145,7 @@
         </svg>
         Upload All
       </button>
-      
+
       <button
         @click="clearAll"
         class="file-upload__batch-button file-upload__batch-button--secondary"
@@ -157,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
 interface FileItem {
@@ -197,7 +197,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   autoUpload: false,
   showBatchActions: true,
-  dropZoneAriaLabel: 'File upload drop zone'
+  dropZoneAriaLabel: 'File upload drop zone',
 })
 
 const emit = defineEmits<{
@@ -241,7 +241,7 @@ const formatFileSize = (bytes: number): string => {
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
 const validateFile = (file: File): string | null => {
@@ -255,7 +255,7 @@ const validateFile = (file: File): string | null => {
     const acceptedTypes = props.accept.split(',').map(t => t.trim())
     const fileType = file.type
     const fileExtension = `.${file.name.split('.').pop()}`
-    
+
     const isAccepted = acceptedTypes.some(type => {
       if (type.startsWith('.')) {
         return fileExtension.toLowerCase() === type.toLowerCase()
@@ -282,7 +282,7 @@ const createFileItem = async (file: File): Promise<FileItem> => {
     size: file.size,
     type: file.type,
     status: 'pending',
-    progress: 0
+    progress: 0,
   }
 
   // Create preview for images
@@ -360,7 +360,7 @@ const uploadFile = async (fileItem: FileItem) => {
       (progress) => {
         fileItem.progress = progress
       },
-      fileItem.uploadController
+      fileItem.uploadController,
     )
     fileItem.status = 'success'
     fileItem.progress = 100
@@ -487,7 +487,7 @@ const handleDragLeave = () => {
 
   &__input {
     @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer;
-    
+
     &:disabled {
       @apply cursor-not-allowed;
     }

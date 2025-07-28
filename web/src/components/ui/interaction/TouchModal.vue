@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 interface Props {
   visible: boolean
@@ -118,19 +118,19 @@ const containerStyle = computed(() => {
   const style: Record<string, string> = {
     maxHeight: props.maxHeight,
   }
-  
+
   if (isDragging.value && translateY.value > 0) {
     style.transform = `translateY(${translateY.value}px)`
     style.transition = 'none'
   }
-  
+
   return style
 })
 
 // 터치 이벤트 핸들러
 const handleTouchStart = (event: TouchEvent) => {
   if (!props.draggable || props.position !== 'bottom') return
-  
+
   const touch = event.touches[0]
   startY.value = touch.clientY
   currentY.value = touch.clientY
@@ -139,16 +139,16 @@ const handleTouchStart = (event: TouchEvent) => {
 
 const handleTouchMove = (event: TouchEvent) => {
   if (!isDragging.value || !props.draggable) return
-  
+
   const touch = event.touches[0]
   currentY.value = touch.clientY
-  
+
   const deltaY = currentY.value - startY.value
-  
+
   // 아래쪽으로만 드래그 허용
   if (deltaY > 0) {
     translateY.value = deltaY
-    
+
     // 스크롤 방지
     event.preventDefault()
   }
@@ -156,9 +156,9 @@ const handleTouchMove = (event: TouchEvent) => {
 
 const handleTouchEnd = () => {
   if (!isDragging.value || !props.draggable) return
-  
+
   isDragging.value = false
-  
+
   // 임계값을 넘으면 모달 닫기
   const threshold = 100
   if (translateY.value > threshold) {
@@ -179,15 +179,15 @@ const handleBackdropClick = () => {
 // 모달 닫기
 const handleClose = () => {
   emit('before-close')
-  
+
   isClosing.value = true
   translateY.value = 0
-  
+
   setTimeout(() => {
     emit('update:visible', false)
     emit('close')
     isClosing.value = false
-    
+
     nextTick(() => {
       emit('after-close')
     })
@@ -204,14 +204,14 @@ const handleOpen = () => {
 // 스크롤 방지
 const preventBodyScroll = () => {
   if (!props.preventScroll) return
-  
+
   document.body.style.overflow = 'hidden'
   document.body.style.paddingRight = '0px' // 스크롤바 공간 보정
 }
 
 const restoreBodyScroll = () => {
   if (!props.preventScroll) return
-  
+
   document.body.style.overflow = ''
   document.body.style.paddingRight = ''
 }
@@ -236,7 +236,7 @@ watch(
       document.removeEventListener('keydown', handleKeydown)
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // 컴포넌트 해제 시 정리
@@ -267,7 +267,7 @@ defineExpose({
   bottom: 0;
   z-index: $z-modal;
   @include flex-center;
-  
+
   &__backdrop {
     position: absolute;
     top: 0;
@@ -288,7 +288,7 @@ defineExpose({
     width: 100%;
     max-width: 480px;
     animation: modal-enter 0.3s ease;
-    
+
     .dark & {
       background: $dark-bg-secondary;
     }
@@ -305,7 +305,7 @@ defineExpose({
 
   &--bottom {
     align-items: flex-end;
-    
+
     .touch-modal__container {
       border-radius: $border-radius-2xl $border-radius-2xl 0 0;
       max-height: 90vh;
@@ -315,7 +315,7 @@ defineExpose({
 
   &--top {
     align-items: flex-start;
-    
+
     .touch-modal__container {
       border-radius: 0 0 $border-radius-2xl $border-radius-2xl;
       margin-top: 0;
@@ -365,7 +365,7 @@ defineExpose({
     .touch-modal__backdrop {
       animation: modal-backdrop-exit 0.3s ease;
     }
-    
+
     .touch-modal__container {
       animation: modal-exit 0.3s ease;
     }
@@ -376,7 +376,7 @@ defineExpose({
     @include flex-center;
     padding: $spacing-3 0 $spacing-2 0;
     cursor: grab;
-    
+
     &:active {
       cursor: grabbing;
     }
@@ -387,7 +387,7 @@ defineExpose({
     height: 4px;
     background: map-get($gray-colors, 300);
     border-radius: $border-radius-full;
-    
+
     .dark & {
       background: $dark-text-tertiary;
     }
@@ -397,11 +397,11 @@ defineExpose({
   &__header {
     border-bottom: 1px solid map-get($gray-colors, 200);
     padding: $spacing-4 $spacing-6;
-    
+
     .touch-modal--draggable & {
       padding-top: $spacing-2;
     }
-    
+
     .dark & {
       border-bottom-color: $dark-bg-tertiary;
     }
@@ -418,7 +418,7 @@ defineExpose({
     font-weight: $font-weight-semibold;
     color: $light-text-primary;
     margin: 0;
-    
+
     .dark & {
       color: $dark-text-primary;
     }
@@ -433,24 +433,24 @@ defineExpose({
     color: map-get($gray-colors, 500);
     cursor: pointer;
     border-radius: $border-radius-full;
-    
+
     svg {
       width: 20px;
       height: 20px;
     }
-    
+
     &:hover {
       @include no-touch {
         background: map-get($gray-colors, 100);
         color: map-get($gray-colors, 700);
-        
+
         .dark & {
           background: $dark-bg-tertiary;
           color: $dark-text-primary;
         }
       }
     }
-    
+
     .dark & {
       color: $dark-text-secondary;
     }
@@ -462,7 +462,7 @@ defineExpose({
     overflow-y: auto;
     @include smooth-scroll;
     @include scrollbar-thin;
-    
+
     .touch-modal--fullscreen & {
       flex: 1;
       padding: $spacing-4;
@@ -474,7 +474,7 @@ defineExpose({
     border-top: 1px solid map-get($gray-colors, 200);
     padding: $spacing-4 $spacing-6;
     background: map-get($gray-colors, 50);
-    
+
     .dark & {
       border-top-color: $dark-bg-tertiary;
       background: darken($dark-bg-secondary, 2%);
@@ -535,7 +535,7 @@ defineExpose({
       transform: scale(1) translateY(0);
     }
   }
-  
+
   @keyframes modal-exit {
     from {
       opacity: 1;
@@ -556,7 +556,7 @@ defineExpose({
       width: 100vw;
       border-radius: $border-radius-2xl $border-radius-2xl 0 0;
     }
-    
+
     &--center {
       .touch-modal__container {
         margin: $spacing-4;
@@ -564,11 +564,11 @@ defineExpose({
         border-radius: $border-radius-2xl;
       }
     }
-    
+
     &__content {
       padding: $spacing-4;
     }
-    
+
     &__header,
     &__footer {
       padding-left: $spacing-4;
@@ -592,7 +592,7 @@ defineExpose({
   &:focus {
     outline: none;
   }
-  
+
   &__container:focus-within {
     outline: 2px solid map-get($primary-colors, 500);
     outline-offset: -2px;
