@@ -1,5 +1,7 @@
 // AICLI Web - SCSS 믹스인 정의
 
+@use 'sass:map';
+@use 'sass:color';
 @use './variables' as *;
 
 // 반응형 브레이크포인트
@@ -164,7 +166,7 @@
   &::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 3px;
-    
+
     &:hover {
       background: rgba(0, 0, 0, 0.3);
     }
@@ -174,7 +176,7 @@
   .dark & {
     &::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.2);
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.3);
       }
@@ -185,7 +187,7 @@
 @mixin scrollbar-hidden {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -194,7 +196,7 @@
 // 카드 스타일
 @mixin card-base {
   background: $light-bg-primary;
-  border: 1px solid map-get($gray-colors, 200);
+  border: 1px solid map.get($gray-colors, 200);
   border-radius: $border-radius-lg;
   padding: $spacing-6;
   box-shadow: $shadow-sm;
@@ -233,12 +235,12 @@
   transition: $transition-base;
   text-decoration: none;
   user-select: none;
-  
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -249,13 +251,13 @@
   @include button-base;
   background: map-get($primary-colors, 500);
   color: white;
-  
+
   &:hover:not(:disabled) {
     background: map-get($primary-colors, 600);
     transform: translateY(-1px);
     box-shadow: $shadow-md;
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(0);
     background: map-get($primary-colors, 700);
@@ -266,17 +268,17 @@
   @include button-base;
   background: map-get($gray-colors, 100);
   color: map-get($gray-colors, 800);
-  
+
   &:hover:not(:disabled) {
     background: map-get($gray-colors, 200);
     transform: translateY(-1px);
     box-shadow: $shadow-sm;
   }
-  
+
   .dark & {
     background: $dark-bg-tertiary;
     color: $dark-text-primary;
-    
+
     &:hover:not(:disabled) {
       background: lighten($dark-bg-tertiary, 10%);
     }
@@ -294,26 +296,26 @@
   background: $light-bg-primary;
   color: $light-text-primary;
   transition: $transition-base;
-  
+
   &:focus {
     outline: none;
     border-color: map-get($primary-colors, 500);
     box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
   }
-  
+
   &::placeholder {
     color: map-get($gray-colors, 500);
   }
-  
+
   .dark & {
     background: $dark-bg-secondary;
     color: $dark-text-primary;
     border-color: $dark-bg-tertiary;
-    
+
     &::placeholder {
       color: $dark-text-tertiary;
     }
-    
+
     &:focus {
       border-color: map-get($primary-colors, 400);
       box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
@@ -336,16 +338,18 @@
 
 // 로딩 애니메이션
 @mixin loading-spinner {
+  animation: spin 1s linear infinite;
+
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  
-  animation: spin 1s linear infinite;
 }
 
 // 페이드 인 애니메이션
 @mixin fade-in($duration: 0.3s) {
+  animation: fade-in $duration ease-out;
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -356,12 +360,12 @@
       transform: translateY(0);
     }
   }
-  
-  animation: fade-in $duration ease-out;
 }
 
 // 슬라이드 애니메이션
 @mixin slide-in-right($duration: 0.3s) {
+  animation: slide-in-right $duration ease-out;
+
   @keyframes slide-in-right {
     from {
       opacity: 0;
@@ -372,8 +376,6 @@
       transform: translateX(0);
     }
   }
-  
-  animation: slide-in-right $duration ease-out;
 }
 
 // 상태 표시 뱃지
@@ -386,10 +388,10 @@
   font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  
+
   background: lighten($color, 40%);
   color: darken($color, 20%);
-  
+
   .dark & {
     background: rgba($color, 0.2);
     color: lighten($color, 20%);
@@ -398,18 +400,18 @@
 
 // 코드 블록 스타일
 @mixin code-block {
-  background: map-get($gray-colors, 100);
-  color: map-get($gray-colors, 800);
+  background: map.get($gray-colors, 100);
+  color: map.get($gray-colors, 800);
   font-family: $font-family-mono;
   font-size: $font-size-sm;
   padding: $spacing-2 $spacing-3;
   border-radius: $border-radius-base;
-  border: 1px solid map-get($gray-colors, 200);
-  
+  border: 1px solid map.get($gray-colors, 200);
+
   .dark & {
     background: $dark-bg-tertiary;
     color: $dark-text-primary;
-    border-color: lighten($dark-bg-tertiary, 10%);
+    border-color: color.scale($dark-bg-tertiary, $lightness: 10%);
   }
 }
 
@@ -456,7 +458,7 @@
 @mixin touch-target($size: 44px) {
   min-height: $size;
   min-width: $size;
-  
+
   @include touch {
     min-height: 48px;
     min-width: 48px;
@@ -467,12 +469,12 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  
+
   &:active {
     transform: scale(0.95);
     transition: transform 0.1s ease;
   }
-  
+
   @include reduce-motion {
     &:active {
       transform: none;
@@ -505,7 +507,7 @@
 @mixin smooth-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  
+
   @include reduce-motion {
     scroll-behavior: auto;
   }
@@ -524,7 +526,7 @@
 @mixin mobile-button {
   @include touch-target;
   @include touch-feedback;
-  
+
   @include mobile {
     padding: $spacing-3 $spacing-4;
     font-size: $font-size-base;
@@ -535,7 +537,7 @@
 // 카드 호버 효과 (터치 기기에서는 비활성화)
 @mixin hover-lift {
   transition: $transition-base;
-  
+
   @include no-touch {
     &:hover {
       transform: translateY(-2px);
@@ -550,7 +552,7 @@
     display: flex;
     flex-direction: column;
     gap: $gap;
-    
+
     > * {
       width: 100% !important;
       flex: none !important;
@@ -561,11 +563,11 @@
 // 반응형 텍스트 크기
 @mixin responsive-text($mobile-size, $desktop-size) {
   font-size: $mobile-size;
-  
+
   @include tablet-up {
     font-size: calc(#{$mobile-size} + (#{$desktop-size} - #{$mobile-size}) * ((100vw - #{$breakpoint-sm}) / (#{$breakpoint-lg} - #{$breakpoint-sm})));
   }
-  
+
   @include desktop-up {
     font-size: $desktop-size;
   }
@@ -574,11 +576,11 @@
 // 반응형 간격
 @mixin responsive-spacing($property, $mobile-value, $desktop-value) {
   #{$property}: $mobile-value;
-  
+
   @include tablet-up {
     #{$property}: calc(#{$mobile-value} + (#{$desktop-value} - #{$mobile-value}) * ((100vw - #{$breakpoint-sm}) / (#{$breakpoint-lg} - #{$breakpoint-sm})));
   }
-  
+
   @include desktop-up {
     #{$property}: $desktop-value;
   }

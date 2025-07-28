@@ -169,6 +169,8 @@ const showSupport = (event: Event) => {
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:map';
+@use 'sass:math';
 .not-found-view {
   position: relative;
   min-height: 100vh;
@@ -214,7 +216,7 @@ const showSupport = (event: Event) => {
     transform: translate(-50%, -50%);
     font-size: 4rem;
     font-weight: $font-weight-bold;
-    color: map-get($gray-colors, 300);
+    color: map.get($gray-colors, 300);
     z-index: -1;
 
     .dark & {
@@ -309,13 +311,13 @@ const showSupport = (event: Event) => {
     }
 
     &:hover {
-      background: map-get($gray-colors, 50);
-      color: map-get($primary-colors, 600);
+      background: map.get($gray-colors, 50);
+      color: map.get($primary-colors, 600);
       transform: translateY(-2px);
 
       .dark & {
         background: $dark-bg-tertiary;
-        color: map-get($primary-colors, 400);
+        color: map.get($primary-colors, 400);
       }
     }
   }
@@ -341,7 +343,7 @@ const showSupport = (event: Event) => {
     position: absolute;
     width: 4px;
     height: 4px;
-    background: map-get($gray-colors, 400);
+    background: map.get($gray-colors, 400);
     border-radius: 50%;
     animation: float 6s ease-in-out infinite;
 
@@ -351,10 +353,10 @@ const showSupport = (event: Event) => {
 
     @for $i from 1 through 50 {
       &:nth-child(#{$i}) {
-        left: random(100) * 1%;
-        top: random(100) * 1%;
-        animation-delay: random(60) * 0.1s;
-        animation-duration: (4 + random(40) * 0.1) * 1s;
+        left: math.random(100) * 1%;
+        top: math.random(100) * 1%;
+        animation-delay: math.random(60) * 0.1s;
+        animation-duration: (4 + math.random(40) * 0.1) * 1s;
       }
     }
   }

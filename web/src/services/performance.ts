@@ -141,9 +141,9 @@ export class PerformanceAPIService {
   /**
    * 상위 엔드포인트 조회
    */
-  async getTopEndpoints(limit: number = 10): Promise<EndpointMetric[]> {
+  async getTopEndpoints(limit = 10): Promise<EndpointMetric[]> {
     const response = await apiClient.get(`${this.baseUrl}/endpoints/top`, {
-      params: { limit }
+      params: { limit },
     })
     return response.data
   }
@@ -151,9 +151,9 @@ export class PerformanceAPIService {
   /**
    * 느린 엔드포인트 조회
    */
-  async getSlowEndpoints(limit: number = 10): Promise<EndpointMetric[]> {
+  async getSlowEndpoints(limit = 10): Promise<EndpointMetric[]> {
     const response = await apiClient.get(`${this.baseUrl}/endpoints/slow`, {
-      params: { limit }
+      params: { limit },
     })
     return response.data
   }
@@ -184,9 +184,9 @@ export class PerformanceAPIService {
   /**
    * 상위 에러 조회
    */
-  async getTopErrors(limit: number = 10): Promise<ErrorInfo[]> {
+  async getTopErrors(limit = 10): Promise<ErrorInfo[]> {
     const response = await apiClient.get(`${this.baseUrl}/errors/top`, {
-      params: { limit }
+      params: { limit },
     })
     return response.data
   }
@@ -223,9 +223,9 @@ export class PerformanceAPIService {
   /**
    * 알림 목록 조회
    */
-  async getAlerts(activeOnly: boolean = false): Promise<AlertInfo[]> {
+  async getAlerts(activeOnly = false): Promise<AlertInfo[]> {
     const response = await apiClient.get(`${this.baseUrl}/alerts`, {
-      params: { active: activeOnly }
+      params: { active: activeOnly },
     })
     return response.data
   }
@@ -288,9 +288,9 @@ export class PerformanceAPIService {
   subscribeToMetrics(callback: (metrics: PerformanceMetrics) => void): () => void {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/api/monitoring/ws/metrics`
-    
+
     const ws = new WebSocket(wsUrl)
-    
+
     ws.onmessage = (event) => {
       try {
         const metrics = JSON.parse(event.data)
@@ -299,15 +299,15 @@ export class PerformanceAPIService {
         console.error('메트릭 파싱 오류:', error)
       }
     }
-    
+
     ws.onerror = (error) => {
       console.error('WebSocket 연결 오류:', error)
     }
-    
+
     ws.onclose = () => {
       console.log('WebSocket 연결 종료')
     }
-    
+
     // 연결 해제 함수 반환
     return () => {
       ws.close()
@@ -320,9 +320,9 @@ export class PerformanceAPIService {
   subscribeToErrors(callback: (error: ErrorInfo) => void): () => void {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const wsUrl = `${protocol}//${window.location.host}/api/monitoring/ws/errors`
-    
+
     const ws = new WebSocket(wsUrl)
-    
+
     ws.onmessage = (event) => {
       try {
         const error = JSON.parse(event.data)
@@ -331,15 +331,15 @@ export class PerformanceAPIService {
         console.error('에러 파싱 오류:', parseError)
       }
     }
-    
+
     ws.onerror = (error) => {
       console.error('WebSocket 연결 오류:', error)
     }
-    
+
     ws.onclose = () => {
       console.log('WebSocket 연결 종료')
     }
-    
+
     return () => {
       ws.close()
     }
@@ -406,18 +406,18 @@ export class PerformanceAnalyzer {
    */
   static analyzePerformanceTrend(scores: number[]): 'improving' | 'declining' | 'stable' {
     if (scores.length < 2) return 'stable'
-    
+
     const recent = scores.slice(-5) // 최근 5개 데이터 포인트
     if (recent.length < 2) return 'stable'
-    
+
     const firstHalf = recent.slice(0, Math.floor(recent.length / 2))
     const secondHalf = recent.slice(Math.floor(recent.length / 2))
-    
+
     const firstAvg = firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length
     const secondAvg = secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length
-    
+
     const threshold = 2 // 2점 이상 차이가 나야 트렌드로 인정
-    
+
     if (secondAvg - firstAvg > threshold) return 'improving'
     if (firstAvg - secondAvg > threshold) return 'declining'
     return 'stable'
@@ -434,7 +434,7 @@ export class PerformanceAnalyzer {
   } {
     const currentErrorRate = current.requestCount > 0 ? current.errorCount / current.requestCount : 0
     const previousErrorRate = previous.requestCount > 0 ? previous.errorCount / previous.requestCount : 0
-    
+
     const currentAvgResponseTime = current.requestDuration / Math.max(current.requestCount, 1)
     const previousAvgResponseTime = previous.requestDuration / Math.max(previous.requestCount, 1)
 
@@ -442,23 +442,23 @@ export class PerformanceAnalyzer {
       requestCount: {
         value: current.requestCount,
         change: current.requestCount - previous.requestCount,
-        percentage: previous.requestCount > 0 ? ((current.requestCount - previous.requestCount) / previous.requestCount) * 100 : 0
+        percentage: previous.requestCount > 0 ? ((current.requestCount - previous.requestCount) / previous.requestCount) * 100 : 0,
       },
       errorRate: {
         value: currentErrorRate,
         change: currentErrorRate - previousErrorRate,
-        percentage: previousErrorRate > 0 ? ((currentErrorRate - previousErrorRate) / previousErrorRate) * 100 : 0
+        percentage: previousErrorRate > 0 ? ((currentErrorRate - previousErrorRate) / previousErrorRate) * 100 : 0,
       },
       avgResponseTime: {
         value: currentAvgResponseTime,
         change: currentAvgResponseTime - previousAvgResponseTime,
-        percentage: previousAvgResponseTime > 0 ? ((currentAvgResponseTime - previousAvgResponseTime) / previousAvgResponseTime) * 100 : 0
+        percentage: previousAvgResponseTime > 0 ? ((currentAvgResponseTime - previousAvgResponseTime) / previousAvgResponseTime) * 100 : 0,
       },
       memoryUsage: {
         value: current.memoryUsage,
         change: current.memoryUsage - previous.memoryUsage,
-        percentage: previous.memoryUsage > 0 ? ((current.memoryUsage - previous.memoryUsage) / previous.memoryUsage) * 100 : 0
-      }
+        percentage: previous.memoryUsage > 0 ? ((current.memoryUsage - previous.memoryUsage) / previous.memoryUsage) * 100 : 0,
+      },
     }
   }
 
@@ -480,14 +480,14 @@ export class PerformanceAnalyzer {
         type: 'critical' as const,
         message: '에러율이 높습니다',
         value: errorRate,
-        threshold: 10
+        threshold: 10,
       })
     } else if (errorRate > 5) {
       warnings.push({
         type: 'warning' as const,
         message: '에러율이 증가했습니다',
         value: errorRate,
-        threshold: 5
+        threshold: 5,
       })
     }
 
@@ -498,14 +498,14 @@ export class PerformanceAnalyzer {
         type: 'critical' as const,
         message: '응답 시간이 매우 느립니다',
         value: avgResponseTime,
-        threshold: 2000
+        threshold: 2000,
       })
     } else if (avgResponseTime > 1000) {
       warnings.push({
         type: 'warning' as const,
         message: '응답 시간이 느립니다',
         value: avgResponseTime,
-        threshold: 1000
+        threshold: 1000,
       })
     }
 
@@ -516,14 +516,14 @@ export class PerformanceAnalyzer {
         type: 'critical' as const,
         message: '메모리 사용량이 매우 높습니다',
         value: memoryMB,
-        threshold: 500
+        threshold: 500,
       })
     } else if (memoryMB > 200) {
       warnings.push({
         type: 'warning' as const,
         message: '메모리 사용량이 높습니다',
         value: memoryMB,
-        threshold: 200
+        threshold: 200,
       })
     }
 
@@ -535,7 +535,7 @@ export class PerformanceAnalyzer {
    */
   static generateRecommendations(metrics: PerformanceMetrics): string[] {
     const recommendations = []
-    
+
     const errorRate = metrics.requestCount > 0 ? (metrics.errorCount / metrics.requestCount) * 100 : 0
     const avgResponseTime = metrics.requestDuration / Math.max(metrics.requestCount, 1)
     const memoryMB = metrics.memoryUsage / (1024 * 1024)

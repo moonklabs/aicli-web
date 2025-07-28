@@ -307,6 +307,7 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:map';
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
@@ -408,7 +409,7 @@ defineExpose({
     }
 
     svg {
-      color: map-get($gray-colors, 700);
+      color: map.get($gray-colors, 700);
     }
   }
 }

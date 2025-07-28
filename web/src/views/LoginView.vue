@@ -380,6 +380,8 @@ const getProviderDisplayName = (provider: string): string => {
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:map';
+
 .login-view {
   min-height: 100vh;
   @include flex-center;
@@ -488,7 +490,7 @@ const getProviderDisplayName = (provider: string): string => {
 .demo-info {
   margin-top: $spacing-6;
   padding-top: $spacing-6;
-  border-top: 1px solid map-get($gray-colors, 200);
+  border-top: 1px solid map.get($gray-colors, 200);
 
   .dark & {
     border-top-color: $dark-bg-tertiary;

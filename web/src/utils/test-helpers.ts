@@ -61,7 +61,7 @@ export class PerformanceTestRunner {
    */
   async runAll(): Promise<PerformanceTestResult[]> {
     this.results = []
-    
+
     for (const [name, testFn] of this.tests) {
       const result = await this.runSingle(name, testFn)
       this.results.push(result)
@@ -79,7 +79,7 @@ export class PerformanceTestRunner {
 
     try {
       await testFn()
-      
+
       const endTime = performance.now()
       const endMemory = this.getMemoryUsage()
 
@@ -90,7 +90,7 @@ export class PerformanceTestRunner {
         success: true,
         metrics: {
           loadTime: endTime - startTime,
-        }
+        },
       }
     } catch (error) {
       const endTime = performance.now()
@@ -102,7 +102,7 @@ export class PerformanceTestRunner {
         memoryUsage: endMemory - startMemory,
         success: false,
         error: error instanceof Error ? error.message : String(error),
-        metrics: {}
+        metrics: {},
       }
     }
   }
@@ -126,14 +126,14 @@ export class PerformanceTestRunner {
     const failedTests = totalTests - passedTests
     const averageDuration = this.results.reduce((sum, r) => sum + r.duration, 0) / totalTests
 
-    let report = `성능 테스트 리포트\n`
-    report += `===================\n`
+    let report = '성능 테스트 리포트\n'
+    report += '===================\n'
     report += `총 테스트: ${totalTests}\n`
     report += `성공: ${passedTests}\n`
     report += `실패: ${failedTests}\n`
     report += `평균 실행 시간: ${averageDuration.toFixed(2)}ms\n\n`
 
-    report += `상세 결과:\n`
+    report += '상세 결과:\n'
     this.results.forEach(result => {
       report += `${result.testName}: ${result.success ? 'PASS' : 'FAIL'} (${result.duration.toFixed(2)}ms)\n`
       if (!result.success && result.error) {
@@ -159,7 +159,7 @@ export class LoadTestRunner {
       minResponseTime: Infinity,
       maxResponseTime: 0,
       requestsPerSecond: 0,
-      errors: []
+      errors: [],
     }
 
     const startTime = Date.now()
@@ -169,7 +169,7 @@ export class LoadTestRunner {
 
     // 동시 요청 실행
     const promises: Promise<void>[] = []
-    
+
     for (let i = 0; i < config.concurrent; i++) {
       promises.push(this.runConcurrentRequests(config, endTime, responseTimes, errors))
     }
@@ -180,7 +180,7 @@ export class LoadTestRunner {
     results.totalRequests = responseTimes.length
     results.successfulRequests = responseTimes.filter(time => time > 0).length
     results.failedRequests = results.totalRequests - results.successfulRequests
-    
+
     if (responseTimes.length > 0) {
       results.averageResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
       results.minResponseTime = Math.min(...responseTimes.filter(time => time > 0))
@@ -192,7 +192,7 @@ export class LoadTestRunner {
 
     results.errors = Array.from(errors.entries()).map(([message, count]) => ({
       message,
-      count
+      count,
     }))
 
     return results
@@ -202,18 +202,18 @@ export class LoadTestRunner {
     config: LoadTestConfig,
     endTime: number,
     responseTimes: number[],
-    errors: Map<string, number>
+    errors: Map<string, number>,
   ): Promise<void> {
     while (Date.now() < endTime) {
       try {
         const requestStart = performance.now()
-        
+
         const response = await fetch(config.endpoint, {
           method: config.method,
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: config.payload ? JSON.stringify(config.payload) : undefined
+          body: config.payload ? JSON.stringify(config.payload) : undefined,
         })
 
         const requestEnd = performance.now()
@@ -248,9 +248,9 @@ export class RenderPerformanceTest {
   async measureRenderTime(componentName: string, renderFn: () => Promise<void>): Promise<number> {
     return new Promise(async (resolve) => {
       const startTime = performance.now()
-      
+
       await renderFn()
-      
+
       // 다음 프레임에서 측정
       requestAnimationFrame(() => {
         const endTime = performance.now()
@@ -262,11 +262,11 @@ export class RenderPerformanceTest {
   /**
    * 프레임 레이트 측정
    */
-  measureFrameRate(duration: number = 1000): Promise<number> {
+  measureFrameRate(duration = 1000): Promise<number> {
     return new Promise((resolve) => {
       let frames = 0
       const startTime = performance.now()
-      
+
       const countFrames = () => {
         frames++
         if (performance.now() - startTime < duration) {
@@ -276,7 +276,7 @@ export class RenderPerformanceTest {
           resolve(fps)
         }
       }
-      
+
       requestAnimationFrame(countFrames)
     })
   }
@@ -284,7 +284,7 @@ export class RenderPerformanceTest {
   /**
    * 메모리 누수 감지
    */
-  async detectMemoryLeaks(testFn: () => Promise<void>, iterations: number = 10): Promise<{
+  async detectMemoryLeaks(testFn: () => Promise<void>, iterations = 10): Promise<{
     initialMemory: number
     finalMemory: number
     memoryGrowth: number
@@ -296,10 +296,10 @@ export class RenderPerformanceTest {
     }
 
     const initialMemory = this.getMemoryUsage()
-    
+
     for (let i = 0; i < iterations; i++) {
       await testFn()
-      
+
       // 주기적으로 가비지 컬렉션 시도
       if (i % 3 === 0 && 'gc' in window) {
         (window as any).gc()
@@ -313,7 +313,7 @@ export class RenderPerformanceTest {
 
     const finalMemory = this.getMemoryUsage()
     const memoryGrowth = finalMemory - initialMemory
-    
+
     // 10MB 이상 증가하면 메모리 누수 의심
     const possibleLeak = memoryGrowth > 10 * 1024 * 1024
 
@@ -321,7 +321,7 @@ export class RenderPerformanceTest {
       initialMemory,
       finalMemory,
       memoryGrowth,
-      possibleLeak
+      possibleLeak,
     }
   }
 
@@ -347,24 +347,24 @@ export class NetworkPerformanceTest {
     error?: string
   }> {
     const startTime = performance.now()
-    
+
     try {
       const response = await fetch(url, options)
       const endTime = performance.now()
-      
+
       return {
         responseTime: endTime - startTime,
         statusCode: response.status,
-        success: response.ok
+        success: response.ok,
       }
     } catch (error) {
       const endTime = performance.now()
-      
+
       return {
         responseTime: endTime - startTime,
         statusCode: 0,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       }
     }
   }
@@ -388,7 +388,7 @@ export class NetworkPerformanceTest {
         name: endpoint.name,
         responseTime: result.responseTime,
         success: result.success,
-        error: result.error
+        error: result.error,
       }
     })
 
@@ -415,15 +415,15 @@ export class AccessibilityTest {
       'select:not([disabled])',
       'textarea:not([disabled])',
       '[tabindex]:not([tabindex="-1"])',
-      '[contenteditable="true"]'
+      '[contenteditable="true"]',
     ]
 
     const focusableElements = container.querySelectorAll(focusableSelectors.join(', '))
-    
+
     // 탭 순서 테스트
     let tabOrder = true
     let previousTabIndex = -1
-    
+
     focusableElements.forEach((element) => {
       const tabIndex = parseInt(element.getAttribute('tabindex') || '0')
       if (tabIndex > 0 && tabIndex < previousTabIndex) {
@@ -435,7 +435,7 @@ export class AccessibilityTest {
     return {
       focusableElements: focusableElements.length,
       tabOrder,
-      escapeHandling: true // 실제 구현에서는 ESC 키 핸들링 테스트
+      escapeHandling: true, // 실제 구현에서는 ESC 키 핸들링 테스트
     }
   }
 
@@ -450,17 +450,17 @@ export class AccessibilityTest {
     const issues = {
       missingLabels: [] as string[],
       invalidRoles: [] as string[],
-      missingDescriptions: [] as string[]
+      missingDescriptions: [] as string[],
     }
 
     // 라벨이 필요한 요소들 확인
     const interactiveElements = container.querySelectorAll('button, input, select, textarea')
     interactiveElements.forEach((element, index) => {
-      const hasLabel = element.hasAttribute('aria-label') || 
+      const hasLabel = element.hasAttribute('aria-label') ||
                       element.hasAttribute('aria-labelledby') ||
                       element.closest('label') ||
                       element.querySelector('label')
-      
+
       if (!hasLabel) {
         issues.missingLabels.push(`${element.tagName.toLowerCase()}[${index}]`)
       }
@@ -521,7 +521,7 @@ export class TestSuite {
       ...performanceResults,
       renderResults,
       networkResults,
-      accessibilityResults
+      accessibilityResults,
     ].filter(Boolean)
 
     const passedTests = allTests.filter(test => test.success).length
@@ -539,8 +539,8 @@ export class TestSuite {
         totalTests: allTests.length,
         passedTests,
         failedTests,
-        duration
-      }
+        duration,
+      },
     }
   }
 
@@ -576,13 +576,13 @@ export class TestSuite {
       return {
         success: fps > 30,
         fps,
-        testName: 'Frame Rate Test'
+        testName: 'Frame Rate Test',
       }
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
-        testName: 'Frame Rate Test'
+        testName: 'Frame Rate Test',
       }
     }
   }
@@ -593,13 +593,13 @@ export class TestSuite {
       return {
         success: result.success && result.responseTime < 1000,
         responseTime: result.responseTime,
-        testName: 'API Response Time Test'
+        testName: 'API Response Time Test',
       }
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
-        testName: 'API Response Time Test'
+        testName: 'API Response Time Test',
       }
     }
   }
@@ -609,19 +609,19 @@ export class TestSuite {
       const container = document.body
       const result = await this.accessibilityTest.testKeyboardNavigation(container)
       const ariaResult = this.accessibilityTest.validateAriaAttributes(container)
-      
+
       return {
         success: result.focusableElements > 0 && result.tabOrder && ariaResult.missingLabels.length === 0,
         focusableElements: result.focusableElements,
         tabOrder: result.tabOrder,
         missingLabels: ariaResult.missingLabels.length,
-        testName: 'Accessibility Test'
+        testName: 'Accessibility Test',
       }
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
-        testName: 'Accessibility Test'
+        testName: 'Accessibility Test',
       }
     }
   }

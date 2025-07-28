@@ -14,7 +14,7 @@ import type {
   UpdatePrivacySettingsRequest,
   UpdateProfileRequest,
   UserProfile,
-  VerifyTwoFactorRequest,
+  // VerifyTwoFactorRequest,
 } from '@/types/api'
 
 export const profileApi = {

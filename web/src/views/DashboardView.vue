@@ -249,6 +249,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:map';
 .dashboard-view {
   height: 100%;
   display: flex;
@@ -262,7 +263,7 @@ onMounted(() => {
 
 .dashboard-header {
   background: $light-bg-primary;
-  border-bottom: 1px solid map-get($gray-colors, 200);
+  border-bottom: 1px solid map.get($gray-colors, 200);
   padding: $spacing-4 $spacing-6;
 
   .dark & {
@@ -368,7 +369,7 @@ onMounted(() => {
   @include flex-between;
   margin-bottom: $spacing-4;
   padding-bottom: $spacing-3;
-  border-bottom: 1px solid map-get($gray-colors, 200);
+  border-bottom: 1px solid map.get($gray-colors, 200);
 
   .dark & {
     border-bottom-color: $dark-bg-tertiary;
@@ -387,18 +388,18 @@ onMounted(() => {
 
   .section-link {
     font-size: $font-size-sm;
-    color: map-get($primary-colors, 600);
+    color: map.get($primary-colors, 600);
     text-decoration: none;
 
     &:hover {
-      color: map-get($primary-colors, 700);
+      color: map.get($primary-colors, 700);
     }
 
     .dark & {
-      color: map-get($primary-colors, 400);
+      color: map.get($primary-colors, 400);
 
       &:hover {
-        color: map-get($primary-colors, 300);
+        color: map.get($primary-colors, 300);
       }
     }
   }
@@ -420,7 +421,7 @@ onMounted(() => {
   cursor: pointer;
 
   &:hover {
-    background: map-get($gray-colors, 50);
+    background: map.get($gray-colors, 50);
 
     .dark & {
       background: $dark-bg-tertiary;

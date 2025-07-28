@@ -1,6 +1,6 @@
 import { URL, fileURLToPath } from 'node:url'
 
-import { defineConfig, loadEnv } from 'vite'
+import { type UserConfig, defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -8,18 +8,19 @@ import { VitePWA } from 'vite-plugin-pwa'
 // import { viteImagemin } from 'vite-plugin-imagemin'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
     plugins: [
       vue(),
-      mode === 'development' ? vueDevTools() : null,
+      mode === 'development' && vueDevTools(),
       // PWA 설정
       VitePWA({
         registerType: 'autoUpdate',
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -141,12 +142,12 @@ export default defineConfig(({ mode }) => {
         },
       }),
       // 번들 분석기 (프로덕션 빌드 시)
-      mode === 'production' ? visualizer({
+      mode === 'production' && visualizer({
         filename: 'dist/bundle-analysis.html',
         open: false,
         gzipSize: true,
         brotliSize: true,
-      }) : null,
+      }),
       // 이미지 최적화 (프로덕션 빌드 시) - 일시적으로 비활성화
       // mode === 'production' ? viteImagemin({
       //   gifsicle: { optimizationLevel: 7 },

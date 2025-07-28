@@ -166,7 +166,8 @@ import {
   Trash2,
 } from '@vicons/lucide'
 
-import { type LogEntry, useDockerStore } from '@/stores/docker'
+import { useDockerStore } from '@/stores/docker'
+// import type { LogEntry } from '@/stores/docker'
 
 interface Props {
   show: boolean

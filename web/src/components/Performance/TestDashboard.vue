@@ -4,42 +4,42 @@
     <div class="dashboard-header">
       <h2 class="dashboard-title">자동화된 테스트 스위트</h2>
       <div class="header-actions">
-        <n-space>
-          <n-button 
-            @click="runAllTests" 
+        <NSpace>
+          <NButton
+            @click="runAllTests"
             :loading="isRunning"
             type="primary"
             size="medium"
           >
             🧪 전체 테스트 실행
-          </n-button>
-          <n-dropdown :options="testTypeOptions" @select="runSpecificTest">
-            <n-button :disabled="isRunning" size="medium">
+          </NButton>
+          <NDropdown :options="testTypeOptions" @select="runSpecificTest">
+            <NButton :disabled="isRunning" size="medium">
               🎯 선택 테스트 실행
-            </n-button>
-          </n-dropdown>
-          <n-button 
+            </NButton>
+          </NDropdown>
+          <NButton
             @click="clearResults"
             :disabled="!hasResults"
             size="medium"
           >
             🗑️ 결과 지우기
-          </n-button>
-          <n-button 
+          </NButton>
+          <NButton
             @click="exportResults"
             :disabled="!hasResults"
             size="medium"
           >
             📥 리포트 다운로드
-          </n-button>
-        </n-space>
+          </NButton>
+        </NSpace>
       </div>
     </div>
 
     <!-- 전체 결과 요약 -->
     <div v-if="testResults" class="results-summary">
       <div class="summary-cards">
-        <n-card class="summary-card total">
+        <NCard class="summary-card total">
           <div class="card-content">
             <div class="card-icon">🧪</div>
             <div class="card-details">
@@ -47,9 +47,9 @@
               <div class="card-label">총 테스트</div>
             </div>
           </div>
-        </n-card>
+        </NCard>
 
-        <n-card class="summary-card passed">
+        <NCard class="summary-card passed">
           <div class="card-content">
             <div class="card-icon">✅</div>
             <div class="card-details">
@@ -57,9 +57,9 @@
               <div class="card-label">통과</div>
             </div>
           </div>
-        </n-card>
+        </NCard>
 
-        <n-card class="summary-card failed">
+        <NCard class="summary-card failed">
           <div class="card-content">
             <div class="card-icon">❌</div>
             <div class="card-details">
@@ -67,9 +67,9 @@
               <div class="card-label">실패</div>
             </div>
           </div>
-        </n-card>
+        </NCard>
 
-        <n-card class="summary-card duration">
+        <NCard class="summary-card duration">
           <div class="card-content">
             <div class="card-icon">⏱️</div>
             <div class="card-details">
@@ -77,13 +77,13 @@
               <div class="card-label">소요 시간</div>
             </div>
           </div>
-        </n-card>
+        </NCard>
       </div>
 
       <!-- 성공률 진행 표시 -->
       <div class="success-rate">
         <h3>테스트 성공률</h3>
-        <n-progress
+        <NProgress
           type="line"
           :percentage="successRate"
           :color="getSuccessRateColor(successRate)"
@@ -98,22 +98,22 @@
 
     <!-- 실행 중 상태 -->
     <div v-if="isRunning" class="running-status">
-      <n-card>
+      <NCard>
         <div class="running-content">
-          <n-spin size="large" />
+          <NSpin size="large" />
           <div class="running-text">
             <h3>테스트 실행 중...</h3>
             <p>{{ currentTestStatus }}</p>
           </div>
         </div>
-      </n-card>
+      </NCard>
     </div>
 
     <!-- 테스트 카테고리별 결과 -->
     <div v-if="testResults && !isRunning" class="test-categories">
-      <n-tabs type="line" animated>
+      <NTabs type="line" animated>
         <!-- 성능 테스트 -->
-        <n-tab-pane name="performance" tab="🚀 성능 테스트">
+        <NTabPane name="performance" tab="🚀 성능 테스트">
           <div class="test-category-content">
             <div class="category-header">
               <h3>성능 테스트 결과</h3>
@@ -121,10 +121,10 @@
                 {{ testResults.performance.filter(t => t.success).length }} / {{ testResults.performance.length }} 통과
               </div>
             </div>
-            
+
             <div class="test-results-grid">
-              <div 
-                v-for="test in testResults.performance" 
+              <div
+                v-for="test in testResults.performance"
                 :key="test.testName"
                 class="test-result-card"
                 :class="{ success: test.success, failed: !test.success }"
@@ -151,10 +151,10 @@
               </div>
             </div>
           </div>
-        </n-tab-pane>
+        </NTabPane>
 
         <!-- 렌더링 테스트 -->
-        <n-tab-pane name="render" tab="🎨 렌더링">
+        <NTabPane name="render" tab="🎨 렌더링">
           <div class="test-category-content">
             <div class="category-header">
               <h3>렌더링 성능 테스트</h3>
@@ -162,9 +162,9 @@
                 {{ testResults.render?.success ? '통과' : '실패' }}
               </div>
             </div>
-            
+
             <div v-if="testResults.render" class="render-results">
-              <n-card :class="{ 'success-card': testResults.render.success, 'error-card': !testResults.render.success }">
+              <NCard :class="{ 'success-card': testResults.render.success, 'error-card': !testResults.render.success }">
                 <div class="render-content">
                   <div class="render-metric">
                     <h4>프레임 레이트 (FPS)</h4>
@@ -178,19 +178,19 @@
                       </span>
                     </div>
                   </div>
-                  
+
                   <div v-if="!testResults.render.success" class="error-details">
                     <h4>오류 정보</h4>
                     <p>{{ testResults.render.error }}</p>
                   </div>
                 </div>
-              </n-card>
+              </NCard>
             </div>
           </div>
-        </n-tab-pane>
+        </NTabPane>
 
         <!-- 네트워크 테스트 -->
-        <n-tab-pane name="network" tab="🌐 네트워크">
+        <NTabPane name="network" tab="🌐 네트워크">
           <div class="test-category-content">
             <div class="category-header">
               <h3>네트워크 성능 테스트</h3>
@@ -198,9 +198,9 @@
                 {{ testResults.network?.success ? '통과' : '실패' }}
               </div>
             </div>
-            
+
             <div v-if="testResults.network" class="network-results">
-              <n-card :class="{ 'success-card': testResults.network.success, 'error-card': !testResults.network.success }">
+              <NCard :class="{ 'success-card': testResults.network.success, 'error-card': !testResults.network.success }">
                 <div class="network-content">
                   <div class="network-metric">
                     <h4>API 응답 시간</h4>
@@ -213,19 +213,19 @@
                       </span>
                     </div>
                   </div>
-                  
+
                   <div v-if="!testResults.network.success" class="error-details">
                     <h4>오류 정보</h4>
                     <p>{{ testResults.network.error }}</p>
                   </div>
                 </div>
-              </n-card>
+              </NCard>
             </div>
           </div>
-        </n-tab-pane>
+        </NTabPane>
 
         <!-- 접근성 테스트 -->
-        <n-tab-pane name="accessibility" tab="♿ 접근성">
+        <NTabPane name="accessibility" tab="♿ 접근성">
           <div class="test-category-content">
             <div class="category-header">
               <h3>접근성 테스트</h3>
@@ -233,23 +233,23 @@
                 {{ testResults.accessibility?.success ? '통과' : '실패' }}
               </div>
             </div>
-            
+
             <div v-if="testResults.accessibility" class="accessibility-results">
-              <n-card :class="{ 'success-card': testResults.accessibility.success, 'error-card': !testResults.accessibility.success }">
+              <NCard :class="{ 'success-card': testResults.accessibility.success, 'error-card': !testResults.accessibility.success }">
                 <div class="accessibility-content">
                   <div class="accessibility-metrics">
                     <div class="metric-item">
                       <h4>포커스 가능한 요소</h4>
                       <span class="metric-value">{{ testResults.accessibility.focusableElements }}</span>
                     </div>
-                    
+
                     <div class="metric-item">
                       <h4>탭 순서</h4>
                       <span :class="['status-badge', testResults.accessibility.tabOrder ? 'good' : 'bad']">
                         {{ testResults.accessibility.tabOrder ? '올바름' : '문제 있음' }}
                       </span>
                     </div>
-                    
+
                     <div class="metric-item">
                       <h4>누락된 라벨</h4>
                       <span :class="['status-badge', testResults.accessibility.missingLabels === 0 ? 'good' : 'warning']">
@@ -257,7 +257,7 @@
                       </span>
                     </div>
                   </div>
-                  
+
                   <div v-if="!testResults.accessibility.success" class="error-details">
                     <h4>개선 권장사항</h4>
                     <ul>
@@ -268,17 +268,17 @@
                     </ul>
                   </div>
                 </div>
-              </n-card>
+              </NCard>
             </div>
           </div>
-        </n-tab-pane>
-      </n-tabs>
+        </NTabPane>
+      </NTabs>
     </div>
 
     <!-- 테스트 기록 -->
     <div v-if="testHistory.length > 0" class="test-history">
-      <n-card title="최근 테스트 기록">
-        <n-data-table
+      <NCard title="최근 테스트 기록">
+        <NDataTable
           :columns="historyColumns"
           :data="testHistory"
           :pagination="{
@@ -287,46 +287,46 @@
             pageSizes: [5, 10, 20]
           }"
         />
-      </n-card>
+      </NCard>
     </div>
 
     <!-- 도움말 섹션 -->
     <div v-if="!testResults && !isRunning" class="help-section">
-      <n-card title="테스트 스위트 가이드">
+      <NCard title="테스트 스위트 가이드">
         <div class="help-content">
           <div class="test-type-info">
             <h4>🚀 성능 테스트</h4>
             <p>Core Web Vitals, 메모리 사용량, DOM 조작 성능을 측정합니다.</p>
           </div>
-          
+
           <div class="test-type-info">
             <h4>🎨 렌더링 테스트</h4>
             <p>프레임 레이트, 렌더링 시간, 메모리 누수를 확인합니다.</p>
           </div>
-          
+
           <div class="test-type-info">
             <h4>🌐 네트워크 테스트</h4>
             <p>API 응답 시간, 에러율, 처리량을 테스트합니다.</p>
           </div>
-          
+
           <div class="test-type-info">
             <h4>♿ 접근성 테스트</h4>
             <p>키보드 네비게이션, ARIA 속성, 스크린 리더 호환성을 검증합니다.</p>
           </div>
-          
+
           <div class="start-guide">
             <p><strong>시작하기:</strong> 상단의 "전체 테스트 실행" 버튼을 클릭하여 모든 테스트를 실행하거나, 특정 카테고리만 선택하여 테스트할 수 있습니다.</p>
           </div>
         </div>
-      </n-card>
+      </NCard>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { NCard, NButton, NSpace, NDropdown, NProgress, NSpin, NTabs, NTabPane, NDataTable } from 'naive-ui'
-import { testSuite, type PerformanceTestResult } from '@/utils/test-helpers'
+import { computed, onMounted, ref } from 'vue'
+import { NButton, NCard, NDataTable, NDropdown, NProgress, NSpace, NSpin, NTabPane, NTabs } from 'naive-ui'
+import { type PerformanceTestResult, testSuite } from '@/utils/test-helpers'
 
 interface TestResults {
   performance: PerformanceTestResult[]
@@ -370,7 +370,7 @@ const testTypeOptions = [
   { label: '🚀 성능 테스트', key: 'performance' },
   { label: '🎨 렌더링 테스트', key: 'render' },
   { label: '🌐 네트워크 테스트', key: 'network' },
-  { label: '♿ 접근성 테스트', key: 'accessibility' }
+  { label: '♿ 접근성 테스트', key: 'accessibility' },
 ]
 
 // 테스트 기록 테이블 컬럼
@@ -378,63 +378,63 @@ const historyColumns = [
   {
     title: '시간',
     key: 'timestamp',
-    render: (row: TestHistoryItem) => new Date(row.timestamp).toLocaleString()
+    render: (row: TestHistoryItem) => new Date(row.timestamp).toLocaleString(),
   },
   {
     title: '테스트 유형',
-    key: 'type'
+    key: 'type',
   },
   {
     title: '총 테스트',
-    key: 'totalTests'
+    key: 'totalTests',
   },
   {
     title: '통과',
     key: 'passedTests',
-    render: (row: TestHistoryItem) => `✅ ${row.passedTests}`
+    render: (row: TestHistoryItem) => `✅ ${row.passedTests}`,
   },
   {
     title: '실패',
     key: 'failedTests',
-    render: (row: TestHistoryItem) => `❌ ${row.failedTests}`
+    render: (row: TestHistoryItem) => `❌ ${row.failedTests}`,
   },
   {
     title: '성공률',
     key: 'successRate',
-    render: (row: TestHistoryItem) => `${row.successRate.toFixed(1)}%`
+    render: (row: TestHistoryItem) => `${row.successRate.toFixed(1)}%`,
   },
   {
     title: '소요 시간',
     key: 'duration',
-    render: (row: TestHistoryItem) => formatDuration(row.duration)
-  }
+    render: (row: TestHistoryItem) => formatDuration(row.duration),
+  },
 ]
 
 // 메서드들
 const runAllTests = async () => {
   isRunning.value = true
   currentTestStatus.value = '테스트 스위트 초기화 중...'
-  
+
   try {
     currentTestStatus.value = '성능 테스트 실행 중...'
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     currentTestStatus.value = '렌더링 테스트 실행 중...'
     await new Promise(resolve => setTimeout(resolve, 300))
-    
+
     currentTestStatus.value = '네트워크 테스트 실행 중...'
     await new Promise(resolve => setTimeout(resolve, 400))
-    
+
     currentTestStatus.value = '접근성 테스트 실행 중...'
     await new Promise(resolve => setTimeout(resolve, 300))
-    
+
     currentTestStatus.value = '결과 분석 중...'
     const results = await testSuite.runFullSuite()
     testResults.value = results
-    
+
     // 테스트 기록에 추가
     addToHistory('전체 테스트', results.summary)
-    
+
   } catch (error) {
     console.error('테스트 실행 중 오류:', error)
   } finally {
@@ -449,21 +449,21 @@ const runSpecificTest = async (key: string) => {
     performance: '성능 테스트',
     render: '렌더링 테스트',
     network: '네트워크 테스트',
-    accessibility: '접근성 테스트'
+    accessibility: '접근성 테스트',
   }
-  
+
   currentTestStatus.value = `${testTypeMap[key]} 실행 중...`
-  
+
   try {
     // 실제 구현에서는 특정 테스트만 실행
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 모의 결과 생성
     const mockResults = createMockResults(key)
     testResults.value = mockResults
-    
+
     addToHistory(testTypeMap[key], mockResults.summary)
-    
+
   } catch (error) {
     console.error('테스트 실행 중 오류:', error)
   } finally {
@@ -478,7 +478,7 @@ const clearResults = () => {
 
 const exportResults = () => {
   if (!testResults.value) return
-  
+
   const report = generateTestReport(testResults.value)
   const blob = new Blob([report], { type: 'text/plain' })
   const url = URL.createObjectURL(blob)
@@ -498,16 +498,16 @@ const addToHistory = (type: string, summary: TestResults['summary']) => {
     passedTests: summary.passedTests,
     failedTests: summary.failedTests,
     duration: summary.duration,
-    successRate: summary.totalTests > 0 ? (summary.passedTests / summary.totalTests) * 100 : 0
+    successRate: summary.totalTests > 0 ? (summary.passedTests / summary.totalTests) * 100 : 0,
   }
-  
+
   testHistory.value.unshift(historyItem)
-  
+
   // 최대 50개까지만 저장
   if (testHistory.value.length > 50) {
     testHistory.value = testHistory.value.slice(0, 50)
   }
-  
+
   // 로컬 스토리지에 저장
   localStorage.setItem('test-history', JSON.stringify(testHistory.value))
 }
@@ -575,8 +575,8 @@ const createMockResults = (testType: string): TestResults => {
       totalTests: 1,
       passedTests: 1,
       failedTests: 0,
-      duration: 1000 + Math.random() * 2000
-    }
+      duration: 1000 + Math.random() * 2000,
+    },
   }
 
   switch (testType) {
@@ -587,22 +587,22 @@ const createMockResults = (testType: string): TestResults => {
           duration: 150 + Math.random() * 100,
           memoryUsage: 1024 * 1024 * (2 + Math.random() * 3),
           success: Math.random() > 0.2,
-          metrics: {}
-        }
+          metrics: {},
+        },
       ]
       break
     case 'render':
       mockResults.render = {
         success: Math.random() > 0.1,
         fps: 45 + Math.random() * 15,
-        testName: 'Frame Rate Test'
+        testName: 'Frame Rate Test',
       }
       break
     case 'network':
       mockResults.network = {
         success: Math.random() > 0.15,
         responseTime: 200 + Math.random() * 800,
-        testName: 'API Response Time Test'
+        testName: 'API Response Time Test',
       }
       break
     case 'accessibility':
@@ -611,7 +611,7 @@ const createMockResults = (testType: string): TestResults => {
         focusableElements: 15 + Math.floor(Math.random() * 10),
         tabOrder: Math.random() > 0.2,
         missingLabels: Math.floor(Math.random() * 3),
-        testName: 'Accessibility Test'
+        testName: 'Accessibility Test',
       }
       break
   }
@@ -620,48 +620,48 @@ const createMockResults = (testType: string): TestResults => {
 }
 
 const generateTestReport = (results: TestResults): string => {
-  let report = `테스트 리포트\n`
+  let report = '테스트 리포트\n'
   report += `생성 시간: ${new Date().toLocaleString()}\n`
-  report += `===========================================\n\n`
-  
-  report += `전체 요약:\n`
+  report += '===========================================\n\n'
+
+  report += '전체 요약:\n'
   report += `- 총 테스트: ${results.summary.totalTests}\n`
   report += `- 통과: ${results.summary.passedTests}\n`
   report += `- 실패: ${results.summary.failedTests}\n`
   report += `- 성공률: ${successRate.value.toFixed(1)}%\n`
   report += `- 소요 시간: ${formatDuration(results.summary.duration)}\n\n`
-  
+
   if (results.performance.length > 0) {
-    report += `성능 테스트 결과:\n`
+    report += '성능 테스트 결과:\n'
     results.performance.forEach(test => {
       report += `- ${test.testName}: ${test.success ? 'PASS' : 'FAIL'} (${formatDuration(test.duration)})\n`
       if (!test.success && test.error) {
         report += `  오류: ${test.error}\n`
       }
     })
-    report += `\n`
+    report += '\n'
   }
-  
+
   if (results.render) {
-    report += `렌더링 테스트 결과:\n`
+    report += '렌더링 테스트 결과:\n'
     report += `- FPS: ${results.render.fps?.toFixed(1) || 'N/A'}\n`
     report += `- 상태: ${results.render.success ? 'PASS' : 'FAIL'}\n\n`
   }
-  
+
   if (results.network) {
-    report += `네트워크 테스트 결과:\n`
+    report += '네트워크 테스트 결과:\n'
     report += `- 응답 시간: ${formatDuration(results.network.responseTime)}\n`
     report += `- 상태: ${results.network.success ? 'PASS' : 'FAIL'}\n\n`
   }
-  
+
   if (results.accessibility) {
-    report += `접근성 테스트 결과:\n`
+    report += '접근성 테스트 결과:\n'
     report += `- 포커스 가능한 요소: ${results.accessibility.focusableElements}\n`
     report += `- 탭 순서: ${results.accessibility.tabOrder ? '올바름' : '문제 있음'}\n`
     report += `- 누락된 라벨: ${results.accessibility.missingLabels}개\n`
     report += `- 상태: ${results.accessibility.success ? 'PASS' : 'FAIL'}\n\n`
   }
-  
+
   return report
 }
 
@@ -1045,22 +1045,22 @@ onMounted(() => {
   .test-dashboard {
     padding: 16px;
   }
-  
+
   .dashboard-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .summary-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .test-metrics {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .accessibility-metrics {
     grid-template-columns: 1fr;
   }

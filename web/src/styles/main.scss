@@ -1,5 +1,6 @@
 // AICLI Web - 메인 스타일시트
 
+@use 'sass:map';
 @use './variables' as *;
 @use './mixins' as *;
 
@@ -33,20 +34,20 @@ body {
 
 // 링크 스타일
 a {
-  color: map-get($primary-colors, 600);
+  color: map.get($primary-colors, 600);
   text-decoration: none;
   transition: $transition-base;
 
   &:hover {
-    color: map-get($primary-colors, 700);
+    color: map.get($primary-colors, 700);
     text-decoration: underline;
   }
 
   .dark & {
-    color: map-get($primary-colors, 400);
+    color: map.get($primary-colors, 400);
 
     &:hover {
-      color: map-get($primary-colors, 300);
+      color: map.get($primary-colors, 300);
     }
   }
 }
@@ -134,7 +135,7 @@ input, textarea, select {
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
-  
+
   &:hover {
     background: rgba(0, 0, 0, 0.3);
   }
@@ -142,7 +143,7 @@ input, textarea, select {
 
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.3);
   }
@@ -188,13 +189,13 @@ input, textarea, select {
 .text-xl { font-size: $font-size-xl; }
 .text-2xl { font-size: $font-size-2xl; }
 
-.text-primary { color: map-get($primary-colors, 600); }
+.text-primary { color: map.get($primary-colors, 600); }
 .text-success { color: $success; }
 .text-warning { color: $warning; }
 .text-error { color: $error; }
 .text-info { color: $info; }
 
-.bg-primary { background-color: map-get($primary-colors, 500); }
+.bg-primary { background-color: map.get($primary-colors, 500); }
 .bg-success { background-color: $success; }
 .bg-warning { background-color: $warning; }
 .bg-error { background-color: $error; }
@@ -517,11 +518,11 @@ input, textarea, select {
   .touch-only {
     display: block;
   }
-  
+
   .no-touch-only {
     display: none;
   }
-  
+
   // 터치 기기에서 호버 효과 제거
   .hover-disabled {
     &:hover {
@@ -535,7 +536,7 @@ input, textarea, select {
   .touch-only {
     display: none;
   }
-  
+
   .no-touch-only {
     display: block;
   }
@@ -546,7 +547,7 @@ input, textarea, select {
   .portrait-only {
     display: block;
   }
-  
+
   .landscape-only {
     display: none;
   }
@@ -556,7 +557,7 @@ input, textarea, select {
   .portrait-only {
     display: none;
   }
-  
+
   .landscape-only {
     display: block;
   }

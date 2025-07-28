@@ -115,10 +115,9 @@ import {
 } from 'vue'
 import {
   Chart,
-  ChartConfiguration,
-  ChartType,
   registerables,
 } from 'chart.js'
+import type { ChartConfiguration, ChartType } from 'chart.js'
 import type {
   AdvancedChartProps,
   ChartData,
