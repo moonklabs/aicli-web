@@ -3,17 +3,17 @@
  * Core Web Vitals 측정 및 성능 지표 추적
  */
 
-import { onCLS, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals'
+import { type Metric, onCLS, onFCP, onLCP, onTTFB } from 'web-vitals'
 
 export interface PerformanceMetrics {
   // Core Web Vitals
   lcp?: number // Largest Contentful Paint
   cls?: number // Cumulative Layout Shift
-  
+
   // Additional Metrics
   fcp?: number // First Contentful Paint
   ttfb?: number // Time to First Byte
-  
+
   // Custom Metrics
   pageLoadTime?: number
   resourceLoadTime?: number
@@ -42,30 +42,30 @@ class PerformanceMonitor {
    */
   init() {
     if (this.isInitialized) return
-    
+
     this.isInitialized = true
-    
+
     // Core Web Vitals 측정
     onLCP((metric: Metric) => {
       this.metrics.lcp = metric.value
       this.checkAndReport()
     })
-    
+
     onCLS((metric: Metric) => {
       this.metrics.cls = metric.value
       this.checkAndReport()
     })
-    
+
     onFCP((metric: Metric) => {
       this.metrics.fcp = metric.value
       this.checkAndReport()
     })
-    
+
     onTTFB((metric: Metric) => {
       this.metrics.ttfb = metric.value
       this.checkAndReport()
     })
-    
+
     // 페이지 로드 완료 시 추가 메트릭 수집
     this.collectAdditionalMetrics()
   }
@@ -90,15 +90,15 @@ class PerformanceMonitor {
   private calculateScores(): PerformanceReport['scores'] {
     const lcpScore = this.getScore(this.metrics.lcp, [2500, 4000])
     const clsScore = this.getScore(this.metrics.cls, [0.1, 0.25])
-    
+
     // 전체 점수는 가장 낮은 점수로 결정
     const allScores = [lcpScore, clsScore]
-    const overallScore = allScores.includes('poor') 
-      ? 'poor' 
-      : allScores.includes('needs-improvement') 
-        ? 'needs-improvement' 
+    const overallScore = allScores.includes('poor')
+      ? 'poor'
+      : allScores.includes('needs-improvement')
+        ? 'needs-improvement'
         : 'good'
-    
+
     return {
       lcp: lcpScore,
       cls: clsScore,
@@ -110,13 +110,13 @@ class PerformanceMonitor {
    * 개별 메트릭 점수 계산
    */
   private getScore(
-    value: number | undefined, 
-    thresholds: [number, number]
+    value: number | undefined,
+    thresholds: [number, number],
   ): 'good' | 'needs-improvement' | 'poor' {
     if (value === undefined) return 'poor'
-    
+
     const [good, needsImprovement] = thresholds
-    
+
     if (value <= good) return 'good'
     if (value <= needsImprovement) return 'needs-improvement'
     return 'poor'
@@ -141,11 +141,11 @@ class PerformanceMonitor {
    */
   private collectTimingMetrics() {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-    
+
     if (navigation) {
       this.metrics.navigationTiming = navigation
       this.metrics.pageLoadTime = navigation.loadEventEnd - navigation.navigationStart
-      
+
       // 리소스 로딩 시간 계산
       const resources = performance.getEntriesByType('resource')
       const totalResourceTime = resources.reduce((total, resource) => {
@@ -153,7 +153,7 @@ class PerformanceMonitor {
       }, 0)
       this.metrics.resourceLoadTime = totalResourceTime
     }
-    
+
     this.checkAndReport()
   }
 
@@ -163,7 +163,7 @@ class PerformanceMonitor {
   private checkAndReport() {
     // 주요 메트릭이 모두 수집되었는지 확인
     if (!this.metrics.lcp || !this.metrics.fcp) return
-    
+
     const report: PerformanceReport = {
       url: window.location.href,
       timestamp: Date.now(),
@@ -171,7 +171,7 @@ class PerformanceMonitor {
       metrics: this.getMetrics(),
       scores: this.calculateScores(),
     }
-    
+
     // 콜백 실행
     this.callbacks.forEach(callback => {
       try {
@@ -203,7 +203,7 @@ class PerformanceMonitor {
    */
   getResourceLoadingAnalysis() {
     const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-    
+
     const analysis = {
       totalResources: resources.length,
       slowestResources: resources
@@ -215,7 +215,7 @@ class PerformanceMonitor {
         }))
         .sort((a, b) => b.duration - a.duration)
         .slice(0, 10),
-      
+
       resourcesByType: resources.reduce((acc, resource) => {
         const type = this.getResourceType(resource.name)
         if (!acc[type]) {
@@ -227,7 +227,7 @@ class PerformanceMonitor {
         return acc
       }, {} as Record<string, { count: number; totalSize: number; totalDuration: number }>),
     }
-    
+
     return analysis
   }
 
@@ -271,9 +271,9 @@ export function createPerformancePlugin() {
     install(app: any) {
       app.config.globalProperties.$performance = performanceMonitor
       app.provide('performance', performanceMonitor)
-      
+
       // 앱 시작 시 초기화
       performanceMonitor.init()
-    }
+    },
   }
 }

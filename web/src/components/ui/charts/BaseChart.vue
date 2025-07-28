@@ -64,7 +64,7 @@
       </button>
 
       <button
-        v-if="export?.enabled"
+        v-if="exportOptions?.enabled"
         @click="showExportMenu = !showExportMenu"
         class="toolbar-btn"
         title="내보내기"
@@ -238,7 +238,7 @@ const chartConfiguration = computed((): ChartConfiguration => ({
 }))
 
 const availableExportFormats = computed(() => {
-  return props.export?.formats || ['png', 'jpg', 'svg']
+  return props.exportOptions?.formats || ['png', 'jpg', 'svg']
 })
 
 // 차트 생성 및 업데이트
@@ -441,10 +441,10 @@ const exportChart = (format: string) => {
 
   try {
     const canvas = chartInstance.value.canvas
-    const filename = props.export?.filename || `chart.${format}`
+    const filename = props.exportOptions?.filename || `chart.${format}`
 
     if (format === 'png' || format === 'jpg') {
-      const imageData = canvas.toDataURL(`image/${format}`, props.export?.quality || 0.8)
+      const imageData = canvas.toDataURL(`image/${format}`, props.exportOptions?.quality || 0.8)
       downloadImage(imageData, filename)
     } else if (format === 'svg') {
       // SVG 내보내기는 추가 라이브러리 필요

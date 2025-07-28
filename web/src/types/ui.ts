@@ -14,6 +14,15 @@ export type ComponentStatus = 'loading' | 'success' | 'error' | 'warning' | 'idl
 // 테마 모드 타입
 export type ThemeMode = 'light' | 'dark' | 'auto';
 
+// 접근성 테마 타입
+export type AccessibilityTheme = 'default' | 'high-contrast' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'monochrome';
+
+// 모션 감소 설정 타입
+export type MotionPreference = 'auto' | 'reduce' | 'no-preference';
+
+// 폰트 크기 설정 타입
+export type FontSizePreference = 'small' | 'medium' | 'large' | 'extra-large';
+
 // 방향 타입
 export type Direction = 'horizontal' | 'vertical';
 
@@ -166,6 +175,37 @@ export interface ThemeConfig {
   borderRadius?: string;
   fontSize?: string;
   fontFamily?: string;
+  accessibilityTheme?: AccessibilityTheme;
+  motionPreference?: MotionPreference;
+  fontSizePreference?: FontSizePreference;
+  highContrastMode?: boolean;
+  reducedTransparency?: boolean;
+  forceFocusVisible?: boolean;
+}
+
+// 접근성 설정 타입
+export interface AccessibilitySettings {
+  // 시각적 접근성
+  highContrast: boolean;
+  reducedMotion: boolean;
+  reducedTransparency: boolean;
+  forceFocusVisible: boolean;
+  colorBlindnessFilter: AccessibilityTheme;
+  fontSize: FontSizePreference;
+
+  // 키보드 네비게이션
+  keyboardNavigation: boolean;
+  skipLinks: boolean;
+  tabTrapEnabled: boolean;
+
+  // 스크린 리더
+  announcePageChanges: boolean;
+  announceFormErrors: boolean;
+  announceLiveRegions: boolean;
+
+  // 타이밍 설정
+  extendedTimeouts: boolean;
+  pauseAnimations: boolean;
 }
 
 // 접근성 속성
@@ -179,6 +219,18 @@ export interface AccessibilityProps {
   'aria-required'?: boolean;
   'aria-invalid'?: boolean;
   'aria-live'?: 'off' | 'polite' | 'assertive';
+  'aria-busy'?: boolean;
+  'aria-current'?: boolean | 'page' | 'step' | 'location' | 'date' | 'time';
+  'aria-pressed'?: boolean;
+  'aria-selected'?: boolean;
+  'aria-checked'?: boolean | 'mixed';
+  'aria-level'?: number;
+  'aria-setsize'?: number;
+  'aria-posinset'?: number;
+  'aria-valuemin'?: number;
+  'aria-valuemax'?: number;
+  'aria-valuenow'?: number;
+  'aria-valuetext'?: string;
   role?: string;
   tabindex?: number;
 }
@@ -466,7 +518,7 @@ export interface ChartTableIntegration {
 export interface AdvancedChartProps extends BaseChartProps {
   theme?: ChartTheme;
   realTime?: RealTimeChartConfig;
-  export?: ChartExportConfig;
+  exportOptions?: ChartExportConfig;
   zoom?: ChartZoomConfig;
   tableIntegration?: ChartTableIntegration;
   accessibility?: {
