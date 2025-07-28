@@ -1,45 +1,26 @@
-#!/bin/bash
-# AICode Manager 테스트 서버 종료 스크립트
+#\!/bin/bash
+# 테스트 서버 중지 스크립트
 
-set -e
+echo "🛑 테스트 서버 중지 중..."
 
-echo "🛑 AICode Manager 테스트 서버 종료..."
-
-# 색상 정의
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-PID_FILE=".test-server.pid"
-
-# PID 파일 확인
-if [ ! -f "$PID_FILE" ]; then
-    echo -e "${YELLOW}⚠️  실행 중인 테스트 서버가 없습니다.${NC}"
-    
-    # Docker 컨테이너 확인
-    if docker-compose ps 2>/dev/null | grep -q "Up"; then
-        echo -e "${BLUE}🐳 Docker 컨테이너가 실행 중입니다.${NC}"
-        read -p "Docker 컨테이너도 종료하시겠습니까? (y/N) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            docker-compose down
-            echo -e "${GREEN}✅ Docker 컨테이너 종료 완료${NC}"
-        fi
-    fi
-    exit 0
+# API 서버 프로세스 찾아서 종료
+API_PIDS=$(pgrep -f "aicli-api")
+if [ -n "$API_PIDS" ]; then
+    echo "API 서버 프로세스 종료: $API_PIDS"
+    kill $API_PIDS 2>/dev/null
 fi
 
-# PID 파일에서 프로세스 종료
-echo "프로세스 종료 중..."
-while read pid; do
-    if kill -0 "$pid" 2>/dev/null; then
-        echo "  - PID $pid 종료"
-        kill "$pid"
-    fi
-done < "$PID_FILE"
+# 웹 개발 서버 종료
+WEB_PIDS=$(pgrep -f "vite")
+if [ -n "$WEB_PIDS" ]; then
+    echo "웹 개발 서버 종료: $WEB_PIDS"
+    kill $WEB_PIDS 2>/dev/null
+fi
 
-# PID 파일 삭제
-rm -f "$PID_FILE"
+# Docker 컨테이너 정리
+if [ -f "docker-compose.test.yml" ]; then
+    echo "Docker 컨테이너 정리..."
+    docker-compose -f docker-compose.test.yml down 2>/dev/null
+fi
 
-echo -e "${GREEN}✅ 테스트 서버 종료 완료${NC}"
+echo "✅ 모든 테스트 서버가 종료되었습니다."
