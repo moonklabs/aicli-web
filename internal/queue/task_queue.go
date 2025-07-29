@@ -246,7 +246,7 @@ func (tq *TaskQueue) processTask(ctx context.Context, task *models.Task, workerI
 	log.Printf("워커 %d: 태스크 %s 처리 시작", workerID, task.ID)
 
 	// 취소 상태 확인
-	if task.Status == models.TaskCancelled {
+	if task.Status == models.TaskCanceled {
 		log.Printf("워커 %d: 태스크 %s 이미 취소됨", workerID, task.ID)
 		return
 	}

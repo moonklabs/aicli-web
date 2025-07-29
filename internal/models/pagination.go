@@ -4,6 +4,12 @@ import (
 	"math"
 )
 
+// 정렬 방향 상수
+const (
+	SortOrderAsc  = "asc"
+	SortOrderDesc = "desc"
+)
+
 // PaginationRequest 페이지네이션 요청 파라미터
 type PaginationRequest struct {
 	// 페이지 번호 (1부터 시작)
@@ -49,8 +55,8 @@ func (p *PaginationRequest) Normalize() {
 	if p.Sort == "" {
 		p.Sort = "created_at"
 	}
-	if p.Order != "asc" && p.Order != "desc" {
-		p.Order = "desc"
+	if p.Order != SortOrderAsc && p.Order != SortOrderDesc {
+		p.Order = SortOrderDesc
 	}
 }
 

@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+// SQLite 트랜잭션 레벨 상수
+const (
+	SQLiteLevelDeferred   = "DEFERRED"
+	SQLiteLevelImmediate  = "IMMEDIATE"
+	SQLiteLevelExclusive  = "EXCLUSIVE"
+)
+
 // Transaction 트랜잭션 인터페이스
 type Transaction interface {
 	// Commit 트랜잭션 커밋
@@ -177,15 +184,15 @@ func (il IsolationLevel) String() string {
 func (il IsolationLevel) SQLiteLevel() string {
 	switch il {
 	case IsolationLevelReadUncommitted:
-		return "DEFERRED"
+		return SQLiteLevelDeferred
 	case IsolationLevelReadCommitted:
-		return "DEFERRED"
+		return SQLiteLevelDeferred
 	case IsolationLevelRepeatableRead:
-		return "IMMEDIATE"
+		return SQLiteLevelImmediate
 	case IsolationLevelSerializable:
-		return "EXCLUSIVE"
+		return SQLiteLevelExclusive
 	default:
-		return "DEFERRED"
+		return SQLiteLevelDeferred
 	}
 }
 

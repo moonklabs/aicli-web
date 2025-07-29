@@ -618,7 +618,7 @@ func (v *TaskBusinessValidator) validateStatusTransition(newStatus models.TaskSt
 	case models.TaskCompleted, models.TaskFailed:
 		// running -> completed/failed만 허용
 		return nil
-	case models.TaskCancelled:
+	case models.TaskCanceled:
 		// pending/running -> cancelled 허용
 		return nil
 	default:

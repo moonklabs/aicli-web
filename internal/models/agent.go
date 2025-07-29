@@ -27,6 +27,11 @@ const (
 	AgentStatusTerminated AgentStatus = "terminated"
 )
 
+// 공통 문자열 상수
+const (
+	DeletedStatusString = "deleted"
+)
+
 // AgentConfig 에이전트 설정
 type AgentConfig struct {
 	// AI 모델 설정
@@ -73,9 +78,9 @@ type Agent struct {
 	Description string      `json:"description,omitempty" gorm:"type:varchar(500)" validate:"omitempty,max=500"`
 
 	// 상태 정보
-	LastActivity time.Time  `json:"last_activity,omitempty" gorm:"index" validate:"-"`
-	ErrorMessage string     `json:"error_message,omitempty" gorm:"type:text" validate:"omitempty,max=2000"`
-	Version      int        `json:"version" gorm:"default:1" validate:"min=1"`
+	LastActivity time.Time `json:"last_activity,omitempty" gorm:"index" validate:"-"`
+	ErrorMessage string    `json:"error_message,omitempty" gorm:"type:text" validate:"omitempty,max=2000"`
+	Version      int       `json:"version" gorm:"default:1" validate:"min=1"`
 
 	// 타임스탬프
 	CreatedAt time.Time  `json:"created_at" gorm:"not null" validate:"-"`
@@ -91,21 +96,21 @@ type Agent struct {
 
 // AgentResponse 에이전트 응답 모델
 type AgentResponse struct {
-	ID           string       `json:"id"`
-	ProjectID    string       `json:"project_id"`
-	Name         string       `json:"name"`
-	Type         AgentType    `json:"type"`
-	Status       AgentStatus  `json:"status"`
-	WorktreeID   string       `json:"worktree_id,omitempty"`
-	ContainerID  string       `json:"container_id,omitempty"`
-	SessionID    string       `json:"session_id,omitempty"`
-	Config       AgentConfig  `json:"config"`
-	Description  string       `json:"description,omitempty"`
-	LastActivity time.Time    `json:"last_activity,omitempty"`
-	ErrorMessage string       `json:"error_message,omitempty"`
-	CreatedAt    time.Time    `json:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
-	Project      *Project     `json:"project,omitempty"`
+	ID           string      `json:"id"`
+	ProjectID    string      `json:"project_id"`
+	Name         string      `json:"name"`
+	Type         AgentType   `json:"type"`
+	Status       AgentStatus `json:"status"`
+	WorktreeID   string      `json:"worktree_id,omitempty"`
+	ContainerID  string      `json:"container_id,omitempty"`
+	SessionID    string      `json:"session_id,omitempty"`
+	Config       AgentConfig `json:"config"`
+	Description  string      `json:"description,omitempty"`
+	LastActivity time.Time   `json:"last_activity,omitempty"`
+	ErrorMessage string      `json:"error_message,omitempty"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
+	Project      *Project    `json:"project,omitempty"`
 }
 
 // ToResponse Agent를 AgentResponse로 변환
@@ -205,7 +210,7 @@ func (a *Agent) GetDisplayStatus() string {
 	defer a.mu.RUnlock()
 
 	if a.DeletedAt != nil {
-		return "deleted"
+		return DeletedStatusString
 	}
 	return string(a.Status)
 }
@@ -216,10 +221,10 @@ func (a *Agent) GetResourceUsage() map[string]interface{} {
 	defer a.mu.RUnlock()
 
 	return map[string]interface{}{
-		"memory_limit": a.Config.MemoryLimit,
-		"cpu_limit":    a.Config.CPULimit,
-		"container_id": a.ContainerID,
-		"status":       a.Status,
+		"memory_limit":  a.Config.MemoryLimit,
+		"cpu_limit":     a.Config.CPULimit,
+		"container_id":  a.ContainerID,
+		"status":        a.Status,
 		"last_activity": a.LastActivity,
 	}
 }

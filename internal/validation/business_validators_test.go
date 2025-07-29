@@ -428,7 +428,7 @@ func TestValidateStatusTransition(t *testing.T) {
 		},
 		{
 			name:      "cancelled 상태로 전환",
-			newStatus: models.TaskCancelled,
+			newStatus: models.TaskCanceled,
 			wantError: false,
 		},
 		{

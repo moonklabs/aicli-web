@@ -13,17 +13,17 @@ linters-settings:
     min-len: 2
     min-occurrences: 2
   depguard:
-    list-type: blacklist
-    packages:
-      - github.com/sirupsen/logrus
-    packages-with-error-message:
-      - github.com/sirupsen/logrus: "logging is allowed only by logutils.Log"
+    rules:
+      main:
+        deny:
+          - pkg: "github.com/sirupsen/logrus"
+            desc: "logging is allowed only by logutils.Log"
   misspell:
     locale: US
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/drumcap/aicli-web
+    local-prefixes: github.com/aicli/aicli-web
   revive:
     min-confidence: 0
 
@@ -37,7 +37,6 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - exportloopref
     - exhaustive
     - funlen
     - gochecknoinits
@@ -45,7 +44,7 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -71,15 +70,10 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - funlen
         - goconst
-
-run:
-  timeout: 5m
-  issues-exit-code: 1
-  tests: true
-  skip-dirs:
+  exclude-dirs:
     - vendor
     - testdata
     - examples
@@ -87,9 +81,14 @@ run:
     - builtin
     - .aiwf
     - docs
-  skip-files:
+  exclude-files:
     - ".*\\.my\\.go$"
     - lib/bad_*.go
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

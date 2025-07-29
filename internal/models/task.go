@@ -13,14 +13,14 @@ const (
 	TaskRunning   TaskStatus = "running"   // 실행 중
 	TaskCompleted TaskStatus = "completed" // 완료
 	TaskFailed    TaskStatus = "failed"    // 실패
-	TaskCancelled TaskStatus = "cancelled" // 취소됨
+	TaskCanceled TaskStatus = "canceled" // 취소됨
 
 	// Alias for consistency with usage
 	TaskStatusPending   = TaskPending
 	TaskStatusRunning   = TaskRunning
 	TaskStatusCompleted = TaskCompleted
 	TaskStatusFailed    = TaskFailed
-	TaskStatusCancelled = TaskCancelled
+	TaskStatusCanceled = TaskCanceled
 )
 
 // Task 태스크 모델
@@ -87,7 +87,7 @@ func (t *Task) IsActive() bool {
 
 // IsTerminal 태스크가 종료 상태인지 확인
 func (t *Task) IsTerminal() bool {
-	return t.Status == TaskCompleted || t.Status == TaskFailed || t.Status == TaskCancelled
+	return t.Status == TaskCompleted || t.Status == TaskFailed || t.Status == TaskCanceled
 }
 
 // CanCancel 태스크를 취소할 수 있는지 확인
@@ -145,7 +145,7 @@ func (t *Task) SetCancelled() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.Status == TaskPending || t.Status == TaskRunning {
-		t.Status = TaskCancelled
+		t.Status = TaskCanceled
 		now := time.Now()
 		t.CompletedAt = &now
 

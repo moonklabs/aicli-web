@@ -291,7 +291,7 @@ func TestTaskService_Cancel(t *testing.T) {
 				assert.NoError(t, getErr)
 				// ToResponse를 사용하여 안전하게 상태 확인
 				cancelledResponse := cancelledTask.ToResponse()
-				assert.Equal(t, models.TaskCancelled, cancelledResponse.Status)
+				assert.Equal(t, models.TaskCanceled, cancelledResponse.Status)
 			}
 		})
 	}

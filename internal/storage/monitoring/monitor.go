@@ -9,13 +9,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/sirupsen/logrus"
 )
 
 // QueryMonitor 쿼리 모니터링 시스템
 type QueryMonitor struct {
 	slowQueryThreshold time.Duration
-	logger             *logrus.Logger
 	mu                 sync.RWMutex
 	metrics            *QueryMetrics
 	queryLog           []QueryLog
@@ -87,7 +85,6 @@ type MonitorConfig struct {
 	MaxLogSize         int
 	EnablePrometheus   bool
 	EnableLogging      bool
-	LogLevel           logrus.Level
 }
 
 // DefaultMonitorConfig 기본 모니터링 설정
@@ -97,15 +94,11 @@ func DefaultMonitorConfig() MonitorConfig {
 		MaxLogSize:         1000,
 		EnablePrometheus:   true,
 		EnableLogging:      true,
-		LogLevel:           logrus.InfoLevel,
 	}
 }
 
 // NewQueryMonitor 새 쿼리 모니터 생성
 func NewQueryMonitor(config MonitorConfig) *QueryMonitor {
-	logger := logrus.New()
-	logger.SetLevel(config.LogLevel)
-
 	var metrics *QueryMetrics
 	if config.EnablePrometheus {
 		metrics = &QueryMetrics{
@@ -145,7 +138,6 @@ func NewQueryMonitor(config MonitorConfig) *QueryMonitor {
 
 	return &QueryMonitor{
 		slowQueryThreshold: config.SlowQueryThreshold,
-		logger:             logger,
 		metrics:            metrics,
 		queryLog:           make([]QueryLog, 0, config.MaxLogSize),
 		maxLogSize:         config.MaxLogSize,
@@ -243,15 +235,9 @@ func (qt *QueryTracker) End(err error) {
 func (qm *QueryMonitor) logQuery(queryLog QueryLog) {
 	// 슬로우 쿼리 특별 처리
 	if queryLog.IsSlow {
-		qm.logger.WithFields(logrus.Fields{
-			"query_id":     queryLog.ID,
-			"operation":    queryLog.Operation,
-			"table":        queryLog.Table,
-			"duration_ms":  queryLog.Duration.Milliseconds(),
-			"storage_type": queryLog.Context.StorageType,
-			"user_id":      queryLog.Context.UserID,
-			"session_id":   queryLog.Context.SessionID,
-		}).Warn("Slow query detected")
+		log.Printf("WARN: Slow query detected - query_id=%s operation=%s table=%s duration_ms=%d storage_type=%s user_id=%s session_id=%s",
+			queryLog.ID, queryLog.Operation, queryLog.Table, queryLog.Duration.Milliseconds(),
+			queryLog.Context.StorageType, queryLog.Context.UserID, queryLog.Context.SessionID)
 
 		// 슬로우 쿼리 알림 (필요시 확장)
 		qm.alertSlowQuery(queryLog)
@@ -259,23 +245,13 @@ func (qm *QueryMonitor) logQuery(queryLog QueryLog) {
 
 	// 에러 쿼리 로깅
 	if queryLog.Error != "" {
-		qm.logger.WithFields(logrus.Fields{
-			"query_id":     queryLog.ID,
-			"operation":    queryLog.Operation,
-			"table":        queryLog.Table,
-			"error":        queryLog.Error,
-			"storage_type": queryLog.Context.StorageType,
-		}).Error("Query failed")
+		log.Printf("ERROR: Query failed - query_id=%s operation=%s table=%s error=%s storage_type=%s",
+			queryLog.ID, queryLog.Operation, queryLog.Table, queryLog.Error, queryLog.Context.StorageType)
 	}
 
 	// 일반 쿼리 로깅 (Debug 레벨)
-	qm.logger.WithFields(logrus.Fields{
-		"query_id":     queryLog.ID,
-		"operation":    queryLog.Operation,
-		"table":        queryLog.Table,
-		"duration_ms":  queryLog.Duration.Milliseconds(),
-		"storage_type": queryLog.Context.StorageType,
-	}).Debug("Query executed")
+	log.Printf("DEBUG: Query executed - query_id=%s operation=%s table=%s duration_ms=%d storage_type=%s",
+		queryLog.ID, queryLog.Operation, queryLog.Table, queryLog.Duration.Milliseconds(), queryLog.Context.StorageType)
 
 	// 메모리에 로그 저장 (순환 버퍼)
 	qm.mu.Lock()
