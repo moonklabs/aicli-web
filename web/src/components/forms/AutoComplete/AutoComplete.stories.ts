@@ -141,7 +141,7 @@ const countries = [
   'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Thailand',
   'Tunisia', 'Turkey', 'Uganda', 'Ukraine', 'United Arab Emirates',
   'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Venezuela',
-  'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe',
 ]
 
 // 기본 스토리
@@ -249,15 +249,15 @@ export const WithAsyncLoading: Story = {
 
         loading.value = true
         action('search')(query)
-        
+
         // API 호출 시뮬레이션
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // 필터링된 결과 반환
         suggestions.value = countries.filter(country =>
-          country.toLowerCase().includes(query.toLowerCase())
+          country.toLowerCase().includes(query.toLowerCase()),
         ).slice(0, 10)
-        
+
         loading.value = false
       }
 

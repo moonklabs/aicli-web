@@ -98,7 +98,7 @@ export const Default: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -136,7 +136,7 @@ export const WithInitialValue: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -169,7 +169,7 @@ export const WithDateRange: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -203,7 +203,7 @@ export const PastDatesOnly: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -237,7 +237,7 @@ export const FutureDatesOnly: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -273,7 +273,7 @@ export const EnglishLocale: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -304,7 +304,7 @@ export const MondayFirst: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -338,7 +338,7 @@ export const CustomFormat: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -369,7 +369,7 @@ export const NotClearable: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -400,7 +400,7 @@ export const Disabled: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -429,7 +429,7 @@ export const BirthdayPicker: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,
@@ -465,7 +465,7 @@ export const ReservationPicker: Story = {
     components: { DatePicker },
     setup() {
       const date = ref(args.modelValue)
-      
+
       return {
         args,
         date,

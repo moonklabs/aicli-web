@@ -385,18 +385,18 @@ export const WithAsyncSearch: Story = {
       const handleSearch = async (query: string) => {
         loading.value = true
         action('search')(query)
-        
+
         // 비동기 검색 시뮬레이션
         await new Promise(resolve => setTimeout(resolve, 500))
-        
+
         if (query) {
           filteredOptions.value = args.options.filter(option =>
-            option.label.toLowerCase().includes(query.toLowerCase())
+            option.label.toLowerCase().includes(query.toLowerCase()),
           )
         } else {
           filteredOptions.value = args.options
         }
-        
+
         loading.value = false
       }
 

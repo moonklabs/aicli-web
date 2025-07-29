@@ -113,7 +113,7 @@ export const Default: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -158,7 +158,7 @@ export const WithInitialValue: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -247,7 +247,7 @@ export const WithCustomPresets: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -279,7 +279,7 @@ export const WithDateRestrictions: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -313,7 +313,7 @@ export const PastDatesOnly: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -347,7 +347,7 @@ export const FutureDatesOnly: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -381,7 +381,7 @@ export const WithoutPresets: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -415,7 +415,7 @@ export const EnglishLocale: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -449,7 +449,7 @@ export const CustomFormat: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -483,7 +483,7 @@ export const NotClearable: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -517,7 +517,7 @@ export const Disabled: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,
@@ -590,7 +590,7 @@ export const ReportPeriod: Story = {
     components: { DateRangePicker },
     setup() {
       const dateRange = ref<DateRange | null>(args.modelValue)
-      
+
       return {
         args,
         dateRange,

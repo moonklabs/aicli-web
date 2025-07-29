@@ -27,11 +27,15 @@ global.ResizeObserver = vi.fn(() => ({
 }))
 
 // IntersectionObserver 모킹
-global.IntersectionObserver = vi.fn(() => ({
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   disconnect: vi.fn(),
   unobserve: vi.fn(),
-}))
+  root: null,
+  rootMargin: '',
+  thresholds: [0],
+  takeRecords: vi.fn().mockReturnValue([])
+})) as any
 
 // matchMedia 모킹
 Object.defineProperty(window, 'matchMedia', {
@@ -72,32 +76,45 @@ global.URL.createObjectURL = vi.fn(() => 'blob:test')
 global.URL.revokeObjectURL = vi.fn()
 
 // HTMLCanvasElement.getContext 모킹
-HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
-  fillRect: vi.fn(),
-  clearRect: vi.fn(),
-  getImageData: vi.fn(() => ({ data: new Array(4) })),
-  putImageData: vi.fn(),
-  createImageData: vi.fn(() => ({ data: new Array(4) })),
-  setTransform: vi.fn(),
-  drawImage: vi.fn(),
-  save: vi.fn(),
-  fillText: vi.fn(),
-  restore: vi.fn(),
-  beginPath: vi.fn(),
-  moveTo: vi.fn(),
-  lineTo: vi.fn(),
-  closePath: vi.fn(),
-  stroke: vi.fn(),
-  translate: vi.fn(),
-  scale: vi.fn(),
-  rotate: vi.fn(),
-  arc: vi.fn(),
-  fill: vi.fn(),
-  measureText: vi.fn(() => ({ width: 0 })),
-  transform: vi.fn(),
-  rect: vi.fn(),
-  clip: vi.fn(),
-}))
+HTMLCanvasElement.prototype.getContext = vi.fn((contextId: string) => {
+  if (contextId === '2d') {
+    return {
+      // 메서드들
+      fillRect: vi.fn(),
+      clearRect: vi.fn(),
+      getImageData: vi.fn(() => ({ data: new Array(4) })),
+      putImageData: vi.fn(),
+      createImageData: vi.fn(() => ({ data: new Array(4) })),
+      setTransform: vi.fn(),
+      drawImage: vi.fn(),
+      save: vi.fn(),
+      fillText: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      stroke: vi.fn(),
+      translate: vi.fn(),
+      scale: vi.fn(),
+      rotate: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      measureText: vi.fn(() => ({ width: 0 })),
+      transform: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
+      // 필수 속성들
+      canvas: document.createElement('canvas'),
+      globalAlpha: 1,
+      globalCompositeOperation: 'source-over',
+      strokeStyle: '#000000',
+      fillStyle: '#000000',
+      lineWidth: 1,
+    } as any
+  }
+  return null
+}) as any
 
 // Vue Test Utils 글로벌 스텁 설정
 config.global.stubs = {

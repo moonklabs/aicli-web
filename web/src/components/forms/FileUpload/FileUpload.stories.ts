@@ -98,7 +98,7 @@ export const Default: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -142,7 +142,7 @@ export const ImageOnly: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -176,7 +176,7 @@ export const SingleFile: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -210,7 +210,7 @@ export const DocumentsOnly: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -241,13 +241,13 @@ export const WithAutoUpload: Story = {
       for (let i = 0; i <= 100; i += 10) {
         await new Promise(resolve => setTimeout(resolve, 200))
         onProgress(i)
-        
+
         // 취소 확인
         if (controller.signal.aborted) {
           throw new Error('Upload cancelled')
         }
       }
-      
+
       // 가상의 업로드 결과 반환
       return {
         url: `https://example.com/uploads/${file.name}`,
@@ -259,7 +259,7 @@ export const WithAutoUpload: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -301,7 +301,7 @@ export const WithSizeLimit: Story = {
     setup() {
       const files = ref<File[]>(args.modelValue)
       const errors = ref<string[]>([])
-      
+
       return {
         args,
         files,
@@ -343,7 +343,7 @@ export const WithFileLimit: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -379,7 +379,7 @@ export const WithoutBatchActions: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -412,7 +412,7 @@ export const Disabled: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,
@@ -440,7 +440,7 @@ export const WithUploadError: Story = {
         await new Promise(resolve => setTimeout(resolve, 100))
         onProgress(i)
       }
-      
+
       // 에러 발생
       throw new Error(`Failed to upload ${file.name}`)
     },
@@ -449,7 +449,7 @@ export const WithUploadError: Story = {
     components: { FileUpload },
     setup() {
       const files = ref<File[]>(args.modelValue)
-      
+
       return {
         args,
         files,

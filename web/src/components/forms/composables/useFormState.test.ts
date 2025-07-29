@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { useFormState } from './useFormState'
 
@@ -8,7 +8,7 @@ describe('useFormState composable', () => {
       const initialValues = {
         name: 'John',
         email: 'john@example.com',
-        age: 30
+        age: 30,
       }
 
       const { formData } = useFormState({ initialValues })
@@ -26,7 +26,7 @@ describe('useFormState composable', () => {
   describe('필드 업데이트', () => {
     it('updateField로 개별 필드를 업데이트할 수 있어야 한다', () => {
       const { formData, updateField } = useFormState({
-        initialValues: { name: 'John', age: 30 }
+        initialValues: { name: 'John', age: 30 },
       })
 
       updateField('name', 'Jane')
@@ -41,10 +41,10 @@ describe('useFormState composable', () => {
           user: {
             name: 'John',
             address: {
-              city: 'Seoul'
-            }
-          }
-        }
+              city: 'Seoul',
+            },
+          },
+        },
       })
 
       updateField('user.address.city', 'Busan')
@@ -56,8 +56,8 @@ describe('useFormState composable', () => {
     it('배열 인덱스를 사용하여 업데이트할 수 있어야 한다', () => {
       const { formData, updateField } = useFormState({
         initialValues: {
-          hobbies: ['reading', 'gaming', 'coding']
-        }
+          hobbies: ['reading', 'gaming', 'coding'],
+        },
       })
 
       updateField('hobbies[1]', 'swimming')
@@ -69,7 +69,7 @@ describe('useFormState composable', () => {
   describe('필드 값 가져오기', () => {
     it('getFieldValue로 필드 값을 가져올 수 있어야 한다', () => {
       const { getFieldValue } = useFormState({
-        initialValues: { name: 'John', age: 30 }
+        initialValues: { name: 'John', age: 30 },
       })
 
       expect(getFieldValue('name')).toBe('John')
@@ -81,10 +81,10 @@ describe('useFormState composable', () => {
         initialValues: {
           user: {
             profile: {
-              bio: 'Hello world'
-            }
-          }
-        }
+              bio: 'Hello world',
+            },
+          },
+        },
       })
 
       expect(getFieldValue('user.profile.bio')).toBe('Hello world')
@@ -92,7 +92,7 @@ describe('useFormState composable', () => {
 
     it('존재하지 않는 필드는 undefined를 반환해야 한다', () => {
       const { getFieldValue } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       expect(getFieldValue('email')).toBeUndefined()
@@ -102,7 +102,7 @@ describe('useFormState composable', () => {
   describe('isDirty 상태', () => {
     it('초기 상태에서는 isDirty가 false여야 한다', () => {
       const { isDirty } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       expect(isDirty.value).toBe(false)
@@ -110,7 +110,7 @@ describe('useFormState composable', () => {
 
     it('필드가 변경되면 isDirty가 true가 되어야 한다', () => {
       const { isDirty, updateField } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       updateField('name', 'Jane')
@@ -120,7 +120,7 @@ describe('useFormState composable', () => {
 
     it('원래 값으로 되돌리면 isDirty가 false가 되어야 한다', () => {
       const { isDirty, updateField } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       updateField('name', 'Jane')
@@ -132,7 +132,7 @@ describe('useFormState composable', () => {
 
     it('dirtyFields로 변경된 필드를 추적할 수 있어야 한다', () => {
       const { dirtyFields, updateField } = useFormState({
-        initialValues: { name: 'John', email: 'john@example.com' }
+        initialValues: { name: 'John', email: 'john@example.com' },
       })
 
       expect(dirtyFields.value).toEqual([])
@@ -162,7 +162,7 @@ describe('useFormState composable', () => {
 
     it('reset 후 isDirty가 false가 되어야 한다', () => {
       const { isDirty, updateField, reset } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       updateField('name', 'Jane')
@@ -174,7 +174,7 @@ describe('useFormState composable', () => {
 
     it('resetField로 특정 필드만 초기화할 수 있어야 한다', () => {
       const { formData, updateField, resetField } = useFormState({
-        initialValues: { name: 'John', email: 'john@example.com' }
+        initialValues: { name: 'John', email: 'john@example.com' },
       })
 
       updateField('name', 'Jane')
@@ -188,7 +188,7 @@ describe('useFormState composable', () => {
 
     it('새로운 값으로 리셋할 수 있어야 한다', () => {
       const { formData, reset } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       const newValues = { name: 'Jane', email: 'jane@example.com' }
@@ -201,7 +201,7 @@ describe('useFormState composable', () => {
   describe('폼 제출', () => {
     it('setValues로 여러 필드를 한 번에 설정할 수 있어야 한다', () => {
       const { formData, setValues } = useFormState({
-        initialValues: { name: 'John', age: 30 }
+        initialValues: { name: 'John', age: 30 },
       })
 
       setValues({ name: 'Jane', age: 25, email: 'jane@example.com' })
@@ -209,13 +209,13 @@ describe('useFormState composable', () => {
       expect(formData.value).toEqual({
         name: 'Jane',
         age: 25,
-        email: 'jane@example.com'
+        email: 'jane@example.com',
       })
     })
 
     it('부분 업데이트가 가능해야 한다', () => {
       const { formData, setValues } = useFormState({
-        initialValues: { name: 'John', age: 30, city: 'Seoul' }
+        initialValues: { name: 'John', age: 30, city: 'Seoul' },
       })
 
       setValues({ name: 'Jane' }, true) // merge = true
@@ -223,7 +223,7 @@ describe('useFormState composable', () => {
       expect(formData.value).toEqual({
         name: 'Jane',
         age: 30,
-        city: 'Seoul'
+        city: 'Seoul',
       })
     })
 
@@ -238,7 +238,7 @@ describe('useFormState composable', () => {
   describe('필드 터치 상태', () => {
     it('초기 상태에서는 어떤 필드도 터치되지 않아야 한다', () => {
       const { touchedFields } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       expect(touchedFields.value).toEqual([])
@@ -246,7 +246,7 @@ describe('useFormState composable', () => {
 
     it('touchField로 필드를 터치 상태로 만들 수 있어야 한다', () => {
       const { touchedFields, touchField } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       touchField('name')
@@ -256,7 +256,7 @@ describe('useFormState composable', () => {
 
     it('isFieldTouched로 특정 필드의 터치 상태를 확인할 수 있어야 한다', () => {
       const { isFieldTouched, touchField } = useFormState({
-        initialValues: { name: 'John', email: 'john@example.com' }
+        initialValues: { name: 'John', email: 'john@example.com' },
       })
 
       expect(isFieldTouched('name')).toBe(false)
@@ -269,7 +269,7 @@ describe('useFormState composable', () => {
 
     it('reset 시 터치 상태도 초기화되어야 한다', () => {
       const { touchedFields, touchField, reset } = useFormState({
-        initialValues: { name: 'John' }
+        initialValues: { name: 'John' },
       })
 
       touchField('name')
@@ -323,13 +323,13 @@ describe('useFormState composable', () => {
       const onChange = vi.fn()
       const { updateField } = useFormState({
         initialValues: { name: 'John' },
-        onChange
+        onChange,
       })
 
       updateField('name', 'Jane')
 
       expect(onChange).toHaveBeenCalledWith({
-        name: 'Jane'
+        name: 'Jane',
       })
     })
 
@@ -337,14 +337,14 @@ describe('useFormState composable', () => {
       const onChange = vi.fn()
       const { setValues } = useFormState({
         initialValues: { name: 'John' },
-        onChange
+        onChange,
       })
 
       setValues({ name: 'Jane', age: 25 })
 
       expect(onChange).toHaveBeenCalledWith({
         name: 'Jane',
-        age: 25
+        age: 25,
       })
     })
   })
@@ -353,8 +353,8 @@ describe('useFormState composable', () => {
     it('배열 필드에 항목을 추가할 수 있어야 한다', () => {
       const { formData, arrayHelpers } = useFormState({
         initialValues: {
-          hobbies: ['reading', 'gaming']
-        }
+          hobbies: ['reading', 'gaming'],
+        },
       })
 
       const { push } = arrayHelpers('hobbies')
@@ -366,8 +366,8 @@ describe('useFormState composable', () => {
     it('배열 필드에서 항목을 제거할 수 있어야 한다', () => {
       const { formData, arrayHelpers } = useFormState({
         initialValues: {
-          hobbies: ['reading', 'gaming', 'coding']
-        }
+          hobbies: ['reading', 'gaming', 'coding'],
+        },
       })
 
       const { remove } = arrayHelpers('hobbies')
@@ -379,8 +379,8 @@ describe('useFormState composable', () => {
     it('배열 필드의 항목을 이동할 수 있어야 한다', () => {
       const { formData, arrayHelpers } = useFormState({
         initialValues: {
-          hobbies: ['reading', 'gaming', 'coding']
-        }
+          hobbies: ['reading', 'gaming', 'coding'],
+        },
       })
 
       const { move } = arrayHelpers('hobbies')
@@ -392,8 +392,8 @@ describe('useFormState composable', () => {
     it('배열 필드에 여러 항목을 삽입할 수 있어야 한다', () => {
       const { formData, arrayHelpers } = useFormState({
         initialValues: {
-          hobbies: ['reading', 'gaming']
-        }
+          hobbies: ['reading', 'gaming'],
+        },
       })
 
       const { insert } = arrayHelpers('hobbies')
@@ -411,12 +411,12 @@ describe('useFormState composable', () => {
             level2: {
               level3: {
                 level4: {
-                  value: 'deep'
-                }
-              }
-            }
-          }
-        }
+                  value: 'deep',
+                },
+              },
+            },
+          },
+        },
       })
 
       updateField('level1.level2.level3.level4.value', 'updated')
@@ -428,8 +428,8 @@ describe('useFormState composable', () => {
       const { formData, updateField } = useFormState({
         initialValues: {
           name: undefined,
-          age: null
-        }
+          age: null,
+        },
       })
 
       expect(formData.value.name).toBeUndefined()
@@ -443,8 +443,8 @@ describe('useFormState composable', () => {
       const { formData, updateField } = useFormState({
         initialValues: {
           numbers: [1, 2, 3],
-          strings: ['a', 'b', 'c']
-        }
+          strings: ['a', 'b', 'c'],
+        },
       })
 
       updateField('numbers[1]', 5)
@@ -456,7 +456,7 @@ describe('useFormState composable', () => {
 
     it('동적으로 필드를 추가할 수 있어야 한다', () => {
       const { formData, updateField } = useFormState({
-        initialValues: {}
+        initialValues: {},
       })
 
       updateField('newField', 'value')
@@ -465,8 +465,8 @@ describe('useFormState composable', () => {
       expect(formData.value).toEqual({
         newField: 'value',
         nested: {
-          field: 'nestedValue'
-        }
+          field: 'nestedValue',
+        },
       })
     })
   })

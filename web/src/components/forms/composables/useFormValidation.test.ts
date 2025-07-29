@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 import { useFormValidation } from './useFormValidation'
 
@@ -7,12 +7,12 @@ describe('useFormValidation composable', () => {
     it('필수 필드 검증이 작동해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          name: { required: true, message: '이름은 필수입니다' }
-        }
+          name: { required: true, message: '이름은 필수입니다' },
+        },
       })
 
       const isValid = await validate({ name: '' })
-      
+
       expect(isValid).toBe(false)
       expect(errors.value.name).toBe('이름은 필수입니다')
     })
@@ -20,12 +20,12 @@ describe('useFormValidation composable', () => {
     it('값이 있을 때 필수 필드 검증을 통과해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          name: { required: true }
-        }
+          name: { required: true },
+        },
       })
 
       const isValid = await validate({ name: 'John' })
-      
+
       expect(isValid).toBe(true)
       expect(errors.value.name).toBeUndefined()
     })
@@ -35,11 +35,11 @@ describe('useFormValidation composable', () => {
     it('이메일 형식을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          email: { 
+          email: {
             type: 'email',
-            message: '올바른 이메일 형식이 아닙니다'
-          }
-        }
+            message: '올바른 이메일 형식이 아닙니다',
+          },
+        },
       })
 
       let isValid = await validate({ email: 'invalid-email' })
@@ -54,8 +54,8 @@ describe('useFormValidation composable', () => {
     it('URL 형식을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          website: { type: 'url' }
-        }
+          website: { type: 'url' },
+        },
       })
 
       let isValid = await validate({ website: 'not-a-url' })
@@ -68,8 +68,8 @@ describe('useFormValidation composable', () => {
     it('숫자 타입을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          age: { type: 'number' }
-        }
+          age: { type: 'number' },
+        },
       })
 
       let isValid = await validate({ age: 'not a number' })
@@ -84,11 +84,11 @@ describe('useFormValidation composable', () => {
     it('최소 길이를 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          password: { 
+          password: {
             minLength: 8,
-            message: '비밀번호는 8자 이상이어야 합니다'
-          }
-        }
+            message: '비밀번호는 8자 이상이어야 합니다',
+          },
+        },
       })
 
       let isValid = await validate({ password: 'short' })
@@ -102,11 +102,11 @@ describe('useFormValidation composable', () => {
     it('최대 길이를 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          username: { 
+          username: {
             maxLength: 10,
-            message: '사용자명은 10자 이하여야 합니다'
-          }
-        }
+            message: '사용자명은 10자 이하여야 합니다',
+          },
+        },
       })
 
       let isValid = await validate({ username: 'verylongusername' })
@@ -121,8 +121,8 @@ describe('useFormValidation composable', () => {
     it('최소값을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          age: { min: 18, message: '18세 이상만 가능합니다' }
-        }
+          age: { min: 18, message: '18세 이상만 가능합니다' },
+        },
       })
 
       let isValid = await validate({ age: 15 })
@@ -136,8 +136,8 @@ describe('useFormValidation composable', () => {
     it('최대값을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          quantity: { max: 100 }
-        }
+          quantity: { max: 100 },
+        },
       })
 
       let isValid = await validate({ quantity: 150 })
@@ -152,11 +152,11 @@ describe('useFormValidation composable', () => {
     it('정규식 패턴을 검증해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          phone: { 
+          phone: {
             pattern: /^\d{3}-\d{4}-\d{4}$/,
-            message: '전화번호 형식이 올바르지 않습니다 (000-0000-0000)'
-          }
-        }
+            message: '전화번호 형식이 올바르지 않습니다 (000-0000-0000)',
+          },
+        },
       })
 
       let isValid = await validate({ phone: '1234567890' })
@@ -172,15 +172,15 @@ describe('useFormValidation composable', () => {
     it('동기 커스텀 검증이 작동해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          password: { 
+          password: {
             validator: (value: string) => {
               if (value.includes('password')) {
                 return '비밀번호에 "password"를 포함할 수 없습니다'
               }
               return true
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       let isValid = await validate({ password: 'mypassword123' })
@@ -194,18 +194,18 @@ describe('useFormValidation composable', () => {
     it('비동기 커스텀 검증이 작동해야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          username: { 
+          username: {
             asyncValidator: async (value: string) => {
               // API 호출 시뮬레이션
               await new Promise(resolve => setTimeout(resolve, 10))
-              
+
               if (value === 'admin') {
                 return '이미 사용 중인 사용자명입니다'
               }
               return true
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       let isValid = await validate({ username: 'admin' })
@@ -221,7 +221,7 @@ describe('useFormValidation composable', () => {
     it('여러 규칙을 동시에 적용할 수 있어야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          password: { 
+          password: {
             required: true,
             minLength: 8,
             maxLength: 20,
@@ -230,10 +230,10 @@ describe('useFormValidation composable', () => {
               required: '비밀번호는 필수입니다',
               minLength: '최소 8자 이상이어야 합니다',
               maxLength: '최대 20자까지 가능합니다',
-              pattern: '영문과 숫자를 포함해야 합니다'
-            }
-          }
-        }
+              pattern: '영문과 숫자를 포함해야 합니다',
+            },
+          },
+        },
       })
 
       // 빈 값
@@ -263,20 +263,20 @@ describe('useFormValidation composable', () => {
       const { validate, errors } = useFormValidation({
         rules: {
           password: { required: true },
-          confirmPassword: { 
+          confirmPassword: {
             validator: (value: string, formData: any) => {
               if (value !== formData.password) {
                 return '비밀번호가 일치하지 않습니다'
               }
               return true
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       const formData = {
         password: 'secure123',
-        confirmPassword: 'different'
+        confirmPassword: 'different',
       }
 
       let isValid = await validate(formData)
@@ -292,7 +292,7 @@ describe('useFormValidation composable', () => {
   describe('동적 규칙', () => {
     it('조건부 검증이 가능해야 한다', async () => {
       const isBusinessAccount = ref(false)
-      
+
       const { validate, errors } = useFormValidation({
         rules: {
           businessNumber: {
@@ -300,10 +300,10 @@ describe('useFormValidation composable', () => {
             pattern: /^\d{3}-\d{2}-\d{5}$/,
             message: {
               required: '사업자등록번호는 필수입니다',
-              pattern: '올바른 사업자등록번호 형식이 아닙니다'
-            }
-          }
-        }
+              pattern: '올바른 사업자등록번호 형식이 아닙니다',
+            },
+          },
+        },
       })
 
       // 개인 계정일 때는 검증 통과
@@ -323,13 +323,13 @@ describe('useFormValidation composable', () => {
       const { validateField, errors } = useFormValidation({
         rules: {
           email: { required: true, type: 'email' },
-          password: { required: true, minLength: 8 }
-        }
+          password: { required: true, minLength: 8 },
+        },
       })
 
       const formData = {
         email: 'invalid-email',
-        password: ''
+        password: '',
       }
 
       // 이메일 필드만 검증
@@ -342,8 +342,8 @@ describe('useFormValidation composable', () => {
     it('clearErrors로 에러를 초기화할 수 있어야 한다', async () => {
       const { validate, clearErrors, errors } = useFormValidation({
         rules: {
-          email: { required: true }
-        }
+          email: { required: true },
+        },
       })
 
       await validate({ email: '' })
@@ -357,8 +357,8 @@ describe('useFormValidation composable', () => {
       const { validate, clearFieldError, errors } = useFormValidation({
         rules: {
           email: { required: true },
-          password: { required: true }
-        }
+          password: { required: true },
+        },
       })
 
       await validate({ email: '', password: '' })
@@ -372,7 +372,7 @@ describe('useFormValidation composable', () => {
 
     it('setError로 수동으로 에러를 설정할 수 있어야 한다', () => {
       const { setError, errors } = useFormValidation({
-        rules: {}
+        rules: {},
       })
 
       setError('email', '서버 에러가 발생했습니다')
@@ -384,13 +384,13 @@ describe('useFormValidation composable', () => {
     it('isValidating 상태가 올바르게 업데이트되어야 한다', async () => {
       const { validate, isValidating } = useFormValidation({
         rules: {
-          username: { 
+          username: {
             asyncValidator: async () => {
               await new Promise(resolve => setTimeout(resolve, 10))
               return true
-            }
-          }
-        }
+            },
+          },
+        },
       })
 
       expect(isValidating.value).toBe(false)
@@ -405,8 +405,8 @@ describe('useFormValidation composable', () => {
     it('isDirty 상태가 검증 후 true가 되어야 한다', async () => {
       const { validate, isDirty } = useFormValidation({
         rules: {
-          email: { required: true }
-        }
+          email: { required: true },
+        },
       })
 
       expect(isDirty.value).toBe(false)
@@ -418,8 +418,8 @@ describe('useFormValidation composable', () => {
     it('hasErrors computed가 올바르게 작동해야 한다', async () => {
       const { validate, hasErrors } = useFormValidation({
         rules: {
-          email: { required: true }
-        }
+          email: { required: true },
+        },
       })
 
       expect(hasErrors.value).toBe(false)
@@ -436,9 +436,9 @@ describe('useFormValidation composable', () => {
     it('validateOnChange 옵션이 작동해야 한다', async () => {
       const { errors, handleFieldChange } = useFormValidation({
         rules: {
-          email: { required: true, type: 'email' }
+          email: { required: true, type: 'email' },
         },
-        validateOnChange: true
+        validateOnChange: true,
       })
 
       await handleFieldChange('email', 'invalid-email')
@@ -451,9 +451,9 @@ describe('useFormValidation composable', () => {
     it('validateOnBlur 옵션이 작동해야 한다', async () => {
       const { errors, handleFieldBlur } = useFormValidation({
         rules: {
-          email: { required: true }
+          email: { required: true },
         },
-        validateOnBlur: true
+        validateOnBlur: true,
       })
 
       await handleFieldBlur('email', { email: '' })
@@ -463,8 +463,8 @@ describe('useFormValidation composable', () => {
     it('기본 에러 메시지가 적용되어야 한다', async () => {
       const { validate, errors } = useFormValidation({
         rules: {
-          email: { required: true, type: 'email' }
-        }
+          email: { required: true, type: 'email' },
+        },
       })
 
       await validate({ email: '' })

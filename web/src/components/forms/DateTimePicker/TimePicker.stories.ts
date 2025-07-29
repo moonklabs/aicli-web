@@ -96,7 +96,7 @@ export const Default: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -134,7 +134,7 @@ export const WithInitialValue: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -166,7 +166,7 @@ export const Use24HourFormat: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -201,7 +201,7 @@ export const WithTimeRange: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -235,7 +235,7 @@ export const Minute15Step: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -269,7 +269,7 @@ export const Minute30Step: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -305,7 +305,7 @@ export const MorningOnly: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -338,7 +338,7 @@ export const AfternoonOnly: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -369,7 +369,7 @@ export const NotClearable: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -400,7 +400,7 @@ export const Disabled: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -430,7 +430,7 @@ export const AppointmentTime: Story = {
     components: { TimePicker },
     setup() {
       const time = ref(args.modelValue)
-      
+
       return {
         args,
         time,
@@ -467,7 +467,7 @@ export const AlarmTime: Story = {
     setup() {
       const time = ref(args.modelValue)
       const isAlarmSet = ref(true)
-      
+
       return {
         args,
         time,

@@ -2,7 +2,7 @@
  * 성능 테스트 헬퍼 유틸리티
  */
 
-import { performance } from '@/utils/performance'
+import { performanceMonitor } from '@/utils/performance'
 
 export interface PerformanceTestResult {
   testName: string
