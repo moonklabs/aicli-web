@@ -64,8 +64,8 @@ func (a *AgentStorage) GetByID(ctx context.Context, id string) (*models.Agent, e
 	return agent.Clone(), nil
 }
 
-// GetByProjectID 프로젝트 ID로 에이전트 목록 조회
-func (a *AgentStorage) GetByProjectID(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
+// GetByProjectIDWithPagination 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 포함)
+func (a *AgentStorage) GetByProjectIDWithPagination(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
@@ -153,6 +153,10 @@ func (a *AgentStorage) Update(ctx context.Context, id string, updates map[string
 		agent.ErrorMessage = errorMessage
 	}
 
+	if lastActivity, ok := updates["last_activity"].(time.Time); ok {
+		agent.LastActivity = lastActivity
+	}
+
 	agent.UpdatedAt = time.Now()
 	return nil
 }
@@ -190,8 +194,8 @@ func (a *AgentStorage) ExistsByName(ctx context.Context, projectID, name string)
 	return false, nil
 }
 
-// GetByStatus 상태별 에이전트 목록 조회
-func (a *AgentStorage) GetByStatus(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
+// GetByStatusWithPagination 상태별 에이전트 목록 조회 (페이지네이션 포함)
+func (a *AgentStorage) GetByStatusWithPagination(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
@@ -290,4 +294,64 @@ func (a *AgentStorage) GetByContainerID(ctx context.Context, containerID string)
 	}
 
 	return nil, storage.ErrNotFound
+}
+
+// GetByProjectID 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 없이)
+func (a *AgentStorage) GetByProjectID(ctx context.Context, projectID string) ([]*models.Agent, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	var filteredAgents []*models.Agent
+	for _, agent := range a.agents {
+		if agent.ProjectID == projectID && agent.DeletedAt == nil {
+			filteredAgents = append(filteredAgents, agent.Clone())
+		}
+	}
+
+	// 생성 시간 기준 정렬 (최신순)
+	sort.Slice(filteredAgents, func(i, j int) bool {
+		return filteredAgents[i].CreatedAt.After(filteredAgents[j].CreatedAt)
+	})
+
+	return filteredAgents, nil
+}
+
+// GetByStatus 상태별 에이전트 목록 조회 (페이지네이션 없이)
+func (a *AgentStorage) GetByStatus(ctx context.Context, status models.AgentStatus) ([]*models.Agent, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	var filteredAgents []*models.Agent
+	for _, agent := range a.agents {
+		if agent.Status == status && agent.DeletedAt == nil {
+			filteredAgents = append(filteredAgents, agent.Clone())
+		}
+	}
+
+	// 마지막 활동 시간 기준 정렬 (최근순)
+	sort.Slice(filteredAgents, func(i, j int) bool {
+		return filteredAgents[i].LastActivity.After(filteredAgents[j].LastActivity)
+	})
+
+	return filteredAgents, nil
+}
+
+// GetAll 모든 에이전트 목록 조회
+func (a *AgentStorage) GetAll(ctx context.Context) ([]*models.Agent, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	var allAgents []*models.Agent
+	for _, agent := range a.agents {
+		if agent.DeletedAt == nil {
+			allAgents = append(allAgents, agent.Clone())
+		}
+	}
+
+	// 생성 시간 기준 정렬 (최신순)
+	sort.Slice(allAgents, func(i, j int) bool {
+		return allAgents[i].CreatedAt.After(allAgents[j].CreatedAt)
+	})
+
+	return allAgents, nil
 }

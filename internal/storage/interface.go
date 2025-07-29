@@ -113,8 +113,11 @@ type AgentStorage interface {
 	// GetByID ID로 에이전트 조회
 	GetByID(ctx context.Context, id string) (*models.Agent, error)
 
-	// GetByProjectID 프로젝트 ID로 에이전트 목록 조회
-	GetByProjectID(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
+	// GetByProjectID 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 없이)
+	GetByProjectID(ctx context.Context, projectID string) ([]*models.Agent, error)
+
+	// GetByProjectIDWithPagination 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 포함)
+	GetByProjectIDWithPagination(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
 
 	// Update 에이전트 업데이트
 	Update(ctx context.Context, id string, updates map[string]interface{}) error
@@ -125,8 +128,11 @@ type AgentStorage interface {
 	// ExistsByName 프로젝트 내 이름으로 존재 여부 확인
 	ExistsByName(ctx context.Context, projectID, name string) (bool, error)
 
-	// GetByStatus 상태별 에이전트 목록 조회
-	GetByStatus(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
+	// GetByStatus 상태별 에이전트 목록 조회 (페이지네이션 없이)
+	GetByStatus(ctx context.Context, status models.AgentStatus) ([]*models.Agent, error)
+
+	// GetByStatusWithPagination 상태별 에이전트 목록 조회 (페이지네이션 포함)
+	GetByStatusWithPagination(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error)
 
 	// GetActiveCount 활성 에이전트 수 조회
 	GetActiveCount(ctx context.Context, projectID string) (int64, error)
@@ -139,6 +145,9 @@ type AgentStorage interface {
 
 	// GetByContainerID 컨테이너 ID로 에이전트 조회
 	GetByContainerID(ctx context.Context, containerID string) (*models.Agent, error)
+
+	// GetAll 모든 에이전트 목록 조회
+	GetAll(ctx context.Context) ([]*models.Agent, error)
 }
 
 // RBACStorage는 rbac.go에서 정의됨
@@ -162,6 +171,9 @@ type Storage interface {
 
 	// RBAC RBAC 스토리지 반환
 	RBAC() RBACStorage
+
+	// Transaction 트랜잭션 실행
+	Transaction(ctx context.Context, fn func(context.Context) error) error
 
 	// Close 스토리지 연결 종료
 	Close() error

@@ -1,9 +1,9 @@
 ---
 task_id: T04A_S01
 sprint_sequence_id: S01
-status: open
+status: done
 complexity: Medium
-last_updated: 2025-07-27T20:30:00+0900
+last_updated: 2025-07-29T16:22:00+0900
 ---
 
 # Task: Docker 에이전트 이미지 및 컨테이너 기본 구현
@@ -18,20 +18,20 @@ Docker 에이전트 이미지를 설계하고 기본 컨테이너 관리 기능�
 - Claude CLI 프로세스 실행 환경 구성
 
 ## Acceptance Criteria
-- [ ] Docker 이미지가 성공적으로 빌드됨
-- [ ] Claude CLI가 이미지에 올바르게 설치됨
-- [ ] 컨테이너 생성/삭제가 정상 동작함
-- [ ] 볼륨 마운트가 올바르게 설정됨
-- [ ] 컨테이너 내에서 Claude CLI 실행 가능
+- [x] Docker 이미지가 성공적으로 빌드됨
+- [x] Claude CLI가 이미지에 올바르게 설치됨
+- [x] 컨테이너 생성/삭제가 정상 동작함
+- [x] 볼륨 마운트가 올바르게 설정됨
+- [x] 컨테이너 내에서 Claude CLI 실행 가능
 
 ## Subtasks
-- [ ] Docker 에이전트 이미지 설계 (Ubuntu 기반)
-- [ ] Dockerfile 작성 및 Claude CLI 설치 스크립트
-- [ ] 이미지 빌드 및 최적화
-- [ ] 기본 컨테이너 생성/삭제 로직 구현
-- [ ] 볼륨 마운트 통합
-- [ ] Claude CLI 프로세스 시작 로직
-- [ ] 단위 테스트 작성
+- [x] Docker 에이전트 이미지 설계 (Ubuntu 기반)
+- [x] Dockerfile 작성 및 Claude CLI 설치 스크립트
+- [x] 이미지 빌드 및 최적화
+- [x] 기본 컨테이너 생성/삭제 로직 구현
+- [x] 볼륨 마운트 통합
+- [x] Claude CLI 프로세스 시작 로직
+- [x] 단위 테스트 작성
 
 ## 기술 가이드
 
@@ -119,4 +119,41 @@ ENTRYPOINT ["/usr/local/bin/claude"]
 ```
 
 ## Output Log
-*(This section is populated as work progresses on the task)*
+
+[2025-07-29 16:12] T04A_S01 태스크 시작 - Docker 에이전트 이미지 및 컨테이너 기본 구현
+
+[2025-07-29 16:15] Docker 에이전트 이미지 설계 및 구현 완료
+- /workspace/aicli-web/docker/agent/Dockerfile 생성
+- Ubuntu 22.04 기반 이미지 설계
+- 필수 개발 도구 포함 (Git, Python, Node.js, Go)
+- Claude CLI 설치 스크립트 작성
+- 엔트리포인트 스크립트 및 설정 파일 생성
+
+[2025-07-29 16:18] Docker 통합 구현 완료
+- /workspace/aicli-web/internal/agent/docker_integration.go 생성
+- DockerAgentIntegration 구조체 및 메서드 구현
+- 컨테이너 생성/시작/중지/제거 기능 구현
+- 볼륨 마운트 및 네트워크 관리 기능
+- Claude CLI 명령 실행 기능 (ExecInAgentContainer)
+
+[2025-07-29 16:20] 기존 DockerAdapter와 통합
+- DockerAdapter에 AgentIntegration 필드 추가
+- Agent 타입 컨테이너를 위한 전용 로직 구현
+- SetAgentIntegration 메서드로 주입 가능
+
+[2025-07-29 16:21] 단위 테스트 작성 완료
+- /workspace/aicli-web/internal/agent/docker_integration_test.go 생성
+- /workspace/aicli-web/internal/agent/docker_adapter_integration_test.go 생성
+- 모든 주요 기능에 대한 테스트 커버리지
+- Mock 객체를 활용한 단위 테스트
+
+[2025-07-29 16:22] 문서화 및 빌드 도구 생성
+- /workspace/aicli-web/docker/agent/Makefile 생성
+- /workspace/aicli-web/docker/agent/docker-compose.yml 생성
+- /workspace/aicli-web/docker/agent/README.md 생성
+- 개발 및 테스트를 위한 편리한 도구 제공
+
+[2025-07-29 16:22] T04A_S01 태스크 완료
+- ✅ 모든 서브태스크 완료
+- ✅ 모든 Acceptance Criteria 충족
+- ✅ Docker 에이전트 이미지 및 컨테이너 기본 구현 완료

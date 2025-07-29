@@ -1,0 +1,47 @@
+# Claude CLI 기본 설정
+version: "1.0"
+
+# API 설정
+api:
+  base_url: "https://api.anthropic.com"
+  timeout: 300
+  max_retries: 3
+
+# 모델 설정
+model:
+  default: "claude-3-opus-20240229"
+  temperature: 0.7
+  max_tokens: 4096
+
+# 세션 설정
+session:
+  history_size: 50
+  save_history: true
+  history_path: "${AGENT_HOME}/.claude/history"
+
+# 출력 설정
+output:
+  format: "markdown"
+  syntax_highlighting: true
+  word_wrap: true
+
+# 프롬프트 설정
+prompt:
+  system: |
+    You are Claude, an AI assistant created by Anthropic.
+    You are running inside an AICode Manager agent container.
+    Your workspace is mounted at /workspace.
+    You have access to the project files and can execute commands.
+
+# 보안 설정
+security:
+  allow_file_access: true
+  allow_command_execution: true
+  sandbox_mode: false
+
+# 로깅 설정
+logging:
+  level: "info"
+  file: "${AGENT_HOME}/.claude/claude.log"
+  max_size: "10MB"
+  max_files: 5

@@ -153,7 +153,7 @@
         <BarChart
           :data="timeChartData"
           :options="timeChartOptions"
-          height="250"
+          :height="250"
         />
       </div>
 
@@ -162,7 +162,7 @@
         <PieChart
           :data="componentChartData"
           :options="componentChartOptions"
-          height="250"
+          :height="250"
         />
       </div>
     </div>
@@ -396,6 +396,7 @@ const componentChartData = computed(() => {
     labels: topComponents.map(item => item.component),
     datasets: [
       {
+        label: '에러 발생 횟수',
         data: topComponents.map(item => item.count),
         backgroundColor: [
           '#f56565', '#ed8936', '#ecc94b', '#48bb78',

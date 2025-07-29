@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  agent:
+    image: aicli-agent:latest
+    container_name: aicli-agent-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - GIT_USER_NAME=${GIT_USER_NAME:-AICode Agent}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL:-agent@aicode.local}
+      - TZ=Asia/Seoul
+    volumes:
+      # 워크스페이스 마운트
+      - ./test-workspace:/workspace
+      # Claude 설정 및 히스토리 보존
+      - agent-claude-data:/home/agent/.claude
+      # SSH 키 전달 (옵션)
+      - ${SSH_AUTH_SOCK:-/dev/null}:${SSH_AUTH_SOCK:-/dev/null}
+      # Git 설정 전달 (옵션)
+      - ${HOME}/.gitconfig:/home/agent/.gitconfig:ro
+    working_dir: /workspace
+    user: agent
+    stdin_open: true
+    tty: true
+    # 리소스 제한
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # 네트워크 설정
+    networks:
+      - agent-network
+    # 헬스체크
+    healthcheck:
+      test: ["CMD", "test", "-f", "/home/agent/.agent_status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # 개발용 워크스페이스 초기화 컨테이너
+  workspace-init:
+    image: alpine/git:latest
+    container_name: workspace-init
+    volumes:
+      - ./test-workspace:/workspace
+    command: |
+      sh -c "
+        if [ ! -d /workspace/.git ]; then
+          cd /workspace
+          git init
+          echo '# Test Workspace' > README.md
+          git add README.md
+          git commit -m 'Initial commit'
+        fi
+      "
+
+volumes:
+  agent-claude-data:
+    name: aicli-agent-claude-data
+
+networks:
+  agent-network:
+    name: aicli-agent-network
+    driver: bridge

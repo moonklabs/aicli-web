@@ -115,7 +115,17 @@ import {
 } from 'vue'
 import {
   Chart,
-  registerables,
+  // 필요한 컴포넌트만 import (Tree-shaking 최적화)
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
 } from 'chart.js'
 import type { ChartConfiguration, ChartType } from 'chart.js'
 import type {
@@ -127,8 +137,19 @@ import type {
   RealTimeChartConfig,
 } from '@/types/ui'
 
-// Chart.js 플러그인 등록
-Chart.register(...registerables)
+// 필요한 Chart.js 컴포넌트만 등록 (번들 크기 최적화)
+Chart.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+)
 
 interface Props extends AdvancedChartProps {
   chartType: ChartType

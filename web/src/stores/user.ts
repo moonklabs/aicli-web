@@ -378,6 +378,44 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  // 토큰 만료 확인 후 필요시 갱신
+  const refreshTokenIfNeeded = async (): Promise<boolean> => {
+    if (!authState.value.token || !authState.value.expiresAt) {
+      return false
+    }
+
+    // 토큰이 30분 내에 만료되면 갱신
+    const thirtyMinutes = 30 * 60 * 1000
+    const timeUntilExpiry = authState.value.expiresAt - Date.now()
+
+    if (timeUntilExpiry <= thirtyMinutes) {
+      return await refreshToken()
+    }
+
+    return true
+  }
+
+  // 로그아웃 함수
+  const logout = async (): Promise<void> => {
+    try {
+      setLoading(true)
+      // TODO: 서버에 로그아웃 요청 전송
+      console.log('Logging out user...')
+      
+      // 인증 정보 및 관련 데이터 모두 초기화
+      clearAuth()
+      
+      // 추가적인 정리 작업
+      permissionCache.value.clear()
+      
+    } catch (err) {
+      console.error('Logout failed:', err)
+      setError('로그아웃 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // 초기화 (localStorage에서 토큰 복원)
   const initializeAuth = async () => {
     const token = localStorage.getItem('auth_token')
@@ -458,6 +496,8 @@ export const useUserStore = defineStore('user', () => {
     setLoading,
     setError,
     refreshToken,
+    refreshTokenIfNeeded,
+    logout,
     initializeAuth,
     updateUser,
 

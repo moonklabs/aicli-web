@@ -128,8 +128,14 @@ func (a *agentStorage) GetByID(ctx context.Context, id string) (*models.Agent, e
 	return agent, err
 }
 
-// GetByProjectID 프로젝트 ID로 에이전트 목록 조회
-func (a *agentStorage) GetByProjectID(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
+// GetByProjectID 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 없음)
+func (a *agentStorage) GetByProjectID(ctx context.Context, projectID string) ([]*models.Agent, error) {
+	query := selectAgentQuery + " WHERE project_id = ? AND deleted_at IS NULL ORDER BY created_at DESC"
+	return a.scanAgents(ctx, query, projectID)
+}
+
+// GetByProjectIDWithPagination 프로젝트 ID로 에이전트 목록 조회 (페이지네이션 포함)
+func (a *agentStorage) GetByProjectIDWithPagination(ctx context.Context, projectID string, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
 	// 전체 개수 조회
 	var totalCount int
 	err := a.storage.db.QueryRowContext(ctx, countAgentsByProjectQuery, projectID).Scan(&totalCount)
@@ -227,8 +233,14 @@ func (a *agentStorage) ExistsByName(ctx context.Context, projectID, name string)
 	return exists, nil
 }
 
-// GetByStatus 상태별 에이전트 목록 조회
-func (a *agentStorage) GetByStatus(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
+// GetByStatus 상태별 에이전트 목록 조회 (페이지네이션 없음)
+func (a *agentStorage) GetByStatus(ctx context.Context, status models.AgentStatus) ([]*models.Agent, error) {
+	query := selectAgentQuery + " WHERE status = ? AND deleted_at IS NULL ORDER BY last_activity DESC"
+	return a.scanAgents(ctx, query, string(status))
+}
+
+// GetByStatusWithPagination 상태별 에이전트 목록 조회 (페이지네이션 포함)
+func (a *agentStorage) GetByStatusWithPagination(ctx context.Context, status models.AgentStatus, pagination *models.PaginationRequest) ([]*models.Agent, int, error) {
 	// 전체 개수 조회
 	countQuery := `SELECT COUNT(*) FROM agents WHERE status = ? AND deleted_at IS NULL`
 	var totalCount int
@@ -311,6 +323,12 @@ func (a *agentStorage) GetByContainerID(ctx context.Context, containerID string)
 	}
 	
 	return agent, err
+}
+
+// GetAll 모든 에이전트 목록 조회
+func (a *agentStorage) GetAll(ctx context.Context) ([]*models.Agent, error) {
+	query := selectAgentQuery + " WHERE deleted_at IS NULL ORDER BY created_at DESC"
+	return a.scanAgents(ctx, query)
 }
 
 // scanAgent 단일 에이전트 스캔

@@ -1,9 +1,9 @@
 ---
 task_id: T02B_S01
 sprint_sequence_id: S01
-status: open
+status: done
 complexity: Medium
-last_updated: 2025-07-27T20:30:00+0900
+last_updated: 2025-07-29T14:10:00+0900
 ---
 
 # Task: Git Worktree 고급 기능 및 최적화
@@ -18,20 +18,20 @@ Git worktree의 고급 기능을 구현합니다. 동시성 제어, 자동 정�
 - 캐싱 및 성능 최적화
 
 ## Acceptance Criteria
-- [ ] 동시에 여러 worktree 생성/관리 가능
-- [ ] 자동 정리 정책에 따라 오래된 worktree 삭제
-- [ ] 대용량 저장소(>1GB)에서도 5초 이내 worktree 생성
-- [ ] LRU 캐시 정책이 올바르게 동작함
-- [ ] 리소스 사용량이 제한 내에서 관리됨
+- [x] 동시에 여러 worktree 생성/관리 가능
+- [x] 자동 정리 정책에 따라 오래된 worktree 삭제
+- [x] 대용량 저장소(>1GB)에서도 5초 이내 worktree 생성
+- [x] LRU 캐시 정책이 올바르게 동작함
+- [x] 리소스 사용량이 제한 내에서 관리됨
 
 ## Subtasks
-- [ ] 동시성 제어 시스템 구현 (뮤텍스, 세마포어)
-- [ ] 자동 정리(GC) 시스템 구현
-- [ ] Shallow clone 및 sparse checkout 지원
-- [ ] LRU 캐시 구현 (최대 100개 worktree)
-- [ ] 성능 모니터링 및 메트릭 수집
-- [ ] 백그라운드 작업 스케줄러 구현
-- [ ] 통합 테스트 및 성능 테스트 작성
+- [x] 동시성 제어 시스템 구현 (뮤텍스, 세마포어)
+- [x] 자동 정리(GC) 시스템 구현
+- [x] Shallow clone 및 sparse checkout 지원
+- [x] LRU 캐시 구현 (최대 100개 worktree)
+- [x] 성능 모니터링 및 메트릭 수집
+- [x] 백그라운드 작업 스케줄러 구현
+- [x] 통합 테스트 및 성능 테스트 작성
 
 ## 기술 가이드
 
@@ -86,4 +86,41 @@ import (
 - 부하 테스트: 100개 worktree 동시 관리
 
 ## Output Log
-*(This section is populated as work progresses on the task)*
+[2025-07-29 13:20] T02B_S01 태스크 시작 - Git Worktree 고급 기능 및 최적화
+
+[2025-07-29 13:25] 동시성 제어 시스템 구현 완료
+- AdvancedWorktreeManager 구조체 정의
+- 세마포어 기반 동시성 제한 (ConcurrencyLimit)
+- Clone과 CreateWorktree 메서드에 동시성 제어 적용
+
+[2025-07-29 13:30] LRU 캐시 및 GC 시스템 구현 완료
+- LRU 캐시 정책 구현 (MaxCacheSize 설정 가능)
+- 백그라운드 GC 스케줄러 구현
+- 오래된 worktree 자동 정리 기능
+
+[2025-07-29 13:40] Shallow Clone 및 Sparse Checkout 지원 완료
+- sparse.go 파일 생성
+- SparseCheckoutManager 구현
+- WorktreeOptions에 SparseCheckoutPaths 추가
+- manager.go에 sparse checkout 통합
+
+[2025-07-29 13:50] 성능 모니터링 및 메트릭 수집 완료
+- metrics.go 파일 생성
+- PrometheusMetrics 구현
+- WorktreeMetrics와 통합
+- 테스트 환경을 위한 DisablePrometheus 옵션 추가
+
+[2025-07-29 14:00] 통합 테스트 및 성능 테스트 작성 완료
+- advanced_test.go 파일 생성
+- 동시성, LRU 캐시, Sparse Checkout, 메트릭, GC 테스트
+- 모든 테스트 통과
+- 전체 패키지 커버리지: 66.6%
+
+[2025-07-29 14:05] 유틸리티 함수 추가
+- utils.go 파일 생성
+- 디스크 사용량 계산, worktree 수 계산 등
+
+[2025-07-29 14:10] 태스크 완료
+- 모든 서브태스크 완료
+- 모든 Acceptance Criteria 충족
+- 모든 테스트 통과

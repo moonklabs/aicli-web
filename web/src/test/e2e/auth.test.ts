@@ -8,6 +8,7 @@ import { mount } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+import naive from 'naive-ui'
 
 import LoginView from '@/views/LoginView.vue'
 import { useUserStore } from '@/stores/user'
@@ -88,13 +89,34 @@ const mountLoginView = () => {
 
   return mount(AppWrapper, {
     global: {
-      plugins: [pinia, router],
+      plugins: [pinia, router, naive],
       stubs: {
         teleport: true,
         transition: false,
       },
     },
   })
+}
+
+// Helper functions to find elements more reliably
+const findUsernameInput = (wrapper: any) => {
+  return wrapper.find('.n-input__input-el[type="text"]') || wrapper.find('.n-input__input-el').at(0)
+}
+
+const findPasswordInput = (wrapper: any) => {
+  return wrapper.find('.n-input__input-el[type="password"]')
+}
+
+const findLoginButton = (wrapper: any) => {
+  return wrapper.findAll('button').at(1) // "로그인" 버튼은 인덱스 1
+}
+
+const findGoogleButton = (wrapper: any) => {
+  return wrapper.findAll('button').at(2) // "Google로 로그인" 버튼은 인덱스 2
+}
+
+const findDemoButton = (wrapper: any) => {
+  return wrapper.findAll('button').at(5) // "데모 계정으로 채우기" 버튼은 인덱스 5
 }
 
 describe('Frontend Authentication E2E Tests', () => {
@@ -119,10 +141,10 @@ describe('Frontend Authentication E2E Tests', () => {
       const wrapper = mountLoginView()
       const userStore = useUserStore()
 
-      // 로그인 폼 입력
-      const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
-      const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      // 로그인 폼 입력 - 헬퍼 함수 사용
+      const usernameInput = findUsernameInput(wrapper)
+      const passwordInput = findPasswordInput(wrapper)
+      const loginButton = findLoginButton(wrapper)
 
       await usernameInput.setValue('admin')
       await passwordInput.setValue('admin123')
@@ -166,7 +188,7 @@ describe('Frontend Authentication E2E Tests', () => {
       // 잘못된 인증 정보 입력
       const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
       const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      const loginButton = wrapper.find('[type="primary"][block]')
 
       await usernameInput.setValue('admin')
       await passwordInput.setValue('wrongpassword')
@@ -196,7 +218,7 @@ describe('Frontend Authentication E2E Tests', () => {
 
       const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
       const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      const loginButton = wrapper.find('[type="primary"][block]')
 
       // 빈 폼으로 로그인 시도
       await loginButton.trigger('click')
@@ -379,7 +401,7 @@ describe('Frontend Authentication E2E Tests', () => {
       const wrapper = mountLoginView()
 
       // Google 로그인 버튼 클릭
-      const googleLoginButton = wrapper.find('button:contains("Google로 로그인")')
+      const googleLoginButton = wrapper.findAll('button').find(btn => btn.text().includes('Google'))
       await googleLoginButton.trigger('click')
 
       // OAuth URL 생성 API 호출 확인
@@ -417,7 +439,7 @@ describe('Frontend Authentication E2E Tests', () => {
       const wrapper = mountLoginView()
 
       // Google 로그인 버튼 클릭
-      const googleLoginButton = wrapper.find('button:contains("Google로 로그인")')
+      const googleLoginButton = wrapper.findAll('button').find(btn => btn.text().includes('Google'))
       await googleLoginButton.trigger('click')
 
       // 에러 상태 확인
@@ -435,7 +457,7 @@ describe('Frontend Authentication E2E Tests', () => {
       const wrapper = mountLoginView()
 
       // 데모 계정 버튼 클릭
-      const demoButton = wrapper.find('button:contains("데모 계정으로 채우기")')
+      const demoButton = wrapper.find('[quaternary][type="primary"]')
       await demoButton.trigger('click')
 
       // 폼 필드 확인
@@ -500,7 +522,7 @@ describe('Frontend Authentication E2E Tests', () => {
       // 로그인 시도
       const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
       const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      const loginButton = wrapper.find('[type="primary"][block]')
 
       await usernameInput.setValue('admin')
       await passwordInput.setValue('admin123')
@@ -536,7 +558,7 @@ describe('Frontend Authentication E2E Tests', () => {
 
       // 부분적 입력으로 로그인 시도
       const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      const loginButton = wrapper.find('[type="primary"][block]')
 
       await passwordInput.setValue('admin123')
       await loginButton.trigger('click')
@@ -570,7 +592,7 @@ describe('Frontend Authentication E2E Tests', () => {
       // Tab 키 네비게이션 테스트
       const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
       const passwordInput = wrapper.find('input[type="password"]')
-      const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+      const loginButton = wrapper.find('[type="primary"][block]')
 
       // 포커스 순서 확인
       await usernameInput.trigger('focus')
@@ -603,7 +625,7 @@ describe('Frontend Authentication E2E Tests', () => {
         // 로그인 시도
         const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
         const passwordInput = wrapper.find('input[type="password"]')
-        const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+        const loginButton = wrapper.find('[type="primary"][block]')
 
         await usernameInput.setValue('admin')
         await passwordInput.setValue('admin123')
@@ -643,7 +665,7 @@ describe('Frontend Authentication E2E Tests', () => {
         // 첫 번째 로그인 시도 (만료된 토큰)
         const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
         const passwordInput = wrapper.find('input[type="password"]')
-        const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+        const loginButton = wrapper.find('[type="primary"][block]')
 
         await usernameInput.setValue('admin')
         await passwordInput.setValue('admin123')
@@ -676,7 +698,7 @@ describe('Frontend Authentication E2E Tests', () => {
         })
 
         // 로그인 버튼 비활성화 확인
-        const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+        const loginButton = wrapper.find('[type="primary"][block]')
         expect(loginButton.attributes('disabled')).toBeDefined()
       })
     })
@@ -702,7 +724,7 @@ describe('Frontend Authentication E2E Tests', () => {
         // 로그인 시도
         const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
         const passwordInput = wrapper.find('input[type="password"]')
-        const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+        const loginButton = wrapper.find('[type="primary"][block]')
 
         await usernameInput.setValue('admin')
         await passwordInput.setValue('admin123')
@@ -760,7 +782,7 @@ describe('Frontend Authentication E2E Tests', () => {
         const wrapper = mountLoginView()
 
         // Google OAuth 로그인 시도
-        const googleLoginButton = wrapper.find('button:contains("Google로 로그인")')
+        const googleLoginButton = wrapper.findAll('button').find(btn => btn.text().includes('Google'))
         await googleLoginButton.trigger('click')
 
         // OAuth Rate limit 처리 확인
@@ -800,7 +822,7 @@ describe('Frontend Authentication E2E Tests', () => {
         // 로그인 실행
         const usernameInput = wrapper.find('input[placeholder*="사용자명"]')
         const passwordInput = wrapper.find('input[type="password"]')
-        const loginButton = wrapper.find('button[type="submit"], .n-button:contains("로그인")')
+        const loginButton = wrapper.find('[type="primary"][block]')
 
         await usernameInput.setValue('admin')
         await passwordInput.setValue('admin123')

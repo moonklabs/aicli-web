@@ -1,6 +1,8 @@
 package memory
 
 import (
+	"context"
+
 	"github.com/aicli/aicli-web/internal/storage"
 )
 
@@ -57,6 +59,11 @@ func (s *Storage) Agent() storage.AgentStorage {
 // RBAC RBAC 스토리지 반환
 func (s *Storage) RBAC() storage.RBACStorage {
 	return s.rbac
+}
+
+// Transaction 트랜잭션 실행 (메모리 스토리지는 단순 실행)
+func (s *Storage) Transaction(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
 }
 
 // Close 스토리지 연결 종료 (메모리 스토리지는 아무 작업 없음)

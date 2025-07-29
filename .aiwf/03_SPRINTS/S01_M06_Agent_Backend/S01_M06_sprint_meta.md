@@ -3,7 +3,7 @@ sprint_folder_name: S01_M06_Agent_Backend
 sprint_sequence_id: S01
 milestone_id: M06
 title: Multi Agent Platform - 백엔드 기반 구축
-status: planning
+status: in_progress
 goal: 멀티 에이전트 플랫폼의 백엔드 기반을 구축하여 에이전트 생명주기 관리, Git worktree 통합, Docker 컨테이너 관리, 그리고 에이전트 API를 구현한다.
 last_updated: 2025-07-27T20:05:00+0900
 ---

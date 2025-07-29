@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { VitePWA } from 'vite-plugin-pwa'
-// import { viteImagemin } from 'vite-plugin-imagemin'
+import viteImagemin from 'vite-plugin-imagemin'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }): UserConfig => {
@@ -162,7 +162,35 @@ export default defineConfig(({ mode }): UserConfig => {
         brotliSize: true,
       }),
       // 이미지 최적화 (일시적으로 비활성화)
-      // mode === 'production' ? viteImagemin({...}) : null,
+      // 이미지 최적화 플러그인 (프로덕션 빌드에서만)
+      mode === 'production' ? viteImagemin({
+        gifsicle: {
+          optimizationLevel: 7,
+          interlaced: false,
+        },
+        optipng: {
+          optimizationLevel: 7,
+        },
+        mozjpeg: {
+          quality: 80,
+        },
+        pngquant: {
+          quality: [0.8, 0.9],
+          speed: 4,
+        },
+        svgo: {
+          plugins: [
+            {
+              name: 'removeViewBox',
+              active: false,
+            },
+            {
+              name: 'removeEmptyAttrs',
+              active: true,
+            },
+          ],
+        },
+      }) : null,
     ].filter(Boolean),
 
     resolve: {
@@ -263,6 +291,21 @@ export default defineConfig(({ mode }): UserConfig => {
                 if (id.includes('/message/') || id.includes('/notification/') || id.includes('/modal/') || 
                     id.includes('/dialog/') || id.includes('/drawer/')) {
                   return 'naive-feedback'
+                }
+                // 레이아웃 컴포넌트
+                if (id.includes('/layout/') || id.includes('/menu/') || id.includes('/breadcrumb/') ||
+                    id.includes('/tabs/') || id.includes('/steps/')) {
+                  return 'naive-layout'
+                }
+                // 버튼 및 액션 컴포넌트
+                if (id.includes('/button/') || id.includes('/dropdown/') || id.includes('/popover/') ||
+                    id.includes('/tooltip/') || id.includes('/popconfirm/')) {
+                  return 'naive-actions'
+                }
+                // 유틸리티 컴포넌트
+                if (id.includes('/spin/') || id.includes('/progress/') || id.includes('/skeleton/') ||
+                    id.includes('/badge/') || id.includes('/tag/') || id.includes('/avatar/')) {
+                  return 'naive-utils'
                 }
                 // 나머지 UI 컴포넌트
                 return 'naive-ui-core'
@@ -421,10 +464,10 @@ export default defineConfig(({ mode }): UserConfig => {
         'vue-router',
         'pinia',
         'axios',
-        'naive-ui',
       ],
       exclude: [
         'vite-plugin-vue-devtools',
+        'naive-ui', // naive-ui를 exclude로 이동하여 개별 컴포넌트 최적화
       ],
     },
   }
