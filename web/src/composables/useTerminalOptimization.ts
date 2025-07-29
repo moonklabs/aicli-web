@@ -33,7 +33,14 @@ export interface OptimizedTerminalLine {
   height?: number
 }
 
-export function useTerminalOptimization(options: TerminalOptimizationOptions = {}) {
+export function useTerminalOptimization(options: TerminalOptimizationOptions & {
+  maxLines?: number
+  batchSize?: number
+  debounceDelay?: number
+  useVirtualScrolling?: boolean
+  enableMemoryMonitoring?: boolean
+  collectStats?: boolean
+} = {}) {
   const {
     maxLines = 1000,
     updateInterval = 50,

@@ -248,8 +248,8 @@ export function useTheme() {
   /**
    * 시스템 테마 변경 감지
    */
-  const watchSystemTheme = (): void => {
-    if (typeof window === 'undefined') return
+  const watchSystemTheme = (): (() => void) => {
+    if (typeof window === 'undefined') return () => {}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 

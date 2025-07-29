@@ -35,7 +35,7 @@
           <header v-if="showHeader" class="app-modal__header">
             <div class="app-modal__title-area">
               <h2
-                v-if="title || $slots.title"
+                v-if="title || slots.title"
                 :id="titleId"
                 class="app-modal__title"
               >
@@ -81,7 +81,7 @@
           </main>
 
           <!-- 모달 푸터 -->
-          <footer v-if="$slots.footer || showDefaultFooter" class="app-modal__footer">
+          <footer v-if="slots.footer || showDefaultFooter" class="app-modal__footer">
             <slot name="footer">
               <div v-if="showDefaultFooter" class="app-modal__actions">
                 <AppButton
@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUnmounted, ref, useId, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, useId, useSlots, watch } from 'vue'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 import { useAriaLive } from '@/composables/useAriaLive'
 import AppSpinner from '../feedback/AppSpinner.vue'
@@ -170,6 +170,9 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLDivElement>()
 const contentRef = ref<HTMLDivElement>()
 
+// 슬롯 참조
+const slots = useSlots()
+
 // 고유 ID 생성
 const titleId = useId()
 const descriptionId = useId()
@@ -215,7 +218,7 @@ const { isActive: isFocusTrapped } = useFocusTrap(
 
 // 계산된 속성들
 const showHeader = computed(() => {
-  return props.title || props.$slots?.title || props.closable
+  return props.title || slots.title || props.closable
 })
 
 const modalClasses = computed(() => ({
@@ -239,7 +242,7 @@ const containerClasses = computed(() => ({
 const bodyClasses = computed(() => ({
   'app-modal__body--loading': props.loading,
   'app-modal__body--no-header': !showHeader.value,
-  'app-modal__body--no-footer': !props.$slots?.footer && !props.showDefaultFooter,
+  'app-modal__body--no-footer': !slots.footer && !props.showDefaultFooter,
 }))
 
 // 스크롤 차단 관리

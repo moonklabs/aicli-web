@@ -119,10 +119,11 @@ export function useClaudeStream(sessionId?: string, options: ClaudeStreamOptions
     let hasAnsi = false
 
     if (parseAnsi) {
-      const parsed = AnsiParser.parseAnsiEscapes(processed)
-      hasAnsi = parsed.hasAnsiCodes
-      html = AnsiParser.renderToHtml(parsed)
-      plainText = AnsiParser.stripAnsiCodes(processed)
+      const parser = new AnsiParser()
+      const segments = parser.parse(processed)
+      hasAnsi = segments.some(seg => Object.keys(seg.style).length > 0)
+      html = parser.toHtml(processed)
+      plainText = processed.replace(/\x1b\[[0-9;]*m/g, '')
     }
 
     return {
@@ -391,7 +392,7 @@ export function useClaudeStream(sessionId?: string, options: ClaudeStreamOptions
         return outputBuffer.value
           .map(msg => {
             const timestamp = new Date(msg.timestamp).toLocaleTimeString()
-            const content = AnsiParser.stripAnsiCodes(msg.content)
+            const content = msg.content.replace(/\x1b\[[0-9;]*m/g, '')
             return `[${timestamp}] ${msg.type.toUpperCase()}: ${content}`
           })
           .join('\n')

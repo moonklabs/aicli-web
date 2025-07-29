@@ -256,7 +256,7 @@ export function useMobileOptimization(options: MobileOptimizationOptions = {}) {
     const optimizeScrollElements = () => {
       document.querySelectorAll('[data-scroll-optimize]').forEach((element) => {
         const el = element as HTMLElement
-        el.style.WebkitOverflowScrolling = 'touch'
+        ;(el.style as any).WebkitOverflowScrolling = 'touch'
         el.style.transform = 'translateZ(0)'
         el.style.willChange = 'scroll-position'
       })

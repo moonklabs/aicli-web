@@ -130,9 +130,10 @@ export function useApiLoading(key?: string) {
 
     startLoading(message)
 
+    // 진행률 시뮬레이션 (showProgress가 true인 경우)
+    let progressInterval: NodeJS.Timeout | null = null
+
     try {
-      // 진행률 시뮬레이션 (showProgress가 true인 경우)
-      let progressInterval: NodeJS.Timeout | null = null
 
       if (showProgress) {
         let currentProgress = 0

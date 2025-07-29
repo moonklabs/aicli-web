@@ -102,7 +102,7 @@ export class PerformanceMonitor {
    */
   private collectWebVitals(): void {
     const handleMetric = (metric: Metric) => {
-      this.metrics[metric.name as keyof PerformanceMetrics] = metric.value
+      (this.metrics as any)[metric.name] = metric.value
       this.notifyListeners()
     }
 

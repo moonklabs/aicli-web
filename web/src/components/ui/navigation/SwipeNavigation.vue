@@ -15,9 +15,6 @@
     <div
       class="swipe-navigation__container"
       :style="containerStyle"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
     >
       <div
         v-for="(page, index) in pages"

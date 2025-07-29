@@ -82,7 +82,7 @@ export function usePerformanceOptimization(config: PerformanceConfig = {}) {
 
     return (...args: Parameters<T>) => {
       clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => func(...args), delay)
+      timeoutId = window.setTimeout(() => func(...args), delay)
     }
   }
 

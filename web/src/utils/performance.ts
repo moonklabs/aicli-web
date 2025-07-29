@@ -144,7 +144,7 @@ class PerformanceMonitor {
 
     if (navigation) {
       this.metrics.navigationTiming = navigation
-      this.metrics.pageLoadTime = navigation.loadEventEnd - navigation.navigationStart
+      this.metrics.pageLoadTime = navigation.loadEventEnd - (navigation.fetchStart || 0)
 
       // 리소스 로딩 시간 계산
       const resources = performance.getEntriesByType('resource')

@@ -455,22 +455,37 @@ export function formatTerminalTimestamp(timestamp: string): string {
 /**
  * 터미널 상태 정보 가져오기
  */
-export function getTerminalStatusInfo(lines: TerminalLine[]): {
-  totalLines: number
-  outputLines: number
-  errorLines: number
-  systemLines: number
+export function getTerminalStatusInfo(status: 'connected' | 'disconnected' | 'connecting' | 'error'): {
+  type: 'success' | 'error' | 'warning' | 'default'
+  text: string
+  icon: string
 } {
-  const totalLines = lines.length
-  const outputLines = lines.filter(line => line.type === 'output').length
-  const errorLines = lines.filter(line => line.type === 'error').length
-  const systemLines = lines.filter(line => line.type === 'system').length
-
-  return {
-    totalLines,
-    outputLines,
-    errorLines,
-    systemLines,
+  switch (status) {
+    case 'connected':
+      return {
+        type: 'success',
+        text: '연결됨',
+        icon: '🟢',
+      }
+    case 'connecting':
+      return {
+        type: 'warning',
+        text: '연결 중...',
+        icon: '🟡',
+      }
+    case 'error':
+      return {
+        type: 'error',
+        text: '연결 오류',
+        icon: '🔴',
+      }
+    case 'disconnected':
+    default:
+      return {
+        type: 'default',
+        text: '연결 끊김',
+        icon: '🔘',
+      }
   }
 }
 

@@ -2,7 +2,7 @@
  * 성능 모니터링 API 서비스
  */
 
-import { apiClient } from './api'
+import apiClient from '@/api'
 
 export interface PerformanceMetrics {
   timestamp: number

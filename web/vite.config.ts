@@ -10,7 +10,7 @@ import viteImagemin from 'vite-plugin-imagemin'
 // https://vite.dev/config/
 export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   console.log('🔧 Building in mode:', mode)
 
   return {
@@ -23,9 +23,9 @@ export default defineConfig(({ mode }): UserConfig => {
         },
         template: {
           compilerOptions: {
-            isCustomElement: (tag) => tag.startsWith('ion-')
-          }
-        }
+            isCustomElement: (tag) => tag.startsWith('ion-'),
+          },
+        },
       }),
       mode === 'development' && vueDevTools(),
       // PWA 설정
@@ -255,8 +255,6 @@ export default defineConfig(({ mode }): UserConfig => {
       sourcemap: mode === 'development',
       minify: mode === 'production' ? 'esbuild' : false,
       chunkSizeWarningLimit: 1000,
-      // TypeScript 체크 건너뛰기
-      skipTypeCheck: true,
       rollupOptions: {
         output: {
           // 최적화된 청크 분리 전략
@@ -275,11 +273,11 @@ export default defineConfig(({ mode }): UserConfig => {
               if (id.includes('pinia')) {
                 return 'pinia'
               }
-              
+
               // Naive UI 세분화
               if (id.includes('naive-ui')) {
                 // 폼 관련 컴포넌트
-                if (id.includes('/form/') || id.includes('/input/') || id.includes('/select/') || 
+                if (id.includes('/form/') || id.includes('/input/') || id.includes('/select/') ||
                     id.includes('/checkbox/') || id.includes('/radio/') || id.includes('/date-picker/')) {
                   return 'naive-forms'
                 }
@@ -288,7 +286,7 @@ export default defineConfig(({ mode }): UserConfig => {
                   return 'naive-data'
                 }
                 // 피드백 컴포넌트
-                if (id.includes('/message/') || id.includes('/notification/') || id.includes('/modal/') || 
+                if (id.includes('/message/') || id.includes('/notification/') || id.includes('/modal/') ||
                     id.includes('/dialog/') || id.includes('/drawer/')) {
                   return 'naive-feedback'
                 }
@@ -310,27 +308,27 @@ export default defineConfig(({ mode }): UserConfig => {
                 // 나머지 UI 컴포넌트
                 return 'naive-ui-core'
               }
-              
+
               // 아이콘 (별도 청크)
               if (id.includes('@vicons')) {
                 return 'icons'
               }
-              
+
               // 차트 라이브러리 (대용량)
               if (id.includes('chart.js') || id.includes('vue-chartjs')) {
                 return 'charts'
               }
-              
+
               // 유틸리티 라이브러리
               if (id.includes('axios') || id.includes('@tanstack') || id.includes('date-fns')) {
                 return 'utils'
               }
-              
+
               // 작은 유틸리티들은 하나로 합침
               if (id.includes('web-vitals') || id.includes('workbox')) {
                 return 'utils-small'
               }
-              
+
               // 나머지는 기본 vendor
               return 'vendor'
             }
@@ -347,7 +345,7 @@ export default defineConfig(({ mode }): UserConfig => {
                 if (id.includes('Monitoring')) return 'page-monitoring'
                 return 'pages-other'
               }
-              
+
               // 컴포넌트별 분리 (크기별)
               if (id.includes('/components/')) {
                 if (id.includes('/Performance/') || id.includes('/Debug/')) {
@@ -358,12 +356,12 @@ export default defineConfig(({ mode }): UserConfig => {
                 }
                 return 'components-ui'
               }
-              
+
               // 스토어와 서비스
               if (id.includes('/stores/') || id.includes('/api/')) {
                 return 'app-core'
               }
-              
+
               // 유틸리티와 컴포저블
               if (id.includes('/composables/') || id.includes('/utils/')) {
                 return 'app-utils'
@@ -390,16 +388,17 @@ export default defineConfig(({ mode }): UserConfig => {
 
           entryFileNames: 'assets/[name].[hash].js',
           assetFileNames: (assetInfo) => {
-            const info = assetInfo.name!.split('.')
+            const name = assetInfo.name || 'unknown'
+            const info = name.split('.')
             const ext = info[info.length - 1]
 
-            if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(assetInfo.name!)) {
+            if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)$/.test(name)) {
               return 'assets/media/[name].[hash].[ext]'
             }
-            if (/\.(png|jpe?g|gif|svg|webp|avif)$/.test(assetInfo.name!)) {
+            if (/\.(png|jpe?g|gif|svg|webp|avif)$/.test(name)) {
               return 'assets/images/[name].[hash].[ext]'
             }
-            if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name!)) {
+            if (/\.(woff2?|eot|ttf|otf)$/.test(name)) {
               return 'assets/fonts/[name].[hash].[ext]'
             }
             if (ext === 'css') {
@@ -415,7 +414,7 @@ export default defineConfig(({ mode }): UserConfig => {
           preset: 'recommended',
           propertyReadSideEffects: false,
           tryCatchDeoptimization: false,
-          moduleSideEffects: (id, external) => {
+          moduleSideEffects: (id, _external) => {
             // 특정 모듈의 사이드 이펙트 제어
             if (id.includes('naive-ui') || id.includes('@vicons')) {
               return false // Tree-shaking 허용
@@ -423,7 +422,7 @@ export default defineConfig(({ mode }): UserConfig => {
             if (id.includes('chart.js')) {
               return false // Tree-shaking 허용
             }
-            return 'no-external' // 외부 모듈은 사이드 이펙트 유지
+            return true // 외부 모듈은 사이드 이펙트 유지
           },
         },
       },

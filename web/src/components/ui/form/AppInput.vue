@@ -111,6 +111,12 @@ interface Props extends InputBaseProps {
   ariaDescribedby?: string;
   tabindex?: number;
   showPasswordOn?: 'click' | 'mousedown' | false;
+  onUpdate?: {
+    value?: (value: string | number) => void;
+  };
+  onChange?: (value: string | number) => void;
+  onFocus?: (event: FocusEvent) => void;
+  onBlur?: (event: FocusEvent) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {

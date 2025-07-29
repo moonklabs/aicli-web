@@ -114,8 +114,8 @@ export function useKeyboardNavigation(
   }
 
   // 키보드 이벤트 핸들러
-  const handleKeydown = async (event: KeyboardEvent): Promise<void> => {
-    if (disabled.value) return
+  const handleKeydown = async (event: KeyboardEvent): Promise<boolean> => {
+    if (disabled.value) return false
 
     let handled = false
 

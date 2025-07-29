@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, readonly, ref } from 'vue'
 import {
   type PerformanceListener,
   type PerformanceMetrics,
@@ -180,7 +180,7 @@ export function usePerformanceMonitoring() {
   /**
    * 성능 개선 권장사항 생성
    */
-  const generateRecommendations = (vitals: ReturnType<typeof webVitalsStatus>['value']) => {
+  const generateRecommendations = (vitals: typeof webVitalsStatus.value) => {
     const recommendations: string[] = []
 
     if (vitals.lcp.status === 'poor') {

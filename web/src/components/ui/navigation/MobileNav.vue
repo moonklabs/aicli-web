@@ -137,10 +137,10 @@
           <div v-if="user" class="mobile-nav__user">
             <div class="mobile-nav__user-info">
               <div class="mobile-nav__user-avatar">
-                <img :src="user.avatar || '/default-avatar.png'" :alt="user.name" />
+                <img :src="user.avatar || '/default-avatar.png'" :alt="user.displayName || user.username" />
               </div>
               <div class="mobile-nav__user-details">
-                <span class="mobile-nav__user-name">{{ user.name }}</span>
+                <span class="mobile-nav__user-name">{{ user.displayName || user.username }}</span>
                 <span class="mobile-nav__user-email">{{ user.email }}</span>
               </div>
             </div>

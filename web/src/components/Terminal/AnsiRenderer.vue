@@ -13,7 +13,8 @@ import { computed } from 'vue'
 import { type AnsiSegment, ansiParser } from '@/utils/ansi-parser'
 
 interface Props {
-  text: string
+  content: string
+  allowUnsafeHtml?: boolean
   preserveWhitespace?: boolean
 }
 
@@ -25,6 +26,7 @@ interface RenderedSegment {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  allowUnsafeHtml: false,
   preserveWhitespace: true,
 })
 
@@ -32,10 +34,10 @@ const props = withDefaults(defineProps<Props>(), {
  * ANSI 텍스트를 파싱하여 렌더링 가능한 세그먼트로 변환
  */
 const segments = computed<RenderedSegment[]>(() => {
-  if (!props.text) return []
+  if (!props.content) return []
 
   // ANSI 파서로 텍스트 파싱
-  const ansiSegments: AnsiSegment[] = ansiParser.parse(props.text)
+  const ansiSegments: AnsiSegment[] = ansiParser.parse(props.content)
 
   return ansiSegments.map((segment, index) => {
     const style: Record<string, string> = {}
