@@ -70,9 +70,29 @@ const createTestApp = () => {
 const mountLoginView = () => {
   const { pinia } = createTestApp()
 
-  return mount(LoginView, {
+  // NaiveUI 프로바이더 래퍼
+  const AppWrapper = {
+    template: `
+      <n-message-provider>
+        <n-dialog-provider>
+          <n-notification-provider>
+            <n-loading-bar-provider>
+              <LoginView />
+            </n-loading-bar-provider>
+          </n-notification-provider>
+        </n-dialog-provider>
+      </n-message-provider>
+    `,
+    components: { LoginView },
+  }
+
+  return mount(AppWrapper, {
     global: {
       plugins: [pinia, router],
+      stubs: {
+        teleport: true,
+        transition: false,
+      },
     },
   })
 }

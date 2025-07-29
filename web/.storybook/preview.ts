@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/vue3-vite'
-import { app } from '@storybook/vue3'
+import { getCurrentInstance } from 'vue'
 
 // Naive UI 설정
 import {
@@ -98,13 +98,26 @@ const naive = create({
   ],
 })
 
-app.use(naive)
+// Naive UI 설정을 setup 함수로 이동
 
 // 전역 스타일 임포트
 import '../src/assets/main.css'
 import '../src/styles/main.scss'
 
 const preview: Preview = {
+  decorators: [
+    (story) => ({
+      components: { story },
+      setup() {
+        // Vue 앱에 Naive UI 설정
+        const app = getCurrentInstance()?.appContext.app
+        if (app && !app._context.provides.naive) {
+          app.use(naive)
+        }
+      },
+      template: '<story />',
+    }),
+  ],
   parameters: {
     controls: {
       matchers: {
