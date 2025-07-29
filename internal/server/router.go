@@ -82,6 +82,9 @@ func (s *Server) setupRoutes() {
 		// RBAC 컨트롤러 인스턴스 생성
 		rbacController := controllers.NewRBACController(s.rbacManager, s.storage)
 
+		// Agent 컨트롤러 인스턴스 생성
+		agentController := controllers.NewAgentController(s.agentService)
+
 		// Claude 핸들러 인스턴스 생성 (Claude wrapper가 있다고 가정)
 		// TODO: s.claudeWrapper가 Server 구조체에 추가되어야 함
 		claudeHandler := handlers.NewClaudeHandler(s.claudeWrapper, s.storage.Session(), s.wsHub)
@@ -140,6 +143,32 @@ func (s *Server) setupRoutes() {
 			sessions.POST("/:sessionId/tasks", taskController.Create)
 		}
 
+		// Agent 관련 엔드포인트 (인증 필요)
+		agents := v1.Group("/agents")
+		agents.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
+		{
+			// Agent CRUD
+			agents.GET("", agentController.ListAgents)
+			agents.POST("", agentController.CreateAgent)
+			agents.GET("/:id", agentController.GetAgent)
+			agents.PUT("/:id", agentController.UpdateAgent)
+			agents.DELETE("/:id", agentController.DeleteAgent)
+
+			// Agent 제어
+			agents.POST("/:id/start", agentController.StartAgent)
+			agents.POST("/:id/stop", agentController.StopAgent)
+			agents.POST("/:id/restart", agentController.RestartAgent)
+
+			// Agent 상태 조회
+			agents.GET("/:id/status", agentController.GetAgentStatus)
+			agents.GET("/:id/health", agentController.GetAgentHealth)
+			agents.GET("/:id/metrics", agentController.GetAgentMetrics)
+
+			// Agent 로그 및 이벤트 (WebSocket) - TODO: 구현 필요
+			// agents.GET("/:id/logs", agentController.StreamLogs)
+			// agents.GET("/:id/events", agentController.StreamEvents)
+		}
+
 		// 태스크 관련 엔드포인트 (인증 필요)
 		tasks := v1.Group("/tasks")
 		tasks.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
@@ -151,12 +180,14 @@ func (s *Server) setupRoutes() {
 			tasks.DELETE("/:id", taskController.Cancel)
 		}
 
+
 		// 로그 관련 엔드포인트 (인증 필요)
 		logs := v1.Group("/logs")
 		logs.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))
 		{
 			logs.GET("/workspaces/:id", handlers.GetWorkspaceLogs)
 			logs.GET("/tasks/:id", handlers.GetTaskLogs)
+			logs.GET("/agents/:id", handlers.GetAgentLogs)
 			// TODO: WebSocket 엔드포인트는 나중에 추가
 		}
 

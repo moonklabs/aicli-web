@@ -26,6 +26,15 @@ const (
 	EventTypeBruteForce          EventType = "brute_force"
 	EventTypePrivilegeEscalation EventType = "privilege_escalation"
 	EventTypeMaliciousRequest    EventType = "malicious_request"
+	// AI 에이전트 관련 이벤트 타입
+	EventTypeAIPromptInjection   EventType = "ai_prompt_injection"
+	EventTypeAIJailbreakAttempt  EventType = "ai_jailbreak_attempt"
+	EventTypeAIDataExtraction    EventType = "ai_data_extraction"
+	EventTypeAICommandInjection  EventType = "ai_command_injection"
+	EventTypeAISessionHijack     EventType = "ai_session_hijack"
+	EventTypeAnomalous           EventType = "anomalous_behavior"
+	EventTypeRateLimit           EventType = "rate_limit_violation"
+	EventTypeBlocked             EventType = "access_blocked"
 )
 
 // Severity는 이벤트 심각도를 정의합니다.

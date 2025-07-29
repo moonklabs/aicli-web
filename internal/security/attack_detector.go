@@ -251,6 +251,68 @@ func (ad *AttackDetector) loadDefaultPatterns() {
 			Description: "서버사이드 템플릿 인젝션",
 			IsActive:    true,
 		},
+
+		// AI 에이전트 특화 공격 패턴들
+		{
+			ID:          "ai_001",
+			Name:        "AI Prompt Injection",
+			Type:        "ai_prompt_injection",
+			Pattern:     `(?i)(ignore\s+previous|forget\s+instructions|new\s+instructions|system\s+prompt|\[SYSTEM\]|<\|system\|>)`,
+			Severity:    SeverityHigh,
+			Confidence:  0.8,
+			Description: "AI 프롬프트 인젝션 공격",
+			IsActive:    true,
+		},
+		{
+			ID:          "ai_002",
+			Name:        "AI Jailbreak Attempt",
+			Type:        "ai_jailbreak",
+			Pattern:     `(?i)(jailbreak|uncensored|unrestricted|bypass\s+safety|disable\s+filters|act\s+as\s+dan)`,
+			Severity:    SeverityHigh,
+			Confidence:  0.9,
+			Description: "AI 제한 우회 시도",
+			IsActive:    true,
+		},
+		{
+			ID:          "ai_003",
+			Name:        "AI Model Exploitation",
+			Type:        "ai_exploitation",
+			Pattern:     `(?i)(\\n\\n|\\r\\n|%0a%0a|pretend\s+to\s+be|roleplay\s+as|simulate)`,
+			Severity:    SeverityMedium,
+			Confidence:  0.6,
+			Description: "AI 모델 악용 시도",
+			IsActive:    true,
+		},
+		{
+			ID:          "ai_004",
+			Name:        "AI Data Extraction",
+			Type:        "ai_data_extraction",
+			Pattern:     `(?i)(show\s+me\s+the|reveal\s+the|extract\s+all|dump\s+data|list\s+all\s+files)`,
+			Severity:    SeverityHigh,
+			Confidence:  0.7,
+			Description: "AI를 통한 데이터 추출 시도",
+			IsActive:    true,
+		},
+		{
+			ID:          "ai_005",
+			Name:        "AI Command Injection via Prompt",
+			Type:        "ai_command_injection",
+			Pattern:     `(?i)(execute\s+command|run\s+shell|bash\s+command|\$\(.*\)|` + "`" + `.*` + "`" + `)`,
+			Severity:    SeverityCritical,
+			Confidence:  0.9,
+			Description: "프롬프트를 통한 명령어 실행 시도",
+			IsActive:    true,
+		},
+		{
+			ID:          "ai_006",
+			Name:        "AI Session Hijacking",
+			Type:        "ai_session_hijack",
+			Pattern:     `(?i)(switch\s+user|change\s+identity|impersonate|masquerade\s+as)`,
+			Severity:    SeverityHigh,
+			Confidence:  0.8,
+			Description: "AI 세션 하이재킹 시도",
+			IsActive:    true,
+		},
 	}
 
 	// 정규표현식 컴파일
@@ -545,6 +607,10 @@ func (ad *AttackDetector) isSuspiciousUserAgent(userAgent string) bool {
 		"burp", "owasp zap", "w3af", "acunetix", "netsparker",
 		"python-requests", "curl/7", "wget", "bot", "crawler",
 		"scanner", "fuzzer", "exploit",
+		// AI 도구 관련 의심스러운 User-Agent
+		"langchain", "llamaindex", "openai-python", "anthropic-sdk",
+		"huggingface", "transformers", "gpt", "claude", "bard",
+		"ai-assistant", "chatbot", "llm-client",
 	}
 
 	userAgentLower := strings.ToLower(userAgent)

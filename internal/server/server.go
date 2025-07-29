@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 
+	"github.com/aicli/aicli-web/internal/agent"
 	"github.com/aicli/aicli-web/internal/api/handlers"
 	"github.com/aicli/aicli-web/internal/auth"
 	"github.com/aicli/aicli-web/internal/claude"
 	"github.com/aicli/aicli-web/internal/config"
 	"github.com/aicli/aicli-web/internal/docker"
+	"github.com/aicli/aicli-web/internal/git"
 	"github.com/aicli/aicli-web/internal/middleware"
 	"github.com/aicli/aicli-web/internal/services"
 	"github.com/aicli/aicli-web/internal/storage"
@@ -33,6 +35,7 @@ type Server struct {
 	dockerWorkspaceService *services.DockerWorkspaceService // Docker 통합 워크스페이스 서비스 추가
 	sessionService         *services.SessionService
 	taskService            *services.TaskService
+	agentService           agent.AgentService // Agent 서비스 추가
 
 	// Claude 관련
 	claudeWrapper       claude.Wrapper
@@ -118,6 +121,20 @@ func New() *Server {
 	// 태스크 서비스 초기화
 	taskService := services.NewTaskService(storage, sessionService, nil)
 
+	// Git Worktree 매니저 초기화 (Agent Service 의존성)
+	// TODO: 실제 worktree 매니저 구현 필요
+	var worktreeManager git.WorktreeManager = nil
+
+	// Agent 서비스 초기화
+	// TODO: DockerAdapter, MonitoringService, EventPublisher 구현 필요
+	agentService := agent.NewAgentService(
+		storage,        // storage
+		nil,           // dockerAdapter (TODO: 구현 필요)
+		nil,           // monitoring (TODO: 구현 필요)
+		nil,           // eventPublisher (TODO: 구현 필요)
+		worktreeManager, // worktreeManager (TODO: 구현 필요)
+	)
+
 	// WebSocket 허브 초기화
 	wsHub := websocket.NewHub(nil)
 
@@ -160,6 +177,7 @@ func New() *Server {
 		dockerWorkspaceService: dockerWorkspaceService,
 		sessionService:         sessionService,
 		taskService:            taskService,
+		agentService:           agentService,
 		claudeWrapper:          claudeWrapper,
 		claudeStreamHandler:    claudeStreamHandler,
 		executionTracker:       executionTracker,

@@ -140,3 +140,67 @@ func GetTaskLogs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// GetAgentLogs는 특정 에이전트의 로그를 조회합니다.
+func GetAgentLogs(c *gin.Context) {
+	agentID := c.Param("id")
+
+	// 쿼리 파라미터 처리
+	since := c.Query("since")
+	tail := c.Query("tail")
+	follow := c.Query("follow") == "true"
+
+	// TODO: 실제 에이전트 로그 데이터베이스에서 조회 또는 Docker 컨테이너 로그 스트리밍
+	logs := []LogsEntry{
+		{
+			Timestamp: "2025-01-20T10:00:01Z",
+			Level:     "info",
+			Message:   "에이전트 초기화: " + agentID,
+			Source:    "agent",
+		},
+		{
+			Timestamp: "2025-01-20T10:00:02Z",
+			Level:     "debug",
+			Message:   "Claude CLI 연결 설정 중",
+			Source:    "agent",
+		},
+		{
+			Timestamp: "2025-01-20T10:00:05Z",
+			Level:     "info",
+			Message:   "에이전트 준비 완료",
+			Source:    "agent",
+		},
+		{
+			Timestamp: "2025-01-20T10:01:00Z",
+			Level:     "debug",
+			Message:   "작업 처리 중...",
+			Source:    "agent",
+		},
+	}
+
+	if follow {
+		// TODO: WebSocket으로 실시간 에이전트 로그 스트리밍 구현
+		c.JSON(http.StatusNotImplemented, gin.H{
+			"error":   "Not implemented",
+			"message": "실시간 에이전트 로그 스트리밍은 아직 구현되지 않았습니다",
+		})
+		return
+	}
+
+	response := LogsResponse{
+		Logs:  logs,
+		Total: len(logs),
+		Since: since,
+	}
+
+	// tail 파라미터 처리
+	if tail != "" {
+		if tailNum, err := strconv.Atoi(tail); err == nil && tailNum > 0 {
+			if tailNum < len(logs) {
+				response.Logs = logs[len(logs)-tailNum:]
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}

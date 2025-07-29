@@ -194,6 +194,31 @@ func (s *Storage) WithTx(ctx context.Context, fn func(tx storage.Transaction) er
 	return err
 }
 
+// Transaction 트랜잭션 실행 (storage.Storage 인터페이스 구현)
+func (s *Storage) Transaction(ctx context.Context, fn func(context.Context) error) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("트랜잭션 시작 실패: %w", err)
+	}
+
+	// 트랜잭션 컨텍스트 생성
+	txCtx := context.WithValue(ctx, "tx", tx)
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	err = fn(txCtx)
+	return err
+}
+
 // Close 스토리지 연결 종료
 func (s *Storage) Close() error {
 	// Prepared Statement 정리

@@ -16,10 +16,14 @@ import (
 
 // SecurityController는 보안 관리 API 컨트롤러입니다.
 type SecurityController struct {
-	eventTracker   *security.EventTracker
-	attackDetector *security.AttackDetector
-	rateLimiter    *middleware.AdvancedRateLimiter
-	logger         *zap.Logger
+	eventTracker     *security.EventTracker
+	attackDetector   *security.AttackDetector
+	rateLimiter      *middleware.AdvancedRateLimiter
+	agentAnalyzer    *security.AgentAnalyzer
+	agentRateLimiter *middleware.AgentRateLimiter
+	realtimeMonitor  *security.RealtimeMonitor
+	alertSystem      *security.AlertSystem
+	logger           *zap.Logger
 }
 
 // SecurityEventResponse는 보안 이벤트 응답입니다.
@@ -105,13 +109,21 @@ func NewSecurityController(
 	eventTracker *security.EventTracker,
 	attackDetector *security.AttackDetector,
 	rateLimiter *middleware.AdvancedRateLimiter,
+	agentAnalyzer *security.AgentAnalyzer,
+	agentRateLimiter *middleware.AgentRateLimiter,
+	realtimeMonitor *security.RealtimeMonitor,
+	alertSystem *security.AlertSystem,
 	logger *zap.Logger,
 ) *SecurityController {
 	return &SecurityController{
-		eventTracker:   eventTracker,
-		attackDetector: attackDetector,
-		rateLimiter:    rateLimiter,
-		logger:         logger,
+		eventTracker:     eventTracker,
+		attackDetector:   attackDetector,
+		rateLimiter:      rateLimiter,
+		agentAnalyzer:    agentAnalyzer,
+		agentRateLimiter: agentRateLimiter,
+		realtimeMonitor:  realtimeMonitor,
+		alertSystem:      alertSystem,
+		logger:           logger,
 	}
 }
 
@@ -598,4 +610,307 @@ func convertToAttackPatternResponse(pattern *security.AttackPattern) *AttackPatt
 
 func generateID(prefix string) string {
 	return fmt.Sprintf("%s_%d", prefix, time.Now().UnixNano())
+}
+
+// AnalyzeAgentRequest는 AI 에이전트 요청을 분석합니다.
+// @Summary AI 에이전트 요청 분석
+// @Description AI 에이전트 요청 패턴을 분석하고 이상 탐지를 수행합니다
+// @Tags security
+// @Accept json
+// @Produce json
+// @Param request body map[string]interface{} true "분석 요청"
+// @Success 200 {object} map[string]interface{} "분석 결과"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /api/v1/security/analyze-agent-request [post]
+func (sc *SecurityController) AnalyzeAgentRequest(c *gin.Context) {
+	var req map[string]interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "잘못된 요청 형식입니다",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// 요청 패턴 생성
+	pattern := &security.AgentRequestPattern{
+		UserID:       c.GetString("user_id"),
+		SessionID:    c.GetString("session_id"),
+		RequestType:  getStringFromMap(req, "request_type"),
+		Timestamp:    time.Now(),
+		TokenCount:   getIntFromMap(req, "token_count"),
+		PromptLength: getIntFromMap(req, "prompt_length"),
+		ResponseTime: time.Duration(getIntFromMap(req, "response_time_ms")) * time.Millisecond,
+		Metadata:     getMapFromInterface(req["metadata"]),
+	}
+
+	// 에이전트 분석 수행
+	if sc.agentAnalyzer != nil {
+		result := sc.agentAnalyzer.AnalyzeRequest(c.Request.Context(), pattern)
+		c.JSON(http.StatusOK, gin.H{
+			"is_anomalous":     result.IsAnomalous,
+			"anomaly_type":     result.AnomalyType,
+			"score":            result.Score,
+			"severity":         result.Severity,
+			"evidence":         result.Evidence,
+			"recommendations": result.Recommendations,
+		})
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "에이전트 분석기가 사용할 수 없습니다",
+		})
+	}
+}
+
+// GetAgentAnalytics는 AI 에이전트 분석 통계를 조회합니다.
+// @Summary AI 에이전트 분석 통계
+// @Description AI 에이전트 요청 분석 통계를 조회합니다
+// @Tags security
+// @Accept json
+// @Produce json
+// @Param user_id query string false "사용자 ID"
+// @Param period query string false "기간 (24h, 7d, 30d)" default(24h)
+// @Success 200 {object} map[string]interface{} "분석 통계"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /api/v1/security/agent-analytics [get]
+func (sc *SecurityController) GetAgentAnalytics(c *gin.Context) {
+	userID := c.Query("user_id")
+	periodStr := c.DefaultQuery("period", "24h")
+	
+	period, err := time.ParseDuration(periodStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "유효하지 않은 기간 형식입니다",
+		})
+		return
+	}
+
+	if sc.agentAnalyzer != nil {
+		analytics, err := sc.agentAnalyzer.GetAnalytics(c.Request.Context(), userID, period)
+		if err != nil {
+			sc.logger.Error("에이전트 분석 통계 조회 실패", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal Server Error",
+				"message": "분석 통계 조회에 실패했습니다",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, analytics)
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "에이전트 분석기가 사용할 수 없습니다",
+		})
+	}
+}
+
+// BlockUser는 사용자를 차단합니다.
+// @Summary 사용자 차단
+// @Description 지정된 사용자를 일시적으로 차단합니다
+// @Tags security
+// @Accept json
+// @Produce json
+// @Param request body map[string]interface{} true "차단 요청"
+// @Success 200 {object} map[string]interface{} "성공 메시지"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /api/v1/security/block-user [post]
+func (sc *SecurityController) BlockUser(c *gin.Context) {
+	var req map[string]interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "잘못된 요청 형식입니다",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	userID := getStringFromMap(req, "user_id")
+	durationStr := getStringFromMap(req, "duration")
+	reason := getStringFromMap(req, "reason")
+
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "사용자 ID가 필요합니다",
+		})
+		return
+	}
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		duration = 30 * time.Minute // 기본 30분
+	}
+
+	if sc.agentRateLimiter != nil {
+		err := sc.agentRateLimiter.BlockUser(c.Request.Context(), userID, duration, reason)
+		if err != nil {
+			sc.logger.Error("사용자 차단 실패", zap.String("user_id", userID), zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal Server Error",
+				"message": "사용자 차단에 실패했습니다",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "사용자가 차단되었습니다",
+			"user_id":  userID,
+			"duration": duration.String(),
+			"reason":   reason,
+		})
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "Rate Limiter가 사용할 수 없습니다",
+		})
+	}
+}
+
+// BlockIP는 IP를 차단합니다.
+// @Summary IP 차단
+// @Description 지정된 IP 주소를 일시적으로 차단합니다
+// @Tags security
+// @Accept json
+// @Produce json
+// @Param request body map[string]interface{} true "차단 요청"
+// @Success 200 {object} map[string]interface{} "성공 메시지"
+// @Failure 400 {object} map[string]interface{} "잘못된 요청"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /api/v1/security/block-ip [post]
+func (sc *SecurityController) BlockIP(c *gin.Context) {
+	var req map[string]interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "잘못된 요청 형식입니다",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ipAddress := getStringFromMap(req, "ip_address")
+	durationStr := getStringFromMap(req, "duration")
+	reason := getStringFromMap(req, "reason")
+
+	if ipAddress == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "IP 주소가 필요합니다",
+		})
+		return
+	}
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		duration = 30 * time.Minute // 기본 30분
+	}
+
+	if sc.agentRateLimiter != nil {
+		err := sc.agentRateLimiter.BlockIP(c.Request.Context(), ipAddress, duration, reason)
+		if err != nil {
+			sc.logger.Error("IP 차단 실패", zap.String("ip", ipAddress), zap.Error(err))
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal Server Error",
+				"message": "IP 차단에 실패했습니다",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":    "IP가 차단되었습니다",
+			"ip_address": ipAddress,
+			"duration":   duration.String(),
+			"reason":     reason,
+		})
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "Rate Limiter가 사용할 수 없습니다",
+		})
+	}
+}
+
+// GetRealtimeWebSocket는 실시간 모니터링 WebSocket 연결을 제공합니다.
+// @Summary 실시간 모니터링 WebSocket
+// @Description 보안 이벤트 실시간 모니터링을 위한 WebSocket 연결
+// @Tags security
+// @Success 101 {string} string "WebSocket 연결 성공"
+// @Router /api/v1/security/realtime [get]
+func (sc *SecurityController) GetRealtimeWebSocket(c *gin.Context) {
+	if sc.realtimeMonitor != nil {
+		sc.realtimeMonitor.HandleWebSocket()(c)
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "실시간 모니터가 사용할 수 없습니다",
+		})
+	}
+}
+
+// GetAlertSystemStats는 알림 시스템 통계를 조회합니다.
+// @Summary 알림 시스템 통계
+// @Description 알림 시스템 상태 및 통계 정보를 조회합니다
+// @Tags security
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "알림 시스템 통계"
+// @Failure 500 {object} map[string]interface{} "서버 오류"
+// @Router /api/v1/security/alert-stats [get]
+func (sc *SecurityController) GetAlertSystemStats(c *gin.Context) {
+	if sc.alertSystem != nil {
+		stats := sc.alertSystem.GetStats()
+		c.JSON(http.StatusOK, stats)
+	} else {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "Service Unavailable",
+			"message": "알림 시스템이 사용할 수 없습니다",
+		})
+	}
+}
+
+// 헬퍼 함수들
+
+func getStringFromMap(m map[string]interface{}, key string) string {
+	if val, ok := m[key]; ok {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	return ""
+}
+
+func getIntFromMap(m map[string]interface{}, key string) int {
+	if val, ok := m[key]; ok {
+		switch v := val.(type) {
+		case int:
+			return v
+		case float64:
+			return int(v)
+		case string:
+			if i, err := strconv.Atoi(v); err == nil {
+				return i
+			}
+		}
+	}
+	return 0
+}
+
+func getMapFromInterface(val interface{}) map[string]string {
+	if m, ok := val.(map[string]interface{}); ok {
+		result := make(map[string]string)
+		for k, v := range m {
+			if str, ok := v.(string); ok {
+				result[k] = str
+			}
+		}
+		return result
+	}
+	return make(map[string]string)
 }

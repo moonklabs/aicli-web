@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"aicli-web/internal/docker"
-	"aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/docker"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 // dockerAdapter Docker 컨테이너 관리를 위한 어댑터 구현체
@@ -45,18 +45,14 @@ func (d *dockerAdapter) CreateContainer(ctx context.Context, config ContainerCon
 			ProjectID: config.Labels["project_id"],
 			Name:      config.Labels["agent_name"],
 			Type:      models.AgentType(config.Labels["agent_type"]),
-			Config:    make(map[string]interface{}),
+			Config: models.AgentConfig{
+				Environment: make(map[string]string),
+			},
 		}
 		
 		// 환경 변수에서 설정 추출
 		for k, v := range config.Environment {
-			if k == "CLAUDE_API_KEY" {
-				agent.Config["claude_api_key"] = v
-			} else if k == "GIT_USER_NAME" {
-				agent.Config["git_user_name"] = v
-			} else if k == "GIT_USER_EMAIL" {
-				agent.Config["git_user_email"] = v
-			}
+			agent.Config.Environment[k] = v
 		}
 		
 		// 에이전트 통합이 설정되지 않은 경우 기본 로직으로 폴백

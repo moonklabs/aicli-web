@@ -13,9 +13,8 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
 
-	"aicli-web/internal/models"
+	"github.com/aicli/aicli-web/internal/models"
 )
 
 const (
@@ -70,18 +69,10 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 		"TZ=Asia/Seoul",
 	}
 	
-	// API 키가 있으면 추가
-	if agent.Config != nil && agent.Config["claude_api_key"] != nil {
-		env = append(env, fmt.Sprintf("CLAUDE_API_KEY=%s", agent.Config["claude_api_key"]))
-	}
-	
-	// Git 설정 추가
-	if agent.Config != nil {
-		if gitName := agent.Config["git_user_name"]; gitName != nil {
-			env = append(env, fmt.Sprintf("GIT_USER_NAME=%s", gitName))
-		}
-		if gitEmail := agent.Config["git_user_email"]; gitEmail != nil {
-			env = append(env, fmt.Sprintf("GIT_USER_EMAIL=%s", gitEmail))
+	// 환경 변수에서 설정 추가
+	if agent.Config.Environment != nil {
+		for k, v := range agent.Config.Environment {
+			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 	
