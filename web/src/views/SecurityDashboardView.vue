@@ -380,7 +380,9 @@ const refreshSuspiciousActivities = async () => {
 const loadSecurityAlertSettings = async () => {
   try {
     const settings = await authApi.getSecurityAlertSettings()
-    alertSettings.value = { ...alertSettings.value, ...settings }
+    if (settings) {
+      alertSettings.value = Object.assign({}, alertSettings.value, settings)
+    }
   } catch (error) {
     console.error('Error loading alert settings:', error)
   }

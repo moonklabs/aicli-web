@@ -131,7 +131,7 @@
 
                 <div class="verification-help">
                   <n-alert type="warning" :show-icon="true" size="small">
-                    <template #header">SMS를 받지 못하셨나요?</template>
+                    <template #header>SMS를 받지 못하셨나요?</template>
                     <ul>
                       <li>전화번호가 정확한지 확인해주세요</li>
                       <li>스팸 차단 설정을 확인해주세요</li>
@@ -165,7 +165,7 @@
 
                 <div class="next-steps">
                   <n-alert type="success" :show-icon="true" size="small">
-                    <template #header">인증 완료</template>
+                    <template #header>인증 완료</template>
                     <p>이제 SMS 알림을 받을 수 있고, 2단계 인증에서 SMS를 사용할 수 있습니다.</p>
                   </n-alert>
                 </div>

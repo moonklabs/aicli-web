@@ -293,17 +293,11 @@ router.beforeEach(async (to, from, next) => {
 
   // 사용자 정보가 없으면 가져오기
   if (!userStore.user) {
-    try {
-      await userStore.fetchCurrentUser()
-    } catch (error) {
-      console.error('Failed to fetch user info:', error)
-      // 사용자 정보를 가져올 수 없으면 로그아웃 처리
-      userStore.clearAuth()
-      return next({
-        name: 'login',
-        query: { redirect: to.fullPath },
-      })
-    }
+    // 사용자 정보가 없으면 로그인으로 리다이렉트
+    return next({
+      name: 'login',
+      query: { redirect: to.fullPath },
+    })
   }
 
   // 권한 체크

@@ -204,7 +204,7 @@ const debugInfo = computed(() => {
     user: {
       id: userInfo.value?.id,
       roles: userRoles.value,
-      permissions: PermissionUtils.permissions,
+      permissions: [], // PermissionUtils.permissions는 private
     },
     timestamp: currentTime.value.toISOString(),
   }, null, 2)

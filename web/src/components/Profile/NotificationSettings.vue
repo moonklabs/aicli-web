@@ -396,6 +396,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  settings: null,
   loading: false,
 })
 

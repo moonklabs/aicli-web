@@ -376,7 +376,7 @@ import {
   EyeSharp as Eye,
   ShieldSharp as Shield,
 } from '@vicons/ionicons5'
-import { profileApi } from '@/api/services'
+// import { profileApi } from '@/api/services' // TODO: API 통합 시 사용
 import type { PrivacySettings, UpdatePrivacySettingsRequest } from '@/types/api'
 
 // Props
@@ -386,6 +386,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  settings: null,
   loading: false,
 })
 

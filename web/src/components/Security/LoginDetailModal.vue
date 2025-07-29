@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+// import { computed } from 'vue'
 import {
   NAlert,
   NDescriptions,
@@ -108,7 +108,7 @@ interface Props {
   login: LoginHistory
 }
 
-const props = defineProps<Props>()
+const _props = defineProps<Props>()
 
 // 메소드
 const formatDateTime = (dateString: string) => {

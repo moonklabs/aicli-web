@@ -485,7 +485,7 @@ const userEmail = computed(() => userStore.user?.email || '')
 const loadSettings = async () => {
   try {
     settings.value = await profileApi.getTwoFactorSettings()
-  } catch (error) {
+  } catch (_error) {
     console.error('2FA 설정 로드 실패:', error)
     message.error('2FA 설정을 불러오는데 실패했습니다')
   }
@@ -497,7 +497,7 @@ const startSetup = async () => {
     settings.value = await profileApi.setupTwoFactor()
     showSetup.value = true
     currentStep.value = 1
-  } catch (error) {
+  } catch (_error) {
     console.error('2FA 설정 시작 실패:', error)
     message.error('2FA 설정을 시작할 수 없습니다')
   } finally {
@@ -522,7 +522,7 @@ const copySecret = async () => {
     try {
       await navigator.clipboard.writeText(settings.value.secret)
       message.success('시크릿 키가 클립보드에 복사되었습니다')
-    } catch (error) {
+    } catch (_error) {
       message.error('클립보드 복사에 실패했습니다')
     }
   }
@@ -561,7 +561,7 @@ const regenerateBackupCodes = async () => {
     newBackupCodes.value = await profileApi.regenerateBackupCodes()
     showBackupCodesModal.value = true
     message.success('새로운 백업 코드가 생성되었습니다')
-  } catch (error) {
+  } catch (_error) {
     console.error('백업 코드 재생성 실패:', error)
     message.error('백업 코드 재생성에 실패했습니다')
   } finally {
@@ -628,7 +628,7 @@ const copyCodes = async (codes: string[]) => {
   try {
     await navigator.clipboard.writeText(codes.join('\n'))
     message.success('백업 코드가 클립보드에 복사되었습니다')
-  } catch (error) {
+  } catch (_error) {
     message.error('클립보드 복사에 실패했습니다')
   }
 }

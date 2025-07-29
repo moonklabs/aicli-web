@@ -172,7 +172,8 @@ interface Props {
   uploading?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
+  currentImage: '',
   uploading: false,
 })
 
@@ -285,7 +286,7 @@ const initializeCrop = () => {
 }
 
 // 크롭 미리보기 업데이트
-const updateCropPreview = () => {
+const _updateCropPreview = () => {
   const canvas = previewCanvasRef.value
   const img = cropImageRef.value
 

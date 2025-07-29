@@ -163,7 +163,7 @@
                 <LineChart
                   :data="realTimeMetricsData"
                   :options="realTimeChartOptions"
-                  height="300"
+                  :height="300"
                 />
               </div>
 
@@ -172,7 +172,7 @@
                 <BarChart
                   :data="errorTrendData"
                   :options="errorChartOptions"
-                  height="300"
+                  :height="300"
                 />
               </div>
 
@@ -181,7 +181,7 @@
                 <LineChart
                   :data="userActivityData"
                   :options="userActivityOptions"
-                  height="300"
+                  :height="300"
                 />
               </div>
 
@@ -190,7 +190,7 @@
                 <PieChart
                   :data="resourceUsageData"
                   :options="resourceChartOptions"
-                  height="300"
+                  :height="300"
                 />
               </div>
             </div>

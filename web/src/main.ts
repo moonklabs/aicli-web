@@ -73,7 +73,7 @@ if (import.meta.env.VITE_FEATURE_DISCRETE_API !== 'false') {
   const { message, notification, dialog, loadingBar } = createDiscreteApi(
     ['message', 'dialog', 'notification', 'loadingBar'],
   )
-  
+
   // 전역으로 사용할 수 있도록 설정
   app.config.globalProperties.$message = message
   app.config.globalProperties.$notification = notification

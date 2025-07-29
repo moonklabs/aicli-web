@@ -1,9 +1,9 @@
-import type { AxiosAdapter, AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosAdapter, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { mockApiMatcher } from './mockApi'
 
 // Mock Axios 어댑터 생성
 export function createMockAdapter(defaultAdapter: AxiosAdapter): AxiosAdapter {
-  return async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
+  return async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
     // 개발 환경이고 Mock API가 활성화된 경우
     if (import.meta.env.DEV && mockApiMatcher.isActive()) {
       const mockResponse = await mockApiMatcher.matchRequest(config)

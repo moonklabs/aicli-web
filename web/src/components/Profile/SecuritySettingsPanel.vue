@@ -292,10 +292,7 @@ import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router'
 import { NIcon, NTag } from 'naive-ui'
 import {
-  TimeSharp as Clock,
-  PhonePortraitSharp as Device,
   DocumentTextSharp as Document,
-  LocationSharp as Location,
   LockClosedSharp as Lock,
   ShieldSharp as Shield,
 } from '@vicons/ionicons5'
@@ -316,7 +313,7 @@ interface Props {
   loading?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const _props = withDefaults(defineProps<Props>(), {
   loading: false,
 })
 
@@ -329,10 +326,9 @@ const emit = defineEmits<{
 // 컴포저블
 const message = useMessage()
 const router = useRouter()
-const userStore = useUserStore()
+const _userStore = useUserStore()
 
 // 반응형 상태
-const loading = ref(false)
 const loadingLoginHistory = ref(false)
 const loadingActivityLog = ref(false)
 const profile = ref<UserProfile | null>(null)

@@ -146,7 +146,7 @@
 
                 <div class="next-steps">
                   <n-alert type="success" :show-icon="true" size="small">
-                    <template #header">다음 로그인부터 새 이메일을 사용하세요</template>
+                    <template #header>다음 로그인부터 새 이메일을 사용하세요</template>
                     <p>보안을 위해 모든 기기에서 자동으로 로그아웃됩니다. 새 이메일로 다시 로그인해주세요.</p>
                   </n-alert>
                 </div>

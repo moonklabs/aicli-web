@@ -401,13 +401,13 @@ export const useUserStore = defineStore('user', () => {
       setLoading(true)
       // TODO: 서버에 로그아웃 요청 전송
       console.log('Logging out user...')
-      
+
       // 인증 정보 및 관련 데이터 모두 초기화
       clearAuth()
-      
+
       // 추가적인 정리 작업
       permissionCache.value.clear()
-      
+
     } catch (err) {
       console.error('Logout failed:', err)
       setError('로그아웃 중 오류가 발생했습니다.')

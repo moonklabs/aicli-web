@@ -394,7 +394,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const stopWorkspace = async (id: string): Promise<boolean> => {
     try {
       setLoading(true)
-      updateWorkspace(id, { status: 'inactive' })
+      updateWorkspace(id, { status: 'idle' })
 
       // TODO: API 호출로 워크스페이스 중지
       console.log(`Stopping workspace ${id}`)
