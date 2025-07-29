@@ -15,7 +15,7 @@ export const dockerApi = {
     workspaceId?: string
   }): Promise<DockerContainerInfo[]> => {
     const response = await apiGet<DockerContainerInfo[]>('/docker/containers', { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -23,7 +23,7 @@ export const dockerApi = {
    */
   getContainer: async (id: string): Promise<DockerContainerInfo> => {
     const response = await apiGet<DockerContainerInfo>(`/docker/containers/${id}`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -31,7 +31,7 @@ export const dockerApi = {
    */
   startContainer: async (id: string): Promise<DockerContainerInfo> => {
     const response = await apiPost<DockerContainerInfo>(`/docker/containers/${id}/start`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -41,7 +41,7 @@ export const dockerApi = {
     const response = await apiPost<DockerContainerInfo>(`/docker/containers/${id}/stop`, {
       force: force || false,
     })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -49,7 +49,7 @@ export const dockerApi = {
    */
   restartContainer: async (id: string): Promise<DockerContainerInfo> => {
     const response = await apiPost<DockerContainerInfo>(`/docker/containers/${id}/restart`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -71,7 +71,7 @@ export const dockerApi = {
     timestamps?: boolean
   }): Promise<string[]> => {
     const response = await apiGet<string[]>(`/docker/containers/${id}/logs`, { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -79,7 +79,7 @@ export const dockerApi = {
    */
   getContainerStats: async (id: string): Promise<DockerStats> => {
     const response = await apiGet<DockerStats>(`/docker/containers/${id}/stats`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -100,7 +100,7 @@ export const dockerApi = {
       command,
       ...options,
     })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -111,7 +111,7 @@ export const dockerApi = {
     dangling?: boolean
   }): Promise<DockerImageInfo[]> => {
     const response = await apiGet<DockerImageInfo[]>('/docker/images', { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -119,7 +119,7 @@ export const dockerApi = {
    */
   getImage: async (id: string): Promise<DockerImageInfo> => {
     const response = await apiGet<DockerImageInfo>(`/docker/images/${id}`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -134,7 +134,7 @@ export const dockerApi = {
       name: imageName,
       tag: tag || 'latest',
     })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -160,7 +160,7 @@ export const dockerApi = {
     logs: string[]
   }> => {
     const response = await apiPost('/docker/images/build', data)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -192,7 +192,7 @@ export const dockerApi = {
     }
   }> => {
     const response = await apiGet('/docker/system/info')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -220,7 +220,7 @@ export const dockerApi = {
     }
   }> => {
     const response = await apiGet('/docker/system/df')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -237,6 +237,6 @@ export const dockerApi = {
     spaceReclaimed: number
   }> => {
     const response = await apiPost('/docker/system/prune', options)
-    return response.data.data
+    return response.data.data as any
   },
 }

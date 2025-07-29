@@ -47,18 +47,19 @@ export function testAnsiParser(): boolean {
 
   testCases.forEach(testCase => {
     try {
-      const result = AnsiParser.parseAnsiEscapes(testCase.input)
-
-      const ansiMatch = result.hasAnsiCodes === testCase.expectAnsi
-      const segmentMatch = result.segments.length === testCase.expectSegments
+      const result = new AnsiParser().parse(testCase.input)
+      const hasAnsi = testCase.input.includes('\x1b[')
+      
+      const ansiMatch = hasAnsi === testCase.expectAnsi
+      const segmentMatch = result.length === testCase.expectSegments
 
       if (ansiMatch && segmentMatch) {
         console.log(`✅ ${testCase.name}: PASS`)
         passedTests++
       } else {
         console.error(`❌ ${testCase.name}: FAIL`)
-        console.error(`  Expected ANSI: ${testCase.expectAnsi}, Got: ${result.hasAnsiCodes}`)
-        console.error(`  Expected segments: ${testCase.expectSegments}, Got: ${result.segments.length}`)
+        console.error(`  Expected ANSI: ${testCase.expectAnsi}, Got: ${hasAnsi}`)
+        console.error(`  Expected segments: ${testCase.expectSegments}, Got: ${result.length}`)
       }
     } catch (error) {
       console.error(`❌ ${testCase.name}: ERROR - ${error}`)
@@ -146,12 +147,13 @@ export function generateMockTerminalLogs(count = 50): TerminalLog[] {
     }
 
     // ANSI 파싱 적용
-    const parsed = AnsiParser.parseAnsiEscapes(content)
-    if (parsed.hasAnsiCodes) {
+    const parsed = new AnsiParser().parse(content)
+    const hasAnsi = content.includes('\x1b[')
+    if (hasAnsi) {
       log.parsed = {
-        raw: parsed.rawText,
-        html: AnsiParser.renderToHtml(parsed),
-        plainText: AnsiParser.stripAnsiCodes(content),
+        raw: content,
+        html: new AnsiParser().toHtml(content),
+        plainText: content.replace(/\x1b\[[0-9;]*m/g, ''),
         hasAnsi: true,
       }
     }
@@ -335,7 +337,7 @@ export function testTerminalPerformance(logCount = 1000): void {
   // ANSI 파싱 성능 테스트
   const parseStartTime = performance.now()
   logs.forEach(log => {
-    AnsiParser.parseAnsiEscapes(log.content)
+    new AnsiParser().parse(log.content)
   })
   const parseTime = performance.now() - parseStartTime
 
@@ -343,7 +345,7 @@ export function testTerminalPerformance(logCount = 1000): void {
   const renderStartTime = performance.now()
   logs.forEach(log => {
     if (log.parsed?.hasAnsi) {
-      AnsiParser.toHtml(log.content)
+      new AnsiParser().toHtml(log.content)
     }
   })
   const renderTime = performance.now() - renderStartTime

@@ -494,7 +494,7 @@ const filteredData = computed(() => {
 
     // 컬럼 필터 적용
     if (filters.length > 0) {
-      result = applyTableFilter(result, filters)
+      result = applyTableFilters(result, filters)
     }
 
     return result
@@ -564,8 +564,8 @@ const visibleItems = computed(() => {
     return paginatedData.value
   }
 
-  const items = virtualizer.value.getVirtualItems()
-  return items.map(virtualItem => ({
+  const items = (virtualizer.value as any).getVirtualItems()
+  return items.map((virtualItem: any) => ({
     ...paginatedData.value[virtualItem.index],
     virtualItem,
   }))
@@ -573,7 +573,7 @@ const visibleItems = computed(() => {
 
 // 가상 스크롤 총 높이
 const virtualTotalSize = computed(() => {
-  return virtualizer.value?.getTotalSize() ?? 0
+  return (virtualizer.value as any)?.getTotalSize() ?? 0
 })
 
 // 선택 상태 계산
@@ -824,13 +824,51 @@ const defaultCompare = (a: any, b: any, type: string): number => {
   }
 }
 
+// 테이블 필터 적용 함수
+const applyTableFilters = (data: any[], filters: TableFilter[]): any[] => {
+  return data.filter(item => {
+    return filters.every(filter => {
+      const value = getCellDisplayValue(item, { key: filter.column } as AdvancedTableColumn)
+      
+      switch (filter.type) {
+        case 'text':
+          return String(value).toLowerCase().includes(String(filter.value).toLowerCase())
+        case 'number':
+          return Number(value) === Number(filter.value)
+        case 'date':
+          const itemDate = new Date(value).getTime()
+          const filterDate = new Date(filter.value).getTime()
+          return itemDate === filterDate
+        case 'select':
+          return value === filter.value
+        case 'multiSelect':
+          const filterValues = Array.isArray(filter.value) ? filter.value : [filter.value]
+          return filterValues.includes(value)
+        case 'dateRange':
+          if (Array.isArray(filter.value) && filter.value.length === 2) {
+            const itemTime = new Date(value).getTime()
+            const startTime = new Date(filter.value[0]).getTime()
+            const endTime = new Date(filter.value[1]).getTime()
+            return itemTime >= startTime && itemTime <= endTime
+          }
+          return true
+        default:
+          return true
+      }
+    })
+  })
+}
+
 const updateVirtualScrollRange = () => {
   // @tanstack/vue-virtual이 자동으로 처리하므로 더 이상 필요하지 않음
   // 하지만 레거시 호환성을 위해 유지
   if (!props.virtualScroll?.enabled) return
 
   // 가상화 라이브러리가 자동으로 처리
-  virtualizer.value?.measure()
+  if (virtualizer.value) {
+    // @tanstack/vue-virtual v3에서는 measure가 자동으로 처리됨
+    // 필요시 수동으로 remeasure 호출 가능
+  }
 }
 
 // 새로운 성능 최적화 함수들

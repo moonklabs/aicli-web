@@ -304,7 +304,7 @@ export function useAccessibilityNavigation() {
   /**
    * 키보드 이벤트 핸들러 설정
    */
-  const setupKeyboardNavigation = (): void => {
+  const setupKeyboardNavigation = (): (() => void) => {
     const handleKeydown = (event: KeyboardEvent): void => {
       if (!keyboardNavigationEnabled.value) return
 
@@ -316,8 +316,8 @@ export function useAccessibilityNavigation() {
           focusNext()
           break
 
-        case 'Alt':
-          if (event.altKey && event.key === '1') {
+        case '1':
+          if (event.altKey) {
             // Alt + 1: 메인 콘텐츠로 스킵
             event.preventDefault()
             skipToTarget('main-content')

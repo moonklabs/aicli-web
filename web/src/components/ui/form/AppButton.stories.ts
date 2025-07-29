@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { action } from '@storybook/addon-actions'
+// import { action } from '@storybook/addon-actions'
 import AppButton from './AppButton.vue'
 
 const meta: Meta<typeof AppButton> = {
@@ -73,10 +73,10 @@ const meta: Meta<typeof AppButton> = {
     },
   },
   args: {
-    onClick: action('clicked'),
-    onFocus: action('focused'),
-    onBlur: action('blurred'),
-    onKeydown: action('keydown'),
+    onClick: () => console.log('clicked'),
+    onFocus: () => console.log('focused'),
+    onBlur: () => console.log('blurred'),
+    onKeydown: () => console.log('keydown'),
   },
 }
 

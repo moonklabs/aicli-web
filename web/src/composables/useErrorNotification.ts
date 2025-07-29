@@ -214,7 +214,7 @@ export function useErrorNotification() {
           retryable = true
           break
         default:
-          if (data?.message) {
+          if (data?.message && typeof data.message === 'string') {
             message = data.message
           }
       }

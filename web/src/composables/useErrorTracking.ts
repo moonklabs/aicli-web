@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, readonly, ref } from 'vue'
 import { type ErrorEvent, type ErrorLevel, errorTracker, logger } from '@/utils/error-tracker'
 
 /**

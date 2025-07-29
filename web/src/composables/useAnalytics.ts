@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, readonly, ref } from 'vue'
 import { type AnalyticsEvent, type AnalyticsEventType, analytics } from '@/utils/analytics'
 
 /**
@@ -547,11 +547,11 @@ export function withPerformanceTracking<T extends (...args: any[]) => any>(
 }
 
 // 글로벌 타입 확장
-declare module '@vue/runtime-core' {
-  interface ComponentCustomProperties {
-    $analytics: typeof analytics
-  }
-}
+// declare module '@vue/runtime-core' {
+//   interface ComponentCustomProperties {
+//     $analytics: typeof analytics
+//   }
+// }
 
 declare global {
   interface HTMLElement {

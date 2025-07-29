@@ -17,7 +17,7 @@ export const workspaceApi = {
     search?: string
   }): Promise<PaginatedResponse<Workspace>> => {
     const response = await apiGet<PaginatedResponse<Workspace>>('/workspaces', { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -25,7 +25,7 @@ export const workspaceApi = {
    */
   getWorkspace: async (id: string): Promise<Workspace> => {
     const response = await apiGet<Workspace>(`/workspaces/${id}`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -33,7 +33,7 @@ export const workspaceApi = {
    */
   createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
     const response = await apiPost<Workspace>('/workspaces', data)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -41,7 +41,7 @@ export const workspaceApi = {
    */
   updateWorkspace: async (id: string, data: UpdateWorkspaceRequest): Promise<Workspace> => {
     const response = await apiPut<Workspace>(`/workspaces/${id}`, data)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -56,7 +56,7 @@ export const workspaceApi = {
    */
   startWorkspace: async (id: string): Promise<Workspace> => {
     const response = await apiPost<Workspace>(`/workspaces/${id}/start`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -64,7 +64,7 @@ export const workspaceApi = {
    */
   stopWorkspace: async (id: string): Promise<Workspace> => {
     const response = await apiPost<Workspace>(`/workspaces/${id}/stop`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -72,7 +72,7 @@ export const workspaceApi = {
    */
   restartWorkspace: async (id: string): Promise<Workspace> => {
     const response = await apiPost<Workspace>(`/workspaces/${id}/restart`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -84,7 +84,7 @@ export const workspaceApi = {
     follow?: boolean
   }): Promise<string[]> => {
     const response = await apiGet<string[]>(`/workspaces/${id}/logs`, { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -100,7 +100,7 @@ export const workspaceApi = {
     const response = await apiGet(`/workspaces/${id}/files`, {
       params: { path: path || '/' },
     })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -115,7 +115,7 @@ export const workspaceApi = {
     const response = await apiGet(`/workspaces/${id}/files/content`, {
       params: { path: filePath },
     })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -165,7 +165,7 @@ export const workspaceApi = {
     }>
   }> => {
     const response = await apiGet(`/workspaces/${id}/git/status`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -176,6 +176,6 @@ export const workspaceApi = {
     exitCode: number
   }> => {
     const response = await apiPost(`/workspaces/${id}/git/execute`, { command })
-    return response.data.data
+    return response.data.data as any
   },
 }

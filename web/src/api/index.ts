@@ -122,7 +122,7 @@ if (import.meta.env.DEV) {
 
 // 요청 인터셉터 설정
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig): Promise<AxiosRequestConfig> => {
+  async (config: any): Promise<any> => {
     // 네트워크 연결 확인 (Mock API가 활성화되지 않은 경우에만)
     if (!isOnline && !(import.meta.env.DEV && mockApiMatcher.isActive())) {
       const error = new Error('Network is offline') as Error & { code: string }
@@ -177,7 +177,7 @@ api.interceptors.request.use(
     }
 
     // 재시도 설정 추가
-    config.metadata = { retryCount: 0 }
+    ;(config as any).metadata = { retryCount: 0 }
 
     return config
   },
@@ -197,7 +197,7 @@ api.interceptors.response.use(
     }
 
     // 캐시 가능한 응답이면 캐시에 저장
-    if (shouldCache(response.config) && !response.fromCache) {
+    if (shouldCache(response.config) && !(response as any).fromCache) {
       const cacheKey = generateCacheKey(response.config)
       setCachedResponse(cacheKey, response.data)
     }
@@ -207,7 +207,7 @@ api.interceptors.response.use(
       console.log('✅ API Response:', {
         status: response.status,
         url: response.config.url,
-        cached: !!response.fromCache,
+        cached: !!(response as any).fromCache,
         data: response.data,
       })
     }
@@ -230,12 +230,12 @@ api.interceptors.response.use(
       url: config?.url,
       message: error.response?.data?.message || error.message,
       data: error.response?.data,
-      retryCount: config?.metadata?.retryCount || 0,
+      retryCount: (config as any)?.metadata?.retryCount || 0,
     })
 
     // 재시도 로직 (401 에러 제외하고 먼저 처리)
     if (config && error.response?.status !== 401) {
-      const retryCount = config.metadata?.retryCount || 0
+      const retryCount = (config as any).metadata?.retryCount || 0
       const shouldRetry = globalRetryConfig.retryCondition ?
         globalRetryConfig.retryCondition(error) :
         (DEFAULT_RETRY_CONFIG.retryCondition?.(error) ?? false)
@@ -252,7 +252,7 @@ api.interceptors.response.use(
         await sleep(delay)
 
         // 재시도 횟수 증가
-        config.metadata.retryCount = retryCount + 1
+        ;(config as any).metadata.retryCount = retryCount + 1
 
         return api.request(config)
       }
@@ -270,7 +270,7 @@ api.interceptors.response.use(
               config.headers.Authorization = `Bearer ${userStore.authState.token}`
             }
             // 재시도 카운트 리셋 (토큰 갱신 후)
-            config.metadata = { retryCount: 0 }
+            ;(config as any).metadata = { retryCount: 0 }
             return api.request(config)
           }
         } catch (refreshError) {
@@ -358,7 +358,7 @@ export const apiDelete = <T = unknown>(url: string, config?: AxiosRequestConfig)
 export const apiUpload = <T = unknown>(
   url: string,
   formData: FormData,
-  onUploadProgress?: (progressEvent: { loaded: number; total: number }) => void,
+  onUploadProgress?: (progressEvent: any) => void,
 ): Promise<AxiosResponse<ApiResponse<T>>> => {
   return api.post(url, formData, {
     headers: {

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import { action } from '@storybook/addon-actions'
+// import { action } from '@storybook/addon-actions'
 import { ref } from 'vue'
 import AppInput from './AppInput.vue'
 import AppFormField from './AppFormField.vue'
@@ -80,12 +80,12 @@ const meta: Meta<typeof AppInput> = {
     },
   },
   args: {
-    'onUpdate:value': action('update:value'),
-    onFocus: action('focused'),
-    onBlur: action('blurred'),
-    onClear: action('cleared'),
-    onChange: action('changed'),
-    onInput: action('input'),
+    'onUpdate:value': () => console.log('update:value'),
+    onFocus: () => console.log('focused'),
+    onBlur: () => console.log('blurred'),
+    onClear: () => console.log('cleared'),
+    onChange: () => console.log('changed'),
+    onInput: () => console.log('input'),
   },
 }
 

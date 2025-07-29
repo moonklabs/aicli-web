@@ -17,7 +17,7 @@ export const claudeApi = {
     limit?: number
   }): Promise<PaginatedResponse<TerminalSession>> => {
     const response = await apiGet<PaginatedResponse<TerminalSession>>('/claude/sessions', { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -25,7 +25,7 @@ export const claudeApi = {
    */
   getSession: async (id: string): Promise<TerminalSession> => {
     const response = await apiGet<TerminalSession>(`/claude/sessions/${id}`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -33,7 +33,7 @@ export const claudeApi = {
    */
   createSession: async (data: CreateTerminalRequest): Promise<TerminalSession> => {
     const response = await apiPost<TerminalSession>('/claude/sessions', data)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -52,7 +52,7 @@ export const claudeApi = {
     message?: string
   }> => {
     const response = await apiPost(`/claude/sessions/${sessionId}/execute`, data)
-    return response.data.data
+    return response.data.data as any as { commandId: string; status: string; message?: string }
   },
 
   /**
@@ -75,7 +75,7 @@ export const claudeApi = {
     hasMore: boolean
   }> => {
     const response = await apiGet(`/claude/sessions/${sessionId}/logs`, { params })
-    return response.data.data
+    return response.data.data as any as { logs: any[]; total: number; hasMore: boolean }
   },
 
   /**
@@ -109,7 +109,7 @@ export const claudeApi = {
     completedAt?: string
   }>> => {
     const response = await apiGet('/claude/tasks', { params })
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -135,7 +135,7 @@ export const claudeApi = {
     completedAt?: string
   }> => {
     const response = await apiGet(`/claude/tasks/${id}`)
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -161,7 +161,7 @@ export const claudeApi = {
     }
   }> => {
     const response = await apiGet('/claude/config')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -199,7 +199,7 @@ export const claudeApi = {
     lastChecked: string
   }> => {
     const response = await apiGet('/claude/status')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -216,7 +216,7 @@ export const claudeApi = {
     available: boolean
   }>> => {
     const response = await apiGet('/claude/models')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -239,7 +239,7 @@ export const claudeApi = {
     updatedAt: string
   }>> => {
     const response = await apiGet('/claude/templates')
-    return response.data.data
+    return response.data.data as any
   },
 
   /**
@@ -250,6 +250,6 @@ export const claudeApi = {
     estimatedTokens: number
   }> => {
     const response = await apiPost(`/claude/templates/${templateId}/use`, { variables })
-    return response.data.data
+    return response.data.data as any
   },
 }

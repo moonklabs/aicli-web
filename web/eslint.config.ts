@@ -26,6 +26,7 @@ export default defineConfigWithVueTs(
     '**/public/**',
     '**/.vscode/**',
     '**/.git/**',
+    '**/storybook-static/**',
   ]),
 
   // Vue 필수 규칙

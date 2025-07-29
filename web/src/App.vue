@@ -26,7 +26,7 @@ const router = useRouter()
 
 // 테마 관리
 const { isDark, initTheme, accessibilitySettings } = useTheme()
-const { announcePageChange } = useAriaLive('app-navigation')
+const { announce } = useAriaLive('app-navigation')
 
 // Naive UI 테마 설정
 const theme = computed<GlobalTheme | null>(() => {
@@ -37,7 +37,7 @@ const theme = computed<GlobalTheme | null>(() => {
 router.afterEach((to, from) => {
   if (accessibilitySettings.value.announcePageChanges && to.name !== from.name) {
     const pageName = (to.meta?.title as string) || (to.name as string) || '새 페이지'
-    announcePageChange(pageName)
+    announce(`페이지가 ${pageName}으로 변경되었습니다`)
   }
 })
 
