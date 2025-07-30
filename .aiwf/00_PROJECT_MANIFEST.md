@@ -222,8 +222,9 @@ aicli-web/
   - 에이전트 데이터 모델 및 생명주기 관리, Git worktree 통합, Docker 컨테이너 관리, RESTful API 구현
   - 태스크 상세화 완료: 8개 태스크 (High: 2개, Medium: 5개, Low: 1개)
   - 핵심 태스크: Agent 모델, Git worktree 관리자, Docker 통합, 에이전트 API 엔드포인트
-  - 완료된 태스크: 1/8 (T01_S01_Agent_Model_Implementation 시작)
-  - 진행률: 0/8 태스크 완료 (0%)
+  - 완료된 태스크: 1/8 (TX01_S01_Agent_Model_Implementation 완료)
+  - 진행 중: T04B_S01_Docker_Advanced_Integration (Docker 고급 통합)
+  - 진행률: 1/8 태스크 완료 (12.5%)
 - **S02_M06_PTY_Streaming** (PLANNED) - 실시간 PTY 터미널 스트리밍 시스템
   - PTY 세션 관리, WebSocket 스트리밍, 터미널 스냅샷 캡처, Docker PTY 통합
   - 태스크 상세화 완료: 9개 태스크 (High: 3개, Medium: 5개, Low: 1개)
