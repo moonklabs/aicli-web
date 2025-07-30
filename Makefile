@@ -32,7 +32,8 @@ YELLOW=\033[0;33m
 BLUE=\033[0;34m
 NC=\033[0m # No Color
 
-.PHONY: all build build-cli build-api build-all clean test test-unit test-integration lint lint-fix lint-all lint-report fmt dev help \
+.PHONY: all build build-cli build-api build-all clean test test-unit test-integration test-integration-full test-integration-quick \
+	test-integration-performance test-integration-agent test-integration-git test-integration-api lint lint-fix lint-all lint-report fmt dev help \
 	run-cli run-api install docker docker-push vet deps check security release pre-commit-install pre-commit-update pre-commit-run \
 	swagger swagger-fmt test-docker test-docker-skip test-container test-docker-bench test-mount test-mount-integration test-status test-status-integration \
 	test-security test-security-integration test-security-bench test-workspace-integration test-workspace-performance test-workspace-complete \
@@ -116,8 +117,40 @@ test-unit:
 
 test-integration:
 	@printf "${BLUE}Running integration tests...${NC}\n"
-	${GO} test -v -race -tags=integration ./internal/testing/...
+	@printf "${YELLOW}T07_S01 통합 테스트 및 검증 실행${NC}\n"
+	${GO} test -v -race -timeout 30m ./test/integration/...
 	@printf "${GREEN}✓ Integration tests completed${NC}\n"
+
+# T07_S01 통합 테스트 관련 타겟들
+test-integration-full:
+	@printf "${BLUE}Running full integration test suite with coverage...${NC}\n"
+	./test/integration/test_runner.sh -c -r
+	@printf "${GREEN}✓ Full integration tests completed${NC}\n"
+
+test-integration-quick:
+	@printf "${BLUE}Running quick integration tests...${NC}\n"
+	./test/integration/test_runner.sh --quick
+	@printf "${GREEN}✓ Quick integration tests completed${NC}\n"
+
+test-integration-performance:
+	@printf "${BLUE}Running performance tests only...${NC}\n"
+	./test/integration/test_runner.sh -s performance
+	@printf "${GREEN}✓ Performance tests completed${NC}\n"
+
+test-integration-agent:
+	@printf "${BLUE}Running agent integration tests only...${NC}\n"
+	./test/integration/test_runner.sh -s agent
+	@printf "${GREEN}✓ Agent integration tests completed${NC}\n"
+
+test-integration-git:
+	@printf "${BLUE}Running git integration tests only...${NC}\n"
+	./test/integration/test_runner.sh -s git
+	@printf "${GREEN}✓ Git integration tests completed${NC}\n"
+
+test-integration-api:
+	@printf "${BLUE}Running API integration tests only...${NC}\n"
+	./test/integration/test_runner.sh -s api
+	@printf "${GREEN}✓ API integration tests completed${NC}\n"
 
 test-e2e:
 	@printf "${BLUE}Running E2E tests...${NC}\n"

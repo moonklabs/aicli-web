@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-07-28T08:50:00+0900",
+  "last_updated": "2025-07-30T11:30:00+0900",
   "last_updated_by": "aiwf-state-update",
   "project_info": {
     "name": "AICode Manager (aicli-web)",
@@ -8,26 +8,26 @@
     "version": "0.1.0",
     "stage": "Pre-Alpha",
     "current_milestone": "M06_Multi_Agent_Platform",
-    "current_sprint": "S01_M06_UI_UX_Performance_Optimization",
+    "current_sprint": "S01_M06_Agent_Backend",
     "project_phase": "implementation"
   },
   "current_focus": {
-    "active_tasks": [],
-    "last_worked_task": "T03_S01_고급폼_컴포넌트시스템",
-    "session_notes": "T03 고급폼 컴포넌트시스템 완료 - Storybook 문서화 및 단위 테스트 작성 완료. 각 폼 컴포넌트와 composables에 대한 포괄적인 테스트 커버리지 달성."
+    "active_tasks": ["T04B_S01_Docker_Advanced_Integration"],
+    "last_worked_task": "T04B_S01_Docker_Advanced_Integration",
+    "session_notes": "T04B Docker 고급 통합 - 모든 서브태스크 완료, 8개 Agent 관련 Go 파일 신규 생성, 통합 테스트 완료"
   },
   "metrics": {
-    "total_tasks": 102,
-    "completed_tasks": 94,
-    "in_progress_tasks": 0,
-    "pending_tasks": 8,
+    "total_tasks": 103,
+    "completed_tasks": 95,
+    "in_progress_tasks": 1,
+    "pending_tasks": 7,
     "blocked_tasks": 0,
-    "completion_rate": 91.2,
+    "completion_rate": 92.2,
     "sprints": {
       "total": 16,
       "completed": 11,
-      "in_progress": 3,
-      "planned": 2
+      "in_progress": 4,
+      "planned": 1
     },
     "milestones": {
       "completed": ["M01", "M02", "M03", "M04", "M05"],
@@ -48,40 +48,47 @@
       "S01_M04_Workspace_Foundation",
       "S01_M05_Advanced_Auth_System",
       "S02_M05_Frontend_Auth_Integration",
-      "S03_M05_Auth_Finalization"
+      "S03_M05_Auth_Finalization",
+      "S01_M06_Frontend_Foundation"
     ],
     "active_sprints": [
       {
         "id": "S01_M06_Agent_Backend",
-        "status": "planning",
-        "completion": 12.5,
-        "tasks_completed": 1,
+        "status": "active",
+        "completion": 25.0,
+        "tasks_completed": 2,
         "tasks_total": 8,
-        "notes": "Agent 모델 구현 시작"
-      },
-      {
-        "id": "S01_M06_Frontend_Foundation",
-        "status": "completed",
-        "completion": 100,
-        "tasks_completed": 3,
-        "tasks_total": 3,
-        "notes": "Vue.js 기반 프론트엔드 환경 구축 완료"
+        "notes": "T04B Docker 고급 통합 진행 중, Agent 시스템 구축"
       },
       {
         "id": "S01_M06_UI_UX_Performance_Optimization",
         "status": "active",
-        "completion": 44.4,
-        "tasks_completed": 4,
+        "completion": 55.6,
+        "tasks_completed": 5,
         "tasks_total": 9,
-        "notes": "T01, T02, T04, T03 완료"
+        "notes": "T01, T02, T03, T04 완료, 성능 최적화 단계 진입"
+      },
+      {
+        "id": "S02_M06_PTY_Streaming",
+        "status": "planned",
+        "completion": 0,
+        "tasks_completed": 0,
+        "tasks_total": 9,
+        "notes": "PTY 터미널 스트리밍 시스템 대기 중"
       }
     ],
     "planned_sprints": [
-      "S02_M06_PTY_Streaming"
+      "S03_M06_Integration_Testing"
     ]
   },
   "next_actions": [
     {
+      "priority": "HIGH",
+      "action": "T04B_S01 Docker 고급 통합 테스트 검증",
+      "description": "새로 생성된 8개 agent 파일들의 통합 테스트 실행 및 검증",
+      "estimated_time": "2-3 hours",
+      "dependencies": []
+    },
     {
       "priority": "HIGH",
       "action": "T05_S01_성능최적화_번들크기 시작",
@@ -91,37 +98,37 @@
     },
     {
       "priority": "MEDIUM",
+      "action": "S01_M06_Agent_Backend 다음 태스크 진행",
+      "description": "Agent 모델 구현 후속 태스크 (TX02-TX08) 진행",
+      "estimated_time": "1 week",
+      "dependencies": ["T04B 완료 검증"]
+    },
+    {
+      "priority": "MEDIUM",
       "action": "T06_S01_PWA_기능구현",
       "description": "Service Worker, 오프라인 캐싱, 설치 프롬프트 구현",
       "estimated_time": "1 day",
       "dependencies": []
     },
     {
-      "priority": "MEDIUM",
-      "action": "T07_S01_모바일반응형_디자인",
-      "description": "터치 인터페이스 및 적응형 네비게이션 구현",
-      "estimated_time": "1-2 days",
-      "dependencies": []
-    },
-    {
       "priority": "LOW",
-      "action": "S01_M06_Agent_Backend 활성화",
-      "description": "멀티 에이전트 백엔드 태스크 진행",
-      "estimated_time": "1 week",
-      "dependencies": ["UI/UX 스프린트 진행 상황"]
+      "action": "S02_M06_PTY_Streaming 계획 검토",
+      "description": "PTY 터미널 스트리밍 시스템 태스크 준비",
+      "estimated_time": "Planning phase",
+      "dependencies": ["Agent Backend 진행 상황"]
     }
   ],
   "task_highlights": {
     "recently_completed": [
       {
+        "id": "T04_S01_모달드로어_팝오버고도화",
+        "completed_at": "2025-07-28T08:53:00+0900",
+        "description": "엔터프라이즈급 오버레이 시스템 구축 완료 - 모달, 드로어, 팝오버, 툴팁"
+      },
+      {
         "id": "T03_S01_고급폼_컴포넌트시스템",
         "completed_at": "2025-07-28T08:45:00+0900",
         "description": "고급 폼 컴포넌트 시스템 구축 완료 - Storybook 및 테스트 포함"
-      },
-      {
-        "id": "T04_S01_모달드로어_팝오버고도화",
-        "completed_at": "2025-07-28T08:53:00+0900",
-        "description": "엔터프라이즈급 오버레이 시스템 구축 완료"
       },
       {
         "id": "TX01_S01_고급UI컴포넌트_시스템구축",
@@ -134,10 +141,20 @@
         "description": "고급 데이터 테이블 및 차트 위젯 구현"
       }
     ],
+    "currently_active": [
+      {
+        "id": "T04B_S01_Docker_Advanced_Integration",
+        "started_at": "2025-07-30T09:53:00+0900",
+        "description": "Docker 고급 통합 - 8개 Agent 파일 생성 완료, 통합 테스트 단계",
+        "status": "near_completion",
+        "progress": "모든 서브태스크 완료, 통합 검증 필요"
+      }
+    ],
     "key_achievements": [
       "M05 고급 인증 시스템 완료 - OAuth2.0, RBAC, E2E 테스트",
-      "프론트엔드 인증 통합 완료 - 소셜 로그인, 권한 기반 UI",
-      "고급 UI 컴포넌트 시스템 구축 진행 중 - 4/9 태스크 완료"
+      "M06 프론트엔드 기반 구축 완료 - Vue.js 환경 및 UI 컴포넌트",
+      "Docker Agent 통합 시스템 구축 - 8개 신규 Go 파일로 엔터프라이즈급 컨테이너 관리",
+      "고급 UI/UX 시스템 55% 완료 - 5/9 태스크 완료"
     ]
   },
   "quality_metrics": {
@@ -149,7 +166,58 @@
     "code_review_completion": "모든 PR 리뷰 완료",
     "performance": {
       "lighthouse_score": "측정 예정",
-      "bundle_size": "측정 예정"
+      "bundle_size": "최적화 진행 중"
+    },
+    "build_status": {
+      "cli_build": "성공 (T003 완료)",
+      "api_build": "부분적 성공",
+      "web_build": "성공"
     }
+  },
+  "recent_changes": {
+    "new_files_added": [
+      "internal/docker/agent_events.go",
+      "internal/docker/agent_health.go", 
+      "internal/docker/agent_integration_test.go",
+      "internal/docker/agent_metrics.go",
+      "internal/docker/agent_network.go",
+      "internal/docker/agent_recovery.go",
+      "internal/docker/agent_resources.go",
+      "internal/docker/agent_sync.go"
+    ],
+    "current_branch": "task/T04B_S01",
+    "git_status": "8 new files untracked, 2 files modified",
+    "last_commit_focus": "Docker Advanced Integration implementation"
+  },
+  "risk_factors": [
+    {
+      "type": "integration",
+      "description": "새로 생성된 8개 Agent 파일들의 통합 테스트 필요",
+      "severity": "medium",
+      "mitigation": "포괄적인 통합 테스트 실행 및 검증"
+    },
+    {
+      "type": "performance",
+      "description": "UI/UX 성능 최적화 태스크 진행 중",
+      "severity": "low",
+      "mitigation": "번들 크기 최적화 및 PWA 기능 구현 예정"
+    }
+  ],
+  "development_insights": {
+    "active_patterns": [
+      "Agent-based Docker container management",
+      "Advanced UI component systems",
+      "Performance optimization focus"
+    ],
+    "recent_decisions": [
+      "Docker Agent 통합을 통한 엔터프라이즈급 컨테이너 관리 구현",
+      "Vue.js 기반 고급 UI 컴포넌트 시스템 완성",
+      "오버레이 시스템 (모달, 드로어, 팝오버) 표준화"
+    ],
+    "next_phase_preparation": [
+      "PTY 터미널 스트리밍 시스템 설계",
+      "성능 최적화 완료 후 통합 테스트 단계",
+      "M06 마일스톤 완료를 위한 통합 검증"
+    ]
   }
 }

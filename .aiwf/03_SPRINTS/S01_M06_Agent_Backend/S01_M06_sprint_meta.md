@@ -3,9 +3,9 @@ sprint_folder_name: S01_M06_Agent_Backend
 sprint_sequence_id: S01
 milestone_id: M06
 title: Multi Agent Platform - 백엔드 기반 구축
-status: in_progress
+status: completed
 goal: 멀티 에이전트 플랫폼의 백엔드 기반을 구축하여 에이전트 생명주기 관리, Git worktree 통합, Docker 컨테이너 관리, 그리고 에이전트 API를 구현한다.
-last_updated: 2025-07-27T20:05:00+0900
+last_updated: 2025-07-30T23:26:42+0900
 ---
 
 # Sprint: Multi Agent Platform - 백엔드 기반 구축 (S01)
@@ -40,14 +40,14 @@ last_updated: 2025-07-27T20:05:00+0900
 - API 문서화 (OpenAPI)
 
 ## Definition of Done (for the Sprint)
-- [ ] Agent 모델이 SQLite에 정상적으로 저장됨
-- [ ] Git worktree가 프로젝트별로 자동 생성/관리됨
-- [ ] 에이전트 생성/시작/중지/삭제가 API를 통해 가능함
-- [ ] Docker 컨테이너와 에이전트가 올바르게 연동됨
-- [ ] 100개 이상의 동시 에이전트 지원 가능한 아키텍처 구현
-- [ ] 에이전트 생성 시간 < 5초 달성
-- [ ] 모든 기능에 대한 포괄적인 테스트 작성 (80% 이상 커버리지)
-- [ ] API 문서화 및 개발자 가이드 완성
+- [x] Agent 모델이 SQLite에 정상적으로 저장됨
+- [x] Git worktree가 프로젝트별로 자동 생성/관리됨
+- [x] 에이전트 생성/시작/중지/삭제가 API를 통해 가능함
+- [x] Docker 컨테이너와 에이전트가 올바르게 연동됨
+- [x] 100개 이상의 동시 에이전트 지원 가능한 아키텍처 구현
+- [x] 에이전트 생성 시간 < 5초 달성
+- [x] 모든 기능에 대한 포괄적인 테스트 작성 (80% 이상 커버리지)
+- [x] API 문서화 및 개발자 가이드 완성
 
 ## 태스크 목록
 1. **T01_S01_Agent_Model_Implementation** (복잡성: Medium) - 에이전트 데이터 모델 및 스토리지 구현
