@@ -9,16 +9,17 @@ import (
 
 // Factory Docker 클라이언트와 관련 매니저들을 생성하고 관리합니다.
 type Factory struct {
-	config           *Config
-	client           *Client
-	networkManager   *NetworkManager
-	statsCollector   *StatsCollector
-	healthChecker    *HealthChecker
-	containerManager *ContainerManager
-	lifecycleManager *LifecycleManager
-	mountManager     *MountManager
-	metricsCollector *MetricsCollector
-	mu               sync.RWMutex
+	config             *Config
+	client             *Client
+	networkManager     *NetworkManager
+	statsCollector     *StatsCollector
+	healthChecker      *HealthChecker
+	containerManager   *ContainerManager
+	lifecycleManager   *LifecycleManager
+	mountManager       *MountManager
+	metricsCollector   *MetricsCollector
+	ptySessionManager  *PTYSessionManager
+	mu                 sync.RWMutex
 }
 
 // NewFactory 새로운 Docker 팩토리를 생성합니다.
@@ -31,15 +32,16 @@ func NewFactory(config *Config) (*Factory, error) {
 	statsCollector := NewStatsCollector(client)
 
 	factory := &Factory{
-		config:           config,
-		client:           client,
-		networkManager:   NewNetworkManager(client),
-		statsCollector:   statsCollector,
-		healthChecker:    NewHealthChecker(client, 30*time.Second),
-		containerManager: NewContainerManager(client),
-		lifecycleManager: NewLifecycleManager(client),
-		mountManager:     NewMountManager(),
-		metricsCollector: NewMetricsCollector(statsCollector, nil), // Manager는 나중에 설정
+		config:            config,
+		client:            client,
+		networkManager:    NewNetworkManager(client),
+		statsCollector:    statsCollector,
+		healthChecker:     NewHealthChecker(client, 30*time.Second),
+		containerManager:  NewContainerManager(client),
+		lifecycleManager:  NewLifecycleManager(client),
+		mountManager:      NewMountManager(),
+		metricsCollector:  NewMetricsCollector(statsCollector, nil), // Manager는 나중에 설정
+		ptySessionManager: NewPTYSessionManager(client, 100),        // 최대 100개 세션
 	}
 
 	return factory, nil
@@ -97,6 +99,13 @@ func (f *Factory) GetMountManager() *MountManager {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 	return f.mountManager
+}
+
+// GetPTYSessionManager PTY 세션 관리자를 반환합니다.
+func (f *Factory) GetPTYSessionManager() *PTYSessionManager {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.ptySessionManager
 }
 
 // GetMetricsCollector 메트릭 수집기를 반환합니다.
@@ -172,6 +181,12 @@ func (f *Factory) Reinitialize(ctx context.Context) error {
 	}
 	f.lifecycleManager = NewLifecycleManager(client)
 
+	// 기존 PTY 세션 매니저 정리
+	if f.ptySessionManager != nil {
+		f.ptySessionManager.Shutdown()
+	}
+	f.ptySessionManager = NewPTYSessionManager(client, 100)
+
 	return nil
 }
 
@@ -196,6 +211,11 @@ func (f *Factory) Close() error {
 	// 생명주기 매니저 정리
 	if f.lifecycleManager != nil {
 		f.lifecycleManager.Close()
+	}
+
+	// PTY 세션 매니저 정리
+	if f.ptySessionManager != nil {
+		f.ptySessionManager.Shutdown()
 	}
 
 	// 클라이언트 정리
@@ -277,6 +297,11 @@ func (m *Manager) Lifecycle() *LifecycleManager {
 // Mount 마운트 매니저를 반환합니다.
 func (m *Manager) Mount() *MountManager {
 	return m.factory.GetMountManager()
+}
+
+// PTY PTY 세션 관리자를 반환합니다.
+func (m *Manager) PTY() *PTYSessionManager {
+	return m.factory.GetPTYSessionManager()
 }
 
 // Metrics 메트릭 수집기를 반환합니다.

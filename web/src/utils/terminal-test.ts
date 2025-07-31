@@ -49,7 +49,7 @@ export function testAnsiParser(): boolean {
     try {
       const result = new AnsiParser().parse(testCase.input)
       const hasAnsi = testCase.input.includes('\x1b[')
-      
+
       const ansiMatch = hasAnsi === testCase.expectAnsi
       const segmentMatch = result.length === testCase.expectSegments
 

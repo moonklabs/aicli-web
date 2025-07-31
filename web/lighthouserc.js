@@ -17,19 +17,21 @@ module.exports = {
       numberOfRuns: 3, // 안정적인 결과를 위해 3회 실행
     },
     assert: {
-      // 성능 기준 설정
+      // 성능 기준 설정 (T09_S01 요구사항: 95점 이상)
       assertions: {
-        'categories:performance': ['warn', { minScore: 0.8 }],
-        'categories:accessibility': ['warn', { minScore: 0.9 }],
-        'categories:best-practices': ['warn', { minScore: 0.8 }],
-        'categories:seo': ['warn', { minScore: 0.8 }],
+        'categories:performance': ['error', { minScore: 0.95 }],
+        'categories:accessibility': ['error', { minScore: 0.95 }],
+        'categories:best-practices': ['error', { minScore: 0.95 }],
+        'categories:seo': ['error', { minScore: 0.95 }],
         'categories:pwa': ['warn', { minScore: 0.8 }],
 
-        // Core Web Vitals
-        'largest-contentful-paint': ['warn', { maxNumericValue: 2500 }],
-        'first-contentful-paint': ['warn', { maxNumericValue: 1800 }],
-        'cumulative-layout-shift': ['warn', { maxNumericValue: 0.1 }],
-        'total-blocking-time': ['warn', { maxNumericValue: 300 }],
+        // Core Web Vitals (더 엄격한 기준)
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
+        'first-contentful-paint': ['error', { maxNumericValue: 1500 }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        'total-blocking-time': ['error', { maxNumericValue: 300 }],
+        'speed-index': ['warn', { maxNumericValue: 3000 }],
+        'interactive': ['error', { maxNumericValue: 3000 }],
 
         // 접근성 관련
         'color-contrast': 'error',

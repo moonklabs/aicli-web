@@ -34,7 +34,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   root: null,
   rootMargin: '',
   thresholds: [0],
-  takeRecords: vi.fn().mockReturnValue([])
+  takeRecords: vi.fn().mockReturnValue([]),
 })) as any
 
 // matchMedia 모킹

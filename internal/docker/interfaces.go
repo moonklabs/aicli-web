@@ -65,6 +65,7 @@ type DockerFactory interface {
 	GetStatsCollector() StatsCollection
 	GetHealthChecker() HealthMonitoring
 	GetMountManager() MountManagement
+	GetPTYSessionManager() PTYSessionManagement
 	IsHealthy(ctx context.Context) (bool, error)
 	Ping(ctx context.Context) error
 	Close() error
@@ -78,6 +79,7 @@ type DockerManager interface {
 	Stats() StatsCollection
 	Health() HealthMonitoring
 	Mount() MountManagement
+	PTY() PTYSessionManagement
 	Config() *Config
 	Context() context.Context
 	GetSystemStatus(ctx context.Context) (*SystemStatus, error)
@@ -246,6 +248,18 @@ type SecurityMonitoring interface {
 	GetSecurityDashboard() *securitypkg.SecurityDashboard
 	GetWorkspaceViolations(workspaceID string) []securitypkg.ResourceViolation
 	ClearViolations(workspaceID string)
+}
+
+// PTYSessionManagement PTY 세션 관리 인터페이스
+type PTYSessionManagement interface {
+	CreateSession(ctx context.Context, containerID string) (PTYSession, error)
+	GetSession(sessionID string) (PTYSession, error)
+	ListSessions() []PTYSession
+	RemoveSession(sessionID string) error
+	GetSessionCount() int
+	GetSessionsByContainer(containerID string) []PTYSession
+	GetStats() *PTYSessionStats
+	Shutdown() error
 }
 
 // ImageManager 이미지 관리 인터페이스 (향후 구현 예정)

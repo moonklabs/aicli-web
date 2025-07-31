@@ -829,7 +829,7 @@ const applyTableFilters = (data: any[], filters: TableFilter[]): any[] => {
   return data.filter(item => {
     return filters.every(filter => {
       const value = getCellDisplayValue(item, { key: filter.column } as AdvancedTableColumn)
-      
+
       switch (filter.type) {
         case 'text':
           return String(value).toLowerCase().includes(String(filter.value).toLowerCase())

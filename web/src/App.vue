@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 import {
   type GlobalTheme,
@@ -25,7 +25,7 @@ const userStore = useUserStore()
 const router = useRouter()
 
 // 테마 관리
-const { isDark, initTheme, accessibilitySettings } = useTheme()
+const { isDark, initTheme, accessibilitySettings, toggleTheme } = useTheme()
 const { announce } = useAriaLive('app-navigation')
 
 // Naive UI 테마 설정
@@ -41,6 +41,22 @@ router.afterEach((to, from) => {
   }
 })
 
+// 키보드 단축키 처리
+const handleKeyboardShortcuts = (event: KeyboardEvent): void => {
+  // Cmd/Ctrl + Shift + T: 테마 토글
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'T') {
+    event.preventDefault()
+    const previousTheme = isDark.value ? '다크 모드' : '라이트 모드'
+    toggleTheme()
+    
+    // 접근성 알림
+    if (accessibilitySettings.value.announcePageChanges) {
+      const newTheme = isDark.value ? '다크 모드' : '라이트 모드'
+      announce(`키보드 단축키로 테마가 ${previousTheme}에서 ${newTheme}(으)로 변경되었습니다`)
+    }
+  }
+}
+
 // 앱 초기화
 onMounted(() => {
   // 테마 시스템 초기화
@@ -48,6 +64,15 @@ onMounted(() => {
 
   // 인증 상태 복원
   userStore.initializeAuth()
+
+  // 키보드 단축키 이벤트 리스너 등록
+  document.addEventListener('keydown', handleKeyboardShortcuts)
+})
+
+// 정리
+onUnmounted(() => {
+  // 키보드 단축키 이벤트 리스너 해제
+  document.removeEventListener('keydown', handleKeyboardShortcuts)
 })
 
 </script>
@@ -73,10 +98,8 @@ onMounted(() => {
                 />
               </div>
 
-              <!-- 메인 콘텐츠 영역 -->
-              <main id="main-content" role="main" class="main-content">
-                <RouterView />
-              </main>
+              <!-- 메인 콘텐츠 영역 (MainLayout이 전체 레이아웃 관리) -->
+              <RouterView />
 
               <!-- 전역 컴포넌트들 -->
               <ErrorNotification />
@@ -125,20 +148,10 @@ onMounted(() => {
   }
 }
 
-.main-content {
-  flex: 1;
-  overflow: auto;
-  padding: var(--spacing-lg);
-
-  // 접근성을 위한 포커스 스타일
-  &:focus {
-    outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  @media (max-width: 640px) {
-    padding: var(--spacing-md);
-  }
+// MainLayout이 콘텐츠 레이아웃을 관리하므로 기본 스타일만 제공
+.app-container > .main-layout {
+  width: 100%;
+  height: 100%;
 }
 
 // 접근성 향상을 위한 전역 스타일
