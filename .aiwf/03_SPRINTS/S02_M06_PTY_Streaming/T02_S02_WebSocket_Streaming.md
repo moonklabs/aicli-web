@@ -36,7 +36,7 @@ PTY 세션과 웹 클라이언트 간의 실시간 양방향 통신을 위한 We
 - [x] 백프레셜 및 플로우 컨트롤 시스템
 - [x] 연결 상태 모니터링 및 헬스체크
 - [x] 메시지 큐잉 및 버퍼 관리
-- [ ] 단위 테스트 및 통합 테스트 작성
+- [x] 단위 테스트 및 통합 테스트 작성
 
 ## Technical Guidelines
 
@@ -132,6 +132,7 @@ type WebSocketConnection struct {
 [2025-07-31 09:45] Factory/Manager 통합 완료 - WebSocket 스트리밍, 핸들러, 헬스체크 시스템 완전 통합
 [2025-07-31 10:00] WebSocket 시스템 검증 완료 - 모든 acceptance criteria 및 subtasks 달성 확인
 [2025-07-31 10:15] T02_S02_WebSocket_Streaming 태스크 완료 - 실시간 WebSocket 스트리밍 시스템 구현 완료
+[2025-07-31 12:30] WebSocket 테스트 케이스 완성 - 포괄적인 단위 테스트, 통합 테스트, 성능 벤치마크 작성 완료
 
 ## 구현된 주요 기능
 
@@ -159,3 +160,11 @@ type WebSocketConnection struct {
 - DockerFactory/DockerManager에 WebSocket 시스템 완전 통합
 - 기존 PTY 및 컨테이너 관리 시스템과 연계
 - 시스템 재초기화 및 리소스 정리 로직 포함
+
+### 5. 포괄적인 테스트 시스템
+- **websocket_streaming_test.go**: WebSocket 연결, 메시지 전송, 백프레셜 제어 등 핵심 기능 테스트
+- **websocket_manager_test.go**: 연결 관리, PTY 연결, 브로드캐스트, 정리 루틴 등 관리자 기능 테스트  
+- **websocket_handlers_test.go**: HTTP 핸들러, 라우팅, 에러 처리, 헬스체크 등 API 레이어 테스트
+- 모의 객체(Mock) 활용한 격리된 단위 테스트
+- 동시성 및 성능 벤치마크 테스트 포함
+- 실시간 WebSocket 통신 시나리오 검증
