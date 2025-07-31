@@ -2,13 +2,16 @@ package docker
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
+	"github.com/gorilla/mux"
 
 	mountpkg "github.com/aicli/aicli-web/internal/docker/mount"
 	securitypkg "github.com/aicli/aicli-web/internal/docker/security"
@@ -66,6 +69,11 @@ type DockerFactory interface {
 	GetHealthChecker() HealthMonitoring
 	GetMountManager() MountManagement
 	GetPTYSessionManager() PTYSessionManagement
+	GetSnapshotManager() TerminalSnapshotManagement
+	GetContainerPTYManager() ContainerPTYManagement
+	GetWebSocketStreamingManager() WebSocketStreamingManagement
+	GetWebSocketHandler() WebSocketHandlerManagement  
+	GetWebSocketHealthCheck() WebSocketHealthCheckManagement
 	IsHealthy(ctx context.Context) (bool, error)
 	Ping(ctx context.Context) error
 	Close() error
@@ -80,6 +88,11 @@ type DockerManager interface {
 	Health() HealthMonitoring
 	Mount() MountManagement
 	PTY() PTYSessionManagement
+	Snapshot() TerminalSnapshotManagement
+	ContainerPTY() ContainerPTYManagement
+	WebSocketStreaming() WebSocketStreamingManagement
+	WebSocketHandler() WebSocketHandlerManagement
+	WebSocketHealthCheck() WebSocketHealthCheckManagement
 	Config() *Config
 	Context() context.Context
 	GetSystemStatus(ctx context.Context) (*SystemStatus, error)
@@ -147,6 +160,7 @@ type ClientInterface interface {
 	ContainerExecCreate(ctx context.Context, containerID string, config ExecConfig) (types.IDResponse, error)
 	ContainerExecStart(ctx context.Context, execID string, config ExecStartConfig) (types.HijackedResponse, error)
 	ContainerExecInspect(ctx context.Context, execID string) (types.ContainerExecInspect, error)
+	Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error)
 }
 
 // LifecycleManagement 컨테이너 생명주기 이벤트 관리 인터페이스
@@ -262,6 +276,56 @@ type PTYSessionManagement interface {
 	Shutdown() error
 }
 
+// TerminalSnapshotManagement 터미널 스냅샷 관리 인터페이스
+type TerminalSnapshotManagement interface {
+	CreateCapturer(sessionID string, interval time.Duration, maxHistory int) (*SnapshotCapturer, error)
+	GetCapturer(sessionID string) (*SnapshotCapturer, error)
+	RemoveCapturer(sessionID string) error
+	StartCapture(sessionID string) error
+	StopCapture(sessionID string) error
+	GetSnapshot(sessionID string) (TerminalSnapshot, error)
+	GetSnapshotHistory(sessionID string) ([]TerminalSnapshot, error)
+	GetAllCapturers() map[string]*SnapshotCapturer
+	Shutdown() error
+}
+
+// ContainerPTYManagement 컨테이너 PTY 통합 관리 인터페이스  
+type ContainerPTYManagement interface {
+	CreateContainerPTY(ctx context.Context, containerID string, config PTYConfig) (PTYSession, error)
+	GetContainerPTYSessions(containerID string) []PTYSession
+	AttachToPTY(ctx context.Context, sessionID string) (PTYSession, error)
+	ExecuteCommand(ctx context.Context, containerID string, cmd []string) (*ExecResult, error)
+	MonitorContainer(ctx context.Context, containerID string) (<-chan ContainerEvent, error)
+	DetectShell(ctx context.Context, containerID string) (string, error)
+	ValidateContainer(ctx context.Context, containerID string) error
+	CleanupInactiveSessions()
+	GetStats() *ContainerPTYStats
+	Shutdown() error
+}
+
+// WebSocketStreamingManagement WebSocket 스트리밍 관리 인터페이스
+type WebSocketStreamingManagement interface {
+	HandleWebSocketConnection(w http.ResponseWriter, r *http.Request, sessionID string) error
+	GetManager() *WebSocketManager
+	Shutdown() error
+}
+
+// WebSocketHandlerManagement WebSocket HTTP 핸들러 관리 인터페이스
+type WebSocketHandlerManagement interface {
+	HandlePTYWebSocket(w http.ResponseWriter, r *http.Request)
+	HandleContainerWebSocket(w http.ResponseWriter, r *http.Request)
+	HandleWebSocketStats(w http.ResponseWriter, r *http.Request)
+	HandleWebSocketConnections(w http.ResponseWriter, r *http.Request)
+	HandleCloseWebSocketConnection(w http.ResponseWriter, r *http.Request)
+	RegisterRoutes(router *mux.Router)
+}
+
+// WebSocketHealthCheckManagement WebSocket 헬스체크 관리 인터페이스
+type WebSocketHealthCheckManagement interface {
+	Check() error
+	GetHealthStatus() map[string]interface{}
+}
+
 // ImageManager 이미지 관리 인터페이스 (향후 구현 예정)
 type ImageManager interface {
 	PullImage(ctx context.Context, image string) error
@@ -314,11 +378,6 @@ type ExecStartConfig struct {
 	Tty    bool `json:"tty"`
 }
 
-type ExecResult struct {
-	ExitCode int    `json:"exit_code"`
-	Output   string `json:"output,omitempty"`
-	Error    string `json:"error,omitempty"`
-}
 
 // Security 관련 타입 정의 (import cycle 방지용)
 type NetworkInfo struct {

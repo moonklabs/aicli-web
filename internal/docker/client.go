@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/client"
 )
 
@@ -171,4 +172,9 @@ func (c *Client) WorkspaceLabels(workspaceID, workspaceName string) map[string]s
 		c.labelKey("workspace.name"): workspaceName,
 		c.labelKey("created"):        time.Now().Format(time.RFC3339),
 	}
+}
+
+// Events Docker 이벤트 스트림을 반환합니다.
+func (c *Client) Events(ctx context.Context, options types.EventsOptions) (<-chan events.Message, <-chan error) {
+	return c.cli.Events(ctx, options)
 }

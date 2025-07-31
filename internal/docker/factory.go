@@ -3,23 +3,31 @@ package docker
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 // Factory Docker 클라이언트와 관련 매니저들을 생성하고 관리합니다.
 type Factory struct {
-	config             *Config
-	client             *Client
-	networkManager     *NetworkManager
-	statsCollector     *StatsCollector
-	healthChecker      *HealthChecker
-	containerManager   *ContainerManager
-	lifecycleManager   *LifecycleManager
-	mountManager       *MountManager
-	metricsCollector   *MetricsCollector
-	ptySessionManager  *PTYSessionManager
-	mu                 sync.RWMutex
+	config                      *Config
+	client                      *Client
+	networkManager              *NetworkManager
+	statsCollector              *StatsCollector
+	healthChecker               *HealthChecker
+	containerManager            *ContainerManager
+	lifecycleManager            *LifecycleManager
+	mountManager                *MountManager
+	metricsCollector            *MetricsCollector
+	ptySessionManager           *PTYSessionManager
+	snapshotManager             *SnapshotManager
+	containerPTYManager         *ContainerPTYManager
+	webSocketStreamingManager   *WebSocketStreamingManager
+	webSocketHandler            *WebSocketHandler
+	webSocketHealthCheck        *WebSocketHealthCheck
+	mu                          sync.RWMutex
 }
 
 // NewFactory 새로운 Docker 팩토리를 생성합니다.
@@ -31,17 +39,30 @@ func NewFactory(config *Config) (*Factory, error) {
 
 	statsCollector := NewStatsCollector(client)
 
+	ptySessionManager := NewPTYSessionManager(client, 100) // 최대 100개 세션
+	containerPTYManager := NewContainerPTYManager(client, ptySessionManager) // 컨테이너 PTY 통합 관리자
+	
+	// WebSocket 시스템 초기화
+	webSocketStreamingManager := NewWebSocketStreamingManager(ptySessionManager, containerPTYManager, 1000) // 최대 1000개 WebSocket 연결
+	webSocketHandler := NewWebSocketHandler(webSocketStreamingManager, ptySessionManager, containerPTYManager)
+	webSocketHealthCheck := NewWebSocketHealthCheck(webSocketStreamingManager)
+	
 	factory := &Factory{
-		config:            config,
-		client:            client,
-		networkManager:    NewNetworkManager(client),
-		statsCollector:    statsCollector,
-		healthChecker:     NewHealthChecker(client, 30*time.Second),
-		containerManager:  NewContainerManager(client),
-		lifecycleManager:  NewLifecycleManager(client),
-		mountManager:      NewMountManager(),
-		metricsCollector:  NewMetricsCollector(statsCollector, nil), // Manager는 나중에 설정
-		ptySessionManager: NewPTYSessionManager(client, 100),        // 최대 100개 세션
+		config:                      config,
+		client:                      client,
+		networkManager:              NewNetworkManager(client),
+		statsCollector:              statsCollector,
+		healthChecker:               NewHealthChecker(client, 30*time.Second),
+		containerManager:            NewContainerManager(client),
+		lifecycleManager:            NewLifecycleManager(client),
+		mountManager:                NewMountManager(),
+		metricsCollector:            NewMetricsCollector(statsCollector, nil), // Manager는 나중에 설정
+		ptySessionManager:           ptySessionManager,
+		snapshotManager:             NewSnapshotManager(ptySessionManager),   // PTY 세션 관리자 연결
+		containerPTYManager:         containerPTYManager,                     // 컨테이너 PTY 관리자 연결
+		webSocketStreamingManager:   webSocketStreamingManager,               // WebSocket 스트리밍 관리자
+		webSocketHandler:            webSocketHandler,                        // WebSocket HTTP 핸들러
+		webSocketHealthCheck:        webSocketHealthCheck,                    // WebSocket 헬스체크
 	}
 
 	return factory, nil
@@ -106,6 +127,41 @@ func (f *Factory) GetPTYSessionManager() *PTYSessionManager {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 	return f.ptySessionManager
+}
+
+// GetSnapshotManager 터미널 스냅샷 관리자를 반환합니다.
+func (f *Factory) GetSnapshotManager() *SnapshotManager {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.snapshotManager
+}
+
+// GetContainerPTYManager 컨테이너 PTY 통합 관리자를 반환합니다.
+func (f *Factory) GetContainerPTYManager() *ContainerPTYManager {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.containerPTYManager
+}
+
+// GetWebSocketStreamingManager WebSocket 스트리밍 관리자를 반환합니다.
+func (f *Factory) GetWebSocketStreamingManager() *WebSocketStreamingManager {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.webSocketStreamingManager
+}
+
+// GetWebSocketHandler WebSocket HTTP 핸들러를 반환합니다.
+func (f *Factory) GetWebSocketHandler() *WebSocketHandler {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.webSocketHandler
+}
+
+// GetWebSocketHealthCheck WebSocket 헬스체크를 반환합니다.
+func (f *Factory) GetWebSocketHealthCheck() *WebSocketHealthCheck {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.webSocketHealthCheck
 }
 
 // GetMetricsCollector 메트릭 수집기를 반환합니다.
@@ -181,11 +237,35 @@ func (f *Factory) Reinitialize(ctx context.Context) error {
 	}
 	f.lifecycleManager = NewLifecycleManager(client)
 
+	// 기존 WebSocket 시스템 정리
+	if f.webSocketStreamingManager != nil {
+		f.webSocketStreamingManager.Shutdown()
+	}
+
+	// 기존 컨테이너 PTY 매니저 정리
+	if f.containerPTYManager != nil {
+		f.containerPTYManager.Shutdown()
+	}
+
+	// 기존 스냅샷 매니저 정리
+	if f.snapshotManager != nil {
+		f.snapshotManager.Shutdown()
+	}
+
 	// 기존 PTY 세션 매니저 정리
 	if f.ptySessionManager != nil {
 		f.ptySessionManager.Shutdown()
 	}
+	
+	// 시스템 재초기화
 	f.ptySessionManager = NewPTYSessionManager(client, 100)
+	f.snapshotManager = NewSnapshotManager(f.ptySessionManager)
+	f.containerPTYManager = NewContainerPTYManager(client, f.ptySessionManager)
+	
+	// WebSocket 시스템 재초기화
+	f.webSocketStreamingManager = NewWebSocketStreamingManager(f.ptySessionManager, f.containerPTYManager, 1000)
+	f.webSocketHandler = NewWebSocketHandler(f.webSocketStreamingManager, f.ptySessionManager, f.containerPTYManager)
+	f.webSocketHealthCheck = NewWebSocketHealthCheck(f.webSocketStreamingManager)
 
 	return nil
 }
@@ -211,6 +291,21 @@ func (f *Factory) Close() error {
 	// 생명주기 매니저 정리
 	if f.lifecycleManager != nil {
 		f.lifecycleManager.Close()
+	}
+
+	// WebSocket 시스템 정리
+	if f.webSocketStreamingManager != nil {
+		f.webSocketStreamingManager.Shutdown()
+	}
+
+	// 컨테이너 PTY 매니저 정리
+	if f.containerPTYManager != nil {
+		f.containerPTYManager.Shutdown()
+	}
+
+	// 스냅샷 매니저 정리
+	if f.snapshotManager != nil {
+		f.snapshotManager.Shutdown()
 	}
 
 	// PTY 세션 매니저 정리
@@ -302,6 +397,31 @@ func (m *Manager) Mount() *MountManager {
 // PTY PTY 세션 관리자를 반환합니다.
 func (m *Manager) PTY() *PTYSessionManager {
 	return m.factory.GetPTYSessionManager()
+}
+
+// Snapshot 터미널 스냅샷 관리자를 반환합니다.
+func (m *Manager) Snapshot() *SnapshotManager {
+	return m.factory.GetSnapshotManager()
+}
+
+// ContainerPTY 컨테이너 PTY 통합 관리자를 반환합니다.
+func (m *Manager) ContainerPTY() *ContainerPTYManager {
+	return m.factory.GetContainerPTYManager()
+}
+
+// WebSocketStreaming WebSocket 스트리밍 관리자를 반환합니다.
+func (m *Manager) WebSocketStreaming() *WebSocketStreamingManager {
+	return m.factory.GetWebSocketStreamingManager()
+}
+
+// WebSocketHandler WebSocket HTTP 핸들러를 반환합니다.
+func (m *Manager) WebSocketHandler() *WebSocketHandler {
+	return m.factory.GetWebSocketHandler()
+}
+
+// WebSocketHealthCheck WebSocket 헬스체크를 반환합니다.
+func (m *Manager) WebSocketHealthCheck() *WebSocketHealthCheck {
+	return m.factory.GetWebSocketHealthCheck()
 }
 
 // Metrics 메트릭 수집기를 반환합니다.
