@@ -138,10 +138,10 @@ func DefaultMonitoringConfig() MonitoringConfig {
 
 // IntegratedAgentSystemComponents 통합된 에이전트 시스템의 모든 컴포넌트
 type IntegratedAgentSystemComponents struct {
-	AgentService     AgentService
-	EventBus         EventBus
-	EventPublisher   EventPublisher
-	MetricsCollector MetricsCollector
+	AgentService      AgentService
+	EventBus          EventBus
+	EventPublisher    EventPublisher
+	MetricsCollector  MetricsCollector
 	MonitoringService MonitoringService
 }
 
@@ -149,16 +149,16 @@ type IntegratedAgentSystemComponents struct {
 func (f *AgentServiceFactory) CreateIntegratedAgentSystem() *IntegratedAgentSystemComponents {
 	// EventBus 생성
 	eventBus := NewBasicEventBus(DefaultEventBusConfig())
-	
+
 	// MetricsCollector 생성
 	metricsCollector := NewBasicMetricsCollector(f.dockerAdapter)
-	
+
 	// MonitoringService 생성
 	monitoring := NewMonitoringService(metricsCollector, eventBus, DefaultMonitoringConfig())
-	
+
 	// EventPublisher 생성
 	eventPublisher := NewBasicEventPublisher(eventBus)
-	
+
 	// AgentService 생성
 	agentService := NewAgentService(
 		f.storage,

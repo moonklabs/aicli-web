@@ -27,11 +27,11 @@ type basicEventBus struct {
 
 // EventBusConfig 이벤트 버스 설정
 type EventBusConfig struct {
-	BufferSize        int           // 채널 버퍼 크기
-	MaxHistorySize    int           // 최대 히스토리 보관 개수
-	HistoryRetention  time.Duration // 히스토리 보관 기간
-	PublishTimeout    time.Duration // 발행 타임아웃
-	EnableHistory     bool          // 히스토리 보관 여부
+	BufferSize       int           // 채널 버퍼 크기
+	MaxHistorySize   int           // 최대 히스토리 보관 개수
+	HistoryRetention time.Duration // 히스토리 보관 기간
+	PublishTimeout   time.Duration // 발행 타임아웃
+	EnableHistory    bool          // 히스토리 보관 여부
 }
 
 // NewBasicEventBus 새 기본 이벤트 버스 생성
@@ -265,7 +265,7 @@ func (b *basicEventBus) CleanupSubscribers() {
 			// 실제 구현에서는 다른 방법을 사용해야 할 수 있음
 			activeChannels = append(activeChannels, ch)
 		}
-		
+
 		if len(activeChannels) == 0 {
 			delete(b.subscribers, agentID)
 		} else {

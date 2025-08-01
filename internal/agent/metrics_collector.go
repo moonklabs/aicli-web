@@ -29,7 +29,7 @@ func NewBasicMetricsCollector(dockerAdapter DockerAdapter) MetricsCollector {
 	return &basicMetricsCollector{
 		metricsStore:   make(map[string][]AgentMetrics),
 		dockerAdapter:  dockerAdapter,
-		maxHistorySize: 1000, // 에이전트당 최대 1000개 메트릭 보관
+		maxHistorySize: 1000,           // 에이전트당 최대 1000개 메트릭 보관
 		retentionTime:  24 * time.Hour, // 24시간 보관
 	}
 }
@@ -67,7 +67,7 @@ func (c *basicMetricsCollector) StoreMetrics(ctx context.Context, metrics AgentM
 	defer c.storeMutex.Unlock()
 
 	agentMetrics := c.metricsStore[metrics.AgentID]
-	
+
 	// 새 메트릭 추가
 	agentMetrics = append(agentMetrics, metrics)
 
@@ -166,7 +166,7 @@ func (c *basicMetricsCollector) collectAgentSpecificMetrics(agent *models.Agent,
 	metrics.Custom["agent_type"] = string(agent.Type)
 	metrics.Custom["agent_status"] = string(agent.Status)
 	metrics.Custom["project_id"] = agent.ProjectID
-	
+
 	if agent.WorktreeID != "" {
 		metrics.Custom["worktree_id"] = agent.WorktreeID
 	}

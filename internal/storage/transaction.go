@@ -8,9 +8,9 @@ import (
 
 // SQLite 트랜잭션 레벨 상수
 const (
-	SQLiteLevelDeferred   = "DEFERRED"
-	SQLiteLevelImmediate  = "IMMEDIATE"
-	SQLiteLevelExclusive  = "EXCLUSIVE"
+	SQLiteLevelDeferred  = "DEFERRED"
+	SQLiteLevelImmediate = "IMMEDIATE"
+	SQLiteLevelExclusive = "EXCLUSIVE"
 )
 
 // Transaction 트랜잭션 인터페이스

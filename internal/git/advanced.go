@@ -19,27 +19,27 @@ type AdvancedWorktreeManager struct {
 	mu               sync.RWMutex
 
 	// LRU 캐시
-	cache       map[string]*cacheEntry
-	cacheList   *list.List
-	cacheSize   int
+	cache        map[string]*cacheEntry
+	cacheList    *list.List
+	cacheSize    int
 	maxCacheSize int
 
 	// GC 설정
-	gcInterval      time.Duration
-	maxAge          time.Duration
-	cleanupRunning  bool
-	cleanupStop     chan struct{}
+	gcInterval     time.Duration
+	maxAge         time.Duration
+	cleanupRunning bool
+	cleanupStop    chan struct{}
 
 	// 메트릭
-	metrics *WorktreeMetrics
+	metrics     *WorktreeMetrics
 	promMetrics *PrometheusMetrics
 }
 
 // cacheEntry LRU 캐시 엔트리
 type cacheEntry struct {
-	worktree  *Worktree
-	element   *list.Element
-	lastUsed  time.Time
+	worktree *Worktree
+	element  *list.Element
+	lastUsed time.Time
 }
 
 // WorktreeMetrics 성능 메트릭
@@ -52,31 +52,31 @@ type WorktreeMetrics struct {
 	CacheHits       int64
 	CacheMisses     int64
 	CloneOperations int64
-	
+
 	// 타이밍
-	CloneDurations   []time.Duration
-	CreateDurations  []time.Duration
-	
+	CloneDurations  []time.Duration
+	CreateDurations []time.Duration
+
 	// 리소스
-	ActiveWorktrees  int
-	CachedWorktrees  int
-	DiskUsageBytes   int64
+	ActiveWorktrees int
+	CachedWorktrees int
+	DiskUsageBytes  int64
 }
 
 // AdvancedOptions 고급 워크트리 매니저 옵션
 type AdvancedOptions struct {
 	// 동시성 제한 (기본값: 5)
 	ConcurrencyLimit int
-	
+
 	// LRU 캐시 크기 (기본값: 100)
 	MaxCacheSize int
-	
+
 	// GC 간격 (기본값: 1시간)
 	GCInterval time.Duration
-	
+
 	// 최대 worktree 나이 (기본값: 30일)
 	MaxAge time.Duration
-	
+
 	// Prometheus 메트릭 비활성화 (테스트용)
 	DisablePrometheus bool
 }
@@ -109,7 +109,7 @@ func NewAdvancedWorktreeManager(base WorktreeManager, opts AdvancedOptions) *Adv
 		cleanupStop:      make(chan struct{}),
 		metrics:          &WorktreeMetrics{},
 	}
-	
+
 	// Prometheus 메트릭 초기화 (비활성화 옵션 확인)
 	if !opts.DisablePrometheus {
 		manager.promMetrics = NewPrometheusMetrics()
@@ -238,12 +238,12 @@ func (m *AdvancedWorktreeManager) Stop() {
 func (m *AdvancedWorktreeManager) GetMetrics() WorktreeMetrics {
 	m.metrics.mu.RLock()
 	defer m.metrics.mu.RUnlock()
-	
+
 	// 복사본 반환
 	metrics := *m.metrics
 	metrics.ActiveWorktrees = m.getActiveWorktreeCount()
 	metrics.CachedWorktrees = len(m.cache)
-	
+
 	return metrics
 }
 
@@ -392,7 +392,7 @@ func (m *AdvancedWorktreeManager) recordCloneDuration(duration time.Duration) {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.CloneDurations = append(m.metrics.CloneDurations, duration)
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordCloneOperation(duration)
@@ -403,7 +403,7 @@ func (m *AdvancedWorktreeManager) recordCreateDuration(duration time.Duration) {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.CreateDurations = append(m.metrics.CreateDurations, duration)
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordWorktreeCreate(duration)
@@ -420,7 +420,7 @@ func (m *AdvancedWorktreeManager) incrementTotalCreated() {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.TotalCreated++
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordWorktreeCreated()
@@ -431,7 +431,7 @@ func (m *AdvancedWorktreeManager) incrementTotalDeleted() {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.TotalDeleted++
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordWorktreeDeleted()
@@ -442,7 +442,7 @@ func (m *AdvancedWorktreeManager) recordCacheHit() {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.CacheHits++
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordCacheHit()
@@ -453,7 +453,7 @@ func (m *AdvancedWorktreeManager) recordCacheMiss() {
 	m.metrics.mu.Lock()
 	defer m.metrics.mu.Unlock()
 	m.metrics.CacheMisses++
-	
+
 	// Prometheus 메트릭 기록
 	if m.promMetrics != nil {
 		m.promMetrics.RecordCacheMiss()

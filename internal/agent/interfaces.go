@@ -86,11 +86,11 @@ type EventBus interface {
 	Publish(ctx context.Context, event AgentEvent) error
 	Subscribe(ctx context.Context, agentID string) (<-chan AgentEvent, error)
 	Unsubscribe(ctx context.Context, agentID string) error
-	
+
 	// 전역 구독 (모든 이벤트)
 	SubscribeGlobal(ctx context.Context) (<-chan AgentEvent, error)
 	UnsubscribeGlobal(ctx context.Context, eventChan <-chan AgentEvent) error
-	
+
 	// 이벤트 히스토리
 	GetEventHistory(agentID string, since time.Time) ([]AgentEvent, error)
 }
@@ -130,26 +130,26 @@ type AgentOperationResult struct {
 
 // AgentStatusInfo 에이전트 상태 정보
 type AgentStatusInfo struct {
-	ID           string               `json:"id"`
-	Status       models.AgentStatus   `json:"status"`
-	ContainerID  string               `json:"container_id,omitempty"`
-	WorktreeID   string               `json:"worktree_id,omitempty"`
-	LastActivity time.Time            `json:"last_activity"`
-	ErrorMessage string               `json:"error_message,omitempty"`
-	Health       HealthStatus         `json:"health"`
-	Container    *ContainerStatus     `json:"container,omitempty"`
+	ID           string             `json:"id"`
+	Status       models.AgentStatus `json:"status"`
+	ContainerID  string             `json:"container_id,omitempty"`
+	WorktreeID   string             `json:"worktree_id,omitempty"`
+	LastActivity time.Time          `json:"last_activity"`
+	ErrorMessage string             `json:"error_message,omitempty"`
+	Health       HealthStatus       `json:"health"`
+	Container    *ContainerStatus   `json:"container,omitempty"`
 }
 
 // ContainerConfig 컨테이너 설정
 type ContainerConfig struct {
-	Image        string            `json:"image"`
-	Environment  map[string]string `json:"environment,omitempty"`
-	WorkingDir   string            `json:"working_dir,omitempty"`
-	Mounts       []MountConfig     `json:"mounts,omitempty"`
-	MemoryLimit  string            `json:"memory_limit,omitempty"`
-	CPULimit     string            `json:"cpu_limit,omitempty"`
-	NetworkMode  string            `json:"network_mode,omitempty"`
-	Labels       map[string]string `json:"labels,omitempty"`
+	Image       string            `json:"image"`
+	Environment map[string]string `json:"environment,omitempty"`
+	WorkingDir  string            `json:"working_dir,omitempty"`
+	Mounts      []MountConfig     `json:"mounts,omitempty"`
+	MemoryLimit string            `json:"memory_limit,omitempty"`
+	CPULimit    string            `json:"cpu_limit,omitempty"`
+	NetworkMode string            `json:"network_mode,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
 }
 
 // MountConfig 마운트 설정
@@ -186,30 +186,30 @@ type ContainerStatus struct {
 
 // HealthStatus 헬스 상태
 type HealthStatus struct {
-	Status      string            `json:"status"` // healthy, unhealthy, starting, unknown
-	LastCheck   time.Time         `json:"last_check"`
-	Checks      []HealthCheck     `json:"checks,omitempty"`
-	Metrics     map[string]string `json:"metrics,omitempty"`
+	Status    string            `json:"status"` // healthy, unhealthy, starting, unknown
+	LastCheck time.Time         `json:"last_check"`
+	Checks    []HealthCheck     `json:"checks,omitempty"`
+	Metrics   map[string]string `json:"metrics,omitempty"`
 }
 
 // HealthCheck 개별 헬스체크
 type HealthCheck struct {
-	Name        string    `json:"name"`
-	Status      string    `json:"status"`
-	Message     string    `json:"message,omitempty"`
-	CheckedAt   time.Time `json:"checked_at"`
-	Duration    time.Duration `json:"duration"`
+	Name      string        `json:"name"`
+	Status    string        `json:"status"`
+	Message   string        `json:"message,omitempty"`
+	CheckedAt time.Time     `json:"checked_at"`
+	Duration  time.Duration `json:"duration"`
 }
 
 // AgentMetrics 에이전트 메트릭
 type AgentMetrics struct {
-	AgentID     string                 `json:"agent_id"`
-	Timestamp   time.Time              `json:"timestamp"`
-	CPU         CPUMetrics             `json:"cpu"`
-	Memory      MemoryMetrics          `json:"memory"`
-	Network     NetworkMetrics         `json:"network"`
-	Disk        DiskMetrics            `json:"disk"`
-	Custom      map[string]interface{} `json:"custom,omitempty"`
+	AgentID   string                 `json:"agent_id"`
+	Timestamp time.Time              `json:"timestamp"`
+	CPU       CPUMetrics             `json:"cpu"`
+	Memory    MemoryMetrics          `json:"memory"`
+	Network   NetworkMetrics         `json:"network"`
+	Disk      DiskMetrics            `json:"disk"`
+	Custom    map[string]interface{} `json:"custom,omitempty"`
 }
 
 // CPUMetrics CPU 메트릭
@@ -221,8 +221,8 @@ type CPUMetrics struct {
 
 // MemoryMetrics 메모리 메트릭
 type MemoryMetrics struct {
-	UsageBytes  int64   `json:"usage_bytes"`
-	LimitBytes  int64   `json:"limit_bytes"`
+	UsageBytes   int64   `json:"usage_bytes"`
+	LimitBytes   int64   `json:"limit_bytes"`
 	UsagePercent float64 `json:"usage_percent"`
 }
 
@@ -316,12 +316,12 @@ func (e *ServiceError) Unwrap() error {
 
 // 에러 코드 상수
 const (
-	ErrCodeAgentNotFound       = "AGENT_NOT_FOUND"
-	ErrCodeAgentAlreadyExists  = "AGENT_ALREADY_EXISTS"
-	ErrCodeInvalidState        = "INVALID_STATE"
-	ErrCodeContainerError      = "CONTAINER_ERROR"
-	ErrCodeWorktreeError       = "WORKTREE_ERROR"
-	ErrCodeResourceLimit       = "RESOURCE_LIMIT"
-	ErrCodePermissionDenied    = "PERMISSION_DENIED"
-	ErrCodeInternalError       = "INTERNAL_ERROR"
+	ErrCodeAgentNotFound      = "AGENT_NOT_FOUND"
+	ErrCodeAgentAlreadyExists = "AGENT_ALREADY_EXISTS"
+	ErrCodeInvalidState       = "INVALID_STATE"
+	ErrCodeContainerError     = "CONTAINER_ERROR"
+	ErrCodeWorktreeError      = "WORKTREE_ERROR"
+	ErrCodeResourceLimit      = "RESOURCE_LIMIT"
+	ErrCodePermissionDenied   = "PERMISSION_DENIED"
+	ErrCodeInternalError      = "INTERNAL_ERROR"
 )

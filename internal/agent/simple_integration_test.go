@@ -26,12 +26,12 @@ func TestSimpleIntegration(t *testing.T) {
 
 	t.Run("단순 이벤트 발행 테스트", func(t *testing.T) {
 		fmt.Printf("=== 단순 이벤트 발행 테스트 시작 ===\n")
-		
+
 		// 이벤트 구독 설정
 		fmt.Printf("1. 전역 이벤트 구독 시작\n")
 		eventChan, err := system.EventBus.SubscribeGlobal(ctx)
 		require.NoError(t, err)
-		
+
 		// 에이전트 생성 요청
 		agentReq := CreateAgentRequest{
 			ProjectID:   uuid.New().String(),
@@ -57,33 +57,33 @@ func TestSimpleIntegration(t *testing.T) {
 		fmt.Printf("4. 생성 이벤트 수신 대기...\n")
 		select {
 		case event := <-eventChan:
-			fmt.Printf("5. 이벤트 수신 성공: Type=%s, AgentID=%s, Message=%s\n", 
+			fmt.Printf("5. 이벤트 수신 성공: Type=%s, AgentID=%s, Message=%s\n",
 				event.Type, event.AgentID, event.Message)
 			require.Equal(t, AgentEventCreated, event.Type)
 			require.Equal(t, agent.ID, event.AgentID)
 		case <-time.After(3 * time.Second):
 			fmt.Printf("5. 이벤트 수신 타임아웃!\n")
-			
+
 			// 디버그 정보
 			counts := system.EventBus.(*basicEventBus).GetSubscriberCount()
 			fmt.Printf("구독자 수: %+v\n", counts)
-			
+
 			// EventPublisher가 nil인지 확인
 			fmt.Printf("EventPublisher nil? %v\n", system.EventPublisher == nil)
-			
+
 			t.Fatal("생성 이벤트를 받지 못했습니다")
 		}
-		
+
 		fmt.Printf("=== 단순 이벤트 발행 테스트 완료 ===\n")
 	})
 
 	t.Run("직접 EventPublisher 테스트", func(t *testing.T) {
 		fmt.Printf("=== 직접 EventPublisher 테스트 시작 ===\n")
-		
+
 		// 이벤트 구독 설정
 		eventChan, err := system.EventBus.SubscribeGlobal(ctx)
 		require.NoError(t, err)
-		
+
 		// 테스트 에이전트
 		testAgent := &models.Agent{
 			ID:        uuid.New().String(),
@@ -106,7 +106,7 @@ func TestSimpleIntegration(t *testing.T) {
 		fmt.Printf("3. 직접 이벤트 수신 대기...\n")
 		select {
 		case event := <-eventChan:
-			fmt.Printf("4. 직접 이벤트 수신 성공: Type=%s, AgentID=%s\n", 
+			fmt.Printf("4. 직접 이벤트 수신 성공: Type=%s, AgentID=%s\n",
 				event.Type, event.AgentID)
 			require.Equal(t, AgentEventCreated, event.Type)
 			require.Equal(t, testAgent.ID, event.AgentID)
@@ -114,7 +114,7 @@ func TestSimpleIntegration(t *testing.T) {
 			fmt.Printf("4. 직접 이벤트 수신 타임아웃!\n")
 			t.Fatal("직접 이벤트를 받지 못했습니다")
 		}
-		
+
 		fmt.Printf("=== 직접 EventPublisher 테스트 완료 ===\n")
 	})
 }

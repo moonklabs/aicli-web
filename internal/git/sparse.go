@@ -36,7 +36,7 @@ func configureSparseCheckout(repo *gogit.Repository, worktreePath string, paths 
 	}
 
 	cfg.Raw.SetOption("core", "", "sparseCheckout", "true")
-	
+
 	if err := repo.SetConfig(cfg); err != nil {
 		return errors.Wrap(err, "설정 저장 실패")
 	}
@@ -51,12 +51,12 @@ func validateSparseCheckoutPaths(paths []string) error {
 		if filepath.IsAbs(path) {
 			return fmt.Errorf("절대 경로는 사용할 수 없습니다: %s", path)
 		}
-		
+
 		// 상위 디렉토리 참조 금지
 		if strings.Contains(path, "..") {
 			return fmt.Errorf("상위 디렉토리 참조는 사용할 수 없습니다: %s", path)
 		}
-		
+
 		// 빈 경로 금지
 		if strings.TrimSpace(path) == "" {
 			return fmt.Errorf("빈 경로는 사용할 수 없습니다")
@@ -145,7 +145,7 @@ func (m *SparseCheckoutManager) DisableSparseCheckout(repoPath string) error {
 	}
 
 	cfg.Raw.SetOption("core", "", "sparseCheckout", "false")
-	
+
 	if err := repo.SetConfig(cfg); err != nil {
 		return &Error{
 			Code:    ErrCodeUnknown,
@@ -179,7 +179,7 @@ func (m *SparseCheckoutManager) DisableSparseCheckout(repoPath string) error {
 // GetSparseCheckoutPaths 현재 sparse checkout 경로 조회
 func (m *SparseCheckoutManager) GetSparseCheckoutPaths(repoPath string) ([]string, error) {
 	sparseCheckoutFile := filepath.Join(repoPath, ".git", "info", "sparse-checkout")
-	
+
 	// 파일이 없으면 sparse checkout 사용 안 함
 	if _, err := os.Stat(sparseCheckoutFile); os.IsNotExist(err) {
 		return nil, nil
@@ -217,7 +217,7 @@ func (m *SparseCheckoutManager) UpdateSparseCheckoutPaths(repoPath string, paths
 
 	sparseCheckoutFile := filepath.Join(repoPath, ".git", "info", "sparse-checkout")
 	content := strings.Join(paths, "\n") + "\n"
-	
+
 	if err := os.WriteFile(sparseCheckoutFile, []byte(content), 0644); err != nil {
 		return &Error{
 			Code:    ErrCodePermission,

@@ -37,16 +37,16 @@ type TaskStats struct {
 
 // WorkspaceStats 워크스페이스 통계 정보
 type WorkspaceStats struct {
-	TotalWorkspaces      int64     `json:"total_workspaces"`
-	ActiveWorkspaces     int64     `json:"active_workspaces"`
-	ArchivedWorkspaces   int64     `json:"archived_workspaces"`
-	TotalProjects        int64     `json:"total_projects"`
-	ActiveProjects       int64     `json:"active_projects"`
-	TotalSessions        int64     `json:"total_sessions"`
-	ActiveSessions       int64     `json:"active_sessions"`
-	TotalActiveTasks     int64     `json:"total_active_tasks"`
-	StorageUsed          int64     `json:"storage_used"`
-	LastUpdated          time.Time `json:"last_updated"`
+	TotalWorkspaces    int64     `json:"total_workspaces"`
+	ActiveWorkspaces   int64     `json:"active_workspaces"`
+	ArchivedWorkspaces int64     `json:"archived_workspaces"`
+	TotalProjects      int64     `json:"total_projects"`
+	ActiveProjects     int64     `json:"active_projects"`
+	TotalSessions      int64     `json:"total_sessions"`
+	ActiveSessions     int64     `json:"active_sessions"`
+	TotalActiveTasks   int64     `json:"total_active_tasks"`
+	StorageUsed        int64     `json:"storage_used"`
+	LastUpdated        time.Time `json:"last_updated"`
 }
 
 // UserActivityStats 사용자 활동 통계 정보

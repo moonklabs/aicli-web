@@ -40,9 +40,9 @@ func (a *AgentStorage) Create(ctx context.Context, agent *models.Agent) error {
 
 	// 중복 이름 확인
 	for _, existing := range a.agents {
-		if existing.ProjectID == agent.ProjectID && 
-		   existing.Name == agent.Name && 
-		   existing.DeletedAt == nil {
+		if existing.ProjectID == agent.ProjectID &&
+			existing.Name == agent.Name &&
+			existing.DeletedAt == nil {
 			return storage.ErrDuplicateKey
 		}
 	}
@@ -116,9 +116,9 @@ func (a *AgentStorage) Update(ctx context.Context, id string, updates map[string
 		// 이름 중복 확인
 		for _, existing := range a.agents {
 			if existing.ID != id &&
-			   existing.ProjectID == agent.ProjectID && 
-			   existing.Name == name && 
-			   existing.DeletedAt == nil {
+				existing.ProjectID == agent.ProjectID &&
+				existing.Name == name &&
+				existing.DeletedAt == nil {
 				return storage.ErrDuplicateKey
 			}
 		}
@@ -184,9 +184,9 @@ func (a *AgentStorage) ExistsByName(ctx context.Context, projectID, name string)
 	defer a.mu.RUnlock()
 
 	for _, agent := range a.agents {
-		if agent.ProjectID == projectID && 
-		   agent.Name == name && 
-		   agent.DeletedAt == nil {
+		if agent.ProjectID == projectID &&
+			agent.Name == name &&
+			agent.DeletedAt == nil {
 			return true, nil
 		}
 	}
@@ -238,9 +238,9 @@ func (a *AgentStorage) GetActiveCount(ctx context.Context, projectID string) (in
 
 	var count int64
 	for _, agent := range a.agents {
-		if agent.ProjectID == projectID && 
-		   agent.Status == models.AgentStatusRunning && 
-		   agent.DeletedAt == nil {
+		if agent.ProjectID == projectID &&
+			agent.Status == models.AgentStatusRunning &&
+			agent.DeletedAt == nil {
 			count++
 		}
 	}

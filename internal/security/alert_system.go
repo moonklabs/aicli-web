@@ -17,40 +17,40 @@ import (
 // AlertSystemConfig는 알림 시스템 설정입니다.
 type AlertSystemConfig struct {
 	// 기본 설정
-	Enabled        bool      // 알림 시스템 활성화
-	MinSeverity    Severity  // 최소 알림 심각도
-	MaxAlertsPerHour int     // 시간당 최대 알림 수
-	
-	// 이메일 설정  
+	Enabled          bool     // 알림 시스템 활성화
+	MinSeverity      Severity // 최소 알림 심각도
+	MaxAlertsPerHour int      // 시간당 최대 알림 수
+
+	// 이메일 설정
 	EmailConfig *EmailConfig `json:"email_config,omitempty"`
-	
+
 	// 슬랙 설정
 	SlackConfig *SlackConfig `json:"slack_config,omitempty"`
-	
+
 	// 웹훅 설정
 	WebhookConfig *WebhookConfig `json:"webhook_config,omitempty"`
-	
+
 	// SMS 설정
 	SMSConfig *SMSConfig `json:"sms_config,omitempty"`
 
 	// 자동 대응 설정
-	AutoResponseEnabled bool                      // 자동 대응 활성화
-	ResponseRules       []*AutoResponseRule       // 자동 대응 규칙
-	EscalationRules     []*EscalationRule         // 에스컬레이션 규칙
+	AutoResponseEnabled bool                // 자동 대응 활성화
+	ResponseRules       []*AutoResponseRule // 자동 대응 규칙
+	EscalationRules     []*EscalationRule   // 에스컬레이션 규칙
 
 	Logger *zap.Logger
 }
 
 // EmailConfig는 이메일 알림 설정입니다.
 type EmailConfig struct {
-	Enabled     bool     `json:"enabled"`
-	SMTPServer  string   `json:"smtp_server"`
-	SMTPPort    int      `json:"smtp_port"`
-	Username    string   `json:"username"`
-	Password    string   `json:"password"`
-	FromEmail   string   `json:"from_email"`
-	ToEmails    []string `json:"to_emails"`
-	UseTLS      bool     `json:"use_tls"`
+	Enabled    bool     `json:"enabled"`
+	SMTPServer string   `json:"smtp_server"`
+	SMTPPort   int      `json:"smtp_port"`
+	Username   string   `json:"username"`
+	Password   string   `json:"password"`
+	FromEmail  string   `json:"from_email"`
+	ToEmails   []string `json:"to_emails"`
+	UseTLS     bool     `json:"use_tls"`
 }
 
 // SlackConfig는 슬랙 알림 설정입니다.
@@ -64,18 +64,18 @@ type SlackConfig struct {
 
 // WebhookConfig는 웹훅 알림 설정입니다.
 type WebhookConfig struct {
-	Enabled     bool              `json:"enabled"`
-	URL         string            `json:"url"`
-	Method      string            `json:"method"`
-	Headers     map[string]string `json:"headers"`
-	Timeout     time.Duration     `json:"timeout"`
-	RetryCount  int               `json:"retry_count"`
+	Enabled    bool              `json:"enabled"`
+	URL        string            `json:"url"`
+	Method     string            `json:"method"`
+	Headers    map[string]string `json:"headers"`
+	Timeout    time.Duration     `json:"timeout"`
+	RetryCount int               `json:"retry_count"`
 }
 
 // SMSConfig는 SMS 알림 설정입니다.
 type SMSConfig struct {
 	Enabled    bool     `json:"enabled"`
-	Provider   string   `json:"provider"`   // "twilio", "aws_sns" 등
+	Provider   string   `json:"provider"` // "twilio", "aws_sns" 등
 	APIKey     string   `json:"api_key"`
 	APISecret  string   `json:"api_secret"`
 	FromNumber string   `json:"from_number"`
@@ -84,15 +84,15 @@ type SMSConfig struct {
 
 // AutoResponseRule은 자동 대응 규칙입니다.
 type AutoResponseRule struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Enabled     bool              `json:"enabled"`
-	EventTypes  []EventType       `json:"event_types"`
-	Severities  []Severity        `json:"severities"`
-	Conditions  map[string]string `json:"conditions"`  // 추가 조건
-	Actions     []*ResponseAction `json:"actions"`     // 수행할 액션들
-	Cooldown    time.Duration     `json:"cooldown"`    // 재실행 방지 시간
-	MaxExecutions int             `json:"max_executions"` // 최대 실행 횟수
+	ID            string            `json:"id"`
+	Name          string            `json:"name"`
+	Enabled       bool              `json:"enabled"`
+	EventTypes    []EventType       `json:"event_types"`
+	Severities    []Severity        `json:"severities"`
+	Conditions    map[string]string `json:"conditions"`     // 추가 조건
+	Actions       []*ResponseAction `json:"actions"`        // 수행할 액션들
+	Cooldown      time.Duration     `json:"cooldown"`       // 재실행 방지 시간
+	MaxExecutions int               `json:"max_executions"` // 최대 실행 횟수
 }
 
 // ResponseAction은 대응 액션입니다.
@@ -104,42 +104,42 @@ type ResponseAction struct {
 
 // EscalationRule은 에스컬레이션 규칙입니다.
 type EscalationRule struct {
-	ID               string        `json:"id"`
-	Name             string        `json:"name"`
-	Enabled          bool          `json:"enabled"`
-	TriggerCondition string        `json:"trigger_condition"` // "event_count", "time_threshold" 등
-	Threshold        int           `json:"threshold"`         // 임계값
-	TimeWindow       time.Duration `json:"time_window"`       // 시간 윈도우
-	EscalationDelay  time.Duration `json:"escalation_delay"`  // 에스컬레이션 지연
-	NotificationChannels []string  `json:"notification_channels"` // 알림 채널
+	ID                   string        `json:"id"`
+	Name                 string        `json:"name"`
+	Enabled              bool          `json:"enabled"`
+	TriggerCondition     string        `json:"trigger_condition"`     // "event_count", "time_threshold" 등
+	Threshold            int           `json:"threshold"`             // 임계값
+	TimeWindow           time.Duration `json:"time_window"`           // 시간 윈도우
+	EscalationDelay      time.Duration `json:"escalation_delay"`      // 에스컬레이션 지연
+	NotificationChannels []string      `json:"notification_channels"` // 알림 채널
 }
 
 // AlertSystem은 보안 알림 시스템입니다.
 type AlertSystem struct {
-	config         *AlertSystemConfig
-	logger         *zap.Logger
-	
+	config *AlertSystemConfig
+	logger *zap.Logger
+
 	// 알림 제한 관리
-	alertCounts    map[string]int // 시간당 알림 수 추적
-	alertMutex     sync.RWMutex
-	
+	alertCounts map[string]int // 시간당 알림 수 추적
+	alertMutex  sync.RWMutex
+
 	// 자동 대응 실행 추적
-	executionCounts map[string]int // 규칙별 실행 횟수
+	executionCounts map[string]int       // 규칙별 실행 횟수
 	lastExecutions  map[string]time.Time // 마지막 실행 시간
 	responseMutex   sync.RWMutex
-	
+
 	// HTTP 클라이언트
 	httpClient *http.Client
 }
 
 // AlertContext는 알림 컨텍스트입니다.
 type AlertContext struct {
-	Event       *SecurityEvent            `json:"event"`
-	Timestamp   time.Time                 `json:"timestamp"`
-	Severity    Severity                  `json:"severity"`
-	Summary     string                    `json:"summary"`
-	Details     map[string]interface{}    `json:"details"`
-	Metadata    map[string]string         `json:"metadata"`
+	Event     *SecurityEvent         `json:"event"`
+	Timestamp time.Time              `json:"timestamp"`
+	Severity  Severity               `json:"severity"`
+	Summary   string                 `json:"summary"`
+	Details   map[string]interface{} `json:"details"`
+	Metadata  map[string]string      `json:"metadata"`
 }
 
 // NewAlertSystem은 새로운 알림 시스템을 생성합니다.
@@ -180,7 +180,7 @@ func (as *AlertSystem) ProcessEvent(ctx context.Context, event *SecurityEvent) e
 
 	// 알림 제한 확인
 	if !as.checkAlertLimit(event) {
-		as.logger.Warn("알림 제한 초과", 
+		as.logger.Warn("알림 제한 초과",
 			zap.String("event_id", event.ID),
 			zap.String("severity", string(event.Severity)))
 		return nil
@@ -238,7 +238,7 @@ func (as *AlertSystem) checkAlertLimit(event *SecurityEvent) bool {
 // createAlertContext는 알림 컨텍스트를 생성합니다.
 func (as *AlertSystem) createAlertContext(event *SecurityEvent) *AlertContext {
 	summary := as.generateSummary(event)
-	
+
 	return &AlertContext{
 		Event:     event,
 		Timestamp: time.Now(),
@@ -300,21 +300,21 @@ func (as *AlertSystem) sendAlert(ctx context.Context, alertCtx *AlertContext) {
 // sendEmailAlert는 이메일 알림을 발송합니다.
 func (as *AlertSystem) sendEmailAlert(alertCtx *AlertContext) {
 	config := as.config.EmailConfig
-	
+
 	subject := fmt.Sprintf("[보안알림] %s - %s", strings.ToUpper(string(alertCtx.Severity)), alertCtx.Summary)
 	body := as.generateEmailBody(alertCtx)
 
 	auth := smtp.PlainAuth("", config.Username, config.Password, config.SMTPServer)
-	
+
 	for _, toEmail := range config.ToEmails {
-		message := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s", 
+		message := fmt.Sprintf("From: %s\nTo: %s\nSubject: %s\n\n%s",
 			config.FromEmail, toEmail, subject, body)
 
 		addr := fmt.Sprintf("%s:%d", config.SMTPServer, config.SMTPPort)
 		err := smtp.SendMail(addr, auth, config.FromEmail, []string{toEmail}, []byte(message))
 		if err != nil {
-			as.logger.Error("이메일 발송 실패", 
-				zap.String("to", toEmail), 
+			as.logger.Error("이메일 발송 실패",
+				zap.String("to", toEmail),
 				zap.Error(err))
 		} else {
 			as.logger.Info("이메일 알림 발송됨", zap.String("to", toEmail))
@@ -325,12 +325,12 @@ func (as *AlertSystem) sendEmailAlert(alertCtx *AlertContext) {
 // sendSlackAlert는 슬랙 알림을 발송합니다.
 func (as *AlertSystem) sendSlackAlert(alertCtx *AlertContext) {
 	config := as.config.SlackConfig
-	
+
 	color := as.getSeverityColor(alertCtx.Severity)
-	
+
 	payload := map[string]interface{}{
-		"channel":   config.Channel,
-		"username":  config.Username,
+		"channel":    config.Channel,
+		"username":   config.Username,
 		"icon_emoji": config.IconEmoji,
 		"attachments": []map[string]interface{}{
 			{
@@ -377,7 +377,7 @@ func (as *AlertSystem) sendSlackAlert(alertCtx *AlertContext) {
 // sendWebhookAlert는 웹훅 알림을 발송합니다.
 func (as *AlertSystem) sendWebhookAlert(alertCtx *AlertContext) {
 	config := as.config.WebhookConfig
-	
+
 	payload, err := json.Marshal(alertCtx)
 	if err != nil {
 		as.logger.Error("웹훅 페이로드 생성 실패", zap.Error(err))
@@ -400,10 +400,10 @@ func (as *AlertSystem) sendWebhookAlert(alertCtx *AlertContext) {
 	for i := 0; i <= config.RetryCount; i++ {
 		resp, err := as.httpClient.Do(req)
 		if err != nil {
-			as.logger.Error("웹훅 요청 실패", 
-				zap.Int("attempt", i+1), 
+			as.logger.Error("웹훅 요청 실패",
+				zap.Int("attempt", i+1),
 				zap.Error(err))
-			
+
 			if i < config.RetryCount {
 				time.Sleep(time.Duration(i+1) * time.Second)
 				continue
@@ -417,10 +417,10 @@ func (as *AlertSystem) sendWebhookAlert(alertCtx *AlertContext) {
 			return
 		}
 
-		as.logger.Error("웹훅 응답 오류", 
+		as.logger.Error("웹훅 응답 오류",
 			zap.Int("status_code", resp.StatusCode),
 			zap.Int("attempt", i+1))
-		
+
 		if i < config.RetryCount {
 			time.Sleep(time.Duration(i+1) * time.Second)
 		}
@@ -431,7 +431,7 @@ func (as *AlertSystem) sendWebhookAlert(alertCtx *AlertContext) {
 func (as *AlertSystem) sendSMSAlert(alertCtx *AlertContext) {
 	// SMS 구현은 실제 서비스 제공업체에 따라 달라짐
 	// 여기서는 로그만 남김
-	as.logger.Info("SMS 알림 발송 요청", 
+	as.logger.Info("SMS 알림 발송 요청",
 		zap.String("severity", string(alertCtx.Severity)),
 		zap.String("summary", alertCtx.Summary))
 }
@@ -635,11 +635,11 @@ func (as *AlertSystem) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"enabled":              as.config.Enabled,
-		"total_alerts_today":   totalAlerts,
+		"enabled":               as.config.Enabled,
+		"total_alerts_today":    totalAlerts,
 		"auto_response_enabled": as.config.AutoResponseEnabled,
-		"total_auto_responses": totalExecutions,
-		"active_rules":         len(as.config.ResponseRules),
-		"escalation_rules":     len(as.config.EscalationRules),
+		"total_auto_responses":  totalExecutions,
+		"active_rules":          len(as.config.ResponseRules),
+		"escalation_rules":      len(as.config.EscalationRules),
 	}
 }

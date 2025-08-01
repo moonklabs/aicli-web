@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/aicli/aicli-web/internal/config"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // NewJWTManagerFromConfig 설정에서 JWT 매니저 생성
@@ -39,7 +39,6 @@ func (m *JWTManager) GenerateTokenWithExpiry(userID, userName, email, role strin
 
 	return tokenString, nil
 }
-
 
 // GetTokenClaims 토큰에서 클레임 추출 (검증 없이, 테스트용)
 func (m *JWTManager) GetTokenClaims(tokenString string) (*Claims, error) {

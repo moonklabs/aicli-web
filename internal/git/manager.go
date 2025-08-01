@@ -104,11 +104,11 @@ func (m *worktreeManager) Clone(ctx context.Context, url, path string, opts Clon
 
 	// 저장소 정보 생성
 	repo := &Repository{
-		ID:           uuid.New().String(),
-		Path:         path,
-		URL:          url,
+		ID:            uuid.New().String(),
+		Path:          path,
+		URL:           url,
 		DefaultBranch: opts.Branch,
-		CreatedAt:    time.Now(),
+		CreatedAt:     time.Now(),
 	}
 
 	// 기본 브랜치 확인
@@ -173,7 +173,7 @@ func (m *worktreeManager) CreateWorktree(ctx context.Context, repo *Repository, 
 	if opts.NewBranch != "" {
 		// 새 브랜치 생성 및 체크아웃
 		branchRef := plumbing.NewBranchReferenceName(opts.NewBranch)
-		
+
 		// HEAD 커밋 가져오기
 		head, err := wtRepo.Head()
 		if err != nil {
@@ -190,7 +190,7 @@ func (m *worktreeManager) CreateWorktree(ctx context.Context, repo *Repository, 
 				Message: fmt.Sprintf("브랜치가 이미 존재합니다: %s", opts.NewBranch),
 			}
 		}
-		
+
 		// 새 브랜치 생성
 		ref := plumbing.NewHashReference(branchRef, head.Hash())
 		err = wtRepo.Storer.SetReference(ref)
@@ -261,7 +261,7 @@ func (m *worktreeManager) CreateWorktree(ctx context.Context, repo *Repository, 
 func (m *worktreeManager) RemoveWorktree(ctx context.Context, repo *Repository, name string) error {
 	// Worktree 경로 계산
 	worktreePath := filepath.Join(m.basePath, "worktrees", repo.ID, name)
-	
+
 	// 디렉토리 존재 확인
 	if _, err := os.Stat(worktreePath); os.IsNotExist(err) {
 		return &Error{
@@ -285,7 +285,7 @@ func (m *worktreeManager) RemoveWorktree(ctx context.Context, repo *Repository, 
 func (m *worktreeManager) ListWorktrees(ctx context.Context, repo *Repository) ([]*Worktree, error) {
 	// Worktree 디렉토리 경로
 	worktreesPath := filepath.Join(m.basePath, "worktrees", repo.ID)
-	
+
 	// 디렉토리 존재 확인
 	entries, err := os.ReadDir(worktreesPath)
 	if err != nil {
@@ -305,7 +305,7 @@ func (m *worktreeManager) ListWorktrees(ctx context.Context, repo *Repository) (
 		}
 
 		wtPath := filepath.Join(worktreesPath, entry.Name())
-		
+
 		// 저장소 열기 시도
 		wtRepo, err := gogit.PlainOpen(wtPath)
 		if err != nil {
@@ -378,7 +378,7 @@ func (m *worktreeManager) CreateBranch(ctx context.Context, worktree *Worktree, 
 
 	// 새 브랜치 생성
 	newBranchRef := plumbing.NewBranchReferenceName(branchName)
-	
+
 	// 브랜치가 이미 존재하는지 확인
 	if _, err := gogitRepo.Reference(newBranchRef, false); err == nil {
 		return &Error{
@@ -386,9 +386,9 @@ func (m *worktreeManager) CreateBranch(ctx context.Context, worktree *Worktree, 
 			Message: fmt.Sprintf("브랜치가 이미 존재합니다: %s", branchName),
 		}
 	}
-	
+
 	ref := plumbing.NewHashReference(newBranchRef, *baseCommit)
-	
+
 	err = gogitRepo.Storer.SetReference(ref)
 	if err != nil {
 		return &Error{

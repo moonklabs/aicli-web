@@ -10,7 +10,7 @@ import (
 // TestDefaultPerformanceConfig는 기본 성능 설정이 올바르게 생성되는지 테스트합니다
 func TestDefaultPerformanceConfig(t *testing.T) {
 	config := DefaultPerformanceConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.True(t, config.ContainerPoolSize > 0)
 	assert.True(t, config.ContainerPoolMaxSize > 0)
@@ -32,7 +32,7 @@ func TestSystemStatus(t *testing.T) {
 		QueuedRequests: 10,
 		LastUpdated:    time.Now(),
 	}
-	
+
 	assert.NotNil(t, status)
 	assert.Equal(t, 50.0, status.CPUUsage)
 	assert.Equal(t, float64(1024*1024*1024), status.MemoryUsage)
@@ -49,7 +49,7 @@ func TestPerformanceMetrics(t *testing.T) {
 		P95CreationTime:     180 * time.Millisecond,
 		P99CreationTime:     190 * time.Millisecond,
 	}
-	
+
 	assert.NotNil(t, metrics)
 	assert.Len(t, metrics.AgentCreationTimes, 2)
 	assert.Equal(t, 150*time.Millisecond, metrics.AverageCreationTime)
@@ -69,17 +69,17 @@ func TestPoolContainerStatus(t *testing.T) {
 // TestAutoScalingConfig는 자동 스케일링 설정이 올바르게 동작하는지 테스트합니다
 func TestAutoScalingConfig(t *testing.T) {
 	config := AutoScalingConfig{
-		Enabled:              true,
-		MinAgents:            2,
-		MaxAgents:            20,
-		ScaleUpThreshold:     80.0,
-		ScaleDownThreshold:   30.0,
-		ScaleUpCooldown:      5 * time.Minute,
-		ScaleDownCooldown:    10 * time.Minute,
-		PredictiveScaling:    false,
-		TargetUtilization:    70.0,
+		Enabled:            true,
+		MinAgents:          2,
+		MaxAgents:          20,
+		ScaleUpThreshold:   80.0,
+		ScaleDownThreshold: 30.0,
+		ScaleUpCooldown:    5 * time.Minute,
+		ScaleDownCooldown:  10 * time.Minute,
+		PredictiveScaling:  false,
+		TargetUtilization:  70.0,
 	}
-	
+
 	assert.True(t, config.Enabled)
 	assert.Equal(t, 2, config.MinAgents)
 	assert.Equal(t, 20, config.MaxAgents)
@@ -101,7 +101,7 @@ func TestContainerPoolStats(t *testing.T) {
 		Utilization:         0.2, // 3/15
 		LastOptimized:       time.Now(),
 	}
-	
+
 	assert.Equal(t, 10, stats.TotalContainers)
 	assert.Equal(t, 7, stats.AvailableContainers)
 	assert.Equal(t, 3, stats.InUseContainers)
@@ -109,17 +109,17 @@ func TestContainerPoolStats(t *testing.T) {
 	assert.Equal(t, 0.2, stats.Utilization)
 }
 
-// TestResourceUsage는 리소스 사용량 구조체가 올바르게 동작하는지 테스트합니다  
+// TestResourceUsage는 리소스 사용량 구조체가 올바르게 동작하는지 테스트합니다
 func TestResourceUsage(t *testing.T) {
 	usage := ResourceUsage{
 		CPUUsage:    0.5,
 		MemoryUsage: 512 * 1024 * 1024, // 512MB
-		DiskUsage:   100 * 1024 * 1024,  // 100MB
+		DiskUsage:   100 * 1024 * 1024, // 100MB
 		NetworkRx:   1024,
 		NetworkTx:   2048,
 		LastUpdated: time.Now(),
 	}
-	
+
 	assert.Equal(t, 0.5, usage.CPUUsage)
 	assert.Equal(t, int64(512*1024*1024), usage.MemoryUsage)
 	assert.Equal(t, int64(100*1024*1024), usage.DiskUsage)

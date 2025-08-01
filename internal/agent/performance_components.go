@@ -19,7 +19,7 @@ var _ = atomic.Value{}
 // NewAgentProfiler는 새로운 에이전트 프로파일러를 생성합니다
 func NewAgentProfiler(interval time.Duration) *AgentProfiler {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &AgentProfiler{
 		cpuProfile:        make([]CPUProfile, 0, 1000),
 		memoryProfile:     make([]MemoryProfile, 0, 1000),
@@ -37,7 +37,7 @@ func (ap *AgentProfiler) Start() error {
 	if !ap.profilingEnabled {
 		return nil
 	}
-	
+
 	go ap.profilingLoop()
 	return nil
 }
@@ -53,18 +53,18 @@ func (ap *AgentProfiler) CollectProfile() {
 	if !ap.profilingEnabled {
 		return
 	}
-	
+
 	now := time.Now()
-	
+
 	// CPU 프로파일 수집
 	ap.collectCPUProfile(now)
-	
+
 	// 메모리 프로파일 수집
 	ap.collectMemoryProfile(now)
-	
+
 	// 고루틴 프로파일 수집
 	ap.collectGoroutineProfile(now)
-	
+
 	// 오래된 프로파일 데이터 정리
 	ap.cleanupOldProfiles(now)
 }
@@ -73,16 +73,16 @@ func (ap *AgentProfiler) CollectProfile() {
 func (ap *AgentProfiler) GetCPUProfile(duration time.Duration) []CPUProfile {
 	ap.mutex.RLock()
 	defer ap.mutex.RUnlock()
-	
+
 	cutoff := time.Now().Add(-duration)
 	profiles := make([]CPUProfile, 0)
-	
+
 	for _, profile := range ap.cpuProfile {
 		if profile.Timestamp.After(cutoff) {
 			profiles = append(profiles, profile)
 		}
 	}
-	
+
 	return profiles
 }
 
@@ -90,16 +90,16 @@ func (ap *AgentProfiler) GetCPUProfile(duration time.Duration) []CPUProfile {
 func (ap *AgentProfiler) GetMemoryProfile(duration time.Duration) []MemoryProfile {
 	ap.mutex.RLock()
 	defer ap.mutex.RUnlock()
-	
+
 	cutoff := time.Now().Add(-duration)
 	profiles := make([]MemoryProfile, 0)
-	
+
 	for _, profile := range ap.memoryProfile {
 		if profile.Timestamp.After(cutoff) {
 			profiles = append(profiles, profile)
 		}
 	}
-	
+
 	return profiles
 }
 
@@ -107,23 +107,23 @@ func (ap *AgentProfiler) GetMemoryProfile(duration time.Duration) []MemoryProfil
 func (ap *AgentProfiler) GetGoroutineProfile(duration time.Duration) []GoroutineProfile {
 	ap.mutex.RLock()
 	defer ap.mutex.RUnlock()
-	
+
 	cutoff := time.Now().Add(-duration)
 	profiles := make([]GoroutineProfile, 0)
-	
+
 	for _, profile := range ap.goroutineProfile {
 		if profile.Timestamp.After(cutoff) {
 			profiles = append(profiles, profile)
 		}
 	}
-	
+
 	return profiles
 }
 
 func (ap *AgentProfiler) profilingLoop() {
 	ticker := time.NewTicker(ap.profilingInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ap.ctx.Done():
@@ -137,24 +137,24 @@ func (ap *AgentProfiler) profilingLoop() {
 func (ap *AgentProfiler) collectCPUProfile(timestamp time.Time) {
 	ap.mutex.Lock()
 	defer ap.mutex.Unlock()
-	
+
 	// CPU 사용률 수집
 	cpuPercent, err := cpu.Percent(100*time.Millisecond, false)
 	if err != nil || len(cpuPercent) == 0 {
 		return
 	}
-	
+
 	// 프로세스 정보 수집
 	processes := ap.collectProcessInfo()
-	
+
 	profile := CPUProfile{
 		Timestamp: timestamp,
 		Usage:     cpuPercent[0],
 		Processes: processes,
 	}
-	
+
 	ap.cpuProfile = append(ap.cpuProfile, profile)
-	
+
 	// 최대 개수 제한
 	if len(ap.cpuProfile) > 1000 {
 		ap.cpuProfile = ap.cpuProfile[1:]
@@ -164,10 +164,10 @@ func (ap *AgentProfiler) collectCPUProfile(timestamp time.Time) {
 func (ap *AgentProfiler) collectMemoryProfile(timestamp time.Time) {
 	ap.mutex.Lock()
 	defer ap.mutex.Unlock()
-	
+
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	
+
 	// 할당 속도 계산
 	var allocRate float64
 	if len(ap.memoryProfile) > 0 {
@@ -178,7 +178,7 @@ func (ap *AgentProfiler) collectMemoryProfile(timestamp time.Time) {
 			allocRate = allocDiff / timeDiff
 		}
 	}
-	
+
 	profile := MemoryProfile{
 		Timestamp:    timestamp,
 		HeapAlloc:    m.Alloc,
@@ -189,9 +189,9 @@ func (ap *AgentProfiler) collectMemoryProfile(timestamp time.Time) {
 		PauseTotalNs: m.PauseTotalNs,
 		AllocRate:    allocRate,
 	}
-	
+
 	ap.memoryProfile = append(ap.memoryProfile, profile)
-	
+
 	// 최대 개수 제한
 	if len(ap.memoryProfile) > 1000 {
 		ap.memoryProfile = ap.memoryProfile[1:]
@@ -201,24 +201,24 @@ func (ap *AgentProfiler) collectMemoryProfile(timestamp time.Time) {
 func (ap *AgentProfiler) collectGoroutineProfile(timestamp time.Time) {
 	ap.mutex.Lock()
 	defer ap.mutex.Unlock()
-	
+
 	numGoroutine := runtime.NumGoroutine()
-	
+
 	// 고루틴 상태별 분류 (실제 구현에서는 runtime 패키지의 고급 기능 사용)
 	goroutinesByState := map[string]int{
-		"running": numGoroutine / 4,      // 추정치
-		"waiting": numGoroutine * 3 / 4,  // 추정치
-		"blocked": 0,                     // 추정치
+		"running": numGoroutine / 4,     // 추정치
+		"waiting": numGoroutine * 3 / 4, // 추정치
+		"blocked": 0,                    // 추정치
 	}
-	
+
 	profile := GoroutineProfile{
 		Timestamp:         timestamp,
 		NumGoroutine:      numGoroutine,
 		GoroutinesByState: goroutinesByState,
 	}
-	
+
 	ap.goroutineProfile = append(ap.goroutineProfile, profile)
-	
+
 	// 최대 개수 제한
 	if len(ap.goroutineProfile) > 1000 {
 		ap.goroutineProfile = ap.goroutineProfile[1:]
@@ -239,7 +239,7 @@ func (ap *AgentProfiler) collectProcessInfo() []ProcessInfo {
 
 func (ap *AgentProfiler) cleanupOldProfiles(now time.Time) {
 	cutoff := now.Add(-ap.profileRetention)
-	
+
 	// CPU 프로파일 정리
 	newCPUProfiles := make([]CPUProfile, 0, len(ap.cpuProfile))
 	for _, profile := range ap.cpuProfile {
@@ -248,7 +248,7 @@ func (ap *AgentProfiler) cleanupOldProfiles(now time.Time) {
 		}
 	}
 	ap.cpuProfile = newCPUProfiles
-	
+
 	// 메모리 프로파일 정리
 	newMemoryProfiles := make([]MemoryProfile, 0, len(ap.memoryProfile))
 	for _, profile := range ap.memoryProfile {
@@ -257,7 +257,7 @@ func (ap *AgentProfiler) cleanupOldProfiles(now time.Time) {
 		}
 	}
 	ap.memoryProfile = newMemoryProfiles
-	
+
 	// 고루틴 프로파일 정리
 	newGoroutineProfiles := make([]GoroutineProfile, 0, len(ap.goroutineProfile))
 	for _, profile := range ap.goroutineProfile {
@@ -271,7 +271,7 @@ func (ap *AgentProfiler) cleanupOldProfiles(now time.Time) {
 // NewSystemResourceMonitor는 새로운 시스템 리소스 모니터를 생성합니다
 func NewSystemResourceMonitor(interval time.Duration) *SystemResourceMonitor {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	monitor := &SystemResourceMonitor{
 		monitoringInterval: interval,
 		alertThresholds: AlertThresholds{
@@ -286,12 +286,12 @@ func NewSystemResourceMonitor(interval time.Duration) *SystemResourceMonitor {
 		cancel:       cancel,
 		alertChannel: make(chan PerformanceAlert, 100),
 	}
-	
+
 	// 초기값 설정
 	monitor.currentCPU.Store(0.0)
 	monitor.currentMemory.Store(&mem.VirtualMemoryStat{})
 	monitor.currentDisk.Store(int64(0))
-	
+
 	return monitor
 }
 
@@ -329,7 +329,7 @@ func (srm *SystemResourceMonitor) GetDiskUsage() float64 {
 func (srm *SystemResourceMonitor) monitoringLoop() {
 	ticker := time.NewTicker(srm.monitoringInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-srm.ctx.Done():
@@ -344,7 +344,7 @@ func (srm *SystemResourceMonitor) collectSystemMetrics() {
 	// CPU 사용률 수집
 	if cpuPercent, err := cpu.Percent(time.Second, false); err == nil && len(cpuPercent) > 0 {
 		srm.currentCPU.Store(cpuPercent[0])
-		
+
 		// CPU 알림 체크
 		if cpuPercent[0] > srm.alertThresholds.HighCPUUsage {
 			srm.sendAlert(PerformanceAlert{
@@ -363,11 +363,11 @@ func (srm *SystemResourceMonitor) collectSystemMetrics() {
 			})
 		}
 	}
-	
+
 	// 메모리 사용률 수집
 	if memStat, err := mem.VirtualMemory(); err == nil {
 		srm.currentMemory.Store(memStat)
-		
+
 		// 메모리 알림 체크
 		if memStat.UsedPercent > srm.alertThresholds.HighMemoryUsage {
 			srm.sendAlert(PerformanceAlert{
@@ -400,7 +400,7 @@ func (srm *SystemResourceMonitor) sendAlert(alert PerformanceAlert) {
 // NewAgentAutoScaler는 새로운 에이전트 자동 스케일러를 생성합니다
 func NewAgentAutoScaler(config AutoScalingConfig) *AgentAutoScaler {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	scaler := &AgentAutoScaler{
 		config:          config,
 		ctx:             ctx,
@@ -408,12 +408,12 @@ func NewAgentAutoScaler(config AutoScalingConfig) *AgentAutoScaler {
 		loadPredictor:   NewLoadPredictor(),
 		capacityPlanner: NewCapacityPlanner(),
 	}
-	
+
 	scaler.currentCapacity.Store(int32(config.MinAgents))
 	scaler.targetCapacity.Store(int32(config.MinAgents))
 	scaler.lastScaleAction.Store("initialized")
 	scaler.lastScaleTime.Store(time.Now())
-	
+
 	return scaler
 }
 
@@ -422,7 +422,7 @@ func (aas *AgentAutoScaler) Start() error {
 	if !aas.config.Enabled {
 		return nil
 	}
-	
+
 	go aas.scalingLoop()
 	return nil
 }
@@ -438,21 +438,21 @@ func (aas *AgentAutoScaler) EvaluateScaling(systemStatus *SystemStatus) error {
 	if !aas.config.Enabled {
 		return nil
 	}
-	
+
 	aas.scalingMutex.Lock()
 	defer aas.scalingMutex.Unlock()
-	
+
 	currentCapacity := int(aas.currentCapacity.Load())
-	
+
 	// 부하 기반 스케일링 결정
 	targetCapacity := aas.calculateTargetCapacity(systemStatus)
-	
+
 	if targetCapacity > currentCapacity {
 		return aas.scaleUp(targetCapacity - currentCapacity)
 	} else if targetCapacity < currentCapacity {
 		return aas.scaleDown(currentCapacity - targetCapacity)
 	}
-	
+
 	return nil
 }
 
@@ -474,7 +474,7 @@ func (aas *AgentAutoScaler) GetLastAction() string {
 func (aas *AgentAutoScaler) scalingLoop() {
 	ticker := time.NewTicker(30 * time.Second) // 30초마다 스케일링 평가
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-aas.ctx.Done():
@@ -501,37 +501,37 @@ func (aas *AgentAutoScaler) calculateTargetCapacity(systemStatus *SystemStatus) 
 	// 간단한 부하 기반 용량 계산
 	cpuLoad := systemStatus.CPUUsage / 100.0
 	memoryLoad := systemStatus.MemoryUsage / 100.0
-	
+
 	// 최대 부하를 기준으로 용량 계산
 	maxLoad := cpuLoad
 	if memoryLoad > maxLoad {
 		maxLoad = memoryLoad
 	}
-	
+
 	currentCapacity := int(aas.currentCapacity.Load())
-	
+
 	if maxLoad > aas.config.ScaleUpThreshold {
 		// 스케일 업 필요
 		factor := maxLoad / aas.config.TargetUtilization
 		targetCapacity := int(float64(currentCapacity) * factor)
-		
+
 		if targetCapacity > aas.config.MaxAgents {
 			targetCapacity = aas.config.MaxAgents
 		}
-		
+
 		return targetCapacity
 	} else if maxLoad < aas.config.ScaleDownThreshold {
 		// 스케일 다운 가능
 		factor := maxLoad / aas.config.TargetUtilization
 		targetCapacity := int(float64(currentCapacity) * factor)
-		
+
 		if targetCapacity < aas.config.MinAgents {
 			targetCapacity = aas.config.MinAgents
 		}
-		
+
 		return targetCapacity
 	}
-	
+
 	return currentCapacity
 }
 
@@ -540,26 +540,26 @@ func (aas *AgentAutoScaler) scaleUp(count int) error {
 	if time.Since(lastScaleTime) < aas.config.ScaleUpCooldown {
 		return nil // 쿨다운 중
 	}
-	
+
 	currentCapacity := int(aas.currentCapacity.Load())
 	newCapacity := currentCapacity + count
-	
+
 	if newCapacity > aas.config.MaxAgents {
 		newCapacity = aas.config.MaxAgents
 		count = newCapacity - currentCapacity
 	}
-	
+
 	if count <= 0 {
 		return nil
 	}
-	
+
 	// 실제 스케일 업 로직 (에이전트 생성)
 	// 여기서는 상태만 업데이트
 	aas.currentCapacity.Store(int32(newCapacity))
 	aas.targetCapacity.Store(int32(newCapacity))
 	aas.lastScaleAction.Store(fmt.Sprintf("scale_up_%d", count))
 	aas.lastScaleTime.Store(time.Now())
-	
+
 	return nil
 }
 
@@ -568,26 +568,26 @@ func (aas *AgentAutoScaler) scaleDown(count int) error {
 	if time.Since(lastScaleTime) < aas.config.ScaleDownCooldown {
 		return nil // 쿨다운 중
 	}
-	
+
 	currentCapacity := int(aas.currentCapacity.Load())
 	newCapacity := currentCapacity - count
-	
+
 	if newCapacity < aas.config.MinAgents {
 		newCapacity = aas.config.MinAgents
 		count = currentCapacity - newCapacity
 	}
-	
+
 	if count <= 0 {
 		return nil
 	}
-	
+
 	// 실제 스케일 다운 로직 (에이전트 제거)
 	// 여기서는 상태만 업데이트
 	aas.currentCapacity.Store(int32(newCapacity))
 	aas.targetCapacity.Store(int32(newCapacity))
 	aas.lastScaleAction.Store(fmt.Sprintf("scale_down_%d", count))
 	aas.lastScaleTime.Store(time.Now())
-	
+
 	return nil
 }
 
@@ -612,7 +612,7 @@ func NewLoadPredictor() *LoadPredictor {
 func (lp *LoadPredictor) PredictLoad(targetTime time.Time) LoadPrediction {
 	lp.mutex.RLock()
 	defer lp.mutex.RUnlock()
-	
+
 	// 간단한 이동평균 기반 예측
 	if len(lp.loadHistory) == 0 {
 		return LoadPrediction{
@@ -621,26 +621,26 @@ func (lp *LoadPredictor) PredictLoad(targetTime time.Time) LoadPrediction {
 			Confidence:   0.5,
 		}
 	}
-	
+
 	// 최근 데이터 기반 평균 계산
 	recentCount := 10
 	if len(lp.loadHistory) < recentCount {
 		recentCount = len(lp.loadHistory)
 	}
-	
+
 	var totalLoad float64
 	for i := len(lp.loadHistory) - recentCount; i < len(lp.loadHistory); i++ {
 		totalLoad += lp.loadHistory[i].CPUUsage
 	}
-	
+
 	avgLoad := totalLoad / float64(recentCount)
-	
+
 	// 시간 기반 패턴 적용
 	hour := targetTime.Hour()
 	if pattern, exists := lp.dailyPatterns[hour]; exists {
 		avgLoad = avgLoad * pattern
 	}
-	
+
 	return LoadPrediction{
 		Timestamp:    targetTime,
 		ExpectedLoad: avgLoad / 100.0, // 백분율을 비율로 변환
@@ -659,14 +659,14 @@ type LoadPrediction struct {
 func (lp *LoadPredictor) RecordLoad(dataPoint LoadDataPoint) {
 	lp.mutex.Lock()
 	defer lp.mutex.Unlock()
-	
+
 	lp.loadHistory = append(lp.loadHistory, dataPoint)
-	
+
 	// 최대 크기 제한
 	if len(lp.loadHistory) > lp.maxHistorySize {
 		lp.loadHistory = lp.loadHistory[1:]
 	}
-	
+
 	// 패턴 업데이트
 	lp.updatePatterns(dataPoint)
 }
@@ -674,7 +674,7 @@ func (lp *LoadPredictor) RecordLoad(dataPoint LoadDataPoint) {
 func (lp *LoadPredictor) updatePatterns(dataPoint LoadDataPoint) {
 	hour := dataPoint.Timestamp.Hour()
 	weekday := int(dataPoint.Timestamp.Weekday())
-	
+
 	// 일일 패턴 업데이트 (지수 이동평균)
 	alpha := 0.1
 	if existing, exists := lp.dailyPatterns[hour]; exists {
@@ -682,7 +682,7 @@ func (lp *LoadPredictor) updatePatterns(dataPoint LoadDataPoint) {
 	} else {
 		lp.dailyPatterns[hour] = dataPoint.CPUUsage
 	}
-	
+
 	// 주간 패턴 업데이트
 	if existing, exists := lp.weeklyPatterns[weekday]; exists {
 		lp.weeklyPatterns[weekday] = alpha*dataPoint.CPUUsage + (1-alpha)*existing
@@ -703,21 +703,21 @@ func NewCapacityPlanner() *CapacityPlanner {
 // DefaultResourceModel은 기본 리소스 모델을 반환합니다
 func DefaultResourceModel() ResourceModel {
 	return ResourceModel{
-		CPUPerAgent:    0.1,  // 0.1 코어
-		MemoryPerAgent: 100 * 1024 * 1024, // 100MB
-		DiskPerAgent:   10 * 1024 * 1024,  // 10MB
-		NetworkPerAgent: 1024, // 1KB/s
+		CPUPerAgent:     0.1,               // 0.1 코어
+		MemoryPerAgent:  100 * 1024 * 1024, // 100MB
+		DiskPerAgent:    10 * 1024 * 1024,  // 10MB
+		NetworkPerAgent: 1024,              // 1KB/s
 		SystemOverhead: ResourceRequirements{
-			CPU:     0.5,  // 0.5 코어
-			Memory:  512 * 1024 * 1024, // 512MB
+			CPU:     0.5,                // 0.5 코어
+			Memory:  512 * 1024 * 1024,  // 512MB
 			Disk:    1024 * 1024 * 1024, // 1GB
-			Network: 10 * 1024, // 10KB/s
+			Network: 10 * 1024,          // 10KB/s
 		},
 		ScalingOverhead: ResourceRequirements{
-			CPU:     0.05, // 0.05 코어 per scaling operation
+			CPU:     0.05,             // 0.05 코어 per scaling operation
 			Memory:  10 * 1024 * 1024, // 10MB
-			Disk:    1024 * 1024, // 1MB
-			Network: 1024, // 1KB/s
+			Disk:    1024 * 1024,      // 1MB
+			Network: 1024,             // 1KB/s
 		},
 	}
 }
@@ -725,11 +725,11 @@ func DefaultResourceModel() ResourceModel {
 // NewAgentLoadBalancer는 새로운 에이전트 로드 밸런서를 생성합니다
 func NewAgentLoadBalancer() *AgentLoadBalancer {
 	return &AgentLoadBalancer{
-		strategy:        StrategyAdaptive,
-		agentPools:      make(map[string]*AgentPool),
-		routingTable:    NewRoutingTable(),
-		healthChecker:   NewAgentHealthChecker(),
-		routingMetrics:  NewRoutingMetrics(),
+		strategy:       StrategyAdaptive,
+		agentPools:     make(map[string]*AgentPool),
+		routingTable:   NewRoutingTable(),
+		healthChecker:  NewAgentHealthChecker(),
+		routingMetrics: NewRoutingMetrics(),
 	}
 }
 
@@ -744,7 +744,7 @@ func NewRoutingTable() *RoutingTable {
 // NewAgentHealthChecker는 새로운 에이전트 건강 체커를 생성합니다
 func NewAgentHealthChecker() *AgentHealthChecker {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &AgentHealthChecker{
 		checkInterval: 30 * time.Second,
 		checkTimeout:  5 * time.Second,
@@ -764,7 +764,7 @@ func NewRoutingMetrics() *RoutingMetrics {
 // NewPerformanceAlertManager는 새로운 성능 알림 관리자를 생성합니다
 func NewPerformanceAlertManager() *PerformanceAlertManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &PerformanceAlertManager{
 		alertChannel:   make(chan PerformanceAlert, 1000),
 		alertRules:     make([]AlertRule, 0),
@@ -802,15 +802,15 @@ func (pam *PerformanceAlertManager) alertProcessingLoop() {
 func (pam *PerformanceAlertManager) processAlert(alert PerformanceAlert) {
 	pam.mutex.Lock()
 	defer pam.mutex.Unlock()
-	
+
 	// 알림 히스토리에 추가
 	pam.alertHistory = append(pam.alertHistory, alert)
-	
+
 	// 최대 크기 제한
 	if len(pam.alertHistory) > pam.maxHistorySize {
 		pam.alertHistory = pam.alertHistory[1:]
 	}
-	
+
 	// 알림 규칙 실행
 	for _, rule := range pam.alertRules {
 		if rule.Enabled && pam.matchesRule(alert, rule) {

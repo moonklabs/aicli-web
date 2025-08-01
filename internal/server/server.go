@@ -128,10 +128,10 @@ func New() *Server {
 	// Agent 서비스 초기화
 	// TODO: DockerAdapter, MonitoringService, EventPublisher 구현 필요
 	agentService := agent.NewAgentService(
-		storage,        // storage
-		nil,           // dockerAdapter (TODO: 구현 필요)
-		nil,           // monitoring (TODO: 구현 필요)
-		nil,           // eventPublisher (TODO: 구현 필요)
+		storage,         // storage
+		nil,             // dockerAdapter (TODO: 구현 필요)
+		nil,             // monitoring (TODO: 구현 필요)
+		nil,             // eventPublisher (TODO: 구현 필요)
 		worktreeManager, // worktreeManager (TODO: 구현 필요)
 	)
 

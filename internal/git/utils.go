@@ -78,7 +78,7 @@ func (m *AdvancedWorktreeManager) updateActiveWorktreeCount() {
 	m.metrics.mu.Lock()
 	m.metrics.ActiveWorktrees = count
 	m.metrics.mu.Unlock()
-	
+
 	if m.promMetrics != nil {
 		m.promMetrics.SetActiveWorktrees(count)
 	}
@@ -90,7 +90,7 @@ func (m *AdvancedWorktreeManager) updateDiskUsage() {
 	m.metrics.mu.Lock()
 	m.metrics.DiskUsageBytes = usage
 	m.metrics.mu.Unlock()
-	
+
 	if m.promMetrics != nil {
 		m.promMetrics.SetDiskUsage(usage)
 	}

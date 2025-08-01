@@ -15,8 +15,8 @@ import (
 // dockerAdapter Docker 컨테이너 관리를 위한 어댑터 구현체
 type dockerAdapter struct {
 	containerManager docker.ContainerManagement
-	client          docker.ClientInterface
-	statsCollector  docker.StatsCollection
+	client           docker.ClientInterface
+	statsCollector   docker.StatsCollection
 	agentIntegration *DockerAgentIntegration // 에이전트 전용 Docker 통합
 }
 
@@ -24,8 +24,8 @@ type dockerAdapter struct {
 func NewDockerAdapter(containerManager docker.ContainerManagement, client docker.ClientInterface, statsCollector docker.StatsCollection) DockerAdapter {
 	return &dockerAdapter{
 		containerManager: containerManager,
-		client:          client,
-		statsCollector:  statsCollector,
+		client:           client,
+		statsCollector:   statsCollector,
 		agentIntegration: nil, // 나중에 주입
 	}
 }
@@ -49,28 +49,28 @@ func (d *dockerAdapter) CreateContainer(ctx context.Context, config ContainerCon
 				Environment: make(map[string]string),
 			},
 		}
-		
+
 		// 환경 변수에서 설정 추출
 		for k, v := range config.Environment {
 			agent.Config.Environment[k] = v
 		}
-		
+
 		// 에이전트 통합이 설정되지 않은 경우 기본 로직으로 폴백
 		if d.agentIntegration == nil {
 			return nil, fmt.Errorf("에이전트 Docker 통합이 설정되지 않음")
 		}
-		
+
 		// 네트워크 확인
 		if err := d.agentIntegration.EnsureAgentNetwork(ctx); err != nil {
 			return nil, fmt.Errorf("에이전트 네트워크 생성 실패: %w", err)
 		}
-		
+
 		// 에이전트 컨테이너 생성
 		containerID, err := d.agentIntegration.CreateAgentContainer(ctx, agent, config.WorkingDir)
 		if err != nil {
 			return nil, fmt.Errorf("에이전트 컨테이너 생성 실패: %w", err)
 		}
-		
+
 		return &ContainerInfo{
 			ID:      containerID,
 			Name:    fmt.Sprintf("aicli-agent-%s", agent.ID),
@@ -78,7 +78,7 @@ func (d *dockerAdapter) CreateContainer(ctx context.Context, config ContainerCon
 			Created: time.Now(),
 		}, nil
 	}
-	
+
 	// 기존 로직 유지
 	createReq, err := d.convertToCreateRequest(config)
 	if err != nil {
@@ -107,7 +107,7 @@ func (d *dockerAdapter) StartContainer(ctx context.Context, containerID string) 
 			}
 		}
 	}
-	
+
 	// 기존 로직
 	err = d.containerManager.StartContainer(ctx, containerID)
 	if err != nil {
@@ -128,7 +128,7 @@ func (d *dockerAdapter) StopContainer(ctx context.Context, containerID string) e
 			}
 		}
 	}
-	
+
 	// 기존 로직
 	timeout := 30 * time.Second
 	err = d.containerManager.StopContainer(ctx, containerID, timeout)
@@ -154,7 +154,7 @@ func (d *dockerAdapter) RemoveContainer(ctx context.Context, containerID string)
 			}
 		}
 	}
-	
+
 	// 기존 로직
 	err = d.containerManager.RemoveContainer(ctx, containerID, true) // force=true
 	if err != nil {
@@ -212,11 +212,11 @@ func (d *dockerAdapter) GetContainerHealth(ctx context.Context, containerID stri
 		// 헬스체크 정보가 있다면 추가
 		if containerJSON.State.Health != nil {
 			health.Status = strings.ToLower(containerJSON.State.Health.Status)
-			
+
 			if len(containerJSON.State.Health.Log) > 0 {
 				lastCheck := containerJSON.State.Health.Log[len(containerJSON.State.Health.Log)-1]
 				health.LastCheck = lastCheck.Start
-				
+
 				// 최근 체크들을 변환
 				for _, log := range containerJSON.State.Health.Log {
 					check := HealthCheck{
@@ -430,7 +430,7 @@ func (d *dockerAdapter) readExecOutput(reader io.Reader) (stdout, stderr string,
 	if err != nil {
 		return "", "", err
 	}
-	
+
 	return string(output), "", nil
 }
 
@@ -445,7 +445,7 @@ func (ls *simpleLogStream) Read() ([]byte, error) {
 	if ls.closed {
 		return nil, io.EOF
 	}
-	
+
 	// 간단한 로그 메시지 반환 (실제 구현에서는 Docker API 호출 필요)
 	logMessage := fmt.Sprintf("[%s] Container %s log entry\n", time.Now().Format(time.RFC3339), ls.containerID)
 	ls.closed = true // 한 번만 읽고 종료

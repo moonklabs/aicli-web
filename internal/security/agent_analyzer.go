@@ -26,13 +26,13 @@ type AgentRequestPattern struct {
 
 // AgentAnomalyResult는 AI 에이전트 이상 탐지 결과를 나타냅니다.
 type AgentAnomalyResult struct {
-	IsAnomalous     bool               `json:"is_anomalous"`
-	AnomalyType     string             `json:"anomaly_type"`
-	Score           float64            `json:"score"`           // 0.0 ~ 1.0
-	Severity        Severity           `json:"severity"`
-	Evidence        []string           `json:"evidence"`
+	IsAnomalous     bool                 `json:"is_anomalous"`
+	AnomalyType     string               `json:"anomaly_type"`
+	Score           float64              `json:"score"` // 0.0 ~ 1.0
+	Severity        Severity             `json:"severity"`
+	Evidence        []string             `json:"evidence"`
 	Pattern         *AgentRequestPattern `json:"pattern"`
-	Recommendations []string           `json:"recommendations"`
+	Recommendations []string             `json:"recommendations"`
 }
 
 // AgentAnalyzerConfig는 에이전트 분석기 설정입니다.
@@ -41,33 +41,33 @@ type AgentAnalyzerConfig struct {
 	EventTracker *EventTracker
 
 	// 임계값 설정
-	MaxRequestsPerMinute    int           // 분당 최대 요청 수
+	MaxRequestsPerMinute   int           // 분당 최대 요청 수
 	MaxTokensPerHour       int           // 시간당 최대 토큰 수
 	MaxPromptLength        int           // 최대 프롬프트 길이
 	SuspiciousResponseTime time.Duration // 의심스러운 응답 시간
 	AnomalyThreshold       float64       // 이상 탐지 임계값
 
 	// 시간 윈도우 설정
-	AnalysisWindow    time.Duration // 분석 시간 윈도우
-	PatternWindow     time.Duration // 패턴 분석 윈도우
-	BaselineWindow    time.Duration // 베이스라인 계산 윈도우
+	AnalysisWindow time.Duration // 분석 시간 윈도우
+	PatternWindow  time.Duration // 패턴 분석 윈도우
+	BaselineWindow time.Duration // 베이스라인 계산 윈도우
 
 	Logger *zap.Logger
 }
 
 // AgentAnalyzer는 AI 에이전트 요청 패턴 분석기입니다.
 type AgentAnalyzer struct {
-	config           *AgentAnalyzerConfig
-	redis            redis.UniversalClient
-	logger           *zap.Logger
-	eventTracker     *EventTracker
+	config             *AgentAnalyzerConfig
+	redis              redis.UniversalClient
+	logger             *zap.Logger
+	eventTracker       *EventTracker
 	suspiciousPatterns []*regexp.Regexp
 }
 
 // DefaultAgentAnalyzerConfig는 기본 에이전트 분석기 설정을 반환합니다.
 func DefaultAgentAnalyzerConfig() *AgentAnalyzerConfig {
 	return &AgentAnalyzerConfig{
-		MaxRequestsPerMinute:    100,
+		MaxRequestsPerMinute:   100,
 		MaxTokensPerHour:       10000,
 		MaxPromptLength:        8192,
 		SuspiciousResponseTime: 30 * time.Second,
@@ -117,8 +117,8 @@ func (aa *AgentAnalyzer) compileSuspiciousPatterns() {
 		if compiled, err := regexp.Compile(pattern); err == nil {
 			aa.suspiciousPatterns = append(aa.suspiciousPatterns, compiled)
 		} else {
-			aa.logger.Error("의심스러운 패턴 컴파일 실패", 
-				zap.String("pattern", pattern), 
+			aa.logger.Error("의심스러운 패턴 컴파일 실패",
+				zap.String("pattern", pattern),
 				zap.Error(err))
 		}
 	}
@@ -180,7 +180,7 @@ func (aa *AgentAnalyzer) analyzeRequestFrequency(ctx context.Context, pattern *A
 		}
 		if userCount > int64(aa.config.MaxRequestsPerMinute) {
 			result.Score += 0.8
-			result.Evidence = append(result.Evidence, 
+			result.Evidence = append(result.Evidence,
 				fmt.Sprintf("사용자 요청 빈도 초과: %d/분", userCount))
 			result.AnomalyType = "high_frequency"
 		}
@@ -194,7 +194,7 @@ func (aa *AgentAnalyzer) analyzeRequestFrequency(ctx context.Context, pattern *A
 		}
 		if sessionCount > int64(aa.config.MaxRequestsPerMinute/2) {
 			result.Score += 0.6
-			result.Evidence = append(result.Evidence, 
+			result.Evidence = append(result.Evidence,
 				fmt.Sprintf("세션 요청 빈도 초과: %d/분", sessionCount))
 		}
 	}
@@ -203,17 +203,17 @@ func (aa *AgentAnalyzer) analyzeRequestFrequency(ctx context.Context, pattern *A
 // analyzeTokenUsage는 토큰 사용량을 분석합니다.
 func (aa *AgentAnalyzer) analyzeTokenUsage(ctx context.Context, pattern *AgentRequestPattern, result *AgentAnomalyResult) {
 	tokenKey := fmt.Sprintf("agent:tokens:user:%s", pattern.UserID)
-	
+
 	// 시간당 토큰 사용량 누적
 	totalTokens, err := aa.redis.IncrBy(ctx, tokenKey, int64(pattern.TokenCount)).Result()
 	if err == nil {
 		if totalTokens == int64(pattern.TokenCount) {
 			aa.redis.Expire(ctx, tokenKey, time.Hour)
 		}
-		
+
 		if totalTokens > int64(aa.config.MaxTokensPerHour) {
 			result.Score += 0.7
-			result.Evidence = append(result.Evidence, 
+			result.Evidence = append(result.Evidence,
 				fmt.Sprintf("시간당 토큰 사용량 초과: %d", totalTokens))
 			result.AnomalyType = "excessive_token_usage"
 		}
@@ -222,7 +222,7 @@ func (aa *AgentAnalyzer) analyzeTokenUsage(ctx context.Context, pattern *AgentRe
 	// 단일 요청의 과도한 토큰 사용
 	if pattern.TokenCount > aa.config.MaxTokensPerHour/10 {
 		result.Score += 0.5
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("단일 요청 과도한 토큰 사용: %d", pattern.TokenCount))
 	}
 }
@@ -232,7 +232,7 @@ func (aa *AgentAnalyzer) analyzePromptPattern(ctx context.Context, pattern *Agen
 	// 프롬프트 길이 확인
 	if pattern.PromptLength > aa.config.MaxPromptLength {
 		result.Score += 0.6
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("과도한 프롬프트 길이: %d", pattern.PromptLength))
 		result.AnomalyType = "oversized_prompt"
 	}
@@ -262,14 +262,14 @@ func (aa *AgentAnalyzer) analyzeResponseTime(ctx context.Context, pattern *Agent
 	// 비정상적으로 빠른 응답 (봇 의심)
 	if pattern.ResponseTime < 100*time.Millisecond {
 		result.Score += 0.3
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("비정상적으로 빠른 응답: %v", pattern.ResponseTime))
 	}
 
 	// 비정상적으로 느린 응답 (DoS 공격 의심)
 	if pattern.ResponseTime > aa.config.SuspiciousResponseTime {
 		result.Score += 0.5
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("비정상적으로 느린 응답: %v", pattern.ResponseTime))
 	}
 }
@@ -278,7 +278,7 @@ func (aa *AgentAnalyzer) analyzeResponseTime(ctx context.Context, pattern *Agent
 func (aa *AgentAnalyzer) analyzeBehaviorPattern(ctx context.Context, pattern *AgentRequestPattern, result *AgentAnomalyResult) {
 	// 사용자의 최근 요청 패턴 조회
 	baselineKey := fmt.Sprintf("agent:baseline:user:%s", pattern.UserID)
-	
+
 	// 베이스라인과 비교한 이상 탐지
 	if aa.isDeviationFromBaseline(ctx, baselineKey, pattern) {
 		result.Score += 0.6
@@ -289,7 +289,7 @@ func (aa *AgentAnalyzer) analyzeBehaviorPattern(ctx context.Context, pattern *Ag
 	// 요청 타입 패턴 분석
 	if aa.isSuspiciousRequestType(pattern.RequestType) {
 		result.Score += 0.4
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("의심스러운 요청 타입: %s", pattern.RequestType))
 	}
 }
@@ -297,11 +297,11 @@ func (aa *AgentAnalyzer) analyzeBehaviorPattern(ctx context.Context, pattern *Ag
 // analyzeTemporalAnomaly는 시간적 이상을 분석합니다.
 func (aa *AgentAnalyzer) analyzeTemporalAnomaly(ctx context.Context, pattern *AgentRequestPattern, result *AgentAnomalyResult) {
 	hour := pattern.Timestamp.Hour()
-	
+
 	// 비정상적인 시간대 활동 (새벽 2-6시)
 	if hour >= 2 && hour <= 6 {
 		result.Score += 0.3
-		result.Evidence = append(result.Evidence, 
+		result.Evidence = append(result.Evidence,
 			fmt.Sprintf("비정상적인 시간대 활동: %d시", hour))
 	}
 
@@ -320,7 +320,7 @@ func (aa *AgentAnalyzer) analyzeTemporalAnomaly(ctx context.Context, pattern *Ag
 func (aa *AgentAnalyzer) calculateFinalResult(result *AgentAnomalyResult) {
 	// 점수를 0-1 범위로 정규화
 	result.Score = math.Min(result.Score, 1.0)
-	
+
 	// 이상 여부 판단
 	result.IsAnomalous = result.Score >= aa.config.AnomalyThreshold
 
@@ -351,7 +351,7 @@ func (aa *AgentAnalyzer) handleAnomalousRequest(ctx context.Context, pattern *Ag
 			UserID:    pattern.UserID,
 			SessionID: pattern.SessionID,
 			Details: map[string]interface{}{
-				"anomaly_type":   result.AnomalyType,
+				"anomaly_type":  result.AnomalyType,
 				"score":         result.Score,
 				"token_count":   pattern.TokenCount,
 				"prompt_length": pattern.PromptLength,
@@ -379,15 +379,15 @@ func (aa *AgentAnalyzer) isRepeatedPrompt(ctx context.Context, userID, prompt st
 	// 프롬프트 해시 계산 (간단한 예시)
 	promptHash := fmt.Sprintf("%x", prompt[:min(len(prompt), 100)])
 	key := fmt.Sprintf("agent:prompts:user:%s", userID)
-	
+
 	// 최근 프롬프트 해시들과 비교
 	count, err := aa.redis.SAdd(ctx, key, promptHash).Result()
 	if err != nil {
 		return false
 	}
-	
+
 	aa.redis.Expire(ctx, key, time.Hour)
-	
+
 	// 새로운 프롬프트가 아니면 반복으로 판단
 	return count == 0
 }
@@ -403,13 +403,13 @@ func (aa *AgentAnalyzer) isSuspiciousRequestType(requestType string) bool {
 		"file_access", "system_command", "network_request",
 		"code_execution", "data_extraction",
 	}
-	
+
 	for _, suspicious := range suspiciousTypes {
 		if strings.Contains(strings.ToLower(requestType), suspicious) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -482,7 +482,7 @@ func (aa *AgentAnalyzer) GetAnalytics(ctx context.Context, userID string, period
 
 func (aa *AgentAnalyzer) getUserAnalytics(ctx context.Context, userID string, period time.Duration) (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
-	
+
 	// 요청 빈도 통계
 	freqKey := fmt.Sprintf("agent:freq:user:%s", userID)
 	if count, err := aa.redis.Get(ctx, freqKey).Int(); err == nil {
@@ -500,7 +500,7 @@ func (aa *AgentAnalyzer) getUserAnalytics(ctx context.Context, userID string, pe
 
 func (aa *AgentAnalyzer) getSystemAnalytics(ctx context.Context, period time.Duration) (map[string]interface{}, error) {
 	stats := make(map[string]interface{})
-	
+
 	// 전체 시스템 통계 수집 로직
 	stats["total_users"] = 0
 	stats["total_requests"] = 0

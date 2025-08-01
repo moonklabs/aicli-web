@@ -427,14 +427,14 @@ func (s *agentService) GetAgentStatus(ctx context.Context, id string) (AgentStat
 // StartMultipleAgents는 여러 에이전트를 동시에 시작합니다
 func (s *agentService) StartMultipleAgents(ctx context.Context, ids []string) ([]AgentOperationResult, error) {
 	results := make([]AgentOperationResult, len(ids))
-	
+
 	// 병렬 처리를 위한 고루틴
 	var wg sync.WaitGroup
 	for i, id := range ids {
 		wg.Add(1)
 		go func(index int, agentID string) {
 			defer wg.Done()
-			
+
 			err := s.StartAgent(ctx, agentID)
 			results[index] = AgentOperationResult{
 				AgentID: agentID,
@@ -445,7 +445,7 @@ func (s *agentService) StartMultipleAgents(ctx context.Context, ids []string) ([
 			}
 		}(i, id)
 	}
-	
+
 	wg.Wait()
 	return results, nil
 }
@@ -453,14 +453,14 @@ func (s *agentService) StartMultipleAgents(ctx context.Context, ids []string) ([
 // StopMultipleAgents는 여러 에이전트를 동시에 중지합니다
 func (s *agentService) StopMultipleAgents(ctx context.Context, ids []string) ([]AgentOperationResult, error) {
 	results := make([]AgentOperationResult, len(ids))
-	
+
 	// 병렬 처리를 위한 고루틴
 	var wg sync.WaitGroup
 	for i, id := range ids {
 		wg.Add(1)
 		go func(index int, agentID string) {
 			defer wg.Done()
-			
+
 			err := s.StopAgent(ctx, agentID)
 			results[index] = AgentOperationResult{
 				AgentID: agentID,
@@ -471,7 +471,7 @@ func (s *agentService) StopMultipleAgents(ctx context.Context, ids []string) ([]
 			}
 		}(i, id)
 	}
-	
+
 	wg.Wait()
 	return results, nil
 }
@@ -530,10 +530,10 @@ func (s *agentService) GetAgentMetrics(ctx context.Context, id string) (AgentMet
 func (s *agentService) CleanupStaleAgents(ctx context.Context) (int, error) {
 	// 24시간 이상 비활성 상태인 에이전트 조회
 	staleThreshold := time.Now().Add(-24 * time.Hour)
-	
+
 	// TODO: storage에 GetStaleAgents 메서드 추가 필요
 	// agents, err := s.storage.Agent().GetStaleAgents(ctx, staleThreshold)
-	
+
 	// 임시로 모든 에이전트를 조회하여 필터링
 	allAgents, err := s.storage.Agent().GetAll(ctx)
 	if err != nil {
@@ -549,7 +549,7 @@ func (s *agentService) CleanupStaleAgents(ctx context.Context) (int, error) {
 		// 비활성 상태이고 오래된 에이전트만 정리
 		if (agent.Status == models.AgentStatusStopped || agent.Status == models.AgentStatusError) &&
 			agent.LastActivity.Before(staleThreshold) {
-			
+
 			if err := s.DeleteAgent(ctx, agent.ID); err != nil {
 				// 개별 삭제 실패는 로깅만 처리
 				continue
@@ -648,7 +648,7 @@ func (s *agentService) startAgentProcessWithRecovery(ctx context.Context, agent 
 	if err != nil {
 		// 복구 실패 시 에러 상태로 설정
 		s.updateAgentStatus(ctx, agent.ID, models.AgentStatusError, fmt.Sprintf("Failed to start after recovery attempts: %v", err))
-		
+
 		// 에러 이벤트 발행
 		if s.eventPublisher != nil {
 			s.eventPublisher.PublishAgentError(ctx, agent, err)
@@ -667,10 +667,10 @@ func (s *agentService) startAgentProcessInternal(ctx context.Context, agent *mod
 		MemoryLimit: agent.Config.MemoryLimit,
 		CPULimit:    agent.Config.CPULimit,
 		Labels: map[string]string{
-			"agent.id":      agent.ID,
-			"agent.name":    agent.Name,
-			"agent.type":    string(agent.Type),
-			"project.id":    agent.ProjectID,
+			"agent.id":   agent.ID,
+			"agent.name": agent.Name,
+			"agent.type": string(agent.Type),
+			"project.id": agent.ProjectID,
 		},
 	}
 
@@ -717,7 +717,7 @@ func (s *agentService) startAgentProcessInternal(ctx context.Context, agent *mod
 // waitForAgentHealthy는 에이전트가 정상 상태가 될 때까지 대기합니다
 func (s *agentService) waitForAgentHealthy(ctx context.Context, agentID, containerID string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
-	
+
 	for time.Now().Before(deadline) {
 		select {
 		case <-ctx.Done():

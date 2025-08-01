@@ -12,51 +12,51 @@ import (
 
 // PerformanceTestSuite는 성능 테스트 스위트입니다
 type PerformanceTestSuite struct {
-	config    TestConfig
-	client    *http.Client
-	results   []TestResult
-	mutex     sync.RWMutex
-	running   atomic.Bool
-	ctx       context.Context
-	cancel    context.CancelFunc
-	wg        sync.WaitGroup
+	config  TestConfig
+	client  *http.Client
+	results []TestResult
+	mutex   sync.RWMutex
+	running atomic.Bool
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
 }
 
 // TestConfig는 테스트 설정입니다
 type TestConfig struct {
 	// 기본 설정
-	BaseURL           string        `json:"base_url"`
-	Timeout           time.Duration `json:"timeout"`
-	UserAgent         string        `json:"user_agent"`
+	BaseURL   string        `json:"base_url"`
+	Timeout   time.Duration `json:"timeout"`
+	UserAgent string        `json:"user_agent"`
 
 	// 부하 테스트 설정
-	ConcurrentUsers   int           `json:"concurrent_users"`
-	TestDuration      time.Duration `json:"test_duration"`
-	RampUpDuration    time.Duration `json:"ramp_up_duration"`
-	RampDownDuration  time.Duration `json:"ramp_down_duration"`
+	ConcurrentUsers  int           `json:"concurrent_users"`
+	TestDuration     time.Duration `json:"test_duration"`
+	RampUpDuration   time.Duration `json:"ramp_up_duration"`
+	RampDownDuration time.Duration `json:"ramp_down_duration"`
 
 	// 성능 임계값
-	MaxResponseTime   time.Duration `json:"max_response_time"`
-	MaxErrorRate      float64       `json:"max_error_rate"`
-	MinThroughput     float64       `json:"min_throughput"`
+	MaxResponseTime time.Duration `json:"max_response_time"`
+	MaxErrorRate    float64       `json:"max_error_rate"`
+	MinThroughput   float64       `json:"min_throughput"`
 
 	// 시나리오
-	Scenarios         []TestScenario `json:"scenarios"`
+	Scenarios []TestScenario `json:"scenarios"`
 
 	// 보고서 설정
-	ReportFormat      string        `json:"report_format"`
-	OutputDir         string        `json:"output_dir"`
-	EnableRealTime    bool          `json:"enable_real_time"`
+	ReportFormat   string `json:"report_format"`
+	OutputDir      string `json:"output_dir"`
+	EnableRealTime bool   `json:"enable_real_time"`
 }
 
 // TestScenario는 테스트 시나리오입니다
 type TestScenario struct {
-	Name         string        `json:"name"`
-	Description  string        `json:"description"`
-	Weight       float64       `json:"weight"`
-	Steps        []TestStep    `json:"steps"`
-	ThinkTime    time.Duration `json:"think_time"`
-	Iterations   int           `json:"iterations"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Weight      float64       `json:"weight"`
+	Steps       []TestStep    `json:"steps"`
+	ThinkTime   time.Duration `json:"think_time"`
+	Iterations  int           `json:"iterations"`
 }
 
 // TestStep은 개별 테스트 단계입니다
@@ -80,72 +80,72 @@ type Validation struct {
 
 // TestResult는 테스트 결과입니다
 type TestResult struct {
-	ScenarioName  string        `json:"scenario_name"`
-	StepName      string        `json:"step_name"`
-	URL           string        `json:"url"`
-	Method        string        `json:"method"`
-	StartTime     time.Time     `json:"start_time"`
-	EndTime       time.Time     `json:"end_time"`
-	ResponseTime  time.Duration `json:"response_time"`
-	StatusCode    int           `json:"status_code"`
-	ResponseSize  int64         `json:"response_size"`
-	Success       bool          `json:"success"`
-	Error         string        `json:"error,omitempty"`
-	UserID        int           `json:"user_id"`
-	Timestamp     int64         `json:"timestamp"`
+	ScenarioName string        `json:"scenario_name"`
+	StepName     string        `json:"step_name"`
+	URL          string        `json:"url"`
+	Method       string        `json:"method"`
+	StartTime    time.Time     `json:"start_time"`
+	EndTime      time.Time     `json:"end_time"`
+	ResponseTime time.Duration `json:"response_time"`
+	StatusCode   int           `json:"status_code"`
+	ResponseSize int64         `json:"response_size"`
+	Success      bool          `json:"success"`
+	Error        string        `json:"error,omitempty"`
+	UserID       int           `json:"user_id"`
+	Timestamp    int64         `json:"timestamp"`
 }
 
 // TestSummary는 테스트 요약입니다
 type TestSummary struct {
-	TotalRequests      int64         `json:"total_requests"`
-	SuccessfulRequests int64         `json:"successful_requests"`
-	FailedRequests     int64         `json:"failed_requests"`
-	ErrorRate          float64       `json:"error_rate"`
-	Throughput         float64       `json:"throughput"`
-	AverageResponseTime time.Duration `json:"average_response_time"`
-	MinResponseTime    time.Duration `json:"min_response_time"`
-	MaxResponseTime    time.Duration `json:"max_response_time"`
-	P50ResponseTime    time.Duration `json:"p50_response_time"`
-	P95ResponseTime    time.Duration `json:"p95_response_time"`
-	P99ResponseTime    time.Duration `json:"p99_response_time"`
-	TotalDataTransfer  int64         `json:"total_data_transfer"`
-	StartTime          time.Time     `json:"start_time"`
-	EndTime            time.Time     `json:"end_time"`
-	Duration           time.Duration `json:"duration"`
-	ScenarioResults    map[string]ScenarioSummary `json:"scenario_results"`
+	TotalRequests       int64                      `json:"total_requests"`
+	SuccessfulRequests  int64                      `json:"successful_requests"`
+	FailedRequests      int64                      `json:"failed_requests"`
+	ErrorRate           float64                    `json:"error_rate"`
+	Throughput          float64                    `json:"throughput"`
+	AverageResponseTime time.Duration              `json:"average_response_time"`
+	MinResponseTime     time.Duration              `json:"min_response_time"`
+	MaxResponseTime     time.Duration              `json:"max_response_time"`
+	P50ResponseTime     time.Duration              `json:"p50_response_time"`
+	P95ResponseTime     time.Duration              `json:"p95_response_time"`
+	P99ResponseTime     time.Duration              `json:"p99_response_time"`
+	TotalDataTransfer   int64                      `json:"total_data_transfer"`
+	StartTime           time.Time                  `json:"start_time"`
+	EndTime             time.Time                  `json:"end_time"`
+	Duration            time.Duration              `json:"duration"`
+	ScenarioResults     map[string]ScenarioSummary `json:"scenario_results"`
 }
 
 // ScenarioSummary는 시나리오별 요약입니다
 type ScenarioSummary struct {
-	Name               string        `json:"name"`
-	Requests           int64         `json:"requests"`
-	Successes          int64         `json:"successes"`
-	Failures           int64         `json:"failures"`
-	ErrorRate          float64       `json:"error_rate"`
+	Name                string        `json:"name"`
+	Requests            int64         `json:"requests"`
+	Successes           int64         `json:"successes"`
+	Failures            int64         `json:"failures"`
+	ErrorRate           float64       `json:"error_rate"`
 	AverageResponseTime time.Duration `json:"average_response_time"`
-	Throughput         float64       `json:"throughput"`
+	Throughput          float64       `json:"throughput"`
 }
 
 // LoadTestReport는 부하 테스트 보고서입니다
 type LoadTestReport struct {
-	Summary      TestSummary           `json:"summary"`
-	Results      []TestResult          `json:"results"`
-	Metrics      PerformanceMetrics    `json:"metrics"`
-	TimelineData []TimelineDataPoint   `json:"timeline_data"`
-	Recommendations []string           `json:"recommendations"`
-	Issues       []PerformanceIssue    `json:"issues"`
-	GeneratedAt  time.Time             `json:"generated_at"`
+	Summary         TestSummary         `json:"summary"`
+	Results         []TestResult        `json:"results"`
+	Metrics         PerformanceMetrics  `json:"metrics"`
+	TimelineData    []TimelineDataPoint `json:"timeline_data"`
+	Recommendations []string            `json:"recommendations"`
+	Issues          []PerformanceIssue  `json:"issues"`
+	GeneratedAt     time.Time           `json:"generated_at"`
 }
 
 // TimelineDataPoint는 시간별 데이터 포인트입니다
 type TimelineDataPoint struct {
-	Timestamp       int64   `json:"timestamp"`
-	Throughput      float64 `json:"throughput"`
-	ResponseTime    float64 `json:"response_time"`
-	ErrorRate       float64 `json:"error_rate"`
-	ActiveUsers     int     `json:"active_users"`
-	MemoryUsage     uint64  `json:"memory_usage"`
-	CPUUsage        float64 `json:"cpu_usage"`
+	Timestamp    int64   `json:"timestamp"`
+	Throughput   float64 `json:"throughput"`
+	ResponseTime float64 `json:"response_time"`
+	ErrorRate    float64 `json:"error_rate"`
+	ActiveUsers  int     `json:"active_users"`
+	MemoryUsage  uint64  `json:"memory_usage"`
+	CPUUsage     float64 `json:"cpu_usage"`
 }
 
 // PerformanceMetrics는 성능 메트릭입니다
@@ -179,7 +179,7 @@ func DefaultTestConfig() TestConfig {
 		RampUpDuration:   30 * time.Second,
 		RampDownDuration: 30 * time.Second,
 		MaxResponseTime:  2 * time.Second,
-		MaxErrorRate:     5.0, // 5%
+		MaxErrorRate:     5.0,  // 5%
 		MinThroughput:    10.0, // requests/second
 		Scenarios: []TestScenario{
 			{
@@ -330,7 +330,7 @@ func (pts *PerformanceTestSuite) runRampUp() {
 
 func (pts *PerformanceTestSuite) runMainTest() {
 	fmt.Printf("메인 테스트 시작: %v\n", pts.config.TestDuration)
-	
+
 	// 램프 업이 없는 경우 모든 사용자 시작
 	if pts.config.RampUpDuration <= 0 {
 		for i := 0; i < pts.config.ConcurrentUsers; i++ {
@@ -560,12 +560,12 @@ func (pts *PerformanceTestSuite) collectCurrentMetrics() TimelineDataPoint {
 
 	// 시스템 메트릭 수집
 	dataPoint.ActiveUsers = pts.config.ConcurrentUsers
-	
+
 	// 실제 메모리 사용량 수집
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	dataPoint.MemoryUsage = memStats.HeapAlloc
-	
+
 	// CPU 사용률은 별도의 수집 로직 필요 (현재는 고루틴 수로 대체)
 	dataPoint.CPUUsage = float64(runtime.NumGoroutine())
 
@@ -648,7 +648,7 @@ func (pts *PerformanceTestSuite) calculateSummary(results []TestResult, startTim
 	// 응답 시간 통계
 	if len(responseTimes) > 0 {
 		summary.AverageResponseTime = time.Duration(int64(totalResponseTime) / int64(len(responseTimes)))
-		
+
 		// 응답 시간 정렬
 		for i := 0; i < len(responseTimes)-1; i++ {
 			for j := i + 1; j < len(responseTimes); j++ {

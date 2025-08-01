@@ -26,11 +26,11 @@ type RealtimeMonitorConfig struct {
 	WriteWait       time.Duration // 쓰기 대기 시간
 
 	// 알림 설정
-	AlertEnabled        bool        // 알림 활성화
-	AlertThreshold      Severity    // 알림 최소 심각도
-	MaxClientsPerUser   int         // 사용자당 최대 연결 수
-	EventBufferSize     int         // 이벤트 버퍼 크기
-	StatisticsInterval  time.Duration // 통계 전송 주기
+	AlertEnabled       bool          // 알림 활성화
+	AlertThreshold     Severity      // 알림 최소 심각도
+	MaxClientsPerUser  int           // 사용자당 최대 연결 수
+	EventBufferSize    int           // 이벤트 버퍼 크기
+	StatisticsInterval time.Duration // 통계 전송 주기
 }
 
 // RealtimeMonitor는 실시간 보안 모니터링을 담당합니다.
@@ -53,25 +53,25 @@ type RealtimeMonitor struct {
 
 // ClientConnection은 클라이언트 WebSocket 연결을 관리합니다.
 type ClientConnection struct {
-	UserID     string          `json:"user_id"`
-	Conn       *websocket.Conn `json:"-"`
-	Send       chan []byte     `json:"-"`
-	IsAdmin    bool            `json:"is_admin"`
-	ConnectedAt time.Time      `json:"connected_at"`
-	LastPing   time.Time       `json:"last_ping"`
+	UserID      string          `json:"user_id"`
+	Conn        *websocket.Conn `json:"-"`
+	Send        chan []byte     `json:"-"`
+	IsAdmin     bool            `json:"is_admin"`
+	ConnectedAt time.Time       `json:"connected_at"`
+	LastPing    time.Time       `json:"last_ping"`
 }
 
 // SecurityStatistics는 보안 통계 정보입니다.
 type SecurityStatistics struct {
-	Timestamp        time.Time         `json:"timestamp"`
-	ActiveSessions   int               `json:"active_sessions"`
-	TotalEvents      int               `json:"total_events"`
-	EventsByType     map[string]int    `json:"events_by_type"`
-	EventsBySeverity map[string]int    `json:"events_by_severity"`
-	BlockedIPs       int               `json:"blocked_ips"`
-	BlockedUsers     int               `json:"blocked_users"`
-	AverageResponseTime time.Duration  `json:"average_response_time"`
-	TopThreats       []ThreatSummary   `json:"top_threats"`
+	Timestamp           time.Time       `json:"timestamp"`
+	ActiveSessions      int             `json:"active_sessions"`
+	TotalEvents         int             `json:"total_events"`
+	EventsByType        map[string]int  `json:"events_by_type"`
+	EventsBySeverity    map[string]int  `json:"events_by_severity"`
+	BlockedIPs          int             `json:"blocked_ips"`
+	BlockedUsers        int             `json:"blocked_users"`
+	AverageResponseTime time.Duration   `json:"average_response_time"`
+	TopThreats          []ThreatSummary `json:"top_threats"`
 }
 
 // ThreatSummary는 위협 요약 정보입니다.
@@ -93,16 +93,16 @@ type RealtimeEvent struct {
 // DefaultRealtimeMonitorConfig는 기본 설정을 반환합니다.
 func DefaultRealtimeMonitorConfig() *RealtimeMonitorConfig {
 	return &RealtimeMonitorConfig{
-		ReadBufferSize:      1024,
-		WriteBufferSize:     1024,
-		PingPeriod:          54 * time.Second,
-		PongWait:            60 * time.Second,
-		WriteWait:           10 * time.Second,
-		AlertEnabled:        true,
-		AlertThreshold:      SeverityHigh,
-		MaxClientsPerUser:   3,
-		EventBufferSize:     100,
-		StatisticsInterval:  30 * time.Second,
+		ReadBufferSize:     1024,
+		WriteBufferSize:    1024,
+		PingPeriod:         54 * time.Second,
+		PongWait:           60 * time.Second,
+		WriteWait:          10 * time.Second,
+		AlertEnabled:       true,
+		AlertThreshold:     SeverityHigh,
+		MaxClientsPerUser:  3,
+		EventBufferSize:    100,
+		StatisticsInterval: 30 * time.Second,
 	}
 }
 
@@ -113,13 +113,13 @@ func NewRealtimeMonitor(config *RealtimeMonitorConfig) *RealtimeMonitor {
 	}
 
 	monitor := &RealtimeMonitor{
-		config:       config,
-		eventTracker: config.EventTracker,
-		logger:       config.Logger,
-		clients:      make(map[string]*ClientConnection),
-		eventChan:    make(chan *SecurityEvent, config.EventBufferSize),
+		config:         config,
+		eventTracker:   config.EventTracker,
+		logger:         config.Logger,
+		clients:        make(map[string]*ClientConnection),
+		eventChan:      make(chan *SecurityEvent, config.EventBufferSize),
 		statisticsChan: make(chan *SecurityStatistics, 10),
-		closeChan:    make(chan struct{}),
+		closeChan:      make(chan struct{}),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  config.ReadBufferSize,
 			WriteBufferSize: config.WriteBufferSize,
@@ -302,24 +302,24 @@ func (rm *RealtimeMonitor) broadcastStatistics(stats *SecurityStatistics) {
 // collectStatistics는 현재 보안 통계를 수집합니다.
 func (rm *RealtimeMonitor) collectStatistics() *SecurityStatistics {
 	ctx := context.Background()
-	
+
 	stats := &SecurityStatistics{
-		Timestamp:           time.Now(),
-		EventsByType:        make(map[string]int),
-		EventsBySeverity:    make(map[string]int),
-		TopThreats:          make([]ThreatSummary, 0),
+		Timestamp:        time.Now(),
+		EventsByType:     make(map[string]int),
+		EventsBySeverity: make(map[string]int),
+		TopThreats:       make([]ThreatSummary, 0),
 	}
 
 	// EventTracker가 있으면 통계 수집
 	if rm.eventTracker != nil {
 		if eventStats, err := rm.eventTracker.GetStatistics(ctx, 24*time.Hour); err == nil {
 			stats.TotalEvents = eventStats.TotalEvents
-			
+
 			// EventType을 string으로 변환
 			for eventType, count := range eventStats.EventsByType {
 				stats.EventsByType[string(eventType)] = count
 			}
-			
+
 			// Severity를 string으로 변환
 			for severity, count := range eventStats.EventsBySeverity {
 				stats.EventsBySeverity[string(severity)] = count

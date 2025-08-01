@@ -17,7 +17,7 @@ func TestBasicEventBus(t *testing.T) {
 		PublishTimeout:   time.Second,
 		EnableHistory:    true,
 	}
-	
+
 	eventBus := NewBasicEventBus(config)
 	ctx := context.Background()
 
@@ -52,11 +52,11 @@ func TestBasicEventBus(t *testing.T) {
 
 	t.Run("에이전트별 구독 테스트", func(t *testing.T) {
 		agentID := "test-agent-456"
-		
+
 		// 에이전트별 구독
 		eventChan, err := eventBus.Subscribe(ctx, agentID)
 		require.NoError(t, err)
-		
+
 		// 다른 에이전트의 이벤트 발행 (수신되지 않아야 함)
 		otherEvent := AgentEvent{
 			Type:    AgentEventStarted,
@@ -65,7 +65,7 @@ func TestBasicEventBus(t *testing.T) {
 		}
 		err = eventBus.Publish(ctx, otherEvent)
 		require.NoError(t, err)
-		
+
 		// 대상 에이전트의 이벤트 발행
 		targetEvent := AgentEvent{
 			Type:    AgentEventStarted,
@@ -74,7 +74,7 @@ func TestBasicEventBus(t *testing.T) {
 		}
 		err = eventBus.Publish(ctx, targetEvent)
 		require.NoError(t, err)
-		
+
 		// 대상 에이전트의 이벤트만 수신되어야 함
 		select {
 		case receivedEvent := <-eventChan:
@@ -83,7 +83,7 @@ func TestBasicEventBus(t *testing.T) {
 		case <-time.After(time.Second):
 			t.Fatal("대상 에이전트 이벤트를 받지 못했습니다")
 		}
-		
+
 		// 다른 이벤트는 수신되지 않아야 함
 		select {
 		case unexpectedEvent := <-eventChan:
@@ -97,14 +97,14 @@ func TestBasicEventBus(t *testing.T) {
 func TestEventPublisherBasic(t *testing.T) {
 	// EventBus 생성
 	eventBus := NewBasicEventBus(DefaultEventBusConfig())
-	
+
 	ctx := context.Background()
-	
+
 	t.Run("단순 이벤트 발행 테스트", func(t *testing.T) {
 		// 구독 설정
 		eventChan, err := eventBus.SubscribeGlobal(ctx)
 		require.NoError(t, err)
-		
+
 		// 직접 이벤트 발행
 		testEvent := AgentEvent{
 			Type:      AgentEventCreated,
@@ -112,10 +112,10 @@ func TestEventPublisherBasic(t *testing.T) {
 			Timestamp: time.Now(),
 			Message:   "직접 발행 테스트",
 		}
-		
+
 		err = eventBus.Publish(ctx, testEvent)
 		require.NoError(t, err)
-		
+
 		// 이벤트 수신 확인
 		select {
 		case receivedEvent := <-eventChan:

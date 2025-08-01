@@ -24,8 +24,8 @@ func TestAdvancedWorktreeManager_Concurrency(t *testing.T) {
 
 	// 고급 매니저 생성 (동시성 제한: 3)
 	advManager := NewAdvancedWorktreeManager(baseManager, AdvancedOptions{
-		ConcurrencyLimit: 3,
-		MaxCacheSize:     10,
+		ConcurrencyLimit:  3,
+		MaxCacheSize:      10,
 		DisablePrometheus: true,
 	})
 
@@ -57,7 +57,7 @@ func TestAdvancedWorktreeManager_Concurrency(t *testing.T) {
 	// 10개 작업, 동시 3개 = 최소 4번의 배치
 	// 각 작업이 0.05초 이상 걸린다고 가정하면 최소 0.2초
 	assert.Greater(t, duration.Seconds(), 0.05, "너무 빨리 완료됨 - 동시성 제한이 작동하지 않음")
-	
+
 	// 정리
 	advManager.Stop()
 }
@@ -75,7 +75,7 @@ func TestAdvancedWorktreeManager_LRUCache(t *testing.T) {
 
 	// 고급 매니저 생성 (캐시 크기: 3)
 	advManager := NewAdvancedWorktreeManager(baseManager, AdvancedOptions{
-		MaxCacheSize: 3,
+		MaxCacheSize:      3,
 		DisablePrometheus: true,
 	})
 
@@ -258,9 +258,9 @@ func TestSparseCheckoutManager(t *testing.T) {
 
 	t.Run("Invalid paths", func(t *testing.T) {
 		invalidPaths := []string{
-			"/absolute/path",    // 절대 경로
-			"../parent",         // 상위 디렉토리 참조
-			"",                  // 빈 경로
+			"/absolute/path", // 절대 경로
+			"../parent",      // 상위 디렉토리 참조
+			"",               // 빈 경로
 		}
 
 		for _, path := range invalidPaths {
@@ -280,8 +280,8 @@ func TestGarbageCollection(t *testing.T) {
 
 	// 고급 매니저 생성 (짧은 GC 간격)
 	advManager := NewAdvancedWorktreeManager(baseManager, AdvancedOptions{
-		GCInterval: 100 * time.Millisecond,
-		MaxAge:     1 * time.Second,
+		GCInterval:        100 * time.Millisecond,
+		MaxAge:            1 * time.Second,
 		DisablePrometheus: true,
 	})
 

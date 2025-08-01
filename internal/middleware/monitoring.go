@@ -14,65 +14,65 @@ import (
 // PerformanceMetrics는 성능 메트릭을 저장합니다
 type PerformanceMetrics struct {
 	// HTTP 메트릭
-	RequestCount     int64             `json:"request_count"`
-	ErrorCount       int64             `json:"error_count"`
-	RequestDuration  time.Duration     `json:"request_duration"`
-	ActiveRequests   int64             `json:"active_requests"`
-	ResponseCodes    map[string]int64  `json:"response_codes"`
-	EndpointMetrics  map[string]*EndpointMetric `json:"endpoint_metrics"`
+	RequestCount    int64                      `json:"request_count"`
+	ErrorCount      int64                      `json:"error_count"`
+	RequestDuration time.Duration              `json:"request_duration"`
+	ActiveRequests  int64                      `json:"active_requests"`
+	ResponseCodes   map[string]int64           `json:"response_codes"`
+	EndpointMetrics map[string]*EndpointMetric `json:"endpoint_metrics"`
 
 	// 시스템 메트릭
-	CPUUsage         float64           `json:"cpu_usage"`
-	MemoryUsage      uint64            `json:"memory_usage"`
-	GoroutineCount   int               `json:"goroutine_count"`
-	HeapSize         uint64            `json:"heap_size"`
-	GCCount          uint32            `json:"gc_count"`
+	CPUUsage       float64 `json:"cpu_usage"`
+	MemoryUsage    uint64  `json:"memory_usage"`
+	GoroutineCount int     `json:"goroutine_count"`
+	HeapSize       uint64  `json:"heap_size"`
+	GCCount        uint32  `json:"gc_count"`
 
 	// 메타데이터
-	Timestamp        time.Time         `json:"timestamp"`
-	Uptime           time.Duration     `json:"uptime"`
+	Timestamp time.Time     `json:"timestamp"`
+	Uptime    time.Duration `json:"uptime"`
 }
 
 // EndpointMetric은 개별 엔드포인트 메트릭입니다
 type EndpointMetric struct {
-	Method           string            `json:"method"`
-	Path             string            `json:"path"`
-	Count            int64             `json:"count"`
-	ErrorCount       int64             `json:"error_count"`
-	TotalDuration    time.Duration     `json:"total_duration"`
-	AverageDuration  time.Duration     `json:"average_duration"`
-	MinDuration      time.Duration     `json:"min_duration"`
-	MaxDuration      time.Duration     `json:"max_duration"`
-	LastAccess       time.Time         `json:"last_access"`
-	StatusCodes      map[int]int64     `json:"status_codes"`
+	Method          string        `json:"method"`
+	Path            string        `json:"path"`
+	Count           int64         `json:"count"`
+	ErrorCount      int64         `json:"error_count"`
+	TotalDuration   time.Duration `json:"total_duration"`
+	AverageDuration time.Duration `json:"average_duration"`
+	MinDuration     time.Duration `json:"min_duration"`
+	MaxDuration     time.Duration `json:"max_duration"`
+	LastAccess      time.Time     `json:"last_access"`
+	StatusCodes     map[int]int64 `json:"status_codes"`
 }
 
 // PerformanceMonitoringMiddleware는 성능 모니터링 미들웨어입니다
 type PerformanceMonitoringMiddleware struct {
-	metrics         *PerformanceMetrics
-	mutex           sync.RWMutex
-	startTime       time.Time
+	metrics          *PerformanceMetrics
+	mutex            sync.RWMutex
+	startTime        time.Time
 	collectionTicker *time.Ticker
-	ctx             context.Context
-	cancel          context.CancelFunc
-	wg              sync.WaitGroup
+	ctx              context.Context
+	cancel           context.CancelFunc
+	wg               sync.WaitGroup
 
 	// 설정
-	config          MonitoringConfig
+	config MonitoringConfig
 
 	// 이벤트 리스너들
-	listeners       []PerformanceListener
-	listenersMutex  sync.RWMutex
+	listeners      []PerformanceListener
+	listenersMutex sync.RWMutex
 }
 
 // MonitoringConfig는 모니터링 설정입니다
 type MonitoringConfig struct {
-	CollectionInterval time.Duration `json:"collection_interval"`
-	RetentionPeriod    time.Duration `json:"retention_period"`
-	EnableSystemMetrics bool         `json:"enable_system_metrics"`
-	EnableEndpointMetrics bool       `json:"enable_endpoint_metrics"`
-	MaxEndpoints       int           `json:"max_endpoints"`
-	SlowRequestThreshold time.Duration `json:"slow_request_threshold"`
+	CollectionInterval    time.Duration `json:"collection_interval"`
+	RetentionPeriod       time.Duration `json:"retention_period"`
+	EnableSystemMetrics   bool          `json:"enable_system_metrics"`
+	EnableEndpointMetrics bool          `json:"enable_endpoint_metrics"`
+	MaxEndpoints          int           `json:"max_endpoints"`
+	SlowRequestThreshold  time.Duration `json:"slow_request_threshold"`
 }
 
 // PerformanceListener는 성능 이벤트 리스너입니다
@@ -85,12 +85,12 @@ type PerformanceListener interface {
 // DefaultMonitoringConfig는 기본 모니터링 설정을 반환합니다
 func DefaultMonitoringConfig() MonitoringConfig {
 	return MonitoringConfig{
-		CollectionInterval:     10 * time.Second,
-		RetentionPeriod:        24 * time.Hour,
-		EnableSystemMetrics:    true,
-		EnableEndpointMetrics:  true,
-		MaxEndpoints:           100,
-		SlowRequestThreshold:   2 * time.Second,
+		CollectionInterval:    10 * time.Second,
+		RetentionPeriod:       24 * time.Hour,
+		EnableSystemMetrics:   true,
+		EnableEndpointMetrics: true,
+		MaxEndpoints:          100,
+		SlowRequestThreshold:  2 * time.Second,
 	}
 }
 
@@ -104,11 +104,11 @@ func NewPerformanceMonitoringMiddleware(config MonitoringConfig) *PerformanceMon
 			EndpointMetrics: make(map[string]*EndpointMetric),
 			Timestamp:       time.Now(),
 		},
-		startTime:        time.Now(),
-		config:          config,
-		ctx:             ctx,
-		cancel:          cancel,
-		listeners:       make([]PerformanceListener, 0),
+		startTime: time.Now(),
+		config:    config,
+		ctx:       ctx,
+		cancel:    cancel,
+		listeners: make([]PerformanceListener, 0),
 	}
 
 	// 시스템 메트릭 수집 시작
@@ -279,11 +279,11 @@ func (pmm *PerformanceMonitoringMiddleware) updateEndpointMetrics(method, path s
 		}
 
 		metric = &EndpointMetric{
-			Method:       method,
-			Path:         path,
-			MinDuration:  duration,
-			MaxDuration:  duration,
-			StatusCodes:  make(map[int]int64),
+			Method:      method,
+			Path:        path,
+			MinDuration: duration,
+			MaxDuration: duration,
+			StatusCodes: make(map[int]int64),
 		}
 		pmm.metrics.EndpointMetrics[key] = metric
 	}

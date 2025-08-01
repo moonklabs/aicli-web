@@ -98,7 +98,7 @@ func (m *monitoringService) CheckAgentHealth(ctx context.Context, agent *models.
 	for _, checkFunc := range checks {
 		check := checkFunc(ctx, agent)
 		healthStatus.Checks = append(healthStatus.Checks, check)
-		
+
 		if check.Status != "healthy" {
 			allHealthy = false
 		}
@@ -331,7 +331,7 @@ func (m *monitoringService) checkContainerHealth(ctx context.Context, agent *mod
 	}
 
 	// TODO: Docker adapter를 통한 컨테이너 헬스체크 구현
-	
+
 	check.Duration = time.Since(start)
 	return check
 }
@@ -346,7 +346,7 @@ func (m *monitoringService) checkResourceUsage(ctx context.Context, agent *model
 	}
 
 	// TODO: 리소스 사용량 체크 구현
-	
+
 	check.Duration = time.Since(start)
 	return check
 }
@@ -361,7 +361,7 @@ func (m *monitoringService) checkNetworkConnectivity(ctx context.Context, agent 
 	}
 
 	// TODO: 네트워크 연결성 체크 구현
-	
+
 	check.Duration = time.Since(start)
 	return check
 }

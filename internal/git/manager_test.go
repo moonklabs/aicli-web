@@ -119,7 +119,7 @@ func TestClone(t *testing.T) {
 				assert.NotEmpty(t, repo.ID)
 				assert.NotEmpty(t, repo.Path)
 				assert.Equal(t, tt.url, repo.URL)
-				
+
 				// 복제된 저장소 확인
 				_, err := os.Stat(repo.Path)
 				assert.NoError(t, err)
@@ -146,10 +146,10 @@ func TestCreateWorktree(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "기본 Worktree 생성",
-			repo:   repo,
-			wtName: "feature-1",
-			opts:   WorktreeOptions{},
+			name:    "기본 Worktree 생성",
+			repo:    repo,
+			wtName:  "feature-1",
+			opts:    WorktreeOptions{},
 			wantErr: false,
 		},
 		{
@@ -195,7 +195,7 @@ func TestCreateWorktree(t *testing.T) {
 				assert.Equal(t, tt.wtName, worktree.Name)
 				assert.NotEmpty(t, worktree.Path)
 				assert.Equal(t, tt.repo, worktree.Repository)
-				
+
 				if tt.opts.Lock {
 					assert.True(t, worktree.IsLocked)
 					assert.Equal(t, tt.opts.LockReason, worktree.LockReason)
@@ -470,7 +470,7 @@ func TestGetAuth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			auth, err := manager.getAuth(tt.opts)
 			require.NoError(t, err)
-			
+
 			if tt.wantNil {
 				assert.Nil(t, auth)
 			} else {

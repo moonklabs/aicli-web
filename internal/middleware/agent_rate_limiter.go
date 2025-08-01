@@ -22,30 +22,30 @@ type AgentRateLimiterConfig struct {
 	// 기본 제한 설정
 	DefaultRequestsPerMinute int           // 기본 분당 요청 수
 	DefaultTokensPerHour     int           // 기본 시간당 토큰 수
-	BurstAllowance          int           // 버스트 허용량
-	BlockDuration           time.Duration // 차단 지속 시간
+	BurstAllowance           int           // 버스트 허용량
+	BlockDuration            time.Duration // 차단 지속 시간
 
 	// 동적 조정 설정
-	DynamicAdjustmentEnabled bool    // 동적 조정 활성화
-	AdjustmentFactor        float64 // 조정 계수 (0.1 ~ 2.0)
-	BaselineWindow          time.Duration // 베이스라인 계산 윈도우
+	DynamicAdjustmentEnabled bool          // 동적 조정 활성화
+	AdjustmentFactor         float64       // 조정 계수 (0.1 ~ 2.0)
+	BaselineWindow           time.Duration // 베이스라인 계산 윈도우
 
 	// 사용자별 개별 제한
 	UserLimits map[string]*UserRateLimit // 사용자별 개별 제한
 
 	// 화이트리스트
-	WhitelistedIPs    []string // 화이트리스트 IP
-	WhitelistedUsers  []string // 화이트리스트 사용자
+	WhitelistedIPs   []string // 화이트리스트 IP
+	WhitelistedUsers []string // 화이트리스트 사용자
 
 	Logger *zap.Logger
 }
 
 // UserRateLimit은 사용자별 개별 제한을 정의합니다.
 type UserRateLimit struct {
-	RequestsPerMinute int           // 분당 요청 수
-	TokensPerHour     int           // 시간당 토큰 수
-	BurstAllowance   int           // 버스트 허용량
-	ValidUntil       *time.Time    // 제한 유효 기간
+	RequestsPerMinute int        // 분당 요청 수
+	TokensPerHour     int        // 시간당 토큰 수
+	BurstAllowance    int        // 버스트 허용량
+	ValidUntil        *time.Time // 제한 유효 기간
 }
 
 // AgentRateLimiter는 AI 에이전트 전용 Rate Limiter입니다.
@@ -71,14 +71,14 @@ func DefaultAgentRateLimiterConfig() *AgentRateLimiterConfig {
 	return &AgentRateLimiterConfig{
 		DefaultRequestsPerMinute: 60,
 		DefaultTokensPerHour:     5000,
-		BurstAllowance:          10,
-		BlockDuration:           15 * time.Minute,
+		BurstAllowance:           10,
+		BlockDuration:            15 * time.Minute,
 		DynamicAdjustmentEnabled: true,
-		AdjustmentFactor:        1.0,
-		BaselineWindow:          24 * time.Hour,
-		UserLimits:              make(map[string]*UserRateLimit),
-		WhitelistedIPs:          make([]string, 0),
-		WhitelistedUsers:        make([]string, 0),
+		AdjustmentFactor:         1.0,
+		BaselineWindow:           24 * time.Hour,
+		UserLimits:               make(map[string]*UserRateLimit),
+		WhitelistedIPs:           make([]string, 0),
+		WhitelistedUsers:         make([]string, 0),
 	}
 }
 
@@ -119,7 +119,7 @@ func (arl *AgentRateLimiter) AgentRateLimit() gin.HandlerFunc {
 
 		// Rate Limit 검사
 		result := arl.checkRateLimit(c.Request.Context(), userID, sessionID, ipAddress, tokenCount)
-		
+
 		if !result.Allowed {
 			arl.handleRateLimited(c, userID, result)
 			return
@@ -135,10 +135,10 @@ func (arl *AgentRateLimiter) AgentRateLimit() gin.HandlerFunc {
 // checkRateLimit은 Rate Limit을 검사합니다.
 func (arl *AgentRateLimiter) checkRateLimit(ctx context.Context, userID, sessionID, ipAddress string, tokenCount int) *RateLimitResult {
 	now := time.Now()
-	
+
 	// 사용자별 제한 가져오기
 	userLimit := arl.getUserLimit(userID)
-	
+
 	// 동적 조정 적용
 	if arl.config.DynamicAdjustmentEnabled {
 		userLimit = arl.applyDynamicAdjustment(ctx, userID, userLimit)
@@ -202,7 +202,7 @@ func (arl *AgentRateLimiter) checkRequestRate(ctx context.Context, userID, ipAdd
 		if ipCount == 1 {
 			arl.redis.Expire(ctx, ipKey, time.Minute)
 		}
-		
+
 		// IP별 제한은 사용자별 제한의 2배
 		if ipCount > int64(limit.RequestsPerMinute*2) {
 			return &RateLimitResult{
@@ -222,7 +222,7 @@ func (arl *AgentRateLimiter) checkRequestRate(ctx context.Context, userID, ipAdd
 // checkTokenRate는 토큰 사용률을 검사합니다.
 func (arl *AgentRateLimiter) checkTokenRate(ctx context.Context, userID string, tokenCount int, limit *UserRateLimit, now time.Time) *RateLimitResult {
 	tokenKey := fmt.Sprintf("rate:tokens:user:%s:%d", userID, now.Unix()/3600) // 시간 단위
-	
+
 	currentTokens, err := arl.redis.IncrBy(ctx, tokenKey, int64(tokenCount)).Result()
 	if err != nil {
 		arl.logger.Error("Redis 토큰 추가 실패", zap.Error(err))
@@ -277,14 +277,14 @@ func (arl *AgentRateLimiter) checkBurstLimit(ctx context.Context, userID string,
 func (arl *AgentRateLimiter) applyDynamicAdjustment(ctx context.Context, userID string, baseLimit *UserRateLimit) *UserRateLimit {
 	// 사용자의 과거 사용 패턴을 분석하여 동적으로 조정
 	adjustedLimit := *baseLimit // 복사
-	
+
 	// 최근 24시간 사용 패턴 분석
 	avgUsage := arl.getAverageUsage(ctx, userID, arl.config.BaselineWindow)
-	
+
 	// 평균 사용량 기반 조정
 	if avgUsage > 0 {
 		adjustment := arl.config.AdjustmentFactor
-		
+
 		// 사용량이 제한의 80% 이상이면 여유분 제공
 		if avgUsage >= float64(baseLimit.RequestsPerMinute)*0.8 {
 			adjustment = 1.2
@@ -292,7 +292,7 @@ func (arl *AgentRateLimiter) applyDynamicAdjustment(ctx context.Context, userID 
 			// 사용량이 30% 이하면 제한 강화
 			adjustment = 0.8
 		}
-		
+
 		adjustedLimit.RequestsPerMinute = int(float64(baseLimit.RequestsPerMinute) * adjustment)
 		adjustedLimit.TokensPerHour = int(float64(baseLimit.TokensPerHour) * adjustment)
 		adjustedLimit.BurstAllowance = int(float64(baseLimit.BurstAllowance) * adjustment)
@@ -315,7 +315,7 @@ func (arl *AgentRateLimiter) getUserLimit(userID string) *UserRateLimit {
 	return &UserRateLimit{
 		RequestsPerMinute: arl.config.DefaultRequestsPerMinute,
 		TokensPerHour:     arl.config.DefaultTokensPerHour,
-		BurstAllowance:   arl.config.BurstAllowance,
+		BurstAllowance:    arl.config.BurstAllowance,
 	}
 }
 
@@ -446,14 +446,14 @@ func (arl *AgentRateLimiter) handleRateLimited(c *gin.Context, userID string, re
 	c.Header("X-RateLimit-Limit", strconv.Itoa(arl.config.DefaultRequestsPerMinute))
 	c.Header("X-RateLimit-Remaining", strconv.Itoa(result.RequestsRemaining))
 	c.Header("X-RateLimit-Reset", strconv.FormatInt(result.ResetTime.Unix(), 10))
-	
+
 	if result.RetryAfter > 0 {
 		c.Header("Retry-After", strconv.Itoa(int(result.RetryAfter.Seconds())))
 	}
 
 	c.JSON(http.StatusTooManyRequests, gin.H{
-		"error":   "Too Many Requests",
-		"message": result.Reason,
+		"error":       "Too Many Requests",
+		"message":     result.Reason,
 		"retry_after": result.RetryAfter.Seconds(),
 	})
 	c.Abort()
@@ -550,8 +550,8 @@ func (arl *AgentRateLimiter) GetStats(ctx context.Context) (map[string]interface
 	stats["config"] = map[string]interface{}{
 		"default_requests_per_minute": arl.config.DefaultRequestsPerMinute,
 		"default_tokens_per_hour":     arl.config.DefaultTokensPerHour,
-		"burst_allowance":            arl.config.BurstAllowance,
-		"dynamic_adjustment_enabled": arl.config.DynamicAdjustmentEnabled,
+		"burst_allowance":             arl.config.BurstAllowance,
+		"dynamic_adjustment_enabled":  arl.config.DynamicAdjustmentEnabled,
 	}
 
 	return stats, nil

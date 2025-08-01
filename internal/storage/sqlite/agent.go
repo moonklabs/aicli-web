@@ -119,12 +119,12 @@ func (a *agentStorage) Create(ctx context.Context, agent *models.Agent) error {
 // GetByID ID로 에이전트 조회
 func (a *agentStorage) GetByID(ctx context.Context, id string) (*models.Agent, error) {
 	query := selectAgentQuery + " WHERE id = ? AND deleted_at IS NULL"
-	
+
 	agent, err := a.scanAgent(ctx, query, id)
 	if err == sql.ErrNoRows {
 		return nil, storage.ErrNotFound
 	}
-	
+
 	return agent, err
 }
 
@@ -316,12 +316,12 @@ func (a *agentStorage) UpdateActivity(ctx context.Context, id string) error {
 // GetByContainerID 컨테이너 ID로 에이전트 조회
 func (a *agentStorage) GetByContainerID(ctx context.Context, containerID string) (*models.Agent, error) {
 	query := selectAgentQuery + " WHERE container_id = ? AND deleted_at IS NULL"
-	
+
 	agent, err := a.scanAgent(ctx, query, containerID)
 	if err == sql.ErrNoRows {
 		return nil, storage.ErrNotFound
 	}
-	
+
 	return agent, err
 }
 

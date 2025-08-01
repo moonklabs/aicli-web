@@ -245,7 +245,7 @@ func TestListAgents(t *testing.T) {
 func TestCreateAgent(t *testing.T) {
 	// 테스트 데이터 준비
 	testAgent := createTestAgent()
-	
+
 	tests := []struct {
 		name           string
 		requestBody    interface{}
@@ -266,7 +266,7 @@ func TestCreateAgent(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name: "잘못된 요청 데이터",
+			name:        "잘못된 요청 데이터",
 			requestBody: "invalid json",
 			setupMock: func(mockService *MockAgentService) {
 				// JSON 파싱 실패 시 서비스 호출되지 않음
@@ -292,7 +292,7 @@ func TestCreateAgent(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// 각 테스트마다 새로운 Mock 서비스 생성
 			_, controller, mockService, _ := setupAgentTest()
-			
+
 			// Mock 설정
 			tt.setupMock(mockService)
 
@@ -555,4 +555,3 @@ func TestDeleteAgent(t *testing.T) {
 		})
 	}
 }
-

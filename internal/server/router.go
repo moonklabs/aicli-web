@@ -180,7 +180,6 @@ func (s *Server) setupRoutes() {
 			tasks.DELETE("/:id", taskController.Cancel)
 		}
 
-
 		// 로그 관련 엔드포인트 (인증 필요)
 		logs := v1.Group("/logs")
 		logs.Use(middleware.RequireAuth(s.jwtManager, s.blacklist))

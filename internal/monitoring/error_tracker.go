@@ -25,29 +25,29 @@ type ErrorTracker struct {
 
 // ErrorTrackerConfig는 에러 트래커 설정입니다
 type ErrorTrackerConfig struct {
-	MaxErrors         int           `json:"max_errors"`
-	RetentionPeriod   time.Duration `json:"retention_period"`
-	CleanupInterval   time.Duration `json:"cleanup_interval"`
-	EnableStackTrace  bool          `json:"enable_stack_trace"`
-	EnableGrouping    bool          `json:"enable_grouping"`
-	AlertThreshold    int           `json:"alert_threshold"`
-	AlertInterval     time.Duration `json:"alert_interval"`
+	MaxErrors        int           `json:"max_errors"`
+	RetentionPeriod  time.Duration `json:"retention_period"`
+	CleanupInterval  time.Duration `json:"cleanup_interval"`
+	EnableStackTrace bool          `json:"enable_stack_trace"`
+	EnableGrouping   bool          `json:"enable_grouping"`
+	AlertThreshold   int           `json:"alert_threshold"`
+	AlertInterval    time.Duration `json:"alert_interval"`
 }
 
 // ErrorInfo는 에러 정보를 저장합니다
 type ErrorInfo struct {
-	ID            string            `json:"id"`
-	Message       string            `json:"message"`
-	Type          string            `json:"type"`
-	StackTrace    string            `json:"stack_trace,omitempty"`
+	ID            string                 `json:"id"`
+	Message       string                 `json:"message"`
+	Type          string                 `json:"type"`
+	StackTrace    string                 `json:"stack_trace,omitempty"`
 	Context       map[string]interface{} `json:"context,omitempty"`
-	FirstOccurred time.Time         `json:"first_occurred"`
-	LastOccurred  time.Time         `json:"last_occurred"`
-	Count         int64             `json:"count"`
-	Severity      ErrorSeverity     `json:"severity"`
-	Status        ErrorStatus       `json:"status"`
-	Tags          []string          `json:"tags,omitempty"`
-	Metadata      map[string]string `json:"metadata,omitempty"`
+	FirstOccurred time.Time              `json:"first_occurred"`
+	LastOccurred  time.Time              `json:"last_occurred"`
+	Count         int64                  `json:"count"`
+	Severity      ErrorSeverity          `json:"severity"`
+	Status        ErrorStatus            `json:"status"`
+	Tags          []string               `json:"tags,omitempty"`
+	Metadata      map[string]string      `json:"metadata,omitempty"`
 }
 
 // ErrorSeverity는 AlertSeverity를 사용합니다
@@ -65,12 +65,12 @@ const (
 
 // ErrorEvent는 에러 이벤트입니다
 type ErrorEvent struct {
-	ErrorInfo *ErrorInfo           `json:"error_info"`
-	OccurredAt time.Time           `json:"occurred_at"`
-	Context   map[string]interface{} `json:"context,omitempty"`
-	UserID    string               `json:"user_id,omitempty"`
-	SessionID string               `json:"session_id,omitempty"`
-	RequestID string               `json:"request_id,omitempty"`
+	ErrorInfo  *ErrorInfo             `json:"error_info"`
+	OccurredAt time.Time              `json:"occurred_at"`
+	Context    map[string]interface{} `json:"context,omitempty"`
+	UserID     string                 `json:"user_id,omitempty"`
+	SessionID  string                 `json:"session_id,omitempty"`
+	RequestID  string                 `json:"request_id,omitempty"`
 }
 
 // ErrorListener는 에러 이벤트 리스너 인터페이스입니다
@@ -82,13 +82,13 @@ type ErrorListener interface {
 
 // ErrorSummary는 에러 요약 정보입니다
 type ErrorSummary struct {
-	TotalErrors     int64                    `json:"total_errors"`
-	UniqueErrors    int                      `json:"unique_errors"`
-	ErrorsToday     int64                    `json:"errors_today"`
-	TopErrors       []*ErrorInfo             `json:"top_errors"`
+	TotalErrors       int64                   `json:"total_errors"`
+	UniqueErrors      int                     `json:"unique_errors"`
+	ErrorsToday       int64                   `json:"errors_today"`
+	TopErrors         []*ErrorInfo            `json:"top_errors"`
 	SeverityBreakdown map[ErrorSeverity]int64 `json:"severity_breakdown"`
-	TypeBreakdown   map[string]int64         `json:"type_breakdown"`
-	GeneratedAt     time.Time                `json:"generated_at"`
+	TypeBreakdown     map[string]int64        `json:"type_breakdown"`
+	GeneratedAt       time.Time               `json:"generated_at"`
 }
 
 // DefaultErrorTrackerConfig는 기본 에러 트래커 설정을 반환합니다
@@ -556,9 +556,9 @@ func (et *ErrorTracker) ExportErrors() ([]byte, error) {
 	defer et.mutex.RUnlock()
 
 	exportData := struct {
-		Errors      map[string]*ErrorInfo `json:"errors"`
-		Summary     *ErrorSummary         `json:"summary"`
-		ExportedAt  time.Time             `json:"exported_at"`
+		Errors     map[string]*ErrorInfo `json:"errors"`
+		Summary    *ErrorSummary         `json:"summary"`
+		ExportedAt time.Time             `json:"exported_at"`
 	}{
 		Errors:     et.errors,
 		Summary:    et.GetSummary(),

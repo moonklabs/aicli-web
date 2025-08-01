@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 func TestNewCompletionCmd(t *testing.T) {
 	// 자동완성 명령어 생성 테스트
 	cmd := newCompletionCmd()

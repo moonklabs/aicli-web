@@ -179,7 +179,7 @@ func TestIntegratedAgentSystem(t *testing.T) {
 
 		// 잠시 대기 후 이벤트 히스토리 조회
 		time.Sleep(100 * time.Millisecond)
-		
+
 		history, err := system.EventBus.GetEventHistory(agent.ID, time.Now().Add(-time.Minute))
 		require.NoError(t, err)
 		assert.NotEmpty(t, history)
@@ -236,7 +236,7 @@ func TestIntegratedAgentSystem(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 		status, err := system.AgentService.GetAgentStatus(ctx, agent.ID)
 		require.NoError(t, err)
-		
+
 		// 최종적으로 실행 상태가 되어야 함 (복구 완료)
 		assert.Contains(t, []models.AgentStatus{
 			models.AgentStatusRunning,
@@ -249,7 +249,7 @@ func TestIntegratedAgentSystem(t *testing.T) {
 func TestEventPublisherIntegration(t *testing.T) {
 	// EventBus 생성
 	eventBus := NewBasicEventBus(DefaultEventBusConfig())
-	
+
 	// EventPublisher 생성
 	publisher := NewBasicEventPublisher(eventBus)
 

@@ -18,10 +18,10 @@ type PrometheusMetrics struct {
 	gcDeletedWorktrees prometheus.Counter
 
 	// 게이지 메트릭
-	activeWorktrees   prometheus.Gauge
-	cachedWorktrees   prometheus.Gauge
-	diskUsageBytes    prometheus.Gauge
-	concurrentOps     prometheus.Gauge
+	activeWorktrees prometheus.Gauge
+	cachedWorktrees prometheus.Gauge
+	diskUsageBytes  prometheus.Gauge
+	concurrentOps   prometheus.Gauge
 
 	// 히스토그램 메트릭
 	cloneDuration  prometheus.Histogram

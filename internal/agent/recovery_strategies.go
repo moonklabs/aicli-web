@@ -289,7 +289,7 @@ func (s *StateCorruptionRecoveryStrategy) Priority() int {
 
 // AgentRecoveryManager 에이전트 복구 매니저
 type AgentRecoveryManager struct {
-	strategies []AgentRecoveryStrategy
+	strategies  []AgentRecoveryStrategy
 	retryPolicy *errors.RetryPolicy
 }
 
@@ -335,7 +335,7 @@ func NewAgentRecoveryManager(dockerAdapter DockerAdapter, worktreeManager git.Wo
 // AddStrategy 복구 전략 추가
 func (m *AgentRecoveryManager) AddStrategy(strategy AgentRecoveryStrategy) {
 	m.strategies = append(m.strategies, strategy)
-	
+
 	// 우선순위별로 재정렬
 	for i := 0; i < len(m.strategies)-1; i++ {
 		for j := i + 1; j < len(m.strategies); j++ {

@@ -38,16 +38,16 @@ func NewAgentController(agentService agent.AgentService) *AgentController {
 // @Router /api/v1/agents [get]
 func (ac *AgentController) ListAgents(c *gin.Context) {
 	projectID := c.Query("project_id")
-	
+
 	var agents []*models.Agent
 	var err error
-	
+
 	if projectID != "" {
 		agents, err = ac.agentService.GetAgentByProjectID(c.Request.Context(), projectID)
 	} else {
 		agents, err = ac.agentService.ListActiveAgents(c.Request.Context())
 	}
-	
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "에이전트 목록 조회 실패",
@@ -55,7 +55,7 @@ func (ac *AgentController) ListAgents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"agents": agents,
 		"count":  len(agents),
@@ -84,9 +84,9 @@ func (ac *AgentController) CreateAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// 사용자 ID는 미들웨어에서 처리되므로 별도 설정 불필요
-	
+
 	newAgent, err := ac.agentService.CreateAgent(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -95,7 +95,7 @@ func (ac *AgentController) CreateAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusCreated, newAgent)
 }
 
@@ -115,7 +115,7 @@ func (ac *AgentController) CreateAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id} [get]
 func (ac *AgentController) GetAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	agentData, err := ac.agentService.GetAgent(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -130,7 +130,7 @@ func (ac *AgentController) GetAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, agentData)
 }
 
@@ -151,7 +151,7 @@ func (ac *AgentController) GetAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id} [put]
 func (ac *AgentController) UpdateAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	var req agent.UpdateAgentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -160,7 +160,7 @@ func (ac *AgentController) UpdateAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	updatedAgent, err := ac.agentService.UpdateAgent(c.Request.Context(), agentID, req)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -175,7 +175,7 @@ func (ac *AgentController) UpdateAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, updatedAgent)
 }
 
@@ -194,7 +194,7 @@ func (ac *AgentController) UpdateAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id} [delete]
 func (ac *AgentController) DeleteAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	err := ac.agentService.DeleteAgent(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -209,7 +209,7 @@ func (ac *AgentController) DeleteAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -228,7 +228,7 @@ func (ac *AgentController) DeleteAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id}/start [post]
 func (ac *AgentController) StartAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	err := ac.agentService.StartAgent(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -243,7 +243,7 @@ func (ac *AgentController) StartAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "에이전트가 시작되었습니다",
 		"agent_id": agentID,
@@ -265,7 +265,7 @@ func (ac *AgentController) StartAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id}/stop [post]
 func (ac *AgentController) StopAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	err := ac.agentService.StopAgent(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -280,7 +280,7 @@ func (ac *AgentController) StopAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "에이전트가 중지되었습니다",
 		"agent_id": agentID,
@@ -302,7 +302,7 @@ func (ac *AgentController) StopAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id}/restart [post]
 func (ac *AgentController) RestartAgent(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	err := ac.agentService.RestartAgent(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -317,7 +317,7 @@ func (ac *AgentController) RestartAgent(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "에이전트가 재시작되었습니다",
 		"agent_id": agentID,
@@ -339,7 +339,7 @@ func (ac *AgentController) RestartAgent(c *gin.Context) {
 // @Router /api/v1/agents/{id}/status [get]
 func (ac *AgentController) GetAgentStatus(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	status, err := ac.agentService.GetAgentStatus(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -354,7 +354,7 @@ func (ac *AgentController) GetAgentStatus(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -373,7 +373,7 @@ func (ac *AgentController) GetAgentStatus(c *gin.Context) {
 // @Router /api/v1/agents/{id}/health [get]
 func (ac *AgentController) GetAgentHealth(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	health, err := ac.agentService.GetHealthStatus(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -388,7 +388,7 @@ func (ac *AgentController) GetAgentHealth(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, health)
 }
 
@@ -407,7 +407,7 @@ func (ac *AgentController) GetAgentHealth(c *gin.Context) {
 // @Router /api/v1/agents/{id}/metrics [get]
 func (ac *AgentController) GetAgentMetrics(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	metrics, err := ac.agentService.GetAgentMetrics(c.Request.Context(), agentID)
 	if err != nil {
 		if err.Error() == "agent not found" {
@@ -422,7 +422,7 @@ func (ac *AgentController) GetAgentMetrics(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, metrics)
 }
 
@@ -443,7 +443,7 @@ func (ac *AgentController) BatchStartAgents(c *gin.Context) {
 	var req struct {
 		AgentIDs []string `json:"agent_ids" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "잘못된 요청 데이터",
@@ -451,7 +451,7 @@ func (ac *AgentController) BatchStartAgents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	results, err := ac.agentService.StartMultipleAgents(c.Request.Context(), req.AgentIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -460,7 +460,7 @@ func (ac *AgentController) BatchStartAgents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"results": results,
 		"count":   len(results),
@@ -484,7 +484,7 @@ func (ac *AgentController) BatchStopAgents(c *gin.Context) {
 	var req struct {
 		AgentIDs []string `json:"agent_ids" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "잘못된 요청 데이터",
@@ -492,7 +492,7 @@ func (ac *AgentController) BatchStopAgents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	results, err := ac.agentService.StopMultipleAgents(c.Request.Context(), req.AgentIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -501,7 +501,7 @@ func (ac *AgentController) BatchStopAgents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"results": results,
 		"count":   len(results),
@@ -527,7 +527,7 @@ var upgrader = websocket.Upgrader{
 // @Router /api/v1/agents/{id}/logs/stream [get]
 func (ac *AgentController) StreamAgentLogs(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	// 에이전트 존재 확인
 	_, err := ac.agentService.GetAgent(c.Request.Context(), agentID)
 	if err != nil {
@@ -543,7 +543,7 @@ func (ac *AgentController) StreamAgentLogs(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// WebSocket 연결 업그레이드
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -554,7 +554,7 @@ func (ac *AgentController) StreamAgentLogs(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
-	
+
 	// 로그 스트리밍 시작
 	ac.startLogStreaming(c.Request.Context(), conn, agentID)
 }
@@ -568,7 +568,7 @@ func (ac *AgentController) StreamAgentLogs(c *gin.Context) {
 // @Router /api/v1/agents/{id}/events/stream [get]
 func (ac *AgentController) StreamAgentEvents(c *gin.Context) {
 	agentID := c.Param("id")
-	
+
 	// 에이전트 존재 확인
 	_, err := ac.agentService.GetAgent(c.Request.Context(), agentID)
 	if err != nil {
@@ -584,7 +584,7 @@ func (ac *AgentController) StreamAgentEvents(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// WebSocket 연결 업그레이드
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -595,7 +595,7 @@ func (ac *AgentController) StreamAgentEvents(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
-	
+
 	// 이벤트 스트리밍 시작
 	ac.startEventStreaming(c.Request.Context(), conn, agentID)
 }
@@ -617,7 +617,7 @@ func (ac *AgentController) StreamAllEvents(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
-	
+
 	// 전역 이벤트 스트리밍 시작
 	ac.startGlobalEventStreaming(c.Request.Context(), conn)
 }
@@ -626,10 +626,10 @@ func (ac *AgentController) StreamAllEvents(c *gin.Context) {
 func (ac *AgentController) startLogStreaming(ctx context.Context, conn *websocket.Conn, agentID string) {
 	// TODO: 실제 로그 스트리밍 구현
 	// 현재는 mock 구현으로 데모 목적
-	
+
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -645,7 +645,7 @@ func (ac *AgentController) startLogStreaming(ctx context.Context, conn *websocke
 					"message":   "Sample log message from agent " + agentID,
 				},
 			}
-			
+
 			if err := conn.WriteJSON(logMessage); err != nil {
 				return // 연결 종료
 			}
@@ -657,10 +657,10 @@ func (ac *AgentController) startLogStreaming(ctx context.Context, conn *websocke
 func (ac *AgentController) startEventStreaming(ctx context.Context, conn *websocket.Conn, agentID string) {
 	// EventBus에서 해당 에이전트의 이벤트 구독
 	// TODO: MonitoringService를 통해 이벤트 구독 구현
-	
+
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -676,7 +676,7 @@ func (ac *AgentController) startEventStreaming(ctx context.Context, conn *websoc
 					Message:   "Mock event for agent " + agentID,
 				},
 			}
-			
+
 			if err := conn.WriteJSON(eventMessage); err != nil {
 				return // 연결 종료
 			}
@@ -688,10 +688,10 @@ func (ac *AgentController) startEventStreaming(ctx context.Context, conn *websoc
 func (ac *AgentController) startGlobalEventStreaming(ctx context.Context, conn *websocket.Conn) {
 	// 전역 EventBus 구독
 	// TODO: MonitoringService를 통해 전역 이벤트 구독 구현
-	
+
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -707,7 +707,7 @@ func (ac *AgentController) startGlobalEventStreaming(ctx context.Context, conn *
 					Message:   "Mock global event",
 				},
 			}
-			
+
 			if err := conn.WriteJSON(eventMessage); err != nil {
 				return // 연결 종료
 			}

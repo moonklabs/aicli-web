@@ -650,11 +650,11 @@ func (sc *SecurityController) AnalyzeAgentRequest(c *gin.Context) {
 	if sc.agentAnalyzer != nil {
 		result := sc.agentAnalyzer.AnalyzeRequest(c.Request.Context(), pattern)
 		c.JSON(http.StatusOK, gin.H{
-			"is_anomalous":     result.IsAnomalous,
-			"anomaly_type":     result.AnomalyType,
-			"score":            result.Score,
-			"severity":         result.Severity,
-			"evidence":         result.Evidence,
+			"is_anomalous":    result.IsAnomalous,
+			"anomaly_type":    result.AnomalyType,
+			"score":           result.Score,
+			"severity":        result.Severity,
+			"evidence":        result.Evidence,
 			"recommendations": result.Recommendations,
 		})
 	} else {
@@ -679,7 +679,7 @@ func (sc *SecurityController) AnalyzeAgentRequest(c *gin.Context) {
 func (sc *SecurityController) GetAgentAnalytics(c *gin.Context) {
 	userID := c.Query("user_id")
 	periodStr := c.DefaultQuery("period", "24h")
-	
+
 	period, err := time.ParseDuration(periodStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

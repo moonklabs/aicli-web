@@ -5,18 +5,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/aicli/aicli-web/internal/monitoring"
 	"github.com/aicli/aicli-web/internal/middleware"
+	"github.com/aicli/aicli-web/internal/monitoring"
 	"github.com/aicli/aicli-web/internal/testing"
+	"github.com/gin-gonic/gin"
 )
 
 // MonitoringController는 모니터링 관련 API를 처리합니다
 type MonitoringController struct {
 	performanceMiddleware *middleware.PerformanceMonitoringMiddleware
-	errorTracker         *monitoring.ErrorTracker
-	alertingSystem       *monitoring.AlertingSystem
-	testSuite           *testing.PerformanceTestSuite
+	errorTracker          *monitoring.ErrorTracker
+	alertingSystem        *monitoring.AlertingSystem
+	testSuite             *testing.PerformanceTestSuite
 }
 
 // NewMonitoringController는 새로운 모니터링 컨트롤러를 생성합니다
@@ -28,9 +28,9 @@ func NewMonitoringController(
 ) *MonitoringController {
 	return &MonitoringController{
 		performanceMiddleware: perfMiddleware,
-		errorTracker:         errorTracker,
-		alertingSystem:       alertingSystem,
-		testSuite:           testSuite,
+		errorTracker:          errorTracker,
+		alertingSystem:        alertingSystem,
+		testSuite:             testSuite,
 	}
 }
 
@@ -64,8 +64,8 @@ func (mc *MonitoringController) GetPerformanceScore(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
-			"score": score,
-			"grade": getPerformanceGrade(score),
+			"score":     score,
+			"grade":     getPerformanceGrade(score),
 			"timestamp": time.Now(),
 		},
 	})

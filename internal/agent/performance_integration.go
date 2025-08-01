@@ -14,106 +14,106 @@ import (
 // PerformanceIntegration은 성능 최적화 시스템과 기존 에이전트 서비스의 통합점입니다
 type PerformanceIntegration struct {
 	// 성능 최적화 컴포넌트
-	optimizer      *AgentPerformanceOptimizer
-	benchmark      *PerformanceBenchmark
-	
+	optimizer *AgentPerformanceOptimizer
+	benchmark *PerformanceBenchmark
+
 	// 기존 서비스 컴포넌트
-	agentService   AgentService
-	storage        storage.Storage
-	dockerClient   docker.Client
-	
+	agentService AgentService
+	storage      storage.Storage
+	dockerClient docker.Client
+
 	// 통합 설정
-	config         IntegrationConfig
-	
+	config IntegrationConfig
+
 	// 상태 관리
-	enabled        bool
-	running        bool
+	enabled bool
+	running bool
 }
 
 // IntegrationConfig는 통합 설정입니다
 type IntegrationConfig struct {
 	// 성능 최적화 활성화
-	EnableOptimization     bool                  `json:"enable_optimization"`
-	EnableAutoScaling      bool                  `json:"enable_auto_scaling"`
-	EnableProfiling        bool                  `json:"enable_profiling"`
-	EnableBenchmarking     bool                  `json:"enable_benchmarking"`
-	
+	EnableOptimization bool `json:"enable_optimization"`
+	EnableAutoScaling  bool `json:"enable_auto_scaling"`
+	EnableProfiling    bool `json:"enable_profiling"`
+	EnableBenchmarking bool `json:"enable_benchmarking"`
+
 	// 성능 설정
-	PerformanceConfig      PerformanceConfig     `json:"performance_config"`
-	BenchmarkConfig        BenchmarkConfig       `json:"benchmark_config"`
-	
+	PerformanceConfig PerformanceConfig `json:"performance_config"`
+	BenchmarkConfig   BenchmarkConfig   `json:"benchmark_config"`
+
 	// 모니터링 설정
-	MetricsRetention       time.Duration         `json:"metrics_retention"`
-	AlertingEnabled        bool                  `json:"alerting_enabled"`
-	
+	MetricsRetention time.Duration `json:"metrics_retention"`
+	AlertingEnabled  bool          `json:"alerting_enabled"`
+
 	// 통합 정책
-	OptimizationTriggers   []OptimizationTrigger `json:"optimization_triggers"`
-	PerformanceThresholds  PerformanceThresholds `json:"performance_thresholds"`
+	OptimizationTriggers  []OptimizationTrigger `json:"optimization_triggers"`
+	PerformanceThresholds PerformanceThresholds `json:"performance_thresholds"`
 }
 
 // OptimizationTrigger는 최적화 트리거입니다
 type OptimizationTrigger struct {
-	Name               string        `json:"name"`
-	Condition          string        `json:"condition"`
-	Threshold          float64       `json:"threshold"`
-	Action             string        `json:"action"`
-	Cooldown           time.Duration `json:"cooldown"`
-	LastTriggered      time.Time     `json:"last_triggered"`
+	Name          string        `json:"name"`
+	Condition     string        `json:"condition"`
+	Threshold     float64       `json:"threshold"`
+	Action        string        `json:"action"`
+	Cooldown      time.Duration `json:"cooldown"`
+	LastTriggered time.Time     `json:"last_triggered"`
 }
 
 // PerformanceThresholds는 성능 임계값입니다
 type PerformanceThresholds struct {
-	MaxAgentCreationTime   time.Duration `json:"max_agent_creation_time"`
-	MinThroughput          float64       `json:"min_throughput"`
-	MaxErrorRate           float64       `json:"max_error_rate"`
-	MaxResourceUsage       ResourceLimits `json:"max_resource_usage"`
+	MaxAgentCreationTime time.Duration  `json:"max_agent_creation_time"`
+	MinThroughput        float64        `json:"min_throughput"`
+	MaxErrorRate         float64        `json:"max_error_rate"`
+	MaxResourceUsage     ResourceLimits `json:"max_resource_usage"`
 }
 
 // ResourceLimits는 리소스 제한입니다
 type ResourceLimits struct {
-	CPUPercent     float64 `json:"cpu_percent"`
-	MemoryBytes    int64   `json:"memory_bytes"`
-	DiskBytes      int64   `json:"disk_bytes"`
-	NetworkBps     int64   `json:"network_bps"`
+	CPUPercent  float64 `json:"cpu_percent"`
+	MemoryBytes int64   `json:"memory_bytes"`
+	DiskBytes   int64   `json:"disk_bytes"`
+	NetworkBps  int64   `json:"network_bps"`
 }
 
 // PerformanceEnhancedAgentService는 성능이 향상된 에이전트 서비스입니다
 type PerformanceEnhancedAgentService struct {
 	// 기본 서비스
-	baseService    AgentService
-	
+	baseService AgentService
+
 	// 성능 최적화
-	integration    *PerformanceIntegration
-	
+	integration *PerformanceIntegration
+
 	// 성능 메트릭
-	metrics        *EnhancedMetrics
+	metrics *EnhancedMetrics
 }
 
 // EnhancedMetrics는 향상된 메트릭입니다
 type EnhancedMetrics struct {
 	// 기본 메트릭
-	TotalAgentsCreated     int64         `json:"total_agents_created"`
-	SuccessfulCreations    int64         `json:"successful_creations"`
-	FailedCreations        int64         `json:"failed_creations"`
-	
+	TotalAgentsCreated  int64 `json:"total_agents_created"`
+	SuccessfulCreations int64 `json:"successful_creations"`
+	FailedCreations     int64 `json:"failed_creations"`
+
 	// 성능 메트릭
-	AverageCreationTime    time.Duration `json:"average_creation_time"`
-	P95CreationTime        time.Duration `json:"p95_creation_time"`
-	P99CreationTime        time.Duration `json:"p99_creation_time"`
-	
+	AverageCreationTime time.Duration `json:"average_creation_time"`
+	P95CreationTime     time.Duration `json:"p95_creation_time"`
+	P99CreationTime     time.Duration `json:"p99_creation_time"`
+
 	// 최적화 메트릭
-	OptimizationsApplied   int64         `json:"optimizations_applied"`
-	PoolHitRate            float64       `json:"pool_hit_rate"`
-	CacheHitRate           float64       `json:"cache_hit_rate"`
-	
+	OptimizationsApplied int64   `json:"optimizations_applied"`
+	PoolHitRate          float64 `json:"pool_hit_rate"`
+	CacheHitRate         float64 `json:"cache_hit_rate"`
+
 	// 리소스 메트릭
-	CurrentCPUUsage        float64       `json:"current_cpu_usage"`
-	CurrentMemoryUsage     int64         `json:"current_memory_usage"`
-	PeakMemoryUsage        int64         `json:"peak_memory_usage"`
-	
+	CurrentCPUUsage    float64 `json:"current_cpu_usage"`
+	CurrentMemoryUsage int64   `json:"current_memory_usage"`
+	PeakMemoryUsage    int64   `json:"peak_memory_usage"`
+
 	// 시간 정보
-	LastUpdated            time.Time     `json:"last_updated"`
-	StartTime              time.Time     `json:"start_time"`
+	LastUpdated time.Time `json:"last_updated"`
+	StartTime   time.Time `json:"start_time"`
 }
 
 // NewPerformanceIntegration은 새로운 성능 통합을 생성합니다
@@ -123,16 +123,16 @@ func NewPerformanceIntegration(
 	dockerClient docker.Client,
 	config IntegrationConfig,
 ) *PerformanceIntegration {
-	
+
 	// 성능 최적화기 생성
 	optimizer := NewAgentPerformanceOptimizer(config.PerformanceConfig, dockerClient)
-	
+
 	// 벤치마크 도구 생성
 	var benchmark *PerformanceBenchmark
 	if config.EnableBenchmarking {
 		benchmark = NewPerformanceBenchmark(config.BenchmarkConfig, optimizer)
 	}
-	
+
 	return &PerformanceIntegration{
 		optimizer:    optimizer,
 		benchmark:    benchmark,
@@ -150,23 +150,23 @@ func (pi *PerformanceIntegration) Start() error {
 		log.Println("Performance optimization is disabled")
 		return nil
 	}
-	
+
 	if pi.running {
 		return fmt.Errorf("performance integration already running")
 	}
-	
+
 	// 성능 최적화기 시작
 	if err := pi.optimizer.Start(); err != nil {
 		return fmt.Errorf("failed to start performance optimizer: %w", err)
 	}
-	
+
 	// 백그라운드 모니터링 시작
 	go pi.monitoringLoop()
 	go pi.optimizationLoop()
-	
+
 	pi.running = true
 	log.Println("Performance integration started successfully")
-	
+
 	return nil
 }
 
@@ -175,15 +175,15 @@ func (pi *PerformanceIntegration) Stop() error {
 	if !pi.running {
 		return nil
 	}
-	
+
 	// 성능 최적화기 중지
 	if err := pi.optimizer.Stop(); err != nil {
 		log.Printf("Error stopping performance optimizer: %v", err)
 	}
-	
+
 	pi.running = false
 	log.Println("Performance integration stopped")
-	
+
 	return nil
 }
 
@@ -192,30 +192,30 @@ func (pi *PerformanceIntegration) OptimizeAgentCreation(
 	ctx context.Context,
 	req CreateAgentRequest,
 ) (*models.Agent, error) {
-	
+
 	if !pi.enabled {
 		// 최적화가 비활성화된 경우 기본 서비스 사용
 		return pi.agentService.CreateAgent(ctx, req)
 	}
-	
+
 	start := time.Now()
-	
+
 	// 1. 성능 최적화 적용
 	if err := pi.optimizer.OptimizeAgent(req.Name); err != nil {
 		log.Printf("Optimization failed for agent %s: %v", req.Name, err)
 		// 최적화 실패해도 기본 생성은 계속 진행
 	}
-	
+
 	// 2. 기본 에이전트 생성
 	agent, err := pi.agentService.CreateAgent(ctx, req)
-	
+
 	// 3. 성능 메트릭 기록
 	duration := time.Since(start)
 	pi.recordCreationMetrics(agent != nil, duration)
-	
+
 	// 4. 최적화 트리거 평가
 	go pi.evaluateOptimizationTriggers()
-	
+
 	return agent, err
 }
 
@@ -224,7 +224,7 @@ func (pi *PerformanceIntegration) GetPerformanceMetrics() *PerformanceMetrics {
 	if !pi.enabled {
 		return nil
 	}
-	
+
 	return pi.optimizer.GetPerformanceMetrics()
 }
 
@@ -240,7 +240,7 @@ func (pi *PerformanceIntegration) GetSystemStatus() *SystemStatus {
 			LastUpdated:    time.Now(),
 		}
 	}
-	
+
 	return pi.optimizer.GetSystemStatus()
 }
 
@@ -249,7 +249,7 @@ func (pi *PerformanceIntegration) RunBenchmark() (*BenchmarkResults, error) {
 	if !pi.enabled || pi.benchmark == nil {
 		return nil, fmt.Errorf("benchmarking is not enabled")
 	}
-	
+
 	return pi.benchmark.RunBenchmark()
 }
 
@@ -258,7 +258,7 @@ func (pi *PerformanceIntegration) RunBenchmark() (*BenchmarkResults, error) {
 func (pi *PerformanceIntegration) monitoringLoop() {
 	ticker := time.NewTicker(pi.config.PerformanceConfig.MetricsInterval)
 	defer ticker.Stop()
-	
+
 	for pi.running {
 		select {
 		case <-ticker.C:
@@ -270,7 +270,7 @@ func (pi *PerformanceIntegration) monitoringLoop() {
 func (pi *PerformanceIntegration) optimizationLoop() {
 	ticker := time.NewTicker(pi.config.PerformanceConfig.OptimizationInterval)
 	defer ticker.Stop()
-	
+
 	for pi.running {
 		select {
 		case <-ticker.C:
@@ -285,10 +285,10 @@ func (pi *PerformanceIntegration) collectAndAnalyzeMetrics() {
 	if systemStatus == nil {
 		return
 	}
-	
+
 	// 성능 임계값 확인
 	pi.checkPerformanceThresholds(systemStatus)
-	
+
 	// 알림 처리
 	if pi.config.AlertingEnabled {
 		pi.processAlerts(systemStatus)
@@ -298,7 +298,7 @@ func (pi *PerformanceIntegration) collectAndAnalyzeMetrics() {
 func (pi *PerformanceIntegration) runOptimizationCycle() {
 	// 자동 최적화 실행
 	log.Println("Running optimization cycle")
-	
+
 	// 메트릭 기반 최적화 결정
 	metrics := pi.GetPerformanceMetrics()
 	if metrics != nil {
@@ -308,12 +308,12 @@ func (pi *PerformanceIntegration) runOptimizationCycle() {
 
 func (pi *PerformanceIntegration) checkPerformanceThresholds(status *SystemStatus) {
 	thresholds := pi.config.PerformanceThresholds
-	
+
 	// CPU 사용률 확인
 	if status.CPUUsage > thresholds.MaxResourceUsage.CPUPercent {
 		pi.triggerOptimization("high_cpu", status.CPUUsage)
 	}
-	
+
 	// 메모리 사용량 확인
 	if status.MemoryUsage > float64(thresholds.MaxResourceUsage.MemoryBytes) {
 		pi.triggerOptimization("high_memory", status.MemoryUsage)
@@ -328,14 +328,14 @@ func (pi *PerformanceIntegration) processAlerts(status *SystemStatus) {
 func (pi *PerformanceIntegration) applyMetricsBasedOptimization(metrics *PerformanceMetrics) {
 	// 메트릭 기반 최적화 적용
 	avgCreationTime := metrics.AverageCreationTime
-	
+
 	if avgCreationTime > pi.config.PerformanceThresholds.MaxAgentCreationTime {
 		log.Printf("Agent creation time (%v) exceeds threshold (%v), applying optimizations",
 			avgCreationTime, pi.config.PerformanceThresholds.MaxAgentCreationTime)
-		
+
 		// 컨테이너 풀 웜업
 		pi.optimizer.containerPool.WarmupContainers()
-		
+
 		// 워크트리 풀 최적화
 		pi.optimizer.worktreePool.Optimize()
 	}
@@ -349,7 +349,7 @@ func (pi *PerformanceIntegration) triggerOptimization(triggerType string, value 
 			if time.Since(trigger.LastTriggered) < trigger.Cooldown {
 				continue
 			}
-			
+
 			// 임계값 확인
 			if value > trigger.Threshold {
 				pi.executeOptimizationAction(trigger.Action)
@@ -379,7 +379,7 @@ func (pi *PerformanceIntegration) recordCreationMetrics(success bool, duration t
 	metrics := pi.optimizer.GetPerformanceMetrics()
 	if metrics != nil {
 		metrics.RecordAgentCreation(duration)
-		
+
 		if success {
 			metrics.TotalAgentsCreated.Add(1)
 		} else {
@@ -398,7 +398,7 @@ func NewPerformanceEnhancedAgentService(
 	baseService AgentService,
 	integration *PerformanceIntegration,
 ) *PerformanceEnhancedAgentService {
-	
+
 	return &PerformanceEnhancedAgentService{
 		baseService: baseService,
 		integration: integration,
@@ -411,10 +411,10 @@ func (peas *PerformanceEnhancedAgentService) CreateAgent(
 	ctx context.Context,
 	req CreateAgentRequest,
 ) (*models.Agent, error) {
-	
+
 	// 성능 통합을 통한 최적화된 생성
 	agent, err := peas.integration.OptimizeAgentCreation(ctx, req)
-	
+
 	// 메트릭 업데이트
 	peas.metrics.TotalAgentsCreated++
 	if err != nil {
@@ -423,7 +423,7 @@ func (peas *PerformanceEnhancedAgentService) CreateAgent(
 		peas.metrics.SuccessfulCreations++
 	}
 	peas.metrics.LastUpdated = time.Now()
-	
+
 	return agent, err
 }
 
@@ -516,12 +516,12 @@ func (peas *PerformanceEnhancedAgentService) GetEnhancedMetrics() *EnhancedMetri
 		peas.metrics.P95CreationTime = perfMetrics.P95CreationTime
 		peas.metrics.P99CreationTime = perfMetrics.P99CreationTime
 	}
-	
+
 	if systemStatus := peas.integration.GetSystemStatus(); systemStatus != nil {
 		peas.metrics.CurrentCPUUsage = systemStatus.CPUUsage
 		peas.metrics.CurrentMemoryUsage = int64(systemStatus.MemoryUsage)
 	}
-	
+
 	return peas.metrics
 }
 
@@ -536,14 +536,14 @@ func NewEnhancedMetrics() *EnhancedMetrics {
 // DefaultIntegrationConfig는 기본 통합 설정을 반환합니다
 func DefaultIntegrationConfig() IntegrationConfig {
 	return IntegrationConfig{
-		EnableOptimization:  true,
-		EnableAutoScaling:   true,
-		EnableProfiling:     true,
-		EnableBenchmarking:  false, // 기본적으로 비활성화
-		PerformanceConfig:   DefaultPerformanceConfig(),
-		BenchmarkConfig:     DefaultBenchmarkConfig(),
-		MetricsRetention:    24 * time.Hour,
-		AlertingEnabled:     true,
+		EnableOptimization: true,
+		EnableAutoScaling:  true,
+		EnableProfiling:    true,
+		EnableBenchmarking: false, // 기본적으로 비활성화
+		PerformanceConfig:  DefaultPerformanceConfig(),
+		BenchmarkConfig:    DefaultBenchmarkConfig(),
+		MetricsRetention:   24 * time.Hour,
+		AlertingEnabled:    true,
 		OptimizationTriggers: []OptimizationTrigger{
 			{
 				Name:      "high_cpu",
@@ -573,9 +573,9 @@ func DefaultIntegrationConfig() IntegrationConfig {
 			MaxErrorRate:         1.0,  // 1%
 			MaxResourceUsage: ResourceLimits{
 				CPUPercent:  80.0,
-				MemoryBytes: 2 * 1024 * 1024 * 1024, // 2GB
+				MemoryBytes: 2 * 1024 * 1024 * 1024,  // 2GB
 				DiskBytes:   10 * 1024 * 1024 * 1024, // 10GB
-				NetworkBps:  100 * 1024 * 1024, // 100MB/s
+				NetworkBps:  100 * 1024 * 1024,       // 100MB/s
 			},
 		},
 	}

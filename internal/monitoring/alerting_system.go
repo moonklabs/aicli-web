@@ -10,60 +10,60 @@ import (
 
 // AlertingSystem은 실시간 알림 및 경고 시스템입니다
 type AlertingSystem struct {
-	alerts        map[string]*Alert
-	rules         []AlertRule
-	channels      map[string]AlertChannel
-	mutex         sync.RWMutex
-	config        AlertingConfig
-	ctx           context.Context
-	cancel        context.CancelFunc
-	wg            sync.WaitGroup
+	alerts         map[string]*Alert
+	rules          []AlertRule
+	channels       map[string]AlertChannel
+	mutex          sync.RWMutex
+	config         AlertingConfig
+	ctx            context.Context
+	cancel         context.CancelFunc
+	wg             sync.WaitGroup
 	lastEvaluation time.Time
 }
 
 // AlertingConfig는 알림 시스템 설정입니다
 type AlertingConfig struct {
-	EvaluationInterval time.Duration `json:"evaluation_interval"`
-	DefaultChannel     string        `json:"default_channel"`
-	EnableEmailAlerts  bool          `json:"enable_email_alerts"`
-	EnableSlackAlerts  bool          `json:"enable_slack_alerts"`
-	EnableWebhookAlerts bool         `json:"enable_webhook_alerts"`
-	RetentionPeriod    time.Duration `json:"retention_period"`
-	MaxAlerts          int           `json:"max_alerts"`
+	EvaluationInterval  time.Duration `json:"evaluation_interval"`
+	DefaultChannel      string        `json:"default_channel"`
+	EnableEmailAlerts   bool          `json:"enable_email_alerts"`
+	EnableSlackAlerts   bool          `json:"enable_slack_alerts"`
+	EnableWebhookAlerts bool          `json:"enable_webhook_alerts"`
+	RetentionPeriod     time.Duration `json:"retention_period"`
+	MaxAlerts           int           `json:"max_alerts"`
 }
 
 // Alert는 개별 알림입니다
 type Alert struct {
-	ID          string            `json:"id"`
-	RuleID      string            `json:"rule_id"`
-	Name        string            `json:"name"`
-	Message     string            `json:"message"`
-	Severity    AlertSeverity     `json:"severity"`
-	Status      AlertStatus       `json:"status"`
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
-	StartsAt    time.Time         `json:"starts_at"`
-	EndsAt      *time.Time        `json:"ends_at,omitempty"`
-	LastSentAt  *time.Time        `json:"last_sent_at,omitempty"`
-	SentCount   int               `json:"sent_count"`
+	ID          string             `json:"id"`
+	RuleID      string             `json:"rule_id"`
+	Name        string             `json:"name"`
+	Message     string             `json:"message"`
+	Severity    AlertSeverity      `json:"severity"`
+	Status      AlertStatus        `json:"status"`
+	Labels      map[string]string  `json:"labels"`
+	Annotations map[string]string  `json:"annotations"`
+	StartsAt    time.Time          `json:"starts_at"`
+	EndsAt      *time.Time         `json:"ends_at,omitempty"`
+	LastSentAt  *time.Time         `json:"last_sent_at,omitempty"`
+	SentCount   int                `json:"sent_count"`
 	Metrics     map[string]float64 `json:"metrics,omitempty"`
 }
 
 // AlertRule은 알림 발생 규칙입니다
 type AlertRule struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Query       string            `json:"query"`
-	Condition   AlertCondition    `json:"condition"`
-	Severity    AlertSeverity     `json:"severity"`
-	For         time.Duration     `json:"for"` // 알림 발생 전 대기 시간
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
-	Channels    []string          `json:"channels"`
-	Enabled     bool              `json:"enabled"`
-	LastEvaluation time.Time      `json:"last_evaluation"`
-	EvaluationCount int64         `json:"evaluation_count"`
+	ID              string            `json:"id"`
+	Name            string            `json:"name"`
+	Description     string            `json:"description"`
+	Query           string            `json:"query"`
+	Condition       AlertCondition    `json:"condition"`
+	Severity        AlertSeverity     `json:"severity"`
+	For             time.Duration     `json:"for"` // 알림 발생 전 대기 시간
+	Labels          map[string]string `json:"labels"`
+	Annotations     map[string]string `json:"annotations"`
+	Channels        []string          `json:"channels"`
+	Enabled         bool              `json:"enabled"`
+	LastEvaluation  time.Time         `json:"last_evaluation"`
+	EvaluationCount int64             `json:"evaluation_count"`
 }
 
 // AlertCondition은 알림 발생 조건입니다
@@ -114,13 +114,13 @@ type AlertChannel interface {
 
 // EmailChannel은 이메일 알림 채널입니다
 type EmailChannel struct {
-	SMTPHost     string   `json:"smtp_host"`
-	SMTPPort     int      `json:"smtp_port"`
-	Username     string   `json:"username"`
-	Password     string   `json:"password"`
-	FromEmail    string   `json:"from_email"`
-	ToEmails     []string `json:"to_emails"`
-	Enabled      bool     `json:"enabled"`
+	SMTPHost  string   `json:"smtp_host"`
+	SMTPPort  int      `json:"smtp_port"`
+	Username  string   `json:"username"`
+	Password  string   `json:"password"`
+	FromEmail string   `json:"from_email"`
+	ToEmails  []string `json:"to_emails"`
+	Enabled   bool     `json:"enabled"`
 }
 
 // SlackChannel은 Slack 알림 채널입니다
@@ -146,12 +146,12 @@ type LogChannel struct {
 
 // AlertingMetrics는 알림 시스템 메트릭입니다
 type AlertingMetrics struct {
-	ActiveAlerts   int     `json:"active_alerts"`
-	TotalAlerts    int64   `json:"total_alerts"`
-	ResolvedAlerts int64   `json:"resolved_alerts"`
-	RuleCount      int     `json:"rule_count"`
-	ChannelCount   int     `json:"channel_count"`
-	LastEvaluation time.Time `json:"last_evaluation"`
+	ActiveAlerts       int           `json:"active_alerts"`
+	TotalAlerts        int64         `json:"total_alerts"`
+	ResolvedAlerts     int64         `json:"resolved_alerts"`
+	RuleCount          int           `json:"rule_count"`
+	ChannelCount       int           `json:"channel_count"`
+	LastEvaluation     time.Time     `json:"last_evaluation"`
 	EvaluationDuration time.Duration `json:"evaluation_duration"`
 }
 
@@ -656,9 +656,9 @@ func (lc *LogChannel) Send(alert *Alert) error {
 		severityPrefix = "[INFO]"
 	}
 
-	log.Printf("%s %s: %s (Status: %s, Started: %s)", 
+	log.Printf("%s %s: %s (Status: %s, Started: %s)",
 		severityPrefix, alert.Name, alert.Message, alert.Status, alert.StartsAt.Format("2006-01-02 15:04:05"))
-	
+
 	return nil
 }
 
