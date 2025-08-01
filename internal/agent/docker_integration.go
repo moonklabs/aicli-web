@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
+	"github.com/aicli/aicli-web/internal/docker"
 	"github.com/aicli/aicli-web/internal/models"
 )
 
@@ -41,6 +42,12 @@ type DockerAgentIntegration struct {
 	client      *client.Client
 	imageName   string
 	networkName string
+	
+	// 고급 통합 컴포넌트
+	agentSync      *docker.AgentDockerSync
+	autoRecovery   *docker.AutoRecoveryManager
+	resourceMonitor *docker.AdvancedResourceMonitor
+	dockerClient   *docker.Client
 }
 
 // NewDockerAgentIntegration 새로운 Docker 에이전트 통합 인스턴스 생성
@@ -49,11 +56,35 @@ func NewDockerAgentIntegration(dockerClient *client.Client) (*DockerAgentIntegra
 		return nil, fmt.Errorf("docker client is required")
 	}
 
-	return &DockerAgentIntegration{
-		client:      dockerClient,
-		imageName:   DefaultAgentImage,
-		networkName: "aicli-agent-network",
-	}, nil
+	// Docker Client 래퍼 생성
+	dockerClientWrapper, err := docker.NewClient(docker.DefaultConfig())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create docker client wrapper: %w", err)
+	}
+
+	// 고급 컴포넌트 초기화
+	lifecycle := docker.NewLifecycleManager(dockerClientWrapper)
+	health := docker.NewHealthChecker(dockerClientWrapper, 30*time.Second)
+	agentSync := docker.NewAgentDockerSync(dockerClientWrapper, lifecycle)
+	resourceMonitor := docker.NewAdvancedResourceMonitor(dockerClientWrapper)
+	autoRecovery := docker.NewAutoRecoveryManager(dockerClientWrapper, lifecycle, health, agentSync)
+
+	integration := &DockerAgentIntegration{
+		client:          dockerClient,
+		imageName:       DefaultAgentImage,
+		networkName:     "aicli-agent-network",
+		dockerClient:    dockerClientWrapper,
+		agentSync:       agentSync,
+		autoRecovery:    autoRecovery,
+		resourceMonitor: resourceMonitor,
+	}
+
+	// 네트워크 확인
+	if err := integration.EnsureAgentNetwork(context.Background()); err != nil {
+		return nil, fmt.Errorf("failed to ensure agent network: %w", err)
+	}
+
+	return integration, nil
 }
 
 // CreateAgentContainer 에이전트 컨테이너 생성
@@ -148,7 +179,12 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 		return "", fmt.Errorf("failed to create container: %w", err)
 	}
 
-	return resp.ID, nil
+	containerID := resp.ID
+
+	// 고급 기능 등록
+	d.registerAdvancedFeatures(agent.ID, containerID, agent.Status)
+
+	return containerID, nil
 }
 
 // StartAgentContainer 에이전트 컨테이너 시작
@@ -316,6 +352,9 @@ func (d *DockerAgentIntegration) EnsureAgentNetwork(ctx context.Context) error {
 func (d *DockerAgentIntegration) CleanupAgentVolumes(ctx context.Context, agentID string) error {
 	volumeName := fmt.Sprintf("aicli-agent-%s-claude", agentID)
 
+	// 고급 기능 등록 해제
+	d.unregisterAdvancedFeatures(agentID)
+
 	// 볼륨 제거
 	if err := d.client.VolumeRemove(ctx, volumeName, true); err != nil {
 		// 볼륨이 없는 경우는 무시
@@ -325,4 +364,96 @@ func (d *DockerAgentIntegration) CleanupAgentVolumes(ctx context.Context, agentI
 	}
 
 	return nil
+}
+
+// registerAdvancedFeatures 고급 기능들 등록
+func (d *DockerAgentIntegration) registerAdvancedFeatures(agentID, containerID string, status models.AgentStatus) {
+	// 에이전트 동기화 등록
+	if err := d.agentSync.RegisterAgent(agentID, containerID, status); err != nil {
+		// 로그 에러 (하지만 컨테이너 생성 실패로 처리하지 않음)
+	}
+
+	// 자동 복구 등록
+	recoveryPolicy := docker.RecoveryPolicy{
+		MaxRetries:        3,
+		RetryInterval:     30 * time.Second,
+		HealthCheckDelay:  10 * time.Second,
+		EnableAutoRestart: true,
+		EnableRecreate:    false,
+	}
+	d.autoRecovery.RegisterAgent(agentID, containerID, recoveryPolicy)
+
+	// 리소스 모니터링 등록
+	monitoringConfig := docker.MonitoringConfig{
+		Interval:        10 * time.Second,
+		HistorySize:     100,
+		Threshold:       docker.DefaultResourceThreshold(),
+		EnableAlerting:  true,
+		EnableAutoScale: false, // 기본적으로 비활성화
+	}
+	d.resourceMonitor.RegisterContainer(agentID, containerID, monitoringConfig)
+}
+
+// unregisterAdvancedFeatures 고급 기능들 등록 해제
+func (d *DockerAgentIntegration) unregisterAdvancedFeatures(agentID string) {
+	d.agentSync.UnregisterAgent(agentID)
+	d.autoRecovery.UnregisterAgent(agentID)
+	d.resourceMonitor.UnregisterContainer(agentID)
+}
+
+// UpdateAgentStatus 에이전트 상태 업데이트
+func (d *DockerAgentIntegration) UpdateAgentStatus(agentID string, status models.AgentStatus) error {
+	return d.agentSync.UpdateAgentStatus(agentID, status)
+}
+
+// GetAgentSyncState 에이전트 동기화 상태 조회
+func (d *DockerAgentIntegration) GetAgentSyncState(agentID string) (*docker.AgentSyncState, bool) {
+	return d.agentSync.GetSyncState(agentID)
+}
+
+// GetResourceMetrics 리소스 메트릭 조회
+func (d *DockerAgentIntegration) GetResourceMetrics(agentID string) (*docker.ResourceMetrics, bool) {
+	return d.resourceMonitor.GetResourceMetrics(agentID)
+}
+
+// GetRecoveryState 복구 상태 조회
+func (d *DockerAgentIntegration) GetRecoveryState(agentID string) (*docker.RecoveryState, bool) {
+	return d.autoRecovery.GetRecoveryState(agentID)
+}
+
+// AddResourceAlertHandler 리소스 알람 핸들러 추가
+func (d *DockerAgentIntegration) AddResourceAlertHandler(handler docker.AlertHandler) {
+	d.resourceMonitor.AddAlertHandler(handler)
+}
+
+// AddRecoveryCallback 복구 콜백 추가
+func (d *DockerAgentIntegration) AddRecoveryCallback(callback docker.RecoveryCallback) {
+	d.autoRecovery.AddRecoveryCallback(callback)
+}
+
+// GetIntegrationMetrics 통합 메트릭 조회
+func (d *DockerAgentIntegration) GetIntegrationMetrics() map[string]interface{} {
+	syncMetrics := d.agentSync.GetSyncMetrics()
+	recoveryMetrics := d.autoRecovery.GetRecoveryMetrics()
+	monitoringMetrics := d.resourceMonitor.GetMonitoringMetrics()
+
+	return map[string]interface{}{
+		"sync":       syncMetrics,
+		"recovery":   recoveryMetrics,
+		"monitoring": monitoringMetrics,
+		"timestamp":  time.Now(),
+	}
+}
+
+// Close 고급 기능들 종료
+func (d *DockerAgentIntegration) Close() {
+	if d.agentSync != nil {
+		d.agentSync.Close()
+	}
+	if d.autoRecovery != nil {
+		d.autoRecovery.Close()
+	}
+	if d.resourceMonitor != nil {
+		d.resourceMonitor.Close()
+	}
 }

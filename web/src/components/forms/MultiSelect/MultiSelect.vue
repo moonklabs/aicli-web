@@ -11,7 +11,7 @@
       tabindex="0"
       role="combobox"
       :aria-expanded="isOpen"
-      :aria-haspopup="listbox"
+      :aria-haspopup="'listbox'"
       :aria-labelledby="labelId"
       :aria-describedby="ariaDescribedby"
       :aria-disabled="disabled"

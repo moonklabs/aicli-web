@@ -53,55 +53,7 @@ type AggregatedMetrics struct {
 	ActiveTime time.Duration `json:"active_time"`
 }
 
-// CPUMetrics CPU 관련 메트릭
-type CPUMetrics struct {
-	Current float64 `json:"current"`
-	Average float64 `json:"average"`
-	Peak    float64 `json:"peak"`
-	Min     float64 `json:"min"`
-
-	// 히스토리
-	History []DataPoint `json:"history,omitempty"`
-}
-
-// MemoryMetrics 메모리 관련 메트릭
-type MemoryMetrics struct {
-	CurrentUsage int64   `json:"current_usage"`
-	AverageUsage int64   `json:"average_usage"`
-	PeakUsage    int64   `json:"peak_usage"`
-	Limit        int64   `json:"limit"`
-	UsagePercent float64 `json:"usage_percent"`
-
-	// 히스토리
-	History []DataPoint `json:"history,omitempty"`
-}
-
-// NetworkMetrics 네트워크 관련 메트릭
-type NetworkMetrics struct {
-	RxBytes float64 `json:"rx_bytes"`
-	TxBytes float64 `json:"tx_bytes"`
-	RxMB    float64 `json:"rx_mb"`
-	TxMB    float64 `json:"tx_mb"`
-	TotalMB float64 `json:"total_mb"`
-
-	// 속도 (MB/s)
-	RxRate float64 `json:"rx_rate"`
-	TxRate float64 `json:"tx_rate"`
-
-	// 히스토리
-	History []DataPoint `json:"history,omitempty"`
-}
-
-// DiskMetrics 디스크 관련 메트릭 (향후 구현)
-type DiskMetrics struct {
-	ReadBytes  int64   `json:"read_bytes"`
-	WriteBytes int64   `json:"write_bytes"`
-	ReadRate   float64 `json:"read_rate"`
-	WriteRate  float64 `json:"write_rate"`
-
-	// 히스토리
-	History []DataPoint `json:"history,omitempty"`
-}
+// 메트릭 타입들은 advanced_resource_monitor.go에서 정의됨
 
 // DataPoint 데이터 포인트
 type DataPoint struct {
@@ -235,10 +187,10 @@ func (mc *MetricsCollector) processContainerMetrics(containerID string, stats *C
 			LastUpdated: time.Now(),
 			DataPoints:  0,
 			CPUUsage: CPUMetrics{
-				Min: 100.0, // 초기값을 높게 설정
+				UsagePercent: 0.0,
 			},
 			MemoryUsage: MemoryMetrics{
-				Limit: stats.MemoryLimit,
+				LimitBytes: uint64(stats.MemoryLimit),
 			},
 		}
 		mc.aggregatedData[containerID] = existing
@@ -259,104 +211,36 @@ func (mc *MetricsCollector) processContainerMetrics(containerID string, stats *C
 
 // updateCPUMetrics CPU 메트릭 업데이트
 func (mc *MetricsCollector) updateCPUMetrics(cpu *CPUMetrics, current float64) {
-	cpu.Current = current
-
-	// 평균 계산 (이동 평균)
-	if cpu.Average == 0 {
-		cpu.Average = current
-	} else {
-		cpu.Average = (cpu.Average * 0.9) + (current * 0.1)
-	}
-
-	// 최대값 업데이트
-	if current > cpu.Peak {
-		cpu.Peak = current
-	}
-
-	// 최소값 업데이트
-	if current < cpu.Min {
-		cpu.Min = current
-	}
-
-	// 히스토리 저장 (최근 100개 포인트만 유지)
-	if len(cpu.History) >= 100 {
-		cpu.History = cpu.History[1:] // 가장 오래된 것 제거
-	}
-	cpu.History = append(cpu.History, DataPoint{
-		Timestamp: time.Now(),
-		Value:     current,
-	})
+	cpu.UsagePercent = current
 }
 
 // updateMemoryMetrics 메모리 메트릭 업데이트
 func (mc *MetricsCollector) updateMemoryMetrics(mem *MemoryMetrics, currentUsage, limit int64) {
-	mem.CurrentUsage = currentUsage
-	mem.Limit = limit
+	mem.UsageBytes = uint64(currentUsage)
+	mem.LimitBytes = uint64(limit)
 
 	// 사용률 계산
 	if limit > 0 {
 		mem.UsagePercent = float64(currentUsage) / float64(limit) * 100
 	}
-
-	// 평균 계산
-	if mem.AverageUsage == 0 {
-		mem.AverageUsage = currentUsage
-	} else {
-		mem.AverageUsage = int64(float64(mem.AverageUsage)*0.9 + float64(currentUsage)*0.1)
-	}
-
-	// 최대값 업데이트
-	if currentUsage > mem.PeakUsage {
-		mem.PeakUsage = currentUsage
-	}
-
-	// 히스토리 저장
-	if len(mem.History) >= 100 {
-		mem.History = mem.History[1:]
-	}
-	mem.History = append(mem.History, DataPoint{
-		Timestamp: time.Now(),
-		Value:     currentUsage,
-	})
 }
 
 // updateNetworkMetrics 네트워크 메트릭 업데이트
 func (mc *MetricsCollector) updateNetworkMetrics(net *NetworkMetrics, rxMB, txMB float64, lastUpdate time.Time) {
-	// 이전 값 저장
-	prevRxMB := net.RxMB
-	prevTxMB := net.TxMB
-
-	// 현재 값 업데이트
-	net.RxMB = rxMB
-	net.TxMB = txMB
-	net.TotalMB = rxMB + txMB
-
 	// 바이트 단위 계산
-	net.RxBytes = rxMB * 1024 * 1024
-	net.TxBytes = txMB * 1024 * 1024
+	net.RxBytes = uint64(rxMB * 1024 * 1024)
+	net.TxBytes = uint64(txMB * 1024 * 1024)
 
-	// 전송 속도 계산 (MB/s)
+	// 전송 속도 계산 (bytes/s)
 	if !lastUpdate.IsZero() {
 		timeDiff := time.Since(lastUpdate).Seconds()
 		if timeDiff > 0 {
-			net.RxRate = (rxMB - prevRxMB) / timeDiff
-			net.TxRate = (txMB - prevTxMB) / timeDiff
+			prevRxBytes := float64(net.RxBytes)
+			prevTxBytes := float64(net.TxBytes)
+			net.RxRate = (float64(net.RxBytes) - prevRxBytes) / timeDiff
+			net.TxRate = (float64(net.TxBytes) - prevTxBytes) / timeDiff
 		}
 	}
-
-	// 히스토리 저장
-	if len(net.History) >= 100 {
-		net.History = net.History[1:]
-	}
-	net.History = append(net.History, DataPoint{
-		Timestamp: time.Now(),
-		Value: map[string]float64{
-			"rx_mb":   rxMB,
-			"tx_mb":   txMB,
-			"rx_rate": net.RxRate,
-			"tx_rate": net.TxRate,
-		},
-	})
 }
 
 // extractWorkspaceID 컨테이너 ID에서 워크스페이스 ID 추출

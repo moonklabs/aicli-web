@@ -51,6 +51,8 @@ const (
 	ContainerStateRestarting ContainerState = "restarting"
 	ContainerStateRemoving   ContainerState = "removing"
 	ContainerStateDead       ContainerState = "dead"
+	ContainerStateStopped    ContainerState = "stopped"
+	ContainerStateErrored    ContainerState = "errored"
 )
 
 // GetID는 컨테이너 ID를 반환합니다.
