@@ -22,17 +22,17 @@ const (
 	DefaultAgentImage = "aicli-agent:latest"
 	AgentWorkDir      = "/workspace"
 	AgentHomeDir      = "/home/agent"
-	
+
 	// 컨테이너 라벨
-	LabelAgentID    = "aicli.agent.id"
-	LabelProjectID  = "aicli.project.id"
-	LabelAgentType  = "aicli.agent.type"
-	LabelCreatedAt  = "aicli.created.at"
-	
+	LabelAgentID   = "aicli.agent.id"
+	LabelProjectID = "aicli.project.id"
+	LabelAgentType = "aicli.agent.type"
+	LabelCreatedAt = "aicli.created.at"
+
 	// 리소스 제한 기본값
-	DefaultCPULimit    = 2.0  // 2 CPU cores
-	DefaultMemoryLimit = 4    // 4GB
-	DefaultCPUReserve  = 0.5  // 0.5 CPU cores
+	DefaultCPULimit      = 2.0 // 2 CPU cores
+	DefaultMemoryLimit   = 4   // 4GB
+	DefaultCPUReserve    = 0.5 // 0.5 CPU cores
 	DefaultMemoryReserve = 512 // 512MB
 )
 
@@ -48,7 +48,7 @@ func NewDockerAgentIntegration(dockerClient *client.Client) (*DockerAgentIntegra
 	if dockerClient == nil {
 		return nil, fmt.Errorf("docker client is required")
 	}
-	
+
 	return &DockerAgentIntegration{
 		client:      dockerClient,
 		imageName:   DefaultAgentImage,
@@ -60,7 +60,7 @@ func NewDockerAgentIntegration(dockerClient *client.Client) (*DockerAgentIntegra
 func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent *models.Agent, worktreePath string) (string, error) {
 	// 컨테이너 이름 생성
 	containerName := fmt.Sprintf("aicli-agent-%s", agent.ID)
-	
+
 	// 환경 변수 설정
 	env := []string{
 		fmt.Sprintf("AGENT_ID=%s", agent.ID),
@@ -68,14 +68,14 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 		fmt.Sprintf("AGENT_NAME=%s", agent.Name),
 		"TZ=Asia/Seoul",
 	}
-	
+
 	// 환경 변수에서 설정 추가
 	if agent.Config.Environment != nil {
 		for k, v := range agent.Config.Environment {
 			env = append(env, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
-	
+
 	// 마운트 설정
 	mounts := []mount.Mount{
 		{
@@ -87,7 +87,7 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 			},
 		},
 	}
-	
+
 	// 볼륨 마운트 (영구 데이터)
 	claudeDataVolume := fmt.Sprintf("aicli-agent-%s-claude", agent.ID)
 	mounts = append(mounts, mount.Mount{
@@ -95,7 +95,7 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 		Source: claudeDataVolume,
 		Target: filepath.Join(AgentHomeDir, ".claude"),
 	})
-	
+
 	// 컨테이너 설정
 	config := &container.Config{
 		Image:      d.imageName,
@@ -108,15 +108,15 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 			LabelAgentType: string(agent.Type),
 			LabelCreatedAt: time.Now().Format(time.RFC3339),
 		},
-		Tty:        true,
-		OpenStdin:  true,
-		StdinOnce:  false,
-		AttachStdin: true,
+		Tty:          true,
+		OpenStdin:    true,
+		StdinOnce:    false,
+		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
-		Cmd:        []string{"sleep"}, // 컨테이너를 실행 상태로 유지
+		Cmd:          []string{"sleep"}, // 컨테이너를 실행 상태로 유지
 	}
-	
+
 	// 호스트 설정
 	hostConfig := &container.HostConfig{
 		Mounts:      mounts,
@@ -125,14 +125,14 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 			Name: "unless-stopped",
 		},
 		Resources: container.Resources{
-			CPUQuota:  int64(DefaultCPULimit * 100000),   // CPU 제한
-			CPUPeriod: 100000,
-			Memory:    int64(DefaultMemoryLimit) << 30,    // 메모리 제한 (GB to bytes)
+			CPUQuota:          int64(DefaultCPULimit * 100000), // CPU 제한
+			CPUPeriod:         100000,
+			Memory:            int64(DefaultMemoryLimit) << 30,   // 메모리 제한 (GB to bytes)
 			MemoryReservation: int64(DefaultMemoryReserve) << 20, // 메모리 예약 (MB to bytes)
 		},
 		AutoRemove: false,
 	}
-	
+
 	// 네트워크 설정
 	networkConfig := &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
@@ -141,28 +141,28 @@ func (d *DockerAgentIntegration) CreateAgentContainer(ctx context.Context, agent
 			},
 		},
 	}
-	
+
 	// 컨테이너 생성
 	resp, err := d.client.ContainerCreate(ctx, config, hostConfig, networkConfig, nil, containerName)
 	if err != nil {
 		return "", fmt.Errorf("failed to create container: %w", err)
 	}
-	
+
 	return resp.ID, nil
 }
 
 // StartAgentContainer 에이전트 컨테이너 시작
 func (d *DockerAgentIntegration) StartAgentContainer(ctx context.Context, containerID string) error {
 	// 컨테이너 시작
-	if err := d.client.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
+	if err := d.client.ContainerStart(ctx, containerID, container.StartOptions{}); err != nil {
 		return fmt.Errorf("failed to start container: %w", err)
 	}
-	
+
 	// 컨테이너가 실행 중인지 확인 (최대 10초 대기)
 	timeout := time.After(10 * time.Second)
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-timeout:
@@ -172,11 +172,11 @@ func (d *DockerAgentIntegration) StartAgentContainer(ctx context.Context, contai
 			if err != nil {
 				return fmt.Errorf("failed to inspect container: %w", err)
 			}
-			
+
 			if inspect.State.Running {
 				return nil
 			}
-			
+
 			if inspect.State.ExitCode != 0 {
 				return fmt.Errorf("container exited with code %d: %s", inspect.State.ExitCode, inspect.State.Error)
 			}
@@ -188,7 +188,7 @@ func (d *DockerAgentIntegration) StartAgentContainer(ctx context.Context, contai
 func (d *DockerAgentIntegration) StopAgentContainer(ctx context.Context, containerID string) error {
 	// 정상 종료 시간 (30초)
 	timeout := 30
-	
+
 	// 컨테이너 중지
 	if err := d.client.ContainerStop(ctx, containerID, container.StopOptions{
 		Timeout: &timeout,
@@ -198,14 +198,14 @@ func (d *DockerAgentIntegration) StopAgentContainer(ctx context.Context, contain
 			return fmt.Errorf("failed to stop container: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
 // RemoveAgentContainer 에이전트 컨테이너 제거
 func (d *DockerAgentIntegration) RemoveAgentContainer(ctx context.Context, containerID string) error {
 	// 컨테이너 제거
-	if err := d.client.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{
+	if err := d.client.ContainerRemove(ctx, containerID, container.RemoveOptions{
 		RemoveVolumes: false, // 볼륨은 보존
 		Force:         true,  // 실행 중이어도 강제 제거
 	}); err != nil {
@@ -214,7 +214,7 @@ func (d *DockerAgentIntegration) RemoveAgentContainer(ctx context.Context, conta
 			return fmt.Errorf("failed to remove container: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -227,13 +227,13 @@ func (d *DockerAgentIntegration) GetAgentContainerLogs(ctx context.Context, cont
 	if !options.ShowStderr {
 		options.ShowStderr = true
 	}
-	
+
 	// 로그 스트림 가져오기
 	logs, err := d.client.ContainerLogs(ctx, containerID, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get container logs: %w", err)
 	}
-	
+
 	return logs, nil
 }
 
@@ -243,40 +243,40 @@ func (d *DockerAgentIntegration) ExecInAgentContainer(ctx context.Context, conta
 	execConfig := types.ExecConfig{
 		AttachStdout: true,
 		AttachStderr: true,
-		Cmd:         cmd,
-		WorkingDir:  AgentWorkDir,
-		User:        "agent",
+		Cmd:          cmd,
+		WorkingDir:   AgentWorkDir,
+		User:         "agent",
 	}
-	
+
 	// Exec 생성
 	execID, err := d.client.ContainerExecCreate(ctx, containerID, execConfig)
 	if err != nil {
 		return "", fmt.Errorf("failed to create exec: %w", err)
 	}
-	
+
 	// Exec 시작
 	resp, err := d.client.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{})
 	if err != nil {
 		return "", fmt.Errorf("failed to attach to exec: %w", err)
 	}
 	defer resp.Close()
-	
+
 	// 출력 읽기
 	output, err := io.ReadAll(resp.Reader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read exec output: %w", err)
 	}
-	
+
 	// Exec 상태 확인
 	execInspect, err := d.client.ContainerExecInspect(ctx, execID.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to inspect exec: %w", err)
 	}
-	
+
 	if execInspect.ExitCode != 0 {
 		return string(output), fmt.Errorf("command exited with code %d", execInspect.ExitCode)
 	}
-	
+
 	return string(output), nil
 }
 
@@ -287,13 +287,13 @@ func (d *DockerAgentIntegration) EnsureAgentNetwork(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to list networks: %w", err)
 	}
-	
+
 	for _, net := range networks {
 		if net.Name == d.networkName {
 			return nil // 이미 존재
 		}
 	}
-	
+
 	// 네트워크 생성
 	_, err = d.client.NetworkCreate(ctx, d.networkName, types.NetworkCreate{
 		Driver: "bridge",
@@ -304,18 +304,18 @@ func (d *DockerAgentIntegration) EnsureAgentNetwork(ctx context.Context) error {
 			"com.docker.network.bridge.name": "aicli-agent-br",
 		},
 	})
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to create network: %w", err)
 	}
-	
+
 	return nil
 }
 
 // CleanupAgentVolumes 에이전트 볼륨 정리
 func (d *DockerAgentIntegration) CleanupAgentVolumes(ctx context.Context, agentID string) error {
 	volumeName := fmt.Sprintf("aicli-agent-%s-claude", agentID)
-	
+
 	// 볼륨 제거
 	if err := d.client.VolumeRemove(ctx, volumeName, true); err != nil {
 		// 볼륨이 없는 경우는 무시
@@ -323,6 +323,6 @@ func (d *DockerAgentIntegration) CleanupAgentVolumes(ctx context.Context, agentI
 			return fmt.Errorf("failed to remove volume: %w", err)
 		}
 	}
-	
+
 	return nil
 }

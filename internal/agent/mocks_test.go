@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/system"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/aicli/aicli-web/internal/docker"
@@ -184,10 +185,10 @@ func (m *MockDockerClient) CheckContainer(ctx context.Context, containerID strin
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockDockerClient) GetSystemInfo(ctx context.Context) (*types.Info, error) {
+func (m *MockDockerClient) GetSystemInfo(ctx context.Context) (*system.Info, error) {
 	args := m.Called(ctx)
 	if args.Get(0) != nil {
-		return args.Get(0).(*types.Info), args.Error(1)
+		return args.Get(0).(*system.Info), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
@@ -206,13 +207,13 @@ func (m *MockDockerClient) StartMonitoring(ctx context.Context, callback func(er
 	m.Called(ctx, callback)
 }
 
-// Docker API 메서드들  
+// Docker API 메서드들
 func (m *MockDockerClient) ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform interface{}, containerName string) (container.CreateResponse, error) {
 	args := m.Called(ctx, config, hostConfig, networkingConfig, platform, containerName)
 	return args.Get(0).(container.CreateResponse), args.Error(1)
 }
 
-func (m *MockDockerClient) ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error {
+func (m *MockDockerClient) ContainerStart(ctx context.Context, containerID string, options container.StartOptions) error {
 	args := m.Called(ctx, containerID, options)
 	return args.Error(0)
 }
@@ -222,7 +223,7 @@ func (m *MockDockerClient) ContainerStop(ctx context.Context, containerID string
 	return args.Error(0)
 }
 
-func (m *MockDockerClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+func (m *MockDockerClient) ContainerRemove(ctx context.Context, containerID string, options container.RemoveOptions) error {
 	args := m.Called(ctx, containerID, options)
 	return args.Error(0)
 }
