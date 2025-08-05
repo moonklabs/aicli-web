@@ -14,6 +14,7 @@ const SecurityDashboardView = () => import('@/views/SecurityDashboardView.vue')
 const ProfileEditView = () => import('@/views/ProfileEditView.vue')
 const MonitoringDashboardView = () => import('@/views/MonitoringDashboardView.vue')
 const TerminalTest = () => import('@/views/TerminalTest.vue')
+const MobileTerminalDemo = () => import('@/views/demos/MobileTerminalDemo.vue')
 const LoginView = () => import('@/views/LoginView.vue')
 const OAuthCallbackView = () => import('@/views/OAuthCallbackView.vue')
 const NotFoundView = () => import('@/views/NotFoundView.vue')
@@ -175,6 +176,15 @@ const router = createRouter({
       meta: {
         requiresAuth: false,
         title: '터미널 테스트',
+      },
+    },
+    {
+      path: '/demos/mobile-terminal',
+      name: 'mobile-terminal-demo',
+      component: MobileTerminalDemo,
+      meta: {
+        requiresAuth: false,
+        title: '모바일 터미널 데모',
       },
     },
     // 403 Forbidden 페이지

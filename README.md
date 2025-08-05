@@ -45,6 +45,7 @@ AICode Manager는 개발자가 여러 프로젝트에서 Claude CLI를 효율적
 - 🔐 **사용자 인증 및 권한 관리**: 안전한 멀티 유저 환경
 - 🌐 **RESTful API**: 프로그래밍 가능한 인터페이스
 - 💻 **CLI 도구**: 강력한 커맨드라인 인터페이스
+- 📱 **모바일 반응형 UI**: 터치 친화적 인터페이스 및 제스처 지원
 
 ## 시작하기
 
@@ -508,6 +509,39 @@ aicli config path
 ### Claude CLI 통합
 
 AICode Manager의 핵심 기능인 Claude CLI 통합을 통해 강력한 AI 개발 도구를 활용할 수 있습니다.
+
+## 모바일 반응형 UI
+
+AICode Manager는 완전한 모바일 퍼스트 설계로 구축되었습니다:
+
+### 🎯 주요 모바일 기능
+- **터치 최적화**: 44px 최소 터치 타겟 보장
+- **제스처 인터랙션**: 스와이프, 핀치, 멀티터치 제스처 지원
+- **적응형 레이아웃**: 모바일/태블릿/데스크톱 자동 전환
+- **한 손 사용성**: 한 손으로 모든 기능 조작 가능
+- **햅틱 피드백**: 터치 상호작용 시 진동 피드백
+
+### 📱 구현된 컴포넌트
+- `AdaptiveLayout`: 디바이스별 자동 레이아웃 전환
+- `MobileWorkflowManager`: 모바일 전용 워크플로우 관리
+- `TouchButton`: 터치 최적화 버튼 컴포넌트  
+- `QuickActionPanel`: 빠른 액션 패널
+- `FloatingActionButton`: 플로팅 액션 버튼
+
+### 🎮 제스처 기능
+- **기본 제스처**: 탭, 롱프레스, 스와이프
+- **고급 제스처**: 핀치 투 줌, 회전, 2-5 손가락 멀티터치
+- **커스텀 패턴**: 원형 제스처, 지그재그 패턴 인식
+- **관성 애니메이션**: 자연스러운 스크롤 및 플링 효과
+
+### 📐 반응형 브레이크포인트
+```css
+/* Mobile First Approach */
+@media (min-width: 375px)  { /* iPhone SE */ }
+@media (min-width: 768px)  { /* iPad Portrait */ }
+@media (min-width: 1024px) { /* iPad Landscape */ }
+@media (min-width: 1280px) { /* Desktop */ }
+```
 
 #### Claude 명령어
 

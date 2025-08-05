@@ -1,0 +1,82 @@
+# 성능 테스트 전용 Dockerfile
+# 부하 테스트 도구와 성능 모니터링 도구 포함
+
+FROM golang:1.21-alpine AS builder
+
+# 성능 테스트 도구들 설치
+RUN apk add --no-cache \
+    git \
+    gcc \
+    musl-dev \
+    make \
+    bash \
+    curl \
+    wget \
+    unzip
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# Go 모듈 의존성 설치
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 성능 테스트 도구 설치
+RUN go install github.com/rakyll/hey@latest && \
+    go install github.com/tsenart/vegeta@latest && \
+    go install github.com/prometheus/node_exporter@latest
+
+# k6 부하 테스트 도구 설치
+RUN wget https://github.com/grafana/k6/releases/download/v0.46.0/k6-v0.46.0-linux-amd64.tar.gz && \
+    tar -xzf k6-v0.46.0-linux-amd64.tar.gz && \
+    mv k6-v0.46.0-linux-amd64/k6 /usr/local/bin/ && \
+    rm -rf k6-v0.46.0-*
+
+# 소스 코드 복사
+COPY . .
+
+# 테스트용 바이너리 빌드
+RUN make build
+
+# 최종 성능 테스트 이미지
+FROM alpine:3.18
+
+# 필수 도구 설치
+RUN apk add --no-cache \
+    bash \
+    curl \
+    jq \
+    htop \
+    iotop \
+    ca-certificates \
+    docker-cli
+
+# 성능 모니터링 도구들 복사
+COPY --from=builder /go/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/bin/k6 /usr/local/bin/
+COPY --from=builder /workspace/build/ /workspace/build/
+
+# 성능 테스트 스크립트들 복사
+COPY test/performance/ /test/performance/
+COPY test/scripts/ /test/scripts/
+RUN chmod +x /test/scripts/*.sh /test/performance/*.sh
+
+# 사용자 추가
+RUN addgroup -g 1000 perfuser && \
+    adduser -D -s /bin/bash -u 1000 -G perfuser perfuser
+
+WORKDIR /workspace
+
+# 성능 테스트 설정 파일
+COPY test/config/performance.yaml /etc/performance.yaml
+
+# 환경 변수 설정
+ENV PERFORMANCE_TEST=1
+ENV MAX_CONCURRENT_AGENTS=100
+ENV TEST_DURATION=5m
+ENV LOAD_TEST_RAMP_UP=30s
+
+USER perfuser
+
+# 기본 명령어
+CMD ["make", "test-performance"]

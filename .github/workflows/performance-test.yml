@@ -1,0 +1,257 @@
+name: Performance Test
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'web/**'
+      - '.github/workflows/performance-test.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'web/**'
+  workflow_dispatch:
+  schedule:
+    # 매일 새벽 2시에 실행 (UTC)
+    - cron: '0 2 * * *'
+
+jobs:
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build application
+        working-directory: ./web
+        run: pnpm build
+        
+      - name: Run Lighthouse CI
+        working-directory: ./web
+        run: |
+          npm install -g @lhci/cli@0.13.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-results
+          path: ./web/.lighthouseci
+          retention-days: 30
+
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
+        
+      - name: Analyze bundle
+        working-directory: ./web
+        run: |
+          pnpm build
+          pnpm analyze
+          
+      - name: Generate bundle report
+        working-directory: ./web
+        run: |
+          # Vite bundle analyzer 출력을 파일로 저장
+          mkdir -p bundle-analysis
+          cp dist/.vite/stats.html bundle-analysis/
+          
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: ./web/bundle-analysis
+          retention-days: 30
+          
+      - name: Check bundle size limits
+        working-directory: ./web
+        run: |
+          # 번들 크기 체크 스크립트
+          node scripts/check-bundle-size.js
+
+  web-vitals:
+    name: Web Vitals Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build and Deploy Preview
+        working-directory: ./web
+        run: |
+          pnpm build
+          # Vercel 또는 Netlify 프리뷰 배포
+          
+      - name: Measure Web Vitals
+        run: |
+          # 실제 사용자 메트릭 수집을 위한 스크립트
+          # Google Analytics 또는 커스텀 엔드포인트로 전송
+          echo "Web Vitals measurement would run here"
+          
+  performance-budget:
+    name: Performance Budget Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository  
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        working-directory: ./web
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build application
+        working-directory: ./web
+        run: pnpm build
+        
+      - name: Check performance budget
+        working-directory: ./web
+        run: |
+          # 성능 예산 체크
+          npx bundlesize
+          
+  comment-results:
+    name: Comment Performance Results
+    runs-on: ubuntu-latest
+    needs: [lighthouse, bundle-size]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download Lighthouse results
+        uses: actions/download-artifact@v4
+        with:
+          name: lighthouse-results
+          path: ./lighthouse-results
+          
+      - name: Download bundle analysis
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle-analysis  
+          path: ./bundle-analysis
+          
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Lighthouse 결과 읽기
+            const lighthouseReport = fs.readFileSync('./lighthouse-results/reports/manifest.json', 'utf8');
+            const manifest = JSON.parse(lighthouseReport);
+            
+            // PR 코멘트 작성
+            const comment = `## 🚀 Performance Test Results
+            
+            ### Lighthouse Scores
+            | Metric | Score |
+            |--------|-------|
+            | Performance | ${manifest[0].summary.performance * 100}% |
+            | Accessibility | ${manifest[0].summary.accessibility * 100}% |
+            | Best Practices | ${manifest[0].summary['best-practices'] * 100}% |
+            | SEO | ${manifest[0].summary.seo * 100}% |
+            
+            ### Core Web Vitals
+            | Metric | Value | Status |
+            |--------|-------|--------|
+            | LCP | ${manifest[0].audits['largest-contentful-paint'].numericValue}ms | ${manifest[0].audits['largest-contentful-paint'].score >= 0.9 ? '✅' : '⚠️'} |
+            | FID | ${manifest[0].audits['max-potential-fid'].numericValue}ms | ${manifest[0].audits['max-potential-fid'].score >= 0.9 ? '✅' : '⚠️'} |
+            | CLS | ${manifest[0].audits['cumulative-layout-shift'].numericValue} | ${manifest[0].audits['cumulative-layout-shift'].score >= 0.9 ? '✅' : '⚠️'} |
+            
+            [View full Lighthouse report](${manifest[0].url})
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

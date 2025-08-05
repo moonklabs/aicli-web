@@ -1,0 +1,515 @@
+// 방향 적응 글로벌 스타일
+@use './variables' as *;
+@use './mixins' as *;
+
+// CSS 사용자 정의 속성 기본값
+:root {
+  // 뷰포트 변수
+  --viewport-width: 100vw;
+  --viewport-height: 100vh;
+  --available-width: 100vw;
+  --available-height: 100vh;
+  --aspect-ratio: 1;
+  
+  // 안전 영역 변수
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  
+  // 방향 전환 변수
+  --orientation-transition-duration: 300ms;
+  
+  // 레이아웃 변수
+  --nav-position: bottom;
+  --content-padding: 16px;
+  --content-columns: 1;
+  --keyboard-height: 0px;
+}
+
+// 기본 방향 스타일
+html {
+  // 방향 변경 시 부드러운 전환
+  &.orientation-transitioning {
+    * {
+      transition: all var(--orientation-transition-duration) ease-out;
+    }
+  }
+  
+  // 전환 중 깜빡임 방지
+  &.orientation-transitioning img,
+  &.orientation-transitioning video {
+    transition: none;
+  }
+}
+
+// 세로 모드 스타일
+.orientation-portrait {
+  // 기본 세로 모드 레이아웃
+  .adaptive-layout {
+    flex-direction: column;
+  }
+  
+  // 네비게이션 위치 조정
+  .navigation {
+    &[data-position="bottom"] {
+      order: 2;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: $z-sticky;
+    }
+    
+    &[data-position="top"] {
+      order: 0;
+      position: sticky;
+      top: 0;
+      z-index: $z-sticky;
+    }
+  }
+  
+  // 콘텐츠 영역
+  .main-content {
+    flex: 1;
+    padding: var(--content-padding);
+    padding-top: calc(var(--content-padding) + var(--safe-area-top));
+    padding-bottom: calc(var(--content-padding) + var(--safe-area-bottom));
+    
+    &.full-height-content {
+      min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+    }
+  }
+  
+  // 플로팅 액션 버튼 위치
+  .floating-action-button {
+    bottom: calc($spacing-6 + var(--safe-area-bottom));
+    right: calc($spacing-6 + var(--safe-area-right));
+  }
+  
+  // 모달 및 패널
+  .modal,
+  .bottom-sheet {
+    border-radius: $border-radius-xl $border-radius-xl 0 0;
+    max-height: calc(90vh - var(--safe-area-top));
+  }
+}
+
+// 세로 모드 - 좁은 화면
+.orientation-portrait.orientation-portrait-narrow {
+  // 네비게이션 컴팩트화
+  .navigation {
+    font-size: $font-size-sm;
+    padding: $spacing-2;
+    
+    .nav-item {
+      padding: $spacing-2;
+      min-width: 44px;
+      
+      .nav-label {
+        font-size: $font-size-xs;
+      }
+    }
+  }
+  
+  // 콘텐츠 패딩 감소
+  .main-content {
+    padding: $spacing-3;
+  }
+  
+  // 플로팅 버튼 크기 축소
+  .floating-action-button .fab-main-button {
+    width: 48px;
+    height: 48px;
+  }
+  
+  // 터치 타겟 크기 보장
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+// 세로 모드 - 넓은 화면
+.orientation-portrait.orientation-portrait-wide {
+  // 네비게이션 여유 공간 확보
+  .navigation {
+    padding: $spacing-4;
+    
+    .nav-item {
+      padding: $spacing-3 $spacing-4;
+    }
+  }
+  
+  // 콘텐츠 중앙 정렬
+  .main-content {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: $spacing-6;
+  }
+  
+  // 카드 레이아웃 개선
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-4;
+  }
+}
+
+// 가로 모드 스타일
+.orientation-landscape {
+  // 기본 가로 모드 레이아웃
+  .adaptive-layout {
+    flex-direction: row;
+  }
+  
+  // 사이드 네비게이션
+  .navigation {
+    &[data-position="left"] {
+      order: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 240px;
+      z-index: $z-sidebar;
+      
+      + .main-content {
+        margin-left: 240px;
+      }
+    }
+    
+    &[data-position="right"] {
+      order: 2;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 240px;
+      z-index: $z-sidebar;
+      
+      ~ .main-content {
+        margin-right: 240px;
+      }
+    }
+    
+    &[data-position="top"] {
+      order: 0;
+      position: sticky;
+      top: 0;
+      width: 100%;
+      z-index: $z-sticky;
+    }
+  }
+  
+  // 콘텐츠 영역
+  .main-content {
+    flex: 1;
+    padding: var(--content-padding);
+    padding-left: calc(var(--content-padding) + var(--safe-area-left));
+    padding-right: calc(var(--content-padding) + var(--safe-area-right));
+    
+    // 멀티 컬럼 레이아웃
+    &.multi-column {
+      columns: var(--content-columns);
+      column-gap: $spacing-6;
+      column-fill: balance;
+    }
+  }
+  
+  // 플로팅 액션 버튼 위치 조정
+  .floating-action-button {
+    bottom: calc($spacing-4 + var(--safe-area-bottom));
+    right: calc($spacing-4 + var(--safe-area-right));
+  }
+  
+  // 모달 크기 조정
+  .modal {
+    max-width: 80vw;
+    max-height: 80vh;
+    border-radius: $border-radius-xl;
+  }
+  
+  // 사이드 패널
+  &.enable-side-panel {
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 320px;
+      background: $light-bg-secondary;
+      border-left: 1px solid map-get($gray-colors, 200);
+      z-index: $z-sidebar;
+      
+      .dark & {
+        background: $dark-bg-secondary;
+        border-left-color: $dark-bg-tertiary;
+      }
+      
+      ~ .main-content {
+        margin-right: 320px;
+      }
+    }
+  }
+}
+
+// 가로 모드 - 컴팩트 (높이가 낮은 경우)
+.orientation-landscape.orientation-landscape-compact {
+  // 네비게이션 높이 축소
+  .navigation {
+    padding: $spacing-2;
+    
+    &[data-position="top"] {
+      height: 48px;
+    }
+    
+    &[data-position="left"],
+    &[data-position="right"] {
+      width: 200px;
+    }
+  }
+  
+  // 콘텐츠 패딩 감소
+  .main-content {
+    padding: $spacing-3;
+  }
+  
+  // 헤더 컴팩트화
+  .page-header {
+    padding: $spacing-2 0;
+    
+    h1 {
+      font-size: $font-size-lg;
+    }
+  }
+  
+  // 모달 높이 제한
+  .modal {
+    max-height: 70vh;
+  }
+  
+  // 키보드 영역 고려
+  &.keyboard-visible {
+    .main-content {
+      height: calc(100vh - var(--keyboard-height));
+      overflow-y: auto;
+    }
+  }
+}
+
+// 가로 모드 - 넓은 화면
+.orientation-landscape.orientation-landscape-wide {
+  // 사이드바 확장
+  .navigation {
+    &[data-position="left"],
+    &[data-position="right"] {
+      width: 280px;
+    }
+  }
+  
+  // 콘텐츠 영역 확장
+  .main-content {
+    padding: $spacing-8;
+    
+    // 3컬럼 레이아웃
+    &.multi-column {
+      columns: 3;
+    }
+  }
+  
+  // 카드 그리드 확장
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-6;
+  }
+  
+  // 사이드 패널 확장
+  &.enable-side-panel .side-panel {
+    width: 400px;
+    
+    ~ .main-content {
+      margin-right: 400px;
+    }
+  }
+}
+
+// 키보드 표시 상태
+.keyboard-visible {
+  // 키보드 동작별 처리
+  &[data-keyboard-behavior="resize"] {
+    .main-content {
+      height: calc(100vh - var(--keyboard-height));
+      overflow-y: auto;
+    }
+  }
+  
+  &[data-keyboard-behavior="overlay"] {
+    .main-content {
+      // 키보드가 콘텐츠를 가리지만 스크롤은 유지
+      padding-bottom: calc(var(--content-padding) + var(--keyboard-height));
+    }
+  }
+  
+  &[data-keyboard-behavior="scroll"] {
+    // 포커스된 요소가 키보드 위로 올라오도록 스크롤
+    body {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  // 플로팅 버튼 위치 조정
+  .floating-action-button {
+    bottom: calc($spacing-6 + var(--keyboard-height) + var(--safe-area-bottom));
+  }
+  
+  // 하단 네비게이션 숨김
+  .bottom-navigation {
+    transform: translateY(100%);
+  }
+}
+
+// 방향 전환 애니메이션
+@keyframes orientationChange {
+  from {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.orientation-transitioning {
+  .main-content {
+    animation: orientationChange var(--orientation-transition-duration) ease-out;
+  }
+}
+
+// 미디어 쿼리 기반 방향 스타일 (폴백)
+@media (orientation: portrait) {
+  body:not(.orientation-landscape) {
+    .portrait-only {
+      display: block;
+    }
+    
+    .landscape-only {
+      display: none;
+    }
+  }
+}
+
+@media (orientation: landscape) {
+  body:not(.orientation-portrait) {
+    .portrait-only {
+      display: none;
+    }
+    
+    .landscape-only {
+      display: block;
+    }
+  }
+}
+
+// 컴포넌트별 방향 적응 스타일
+.component-responsive {
+  // 카드 컴포넌트
+  .card {
+    .orientation-portrait & {
+      margin-bottom: $spacing-4;
+    }
+    
+    .orientation-landscape & {
+      margin-right: $spacing-4;
+      margin-bottom: $spacing-3;
+    }
+  }
+  
+  // 폼 컴포넌트
+  .form {
+    .orientation-portrait & {
+      .form-row {
+        flex-direction: column;
+        
+        .form-field {
+          width: 100%;
+          margin-bottom: $spacing-3;
+        }
+      }
+    }
+    
+    .orientation-landscape & {
+      .form-row {
+        flex-direction: row;
+        gap: $spacing-4;
+        
+        .form-field {
+          flex: 1;
+        }
+      }
+    }
+  }
+  
+  // 테이블 컴포넌트
+  .table {
+    .orientation-portrait & {
+      // 카드 뷰로 변환
+      .table-row {
+        display: block;
+        border: 1px solid map-get($gray-colors, 200);
+        border-radius: $border-radius-md;
+        margin-bottom: $spacing-3;
+        padding: $spacing-3;
+        
+        .table-cell {
+          display: block;
+          border: none;
+          padding: $spacing-1 0;
+          
+          &::before {
+            content: attr(data-label) ': ';
+            font-weight: $font-weight-semibold;
+            color: $light-text-secondary;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 접근성 개선
+@include reduce-motion {
+  .orientation-transitioning * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+// 고대비 모드
+@media (prefers-contrast: high) {
+  .navigation {
+    border-color: currentColor;
+  }
+  
+  .main-content {
+    border: 2px solid currentColor;
+  }
+}
+
+// 프린트 스타일
+@media print {
+  .orientation-portrait,
+  .orientation-landscape {
+    .navigation,
+    .floating-action-button,
+    .side-panel {
+      display: none !important;
+    }
+    
+    .main-content {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+    }
+  }
+}

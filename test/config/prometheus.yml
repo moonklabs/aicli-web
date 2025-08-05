@@ -1,0 +1,57 @@
+# Prometheus 테스트 환경 설정
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# 규칙 파일 로드
+rule_files:
+  - "alert_rules.yml"
+
+# 스크래핑 설정
+scrape_configs:
+  # API 서버 메트릭
+  - job_name: 'aicli-api'
+    static_configs:
+      - targets: ['api-server:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+
+  # Docker 메트릭 (cAdvisor)
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['test-docker:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL 메트릭
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['test-db:9187']
+    scrape_interval: 10s
+
+  # Redis 메트릭
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['test-redis:9121']
+    scrape_interval: 10s
+
+  # 통합 테스트 메트릭
+  - job_name: 'integration-test'
+    static_configs:
+      - targets: ['integration-test:8090']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # 성능 테스트 메트릭
+  - job_name: 'performance-test'
+    static_configs:
+      - targets: ['performance-test:8091']
+    metrics_path: '/metrics'
+    scrape_interval: 1s
+
+# 알림 관리자 설정
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []

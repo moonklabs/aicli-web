@@ -757,7 +757,7 @@ func NewAgentHealthChecker() *AgentHealthChecker {
 // NewRoutingMetrics는 새로운 라우팅 메트릭을 생성합니다
 func NewRoutingMetrics() *RoutingMetrics {
 	return &RoutingMetrics{
-		PoolMetrics: make(map[string]*PoolMetrics),
+		PoolMetrics: make(map[string]*AgentPoolMetrics),
 	}
 }
 

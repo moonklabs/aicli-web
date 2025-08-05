@@ -3,6 +3,7 @@
 @use 'sass:map';
 @use './variables' as *;
 @use './mixins' as *;
+@use './orientation' as *;
 
 // 전역 리셋 및 기본 스타일
 * {

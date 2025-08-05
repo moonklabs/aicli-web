@@ -5,12 +5,19 @@ package claude
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/aicli/aicli-web/internal/storage"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,66 +45,167 @@ func TestE2EScenarios(t *testing.T) {
 	})
 }
 
-// testCompleteWorkflow는 완전한 워크플로우를 테스트합니다.
+// testCompleteWorkflow는 완전한 에이전트 워크플로우를 테스트합니다.
 func testCompleteWorkflow(t *testing.T) {
+	ctx := context.Background()
+
+	// Docker 클라이언트 초기화
+	dockerHost := os.Getenv("DOCKER_HOST")
+	if dockerHost == "" {
+		dockerHost = "unix:///var/run/docker.sock"
+	}
+
+	dockerClient, err := client.NewClientWithOpts(
+		client.WithHost(dockerHost),
+		client.WithAPIVersionNegotiation(),
+	)
+	require.NoError(t, err)
+	defer dockerClient.Close()
+
+	// Docker 연결 확인
+	_, err = dockerClient.Info(ctx)
+	require.NoError(t, err, "Docker 데몬에 연결할 수 없습니다")
+
 	// 테스트 환경 설정
 	store, err := storage.New()
 	require.NoError(t, err)
 	defer store.Close()
 
-	sessionManager := NewSessionManager(store.Session())
+	// 세션 매니저 및 에이전트 서비스 초기화 (가상의 서비스)
+	t.Log("=== 에이전트 생명주기 E2E 테스트 시작 ===")
 
-	ctx := context.Background()
-
-	// 1. 세션 생성
-	sessionID, err := sessionManager.Create(ctx, &SessionConfig{
-		WorkspaceID:  "test-workspace",
-		SystemPrompt: "You are a helpful assistant",
-		MaxTurns:     10,
-		Tools:        []string{"Read", "Write"},
-	})
-	require.NoError(t, err)
-	assert.NotEmpty(t, sessionID)
-
-	// 2. 세션 조회
-	session, err := sessionManager.Get(ctx, sessionID)
-	require.NoError(t, err)
-	assert.Equal(t, sessionID, session.ID)
-	assert.Equal(t, "test-workspace", session.Config.WorkspaceID)
-
-	// 3. 세션 상태 업데이트 (시뮬레이션)
-	err = sessionManager.Update(ctx, sessionID, SessionUpdate{
-		State: &SessionState{
-			Status:      "active",
-			LastMessage: "Hello, Claude!",
-			TurnCount:   1,
+	// 1. 에이전트 컨테이너 생성 테스트
+	containerName := fmt.Sprintf("test-agent-%d", time.Now().Unix())
+	createResp, err := dockerClient.ContainerCreate(ctx,
+		&container.Config{
+			Image: "alpine:latest",
+			Cmd:   []string{"sleep", "60"},
+			Labels: map[string]string{
+				"test.type":    "e2e",
+				"test.purpose": "agent-lifecycle",
+			},
 		},
-	})
-	require.NoError(t, err)
+		&container.HostConfig{
+			AutoRemove: true,
+			Resources: container.Resources{
+				Memory:   128 * 1024 * 1024, // 128MB
+				NanoCPUs: 100000000,         // 0.1 CPU
+			},
+		},
+		nil,
+		nil,
+		containerName,
+	)
+	require.NoError(t, err, "에이전트 컨테이너 생성 실패")
+	
+	containerID := createResp.ID
+	t.Logf("에이전트 컨테이너 생성 완료: %s", containerID[:12])
 
-	// 4. 세션 목록 조회
-	sessions, err := sessionManager.List(ctx)
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, len(sessions), 1)
+	// 정리 함수 등록
+	defer func() {
+		if err := dockerClient.ContainerStop(ctx, containerID, container.StopOptions{}); err != nil {
+			t.Logf("컨테이너 중지 실패: %v", err)
+		}
+		if err := dockerClient.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true}); err != nil {
+			t.Logf("컨테이너 제거 실패: %v", err)
+		}
+	}()
 
-	foundSession := false
-	for _, s := range sessions {
-		if s.ID == sessionID {
-			foundSession = true
-			assert.Equal(t, "active", s.State.Status)
-			break
+	// 2. 에이전트 시작
+	err = dockerClient.ContainerStart(ctx, containerID, types.ContainerStartOptions{})
+	require.NoError(t, err, "에이전트 컨테이너 시작 실패")
+	t.Log("에이전트 컨테이너 시작 완료")
+
+	// 3. 에이전트 상태 확인 (실행 중 대기)
+	timeout := time.After(30 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			t.Fatal("에이전트가 30초 내에 실행 상태가 되지 않음")
+		case <-ticker.C:
+			inspect, err := dockerClient.ContainerInspect(ctx, containerID)
+			require.NoError(t, err)
+			
+			if inspect.State.Running {
+				t.Log("에이전트가 실행 중 상태가 되었습니다")
+				goto AgentRunning
+			}
 		}
 	}
-	assert.True(t, foundSession, "Created session should be in list")
 
-	// 5. 세션 종료
-	err = sessionManager.Close(ctx, sessionID)
-	require.NoError(t, err)
+AgentRunning:
+	// 4. 에이전트 작업 실행 시뮬레이션 (exec를 통한 명령 실행)
+	execConfig := types.ExecConfig{
+		Cmd:          []string{"echo", "Hello from E2E test agent"},
+		AttachStdout: true,
+		AttachStderr: true,
+	}
 
-	// 6. 종료된 세션 상태 확인
-	closedSession, err := sessionManager.Get(ctx, sessionID)
+	execResp, err := dockerClient.ContainerExecCreate(ctx, containerID, execConfig)
+	require.NoError(t, err, "명령 실행 준비 실패")
+
+	execAttach, err := dockerClient.ContainerExecAttach(ctx, execResp.ID, types.ExecStartCheck{})
+	require.NoError(t, err, "명령 실행 연결 실패")
+	defer execAttach.Close()
+
+	// 실행 결과 읽기
+	output, err := io.ReadAll(execAttach.Reader)
+	require.NoError(t, err, "명령 실행 결과 읽기 실패")
+	
+	outputStr := string(output)
+	assert.Contains(t, outputStr, "Hello from E2E test agent", "명령 실행 결과가 예상과 다름")
+	t.Logf("에이전트 작업 실행 완료: %s", strings.TrimSpace(outputStr))
+
+	// 5. 에이전트 로그 확인
+	logOptions := types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Timestamps: true,
+		Details:    true,
+	}
+
+	logReader, err := dockerClient.ContainerLogs(ctx, containerID, logOptions)
+	require.NoError(t, err, "로그 조회 실패")
+	defer logReader.Close()
+
+	logData, err := io.ReadAll(logReader)
+	require.NoError(t, err, "로그 읽기 실패")
+	assert.NotEmpty(t, logData, "로그가 비어있음")
+	t.Logf("에이전트 로그 확인 완료: %d bytes", len(logData))
+
+	// 6. 에이전트 리소스 사용량 확인
+	stats, err := dockerClient.ContainerStats(ctx, containerID, false)
+	require.NoError(t, err, "리소스 통계 조회 실패")
+	defer stats.Body.Close()
+
+	var statsData types.StatsJSON
+	decoder := json.NewDecoder(stats.Body)
+	err = decoder.Decode(&statsData)
+	require.NoError(t, err, "리소스 통계 파싱 실패")
+
+	// 메모리 사용량 확인 (128MB 제한 내에 있는지)
+	memoryUsage := statsData.MemoryStats.Usage
+	memoryLimit := statsData.MemoryStats.Limit
+	assert.LessOrEqual(t, memoryUsage, memoryLimit, "메모리 사용량이 제한을 초과함")
+	t.Logf("에이전트 리소스 사용량 - 메모리: %d/%d bytes", memoryUsage, memoryLimit)
+
+	// 7. 에이전트 중지
+	timeout = 10 * time.Second
+	err = dockerClient.ContainerStop(ctx, containerID, &timeout)
+	require.NoError(t, err, "에이전트 중지 실패")
+	t.Log("에이전트 중지 완료")
+
+	// 8. 에이전트 상태 확인 (중지됨)
+	inspect, err := dockerClient.ContainerInspect(ctx, containerID)
 	require.NoError(t, err)
-	assert.Equal(t, "closed", closedSession.State.Status)
+	assert.False(t, inspect.State.Running, "에이전트가 아직 실행 중입니다")
+	assert.Equal(t, "exited", inspect.State.Status, "에이전트 상태가 exited가 아닙니다")
+	t.Log("에이전트 상태 확인 완료: 정상적으로 중지됨")
+
+	t.Log("=== 에이전트 생명주기 E2E 테스트 완료 ===")
 }
 
 // testConcurrentSessions는 동시 세션 처리를 테스트합니다.

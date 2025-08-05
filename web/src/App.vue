@@ -18,8 +18,8 @@ import OfflineIndicator from '@/components/Common/OfflineIndicator.vue'
 import PWAInstallPrompt from '@/components/Common/PWAInstallPrompt.vue'
 import ApiDebugPanel from '@/components/Debug/ApiDebugPanel.vue'
 import SkipLinks from '@/components/ui/accessibility/SkipLinks.vue'
-import ThemeToggle from '@/components/ui/accessibility/ThemeToggle.vue'
 import AccessibilityChecker from '@/components/ui/accessibility/AccessibilityChecker.vue'
+import AdaptiveLayout from '@/components/ui/layout/AdaptiveLayout.vue'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -40,6 +40,18 @@ router.afterEach((to, from) => {
     announce(`페이지가 ${pageName}으로 변경되었습니다`)
   }
 })
+
+// 레이아웃 변경 핸들러
+const handleLayoutChange = (layout: 'mobile' | 'desktop') => {
+  console.log('Layout changed to:', layout)
+  // 레이아웃 변경 시 추가 처리 로직
+}
+
+// 네비게이션 토글 핸들러
+const handleNavigationToggle = (isOpen: boolean) => {
+  console.log('Navigation toggle:', isOpen)
+  // 네비게이션 상태 변경 시 추가 처리 로직
+}
 
 // 앱 초기화
 onMounted(() => {
@@ -62,34 +74,32 @@ onMounted(() => {
       <NDialogProvider>
         <NNotificationProvider>
           <NMessageProvider>
-            <!-- 메인 앱 레이아웃 -->
-            <div id="app" class="app-container">
-              <!-- 접근성 및 테마 컨트롤 -->
-              <div class="app-controls">
-                <ThemeToggle
-                  :show-advanced-settings="true"
-                  :compact="false"
-                  :show-labels="true"
-                />
-              </div>
-
+            <!-- 적응형 레이아웃 -->
+            <AdaptiveLayout
+              id="app"
+              class="app-container"
+              :enable-pull-to-refresh="true"
+              :show-bottom-navigation="true"
+              @layout-change="handleLayoutChange"
+              @navigation-toggle="handleNavigationToggle"
+            >
               <!-- 메인 콘텐츠 영역 -->
               <main id="main-content" role="main" class="main-content">
                 <RouterView />
               </main>
+            </AdaptiveLayout>
 
-              <!-- 전역 컴포넌트들 -->
-              <ErrorNotification />
-              <OfflineIndicator />
-              <PWAInstallPrompt />
-              <ApiDebugPanel />
+            <!-- 전역 컴포넌트들 -->
+            <ErrorNotification />
+            <OfflineIndicator />
+            <PWAInstallPrompt />
+            <ApiDebugPanel />
 
-              <!-- 접근성 검사 도구 (개발 환경에서만) -->
-              <AccessibilityChecker
-                :auto-check="false"
-                :live-monitoring="true"
-              />
-            </div>
+            <!-- 접근성 검사 도구 (개발 환경에서만) -->
+            <AccessibilityChecker
+              :auto-check="false"
+              :live-monitoring="true"
+            />
           </NMessageProvider>
         </NNotificationProvider>
       </NDialogProvider>

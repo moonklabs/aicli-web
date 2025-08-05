@@ -1,0 +1,85 @@
+# E2E 테스트 전용 Dockerfile
+# 브라우저 기반 테스트와 API 통합 테스트를 위한 환경
+
+FROM golang:1.21-alpine AS go-builder
+
+# Go 의존성 설치
+RUN apk add --no-cache \
+    git \
+    gcc \
+    musl-dev \
+    make \
+    bash
+
+WORKDIR /workspace
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 소스 코드 복사 및 빌드
+COPY . .
+RUN make build
+
+# Node.js 환경 (웹 테스트용)
+FROM node:18-alpine AS node-builder
+
+# 웹 의존성 설치
+WORKDIR /workspace/web
+COPY web/package*.json ./
+RUN npm ci --only=production
+
+# 웹 소스 복사 및 빌드
+COPY web/ ./
+RUN npm run build
+
+# 최종 E2E 테스트 이미지
+FROM mcr.microsoft.com/playwright:v1.39.0-focal
+
+# 시스템 의존성 설치
+RUN apt-get update && apt-get install -y \
+    curl \
+    jq \
+    wait-for-it \
+    postgresql-client \
+    redis-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Go 런타임 설치
+RUN curl -L https://go.dev/dl/go1.21.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Node.js는 이미 base 이미지에 포함됨
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# Go 빌드 결과물 복사
+COPY --from=go-builder /workspace/build/ /workspace/build/
+COPY --from=go-builder /workspace/go.mod /workspace/go.sum ./
+
+# Node.js 빌드 결과물 복사  
+COPY --from=node-builder /workspace/web/dist/ /workspace/web/dist/
+COPY --from=node-builder /workspace/web/node_modules/ /workspace/web/node_modules/
+
+# 테스트 스크립트 및 설정 복사
+COPY test/e2e/ /test/e2e/
+COPY test/scripts/ /test/scripts/
+COPY test/fixtures/ /test/fixtures/
+RUN chmod +x /test/scripts/*.sh /test/e2e/*.sh
+
+# Playwright 브라우저 설치
+RUN npx playwright install --with-deps
+
+# 사용자 설정
+RUN useradd -m -s /bin/bash e2euser
+RUN chown -R e2euser:e2euser /workspace /test
+
+# 환경 변수 설정
+ENV E2E_TEST=1
+ENV HEADLESS=true
+ENV API_BASE_URL=http://api-server:8080
+ENV WEB_BASE_URL=http://web-server:3000
+
+USER e2euser
+
+# 기본 명령어
+CMD ["make", "test-e2e"]

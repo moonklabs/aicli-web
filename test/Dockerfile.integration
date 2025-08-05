@@ -1,0 +1,78 @@
+# 통합 테스트 전용 Dockerfile
+# Go 및 테스트 의존성을 포함한 컨테이너 환경
+
+FROM golang:1.21-alpine AS builder
+
+# 필수 도구 설치
+RUN apk add --no-cache \
+    git \
+    gcc \
+    musl-dev \
+    docker-cli \
+    docker-cli-compose \
+    make \
+    bash \
+    curl \
+    postgresql-client \
+    redis
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# Go 모듈 파일 복사 및 의존성 다운로드
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 테스트 도구 설치
+RUN go install github.com/jstemmer/go-junit-report/v2@latest && \
+    go install github.com/onsi/ginkgo/v2/ginkgo@latest && \
+    go install github.com/golang/mock/mockgen@latest && \
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# 테스트 헬퍼 스크립트 복사
+COPY test/scripts/ /test/scripts/
+RUN chmod +x /test/scripts/*.sh
+
+# 전체 소스 코드 복사
+COPY . .
+
+# 테스트용 바이너리 빌드
+RUN make build
+
+# 최종 이미지 (Alpine 기반)
+FROM alpine:3.18
+
+# 런타임 의존성 설치
+RUN apk add --no-cache \
+    docker-cli \
+    git \
+    bash \
+    curl \
+    postgresql-client \
+    redis \
+    jq \
+    ca-certificates
+
+# 사용자 추가
+RUN addgroup -g 1000 testuser && \
+    adduser -D -s /bin/bash -u 1000 -G testuser testuser
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# Builder에서 빌드된 바이너리 복사
+COPY --from=builder /go/bin/* /usr/local/bin/
+COPY --from=builder /workspace/build/ /workspace/build/
+COPY --from=builder /test/scripts/ /test/scripts/
+
+# 테스트 실행을 위한 환경 설정
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
+ENV PATH="/usr/local/bin:${PATH}"
+
+# 테스트 사용자로 전환
+USER testuser
+
+# 기본 명령어
+CMD ["make", "test-integration"]

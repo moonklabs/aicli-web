@@ -1,23 +1,37 @@
 import { type Ref, onBeforeUnmount, onMounted, ref } from 'vue'
 
 interface TouchGestureConfig {
-  // 제스처 활성화 옵션
+  // 기본 제스처 활성화 옵션
   enableSwipe?: boolean
   enablePinch?: boolean
   enablePan?: boolean
   enableTap?: boolean
   enableLongPress?: boolean
 
+  // 고급 제스처 활성화 옵션
+  enableRotate?: boolean
+  enableThreeFingerGestures?: boolean
+  enableVelocityGestures?: boolean
+  enableCustomGestures?: boolean
+
   // 임계값 설정
   swipeThreshold?: number
   pinchThreshold?: number
   panThreshold?: number
   longPressThreshold?: number
+  rotateThreshold?: number
+  velocityThreshold?: number
 
   // 감도 설정
   swipeSensitivity?: number
   pinchSensitivity?: number
   panSensitivity?: number
+  rotateSensitivity?: number
+
+  // 고급 설정
+  enableInertia?: boolean
+  enableMomentum?: boolean
+  enableMultiTouchFiltering?: boolean
 }
 
 interface TouchPoint {
@@ -38,6 +52,11 @@ interface GestureEvent {
   velocity: number
   scale?: number
   angle?: number
+  rotation?: number
+  fingerCount?: number
+  centroid?: TouchPoint
+  momentum?: { x: number; y: number }
+  inertia?: { x: number; y: number; decay: number }
 }
 
 export function useTouchGestures(
@@ -50,13 +69,23 @@ export function useTouchGestures(
     enablePan: true,
     enableTap: true,
     enableLongPress: true,
+    enableRotate: true,
+    enableThreeFingerGestures: true,
+    enableVelocityGestures: true,
+    enableCustomGestures: false,
     swipeThreshold: 50,
     pinchThreshold: 0.1,
     panThreshold: 10,
     longPressThreshold: 500,
+    rotateThreshold: 0.1,
+    velocityThreshold: 0.3,
     swipeSensitivity: 1,
     pinchSensitivity: 1,
     panSensitivity: 1,
+    rotateSensitivity: 1,
+    enableInertia: true,
+    enableMomentum: true,
+    enableMultiTouchFiltering: true,
   }
 
   const settings = { ...defaultConfig, ...config }
@@ -66,6 +95,12 @@ export function useTouchGestures(
   const isGesturing = ref(false)
   const gestureStartTime = ref(0)
   const lastGestureEvent = ref<GestureEvent | null>(null)
+
+  // 고급 제스처 상태
+  const lastRotation = ref(0)
+  const velocityHistory = ref<{ x: number; y: number; timestamp: number }[]>([])
+  const momentumTimer = ref<number | null>(null)
+  const customGestureBuffer = ref<TouchPoint[]>([])
 
   // 현재 제스처 타입
   const currentGesture = ref<string>('')

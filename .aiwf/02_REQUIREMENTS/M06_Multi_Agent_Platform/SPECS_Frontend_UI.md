@@ -88,13 +88,20 @@ const usePTYStream = (agentId: string) => {
 
 ## 모바일 UI
 
-### 반응형 디자인
-- 터치 제스처 지원
-- 가상 키보드 최적화
-- 스와이프 네비게이션
-- 적응형 레이아웃
+### 반응형 디자인 (✅ 구현 완료)
+- ✅ 터치 제스처 지원 (useAdvancedGestures, useTouchInteractions)
+- ✅ 가상 키보드 최적화 (orientation.scss)
+- ✅ 스와이프 네비게이션 (MobileWorkflowManager)
+- ✅ 적응형 레이아웃 (AdaptiveLayout)
 
-### 모바일 컴포넌트
+### 구현된 모바일 컴포넌트
+- ✅ `AdaptiveLayout.vue` - 모바일/데스크톱 적응형 레이아웃
+- ✅ `MobileWorkflowManager.vue` - 모바일 워크플로우 관리자
+- ✅ `QuickActionPanel.vue` - 터치 친화적 액션 패널
+- ✅ `FloatingActionButton.vue` - 플로팅 액션 버튼
+- ✅ `TouchButton.vue` - 고급 터치 버튼 컴포넌트
+
+### 향후 구현 예정
 - `MobileAgentView.vue` - 모바일 에이전트 뷰
 - `MobileTerminal.vue` - 모바일 터미널
 - `TouchKeyboard.vue` - 터치 키보드
@@ -125,6 +132,34 @@ interface CustomPrompt {
 - UI 반응 시간 < 16ms (60fps)
 
 ## 파일 구조
+
+### 현재 구현된 구조
+```
+web/src/
+├── components/
+│   ├── ui/
+│   │   ├── layout/
+│   │   │   ├── AdaptiveLayout.vue ✅
+│   │   │   ├── UserMenu.vue ✅
+│   │   │   ├── MobileLayout.vue ✅
+│   │   │   └── MobileNav.vue ✅
+│   │   ├── mobile/
+│   │   │   ├── MobileWorkflowManager.vue ✅
+│   │   │   ├── QuickActionPanel.vue ✅
+│   │   │   └── FloatingActionButton.vue ✅
+│   │   └── form/
+│   │       └── TouchButton.vue ✅
+├── composables/
+│   ├── useTouchInteractions.ts ✅
+│   ├── useAdvancedGestures.ts ✅
+│   ├── useMobileWorkflow.ts ✅
+│   ├── useMobileOptimization.ts ✅
+│   └── useOrientationAdaptation.ts ✅
+└── styles/
+    └── orientation.scss ✅
+```
+
+### 향후 구현 예정 구조
 ```
 web/src/
 ├── views/

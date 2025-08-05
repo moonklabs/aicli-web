@@ -538,13 +538,13 @@ type RoutingMetrics struct {
 	AverageLatency   atomic.Value `json:"average_latency"` // time.Duration
 
 	// 풀별 메트릭
-	PoolMetrics map[string]*PoolMetrics `json:"pool_metrics"`
+	PoolMetrics map[string]*AgentPoolMetrics `json:"pool_metrics"`
 
 	mutex sync.RWMutex
 }
 
-// PoolMetrics는 풀 메트릭입니다
-type PoolMetrics struct {
+// AgentPoolMetrics는 에이전트 풀 메트릭입니다
+type AgentPoolMetrics struct {
 	RequestCount   atomic.Int64  `json:"request_count"`
 	SuccessCount   atomic.Int64  `json:"success_count"`
 	ErrorCount     atomic.Int64  `json:"error_count"`
