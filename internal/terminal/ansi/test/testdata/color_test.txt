@@ -1,0 +1,53 @@
+# Color Test Sequences
+
+# 4-bit colors (standard 16 colors)
+[30mBlack[0m [31mRed[0m [32mGreen[0m [33mYellow[0m
+[34mBlue[0m [35mMagenta[0m [36mCyan[0m [37mWhite[0m
+
+# Bright/Bold variants
+[90mBright Black[0m [91mBright Red[0m [92mBright Green[0m [93mBright Yellow[0m
+[94mBright Blue[0m [95mBright Magenta[0m [96mBright Cyan[0m [97mBright White[0m
+
+# Background colors
+[40m Black BG [0m [41m Red BG [0m [42m Green BG [0m [43m Yellow BG [0m
+[44m Blue BG [0m [45m Magenta BG [0m [46m Cyan BG [0m [47m White BG [0m
+
+# Combined foreground and background
+[31;44mRed on Blue[0m [33;42mYellow on Green[0m [97;40mWhite on Black[0m
+
+# 8-bit colors (256 colors)
+# Standard colors (0-15)
+[38;5;0m■[0m [38;5;1m■[0m [38;5;2m■[0m [38;5;3m■[0m [38;5;4m■[0m [38;5;5m■[0m [38;5;6m■[0m [38;5;7m■[0m
+[38;5;8m■[0m [38;5;9m■[0m [38;5;10m■[0m [38;5;11m■[0m [38;5;12m■[0m [38;5;13m■[0m [38;5;14m■[0m [38;5;15m■[0m
+
+# Color cube (16-231)
+# Reds
+[38;5;196m■[0m [38;5;197m■[0m [38;5;198m■[0m [38;5;199m■[0m [38;5;200m■[0m [38;5;201m■[0m
+
+# Greens
+[38;5;46m■[0m [38;5;47m■[0m [38;5;48m■[0m [38;5;49m■[0m [38;5;50m■[0m [38;5;51m■[0m
+
+# Blues
+[38;5;21m■[0m [38;5;27m■[0m [38;5;33m■[0m [38;5;39m■[0m [38;5;45m■[0m [38;5;51m■[0m
+
+# Grayscale (232-255)
+[38;5;232m■[0m [38;5;234m■[0m [38;5;236m■[0m [38;5;238m■[0m [38;5;240m■[0m [38;5;242m■[0m
+[38;5;244m■[0m [38;5;246m■[0m [38;5;248m■[0m [38;5;250m■[0m [38;5;252m■[0m [38;5;254m■[0m
+
+# 24-bit true color (RGB)
+# Red gradient
+[38;2;255;0;0m■[0m [38;2;224;0;0m■[0m [38;2;192;0;0m■[0m [38;2;160;0;0m■[0m [38;2;128;0;0m■[0m
+
+# Green gradient
+[38;2;0;255;0m■[0m [38;2;0;224;0m■[0m [38;2;0;192;0m■[0m [38;2;0;160;0m■[0m [38;2;0;128;0m■[0m
+
+# Blue gradient
+[38;2;0;0;255m■[0m [38;2;0;0;224m■[0m [38;2;0;0;192m■[0m [38;2;0;0;160m■[0m [38;2;0;0;128m■[0m
+
+# RGB combinations
+[38;2;255;255;0m■[0m [38;2;255;0;255m■[0m [38;2;0;255;255m■[0m [38;2;255;128;0m■[0m
+
+# Complex color combinations with text attributes
+[1;38;5;196mBold Red (256)[0m
+[3;38;2;255;128;64mItalic Orange (RGB)[0m
+[4;48;5;17;38;5;226mUnderlined Yellow on Blue[0m

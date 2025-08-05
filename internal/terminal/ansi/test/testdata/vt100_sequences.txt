@@ -1,0 +1,69 @@
+# VT100 Test Sequences
+
+# Basic cursor movement
+ESC[A - Cursor up
+ESC[B - Cursor down
+ESC[C - Cursor forward
+ESC[D - Cursor back
+ESC[10A - Cursor up 10 lines
+ESC[5;10H - Cursor to row 5, column 10
+
+# Screen manipulation
+ESC[2J - Clear entire screen
+ESC[J - Clear from cursor to end of screen
+ESC[1J - Clear from cursor to beginning of screen
+ESC[K - Clear from cursor to end of line
+ESC[2K - Clear entire line
+ESC[1K - Clear from cursor to beginning of line
+
+# Text attributes
+ESC[0m - Reset all attributes
+ESC[1m - Bold
+ESC[2m - Dim
+ESC[3m - Italic
+ESC[4m - Underline
+ESC[5m - Blink
+ESC[7m - Reverse
+ESC[8m - Hidden
+
+# Colors (4-bit)
+ESC[30m - Black foreground
+ESC[31m - Red foreground
+ESC[32m - Green foreground
+ESC[33m - Yellow foreground
+ESC[34m - Blue foreground
+ESC[35m - Magenta foreground
+ESC[36m - Cyan foreground
+ESC[37m - White foreground
+
+# Background colors
+ESC[40m - Black background
+ESC[41m - Red background
+ESC[42m - Green background
+ESC[43m - Yellow background
+ESC[44m - Blue background
+ESC[45m - Magenta background
+ESC[46m - Cyan background
+ESC[47m - White background
+
+# Bright colors
+ESC[90m - Bright black foreground
+ESC[91m - Bright red foreground
+ESC[92m - Bright green foreground
+ESC[93m - Bright yellow foreground
+ESC[94m - Bright blue foreground
+ESC[95m - Bright magenta foreground
+ESC[96m - Bright cyan foreground
+ESC[97m - Bright white foreground
+
+# Save/Restore cursor
+ESC7 - Save cursor position
+ESC8 - Restore cursor position
+ESC[s - Save cursor position (ANSI)
+ESC[u - Restore cursor position (ANSI)
+
+# Scrolling
+ESC[1;24r - Set scrolling region lines 1-24
+ESC[r - Reset scrolling region
+ESCD - Scroll down (Index)
+ESCM - Scroll up (Reverse Index)
