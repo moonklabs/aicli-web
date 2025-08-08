@@ -6,10 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
-
-var log = logrus.WithField("component", "pty")
 
 // SessionConfig 세션 관리자 설정
 type SessionConfig struct {

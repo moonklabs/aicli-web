@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aicli-web/internal/pty"
+	"github.com/aicli/aicli-web/internal/pty"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"

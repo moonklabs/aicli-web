@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"io"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Serializer 터미널 직렬화기

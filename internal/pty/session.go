@@ -6,8 +6,6 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // SessionStatus 세션 상태
@@ -88,11 +86,6 @@ func NewPTYSession(containerID string, config *PTYConfig) *PTYSession {
 		Config:      config,
 		metadata:    make(map[string]interface{}),
 	}
-}
-
-// generateSessionID 세션 ID 생성
-func generateSessionID() string {
-	return fmt.Sprintf("pty-%s", uuid.New().String())
 }
 
 // UpdateActivity 활동 시간 업데이트

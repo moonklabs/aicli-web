@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aicli-web/internal/pty"
+	"github.com/aicli/aicli-web/internal/pty"
 	log "github.com/sirupsen/logrus"
 )
 

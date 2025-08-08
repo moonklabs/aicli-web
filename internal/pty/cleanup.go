@@ -90,7 +90,7 @@ func (cm *CleanupManager) cleanupLoop() {
 }
 
 // performCleanup 정리 수행
-func (cm *CleanupManager) performCleanup() {
+func (cm *CleanupManager) performCleanup() int {
 	startTime := time.Now()
 	
 	// 유휴 세션 정리
@@ -107,6 +107,8 @@ func (cm *CleanupManager) performCleanup() {
 		log.Infof("Cleanup completed: %d sessions cleaned (took %v)", 
 			cleaned, time.Since(startTime))
 	}
+	
+	return cleaned
 }
 
 // cleanupOldSessions 오래된 세션 정리

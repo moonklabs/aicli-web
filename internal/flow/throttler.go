@@ -525,7 +525,7 @@ func calculatePerformance(state *ThrottleState) float64 {
 	}
 	
 	// 스로틀링 비율의 역수를 성능 지표로 사용
-	totalMessages := float64(state.ThrottledCount + state.AdjustmentCount*100)
+	totalMessages := float64(state.ThrottledCount + uint64(state.AdjustmentCount)*100)
 	if totalMessages == 0 {
 		return 1.0
 	}

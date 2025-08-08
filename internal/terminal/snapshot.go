@@ -464,7 +464,6 @@ func (sm *SnapshotManager) compressSnapshot(snapshot *Snapshot) error {
 	
 	var buf bytes.Buffer
 	gw := gzip.NewWriter(&buf)
-	gw.SetConcurrency(256<<10, 1)
 	
 	if _, err := gw.Write(data); err != nil {
 		return err
