@@ -26,7 +26,7 @@ var upgrader = websocket.Upgrader{
 // ClaudeStreamHandler는 Claude 스트림 WebSocket 연결을 관리합니다.
 type ClaudeStreamHandler struct {
 	hub      *Hub
-	sessions map[string]*StreamSession
+	sessions map[string]*ClaudeStreamSession
 	mu       sync.RWMutex
 	claude   claude.Wrapper
 }
@@ -35,13 +35,13 @@ type ClaudeStreamHandler struct {
 func NewClaudeStreamHandler(hub *Hub, claudeWrapper claude.Wrapper) *ClaudeStreamHandler {
 	return &ClaudeStreamHandler{
 		hub:      hub,
-		sessions: make(map[string]*StreamSession),
+		sessions: make(map[string]*ClaudeStreamSession),
 		claude:   claudeWrapper,
 	}
 }
 
-// StreamSession은 WebSocket 스트림 세션을 나타냅니다.
-type StreamSession struct {
+// ClaudeStreamSession은 Claude WebSocket 스트림 세션을 나타냅니다.
+type ClaudeStreamSession struct {
 	ID           string
 	Conn         *websocket.Conn
 	Send         chan []byte
@@ -71,7 +71,7 @@ func (h *ClaudeStreamHandler) HandleConnection(c *gin.Context) {
 	ctx, cancel := context.WithCancel(c.Request.Context())
 
 	// 스트림 세션 생성
-	session := &StreamSession{
+	session := &ClaudeStreamSession{
 		ID:           executionID,
 		Conn:         conn,
 		Send:         make(chan []byte, 256),
@@ -106,7 +106,7 @@ func (h *ClaudeStreamHandler) HandleConnection(c *gin.Context) {
 }
 
 // registerSession은 세션을 등록합니다.
-func (h *ClaudeStreamHandler) registerSession(session *StreamSession) {
+func (h *ClaudeStreamHandler) registerSession(session *ClaudeStreamSession) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.sessions[session.ID] = session
@@ -124,7 +124,7 @@ func (h *ClaudeStreamHandler) unregisterSession(sessionID string) {
 }
 
 // GetSession은 등록된 세션을 가져옵니다.
-func (h *ClaudeStreamHandler) GetSession(sessionID string) *StreamSession {
+func (h *ClaudeStreamHandler) GetSession(sessionID string) *ClaudeStreamSession {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return h.sessions[sessionID]
@@ -153,7 +153,7 @@ func (h *ClaudeStreamHandler) BroadcastToSession(sessionID string, message inter
 }
 
 // writePump은 메시지를 클라이언트로 전송합니다.
-func (s *StreamSession) writePump() {
+func (s *ClaudeStreamSession) writePump() {
 	ticker := time.NewTicker(54 * time.Second) // WebSocket ping 주기
 	defer func() {
 		ticker.Stop()
@@ -189,7 +189,7 @@ func (s *StreamSession) writePump() {
 }
 
 // readPump은 클라이언트로부터 메시지를 읽습니다.
-func (s *StreamSession) readPump() {
+func (s *ClaudeStreamSession) readPump() {
 	defer func() {
 		s.cancel()
 		s.Conn.Close()
@@ -222,7 +222,7 @@ func (s *StreamSession) readPump() {
 }
 
 // handleClientMessage는 클라이언트에서 받은 메시지를 처리합니다.
-func (s *StreamSession) handleClientMessage(message []byte) {
+func (s *ClaudeStreamSession) handleClientMessage(message []byte) {
 	var clientMsg ClientMessage
 	if err := json.Unmarshal(message, &clientMsg); err != nil {
 		log.Printf("Invalid client message: %v", err)
@@ -258,7 +258,7 @@ func (s *StreamSession) handleClientMessage(message []byte) {
 }
 
 // streamClaude는 Claude 메시지를 WebSocket으로 스트리밍합니다.
-func (s *StreamSession) streamClaude() {
+func (s *ClaudeStreamSession) streamClaude() {
 	for {
 		select {
 		case msg, ok := <-s.claudeStream:
@@ -303,7 +303,7 @@ func (s *StreamSession) streamClaude() {
 }
 
 // Close는 스트림 세션을 종료합니다.
-func (s *StreamSession) Close() {
+func (s *ClaudeStreamSession) Close() {
 	s.cancel()
 }
 
