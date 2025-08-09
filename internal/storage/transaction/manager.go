@@ -20,6 +20,7 @@ type Manager interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error, opts ...*storage.TransactionOptions) error
 
 	// RunInTxWithResult 결과와 함께 트랜잭션 실행 (제네릭 지원 안함, interface{} 사용)
+	RunInTxWithResult(ctx context.Context, fn func(ctx context.Context) (interface{}, error), opts ...*storage.TransactionOptions) (interface{}, error)
 
 	// Current 현재 컨텍스트에서 트랜잭션 가져오기
 	Current(ctx context.Context) (storage.Transaction, bool)
