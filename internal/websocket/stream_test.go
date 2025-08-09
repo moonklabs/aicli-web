@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -202,7 +201,6 @@ func TestMaxConnections(t *testing.T) {
 // TestConcurrentSessions 동시 세션 테스트
 func TestConcurrentSessions(t *testing.T) {
 	sm := NewStreamManager(nil)
-	ctx := context.Background()
 	
 	// 동시에 여러 세션 생성
 	sessionCount := 10

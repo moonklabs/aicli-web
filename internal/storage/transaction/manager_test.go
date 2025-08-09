@@ -157,17 +157,16 @@ func TestTransactionManager(t *testing.T) {
 		assert.Contains(t, err.Error(), "test error")
 	})
 
-	// TODO: RunInTxWithResult 메서드 구현 후 테스트 활성화
-	// t.Run("RunInTxWithResult", func(t *testing.T) {
-	// 	manager := NewManager(mockStorage, logger)
-	//
-	// 	result, err := manager.RunInTxWithResult(context.Background(), func(ctx context.Context) (interface{}, error) {
-	// 		return 42, nil
-	// 	})
-	//
-	// 	assert.NoError(t, err)
-	// 	assert.Equal(t, 42, result)
-	// })
+	t.Run("RunInTxWithResult", func(t *testing.T) {
+		manager := NewManager(mockStorage, logger)
+
+		result, err := manager.RunInTxWithResult(context.Background(), func(ctx context.Context) (interface{}, error) {
+			return 42, nil
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, 42, result)
+	})
 
 	t.Run("Current 트랜잭션 조회", func(t *testing.T) {
 		manager := NewManager(mockStorage, logger)

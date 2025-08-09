@@ -90,12 +90,7 @@ func TestListWorkspaces(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, response.Data)
 
-	// PaginationResponse 구조에 따라 Meta가 초기화되지 않을 수 있음
-	if response.Meta.CurrentPage == 0 && response.Meta.PerPage == 0 {
-		// 기본값이 설정되지 않은 경우
-		t.Skip("PaginationMeta가 초기화되지 않음")
-	}
-
+	// Meta가 올바르게 설정되어야 함
 	assert.Equal(t, 1, response.Meta.CurrentPage)
 	assert.Equal(t, 10, response.Meta.PerPage)
 	assert.Equal(t, 1, response.Meta.Total) // 생성한 워크스페이스 1개

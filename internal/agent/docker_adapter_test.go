@@ -6,14 +6,11 @@ import (
 	"testing"
 )
 
-func init() {
-	// 전체 Docker adapter 테스트를 건너뜀 - mock 설정 문제로 인한 임시 조치
-}
+// Mock 설정을 완료하여 테스트 활성화
 
 // Mock 정의는 mocks_test.go 파일에서 통합 관리됩니다.
 
 func TestDockerAdapter_CreateContainer(t *testing.T) {
-	t.Skip("Mock 설정이 불완전한 테스트 - 추후 수정 필요")
 
 	// Arrange
 	containerManager := &MockContainerManager{}
@@ -42,7 +39,6 @@ func TestDockerAdapter_CreateContainer(t *testing.T) {
 }
 
 func TestDockerAdapter_StartContainer(t *testing.T) {
-	t.Skip("Mock 설정이 불완전한 테스트 - 추후 수정 필요")
 
 	// Arrange
 	containerManager := &MockContainerManager{}
@@ -60,7 +56,6 @@ func TestDockerAdapter_StartContainer(t *testing.T) {
 }
 
 func TestDockerAdapter_StopContainer(t *testing.T) {
-	t.Skip("Mock 설정이 불완전한 테스트 - 추후 수정 필요")
 
 	// Arrange
 	containerManager := &MockContainerManager{}
@@ -78,7 +73,6 @@ func TestDockerAdapter_StopContainer(t *testing.T) {
 }
 
 func TestDockerAdapter_GetContainerStatus(t *testing.T) {
-	t.Skip("Mock 설정이 불완전한 테스트 - 추후 수정 필요")
 
 	// Arrange
 	containerManager := &MockContainerManager{}
@@ -104,7 +98,6 @@ func TestDockerAdapter_GetContainerStatus(t *testing.T) {
 }
 
 func TestDockerAdapter_GetContainerHealth(t *testing.T) {
-	t.Skip("Mock 설정이 불완전한 테스트 - 추후 수정 필요")
 
 	// Arrange
 	containerManager := &MockContainerManager{}

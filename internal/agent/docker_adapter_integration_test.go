@@ -15,7 +15,7 @@ import (
 // Mock 정의는 mocks_test.go 파일에서 통합 관리됩니다.
 
 func TestDockerAdapter_CreateAgentContainer(t *testing.T) {
-	t.Skip("Docker Agent 통합 설정이 필요한 통합 테스트 - 추후 구현")
+	// Mock을 사용한 Agent 컨테이너 생성 테스트
 
 	ctx := context.Background()
 
@@ -27,14 +27,8 @@ func TestDockerAdapter_CreateAgentContainer(t *testing.T) {
 	// Docker 어댑터 생성
 	adapter := NewDockerAdapter(mockContainerManager, mockClient, mockStatsCollector)
 
-	// Agent 전용 Docker 통합 설정 (Mock client 호환성 문제로 생략)
-	// mockDockerClient := &MockDockerClient{}
-	// agentIntegration := &DockerAgentIntegration{
-	//     client:      mockDockerClient,
-	//     imageName:   DefaultAgentImage,
-	//     networkName: "aicli-agent-network",
-	// }
-	// adapter.(*dockerAdapter).SetAgentIntegration(agentIntegration)
+	// Agent 전용 Docker 통합은 Mock으로 시뮬레이션
+	// 실제 AgentIntegration 대신 ContainerManager를 통한 Agent 컨테이너 생성 테스트
 
 	// 컨테이너 설정
 	config := ContainerConfig{
@@ -59,9 +53,14 @@ func TestDockerAdapter_CreateAgentContainer(t *testing.T) {
 	//     {Name: "aicli-agent-network"},
 	// }, nil)
 
-	// 컨테이너 생성 모의 (ContainerManager 사용)
-	// mockClient.On("ContainerCreate", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-	//     Return(container.CreateResponse{ID: "container-abc123"}, nil)
+	// Agent 컨테이너 생성 모의
+	mockContainerManager.On("CreateWorkspaceContainer", ctx, mock.Anything).
+		Return(&docker.WorkspaceContainer{
+			ID:      "container-abc123",
+			Name:    "aicli-agent-test-agent-123",
+			State:   docker.ContainerStateCreated,
+			Created: time.Now(),
+		}, nil)
 
 	// 컨테이너 생성 실행
 	containerInfo, err := adapter.CreateContainer(ctx, config)
@@ -72,7 +71,7 @@ func TestDockerAdapter_CreateAgentContainer(t *testing.T) {
 	assert.Equal(t, "container-abc123", containerInfo.ID)
 	assert.Equal(t, "aicli-agent-test-agent-123", containerInfo.Name)
 	assert.Equal(t, "created", containerInfo.Status)
-	// mockDockerClient.AssertExpectations(t) // Agent 통합 설정이 제거되어 불필요
+	mockContainerManager.AssertExpectations(t)
 }
 
 func TestDockerAdapter_CreateRegularContainer(t *testing.T) {
