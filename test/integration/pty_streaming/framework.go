@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/aicli/aicli-web/internal/docker"
@@ -15,8 +14,8 @@ import (
 	"github.com/aicli/aicli-web/internal/terminal"
 	"github.com/aicli/aicli-web/internal/websocket"
 	"github.com/docker/docker/api/types"
-	docker_client "github.com/docker/docker/client"
-	"github.com/gorilla/websocket"
+	"github.com/docker/docker/client"
+	gorilla "github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,7 +48,7 @@ type TestServer struct {
 // TestClient represents a test WebSocket client
 type TestClient struct {
 	clientID     string
-	wsConn       *websocket.Conn
+	wsConn       *gorilla.Conn
 	sessionID    string
 	containerID  string
 	connected    bool
@@ -73,7 +72,7 @@ type TestConfig struct {
 
 // TestDockerManager manages Docker containers for testing
 type TestDockerManager struct {
-	client     *docker_client.Client
+	client     *client.Client
 	containers map[string]*TestContainer
 	mutex      sync.RWMutex
 }
@@ -139,15 +138,15 @@ func (itf *IntegrationTestFramework) setupTestServer() error {
 	wsConfig := &websocket.StreamConfig{
 		BufferSize:        4096,
 		MaxConnections:    itf.config.MaxSessions,
-		HeartbeatInterval: 30 * time.Second,
-		Compression:       true,
+		PingInterval:      30 * time.Second,
+		EnableCompression: true,
 	}
 	wsManager := websocket.NewStreamManager(wsConfig)
 
 	// Docker 클라이언트 생성
-	dockerClient, err := docker_client.NewClientWithOpts(
-		docker_client.WithHost(itf.config.DockerHost),
-		docker_client.WithAPIVersionNegotiation(),
+	dockerClient, err := client.NewClientWithOpts(
+		client.WithHost(itf.config.DockerHost),
+		client.WithAPIVersionNegotiation(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %w", err)
@@ -163,13 +162,11 @@ func (itf *IntegrationTestFramework) setupTestServer() error {
 	dockerPTY := docker.NewDockerPTYIntegration(dockerClient, dockerPTYConfig)
 
 	// 플로우 제어 초기화
-	flowConfig := &flow.FlowControlConfig{
-		MaxBufferSize:     1024 * 1024, // 1MB
-		ThrottleThreshold: 0.8,
-		MinRate:           1000,
-		MaxRate:           1000000,
+	flowConfig := flow.DefaultFlowControlConfig()
+	flowController, err := flow.NewFlowController(flowConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create flow controller: %w", err)
 	}
-	flowController := flow.NewFlowController(flowConfig)
 
 	// 터미널 스냅샷 매니저 초기화
 	terminalManager := terminal.NewSnapshotManager(&terminal.SnapshotConfig{
@@ -191,9 +188,9 @@ func (itf *IntegrationTestFramework) setupTestServer() error {
 
 // setupDockerEnvironment initializes Docker test environment
 func (itf *IntegrationTestFramework) setupDockerEnvironment() error {
-	dockerClient, err := docker_client.NewClientWithOpts(
-		docker_client.WithHost(itf.config.DockerHost),
-		docker_client.WithAPIVersionNegotiation(),
+	dockerClient, err := client.NewClientWithOpts(
+		client.WithHost(itf.config.DockerHost),
+		client.WithAPIVersionNegotiation(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %w", err)
@@ -230,8 +227,7 @@ func (itf *IntegrationTestFramework) Start() error {
 	// Docker PTY 시작
 	itf.testServer.dockerPTY.Start()
 
-	// WebSocket 매니저 시작
-	itf.testServer.wsManager.Start()
+	// WebSocket 매니저 시작 (실제 구현에서는 Start 메서드가 없으므로 주석 처리)
 
 	return nil
 }
@@ -252,9 +248,10 @@ func (itf *IntegrationTestFramework) Stop() error {
 		if itf.testServer.dockerPTY != nil {
 			itf.testServer.dockerPTY.Stop()
 		}
-		if itf.testServer.wsManager != nil {
-			itf.testServer.wsManager.Stop()
-		}
+		// WebSocket 매니저 정지 (실제 구현에서는 Stop 메서드가 없으므로 주석 처리)
+		// if itf.testServer.wsManager != nil {
+		//		itf.testServer.wsManager.Stop()
+		// }
 		if itf.testServer.server != nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -328,7 +325,7 @@ func (itf *IntegrationTestFramework) ClosePTYSession(sessionID string) error {
 func (itf *IntegrationTestFramework) ConnectWebSocket(sessionID string) (*TestClient, error) {
 	url := fmt.Sprintf("ws://localhost:%d/ws/%s", itf.config.ServerPort, sessionID)
 
-	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	conn, _, err := gorilla.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect websocket: %w", err)
 	}
@@ -418,7 +415,7 @@ func (itf *IntegrationTestFramework) startTestServer() error {
 
 // handleWebSocket handles WebSocket connections
 func (itf *IntegrationTestFramework) handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	upgrader := websocket.Upgrader{
+	upgrader := gorilla.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
@@ -435,13 +432,13 @@ func (itf *IntegrationTestFramework) handleWebSocket(w http.ResponseWriter, r *h
 }
 
 // handleWebSocketConnection handles individual WebSocket connections
-func (itf *IntegrationTestFramework) handleWebSocketConnection(conn *websocket.Conn) {
+func (itf *IntegrationTestFramework) handleWebSocketConnection(conn *gorilla.Conn) {
 	defer conn.Close()
 
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if gorilla.IsUnexpectedCloseError(err, gorilla.CloseGoingAway, gorilla.CloseAbnormalClosure) {
 				log.Errorf("WebSocket error: %v", err)
 			}
 			break

@@ -10,6 +10,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// isTemporaryError checks if the error is temporary
+func isTemporaryError(err error) bool {
+	if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure) {
+		return false
+	}
+	return websocket.IsCloseError(err, websocket.CloseAbnormalClosure)
+}
+
 // SendCommand sends a command to the PTY session
 func (tc *TestClient) SendCommand(command string) error {
 	tc.mutex.Lock()
@@ -56,7 +64,8 @@ func (tc *TestClient) WaitForOutput(expected string, timeout time.Duration) (str
 
 		_, message, err := tc.wsConn.ReadMessage()
 		if err != nil {
-			if websocket.IsTemporaryError(err) {
+			// 임시 오류 검사를 대체하는 로직
+			if isTemporaryError(err) {
 				continue
 			}
 			tc.mutex.Lock()
