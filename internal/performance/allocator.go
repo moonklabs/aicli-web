@@ -5,8 +5,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"unsafe"
-
-	"github.com/sirupsen/logrus"
 )
 
 // CustomAllocator 커스텀 메모리 할당자

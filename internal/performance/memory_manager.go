@@ -183,13 +183,17 @@ func (mm *MemoryManager) GetObject(objType ObjectType) interface{} {
 	select {
 	case obj := <-pool.objects:
 		atomic.AddInt64(&pool.reused, 1)
-		atomic.AddInt64(&mm.metrics.ObjectsInUse[objType], 1)
+		mm.mutex.Lock()
+		mm.metrics.ObjectsInUse[objType]++
+		mm.mutex.Unlock()
 		return obj
 	default:
 		// 풀이 비어있으면 새로 생성
 		obj := pool.factory()
 		atomic.AddInt64(&pool.created, 1)
-		atomic.AddInt64(&mm.metrics.ObjectsInUse[objType], 1)
+		mm.mutex.Lock()
+		mm.metrics.ObjectsInUse[objType]++
+		mm.mutex.Unlock()
 		return obj
 	}
 }
@@ -214,13 +218,19 @@ func (mm *MemoryManager) ReturnObject(objType ObjectType, obj interface{}) {
 		select {
 		case pool.objects <- obj:
 			atomic.AddInt64(&pool.currentSize, 1)
-			atomic.AddInt64(&mm.metrics.ObjectsInUse[objType], -1)
+			mm.mutex.Lock()
+			mm.metrics.ObjectsInUse[objType]--
+			mm.mutex.Unlock()
 		default:
 			// 풀이 가득 찬 경우 객체 버림
-			atomic.AddInt64(&mm.metrics.ObjectsInUse[objType], -1)
+			mm.mutex.Lock()
+			mm.metrics.ObjectsInUse[objType]--
+			mm.mutex.Unlock()
 		}
 	} else {
-		atomic.AddInt64(&mm.metrics.ObjectsInUse[objType], -1)
+		mm.mutex.Lock()
+		mm.metrics.ObjectsInUse[objType]--
+		mm.mutex.Unlock()
 	}
 }
 
