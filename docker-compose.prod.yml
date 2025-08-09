@@ -1,0 +1,195 @@
+version: '3.8'
+
+services:
+  # API 서버 (프로덕션)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+      target: api
+    container_name: aicli-api-prod
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      - GO_ENV=production
+      - API_PORT=8080
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/aicli.db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    volumes:
+      # 데이터 저장소
+      - ./data:/data
+      # Docker 소켓 (컨테이너 관리용)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # 워크스페이스 볼륨
+      - workspace-data:/workspace
+    networks:
+      - aicli-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # 웹 프론트엔드 (프로덕션)
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - API_URL=${API_URL:-http://api:8080}
+    container_name: aicli-web-prod
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8080}
+    depends_on:
+      - api
+    networks:
+      - aicli-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis 캐시
+  redis:
+    image: redis:7-alpine
+    container_name: aicli-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - aicli-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Claude 워크스페이스 매니저
+  workspace-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.workspace
+    container_name: aicli-workspace-manager
+    restart: unless-stopped
+    environment:
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      - WORKSPACE_DIR=/workspace
+      - MAX_CONTAINERS=${MAX_CONTAINERS:-10}
+      - CONTAINER_TIMEOUT=${CONTAINER_TIMEOUT:-3600}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - workspace-data:/workspace
+      - claude-cache:/home/claude/.cache
+    networks:
+      - aicli-network
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_PTRACE  # PTY 지원
+      - DAC_OVERRIDE  # 파일 시스템 접근
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # Nginx 리버스 프록시 (선택사항)
+  nginx:
+    image: nginx:alpine
+    container_name: aicli-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      - api
+      - web
+    networks:
+      - aicli-network
+    profiles:
+      - with-nginx
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# 네트워크 정의
+networks:
+  aicli-network:
+    driver: bridge
+    name: aicli-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 볼륨 정의
+volumes:
+  # 워크스페이스 데이터
+  workspace-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${WORKSPACE_HOST_PATH:-./workspace}
+  
+  # Claude 캐시
+  claude-cache:
+    driver: local
+  
+  # Redis 데이터
+  redis-data:
+    driver: local
+  
+  # Nginx 캐시
+  nginx-cache:
+    driver: local

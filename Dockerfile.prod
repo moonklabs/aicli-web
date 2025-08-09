@@ -1,0 +1,172 @@
+# ==========================================
+# AICLI-Web Production Dockerfile
+# 멀티스테이지 빌드로 최적화된 프로덕션 이미지
+# ==========================================
+
+# ==== 빌드 스테이지 ====
+FROM golang:1.21-alpine AS builder
+
+# 빌드 도구 설치
+RUN apk add --no-cache \
+    git \
+    make \
+    gcc \
+    musl-dev \
+    ca-certificates \
+    tzdata
+
+# 작업 디렉토리 설정
+WORKDIR /build
+
+# 의존성 캐싱을 위한 go.mod, go.sum 먼저 복사
+COPY go.mod go.sum ./
+RUN go mod download
+
+# 소스 코드 복사
+COPY . .
+
+# 빌드 인자
+ARG VERSION=0.1.0
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
+# 빌드 실행 (정적 바이너리)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo \
+    -ldflags "-s -w -extldflags '-static' \
+        -X github.com/aicli/aicli-web/pkg/version.Version=${VERSION} \
+        -X github.com/aicli/aicli-web/pkg/version.BuildTime=${BUILD_TIME} \
+        -X github.com/aicli/aicli-web/pkg/version.GitCommit=${GIT_COMMIT}" \
+    -o ./build/aicli-api ./cmd/api && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -a -installsuffix cgo \
+    -ldflags "-s -w -extldflags '-static' \
+        -X github.com/aicli/aicli-web/pkg/version.Version=${VERSION} \
+        -X github.com/aicli/aicli-web/pkg/version.BuildTime=${BUILD_TIME} \
+        -X github.com/aicli/aicli-web/pkg/version.GitCommit=${GIT_COMMIT}" \
+    -o ./build/aicli ./cmd/aicli
+
+# ==== API 서버 스테이지 ====
+FROM alpine:3.18 AS api
+
+# 보안 업데이트 및 필수 패키지 설치
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        curl \
+        wget \
+        bash && \
+    rm -rf /var/cache/apk/*
+
+# 사용자 생성 (보안)
+RUN addgroup -g 1000 -S aicli && \
+    adduser -u 1000 -S aicli -G aicli
+
+# 작업 디렉토리 생성
+WORKDIR /app
+
+# 빌드 스테이지에서 바이너리 복사
+COPY --from=builder /build/build/aicli-api /app/aicli-api
+
+# 데이터 디렉토리 생성
+RUN mkdir -p /data /app/logs && \
+    chown -R aicli:aicli /data /app/logs
+
+# 설정 파일 복사 (선택사항)
+# COPY --chown=aicli:aicli config/production.yaml /app/config/
+
+# 사용자 전환
+USER aicli
+
+# 헬스체크
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# 포트 노출
+EXPOSE 8080
+
+# 실행 명령
+ENTRYPOINT ["/app/aicli-api"]
+CMD ["serve"]
+
+# ==== CLI 도구 스테이지 ====
+FROM alpine:3.18 AS cli
+
+# 필수 패키지 설치
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        bash \
+        git \
+        openssh-client \
+        docker-cli && \
+    rm -rf /var/cache/apk/*
+
+# 사용자 생성
+RUN addgroup -g 1000 -S aicli && \
+    adduser -u 1000 -S aicli -G aicli
+
+# 작업 디렉토리
+WORKDIR /app
+
+# 바이너리 복사
+COPY --from=builder /build/build/aicli /app/aicli
+
+# 사용자 전환
+USER aicli
+
+# 실행 명령
+ENTRYPOINT ["/app/aicli"]
+
+# ==== 워크스페이스 스테이지 ====
+FROM alpine:3.18 AS workspace
+
+# Claude 실행에 필요한 패키지 설치
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        bash \
+        git \
+        curl \
+        wget \
+        openssh-client \
+        nodejs \
+        npm \
+        python3 \
+        py3-pip \
+        docker-cli && \
+    rm -rf /var/cache/apk/*
+
+# Claude 사용자 생성
+RUN addgroup -g 1000 -S claude && \
+    adduser -u 1000 -S claude -G claude -s /bin/bash && \
+    usermod -aG docker claude
+
+# 작업 디렉토리 설정
+WORKDIR /workspace
+
+# 워크스페이스 디렉토리 생성
+RUN mkdir -p /workspace /home/claude/.cache /home/claude/.config && \
+    chown -R claude:claude /workspace /home/claude
+
+# Claude CLI 설치 (실제 경로로 변경 필요)
+# RUN npm install -g @anthropic/claude-cli
+
+# 사용자 전환
+USER claude
+
+# 환경 변수
+ENV HOME=/home/claude
+ENV CLAUDE_HOME=/home/claude/.claude
+
+# 볼륨 정의
+VOLUME ["/workspace", "/home/claude/.cache"]
+
+# 기본 명령
+CMD ["/bin/bash"]
