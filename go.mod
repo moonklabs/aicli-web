@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.11
 
 require (
+	github.com/creack/pty v1.1.18
 	github.com/docker/docker v25.0.6+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.15.0
