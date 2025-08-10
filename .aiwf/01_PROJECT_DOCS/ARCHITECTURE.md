@@ -2,7 +2,8 @@
 
 ## 📋 문서 정보
 - **작성일**: 2025-07-20
-- **버전**: 1.0.0
+- **최종 수정**: 2025-08-10
+- **버전**: 2.0.0
 - **프레임워크**: AIWF (AI Workflow Framework)
 - **프로젝트**: AICode Manager - Claude CLI 웹 관리 플랫폼
 
@@ -25,56 +26,70 @@ AICode Manager는 Go 언어로 구현된 네이티브 CLI 도구를 중심으로
 graph TB
     subgraph "Client Layer"
         CLI[AICLI CLI Tool]
-        WEB[Web Dashboard]
+        WEB[Web Terminal UI]
         API_CLIENT[API Client SDKs]
     end
     
     subgraph "API Gateway"
-        GATEWAY[Go API Server]
-        AUTH[Auth Service]
+        GATEWAY[Go API Server - Gin]
+        AUTH[OAuth2/JWT Auth]
         RATE_LIMITER[Rate Limiter]
+        WS_HANDLER[WebSocket Handler]
     end
     
     subgraph "Core Services"
-        TASK_MANAGER[Task Manager]
-        CLAUDE_WRAPPER[Claude CLI Wrapper]
+        SESSION_MGR[Session Manager]
+        CLAUDE_WRAPPER[Process Manager]
         DOCKER_MGR[Docker Manager]
-        WORKSPACE_MGR[Workspace Manager]
+        PTY_MGR[PTY Manager]
+        AGENT_COORD[Agent Coordinator]
+    end
+    
+    subgraph "Real-time Layer"
+        PTY_BRIDGE[PTY-WebSocket Bridge]
+        STREAM_MGR[Stream Manager]
+        SNAPSHOT[Terminal Snapshots]
     end
     
     subgraph "Data Layer"
-        SQLITE[(SQLite/BoltDB)]
+        SQLITE[(SQLite)]
         REDIS[(Redis Cache)]
         FILE_STORE[File System]
         LOG_STORE[Log Storage]
     end
     
     subgraph "Execution Layer"
-        CLAUDE_PROC[Claude CLI Processes]
-        DOCKER_API[Docker Engine API]
-        WORKSPACE[Isolated Workspaces]
+        CLAUDE_PROC[Claude/Gemini CLI]
+        DOCKER_API[Docker Engine]
+        PTY_SESSION[PTY Sessions]
+        WORKSPACE[Container Workspaces]
     end
     
     CLI --> GATEWAY
-    WEB --> GATEWAY
+    WEB --> WS_HANDLER
     API_CLIENT --> GATEWAY
+    
+    WS_HANDLER --> PTY_BRIDGE
+    PTY_BRIDGE --> PTY_MGR
+    PTY_BRIDGE --> STREAM_MGR
     
     GATEWAY --> AUTH
     GATEWAY --> RATE_LIMITER
-    GATEWAY --> TASK_MANAGER
+    GATEWAY --> SESSION_MGR
     GATEWAY --> CLAUDE_WRAPPER
     GATEWAY --> DOCKER_MGR
-    GATEWAY --> WORKSPACE_MGR
+    GATEWAY --> AGENT_COORD
     
-    TASK_MANAGER --> SQLITE
-    TASK_MANAGER --> REDIS
+    SESSION_MGR --> SQLITE
+    SESSION_MGR --> REDIS
     
+    PTY_MGR --> PTY_SESSION
     CLAUDE_WRAPPER --> CLAUDE_PROC
     DOCKER_MGR --> DOCKER_API
     DOCKER_API --> WORKSPACE
     
-    CLAUDE_WRAPPER --> FILE_STORE
-    TASK_MANAGER --> LOG_STORE
+    PTY_SESSION --> SNAPSHOT
+    STREAM_MGR --> LOG_STORE
 ```
 
 ## 🔧 핵심 컴포넌트 설계
@@ -195,30 +210,67 @@ network:
   dns: internal
 ```
 
-### 5. 태스크 관리자
+### 5. PTY 스트리밍 시스템 (신규)
 
-**목적**: 비동기 작업 큐 관리 및 실행 조정
+**목적**: Docker 컨테이너와 웹 터미널 간 실시간 PTY 통신
 
 **주요 기능**:
-- 작업 스케줄링
-- 우선순위 큐 관리
-- 동시 실행 제한
-- 실패 재시도 정책
+- PTY 세션 생명주기 관리
+- WebSocket 양방향 스트리밍
+- ANSI 이스케이프 시퀀스 처리
+- 터미널 스냅샷 캡처 (1초 간격)
+- 백프레셔 및 플로우 컨트롤
+
+**구현 구조**:
+```go
+// internal/pty/session.go
+type PTYSession struct {
+    ID          string
+    ContainerID string  
+    PTY         *os.File
+    Status      SessionStatus
+    Config      *PTYConfig
+}
+
+// internal/websocket/pty_bridge.go
+type PTYBridge struct {
+    streamManager *StreamManager
+    ptyManager    PTYSessionInterface
+    bridges       map[string]*BridgeConnection
+}
+```
+
+**성능 목표**:
+- PTY 응답: < 50ms
+- WebSocket 지연: < 100ms
+- 메모리 사용: < 50MB/세션
+- 동시 세션: 100개 지원
+
+### 6. 세션 관리자
+
+**목적**: Claude CLI 세션 생명주기 관리
+
+**주요 기능**:
+- 세션 풀 관리
+- 상태 추적 및 모니터링
+- 자동 복구 메커니즘
+- 메모리 및 리소스 관리
 
 **동시성 모델**:
 ```go
-type TaskQueue struct {
-    high    chan *Task  // 높은 우선순위
-    medium  chan *Task  // 중간 우선순위
-    low     chan *Task  // 낮은 우선순위
-    workers int         // 워커 수
+type SessionManager struct {
+    sessions map[string]*Session
+    pool     *SessionPool
+    mutex    sync.RWMutex
+    metrics  *SessionMetrics
 }
 
-// 워커 풀 패턴
-func (q *TaskQueue) Start(ctx context.Context) {
-    for i := 0; i < q.workers; i++ {
-        go q.worker(ctx, i)
+// 세션 풀 패턴
+func (m *SessionManager) GetOrCreate(id string) (*Session, error) {
+    if session := m.pool.Get(); session != nil {
+        return session, nil
     }
+    return m.createNewSession(id)
 }
 ```
 

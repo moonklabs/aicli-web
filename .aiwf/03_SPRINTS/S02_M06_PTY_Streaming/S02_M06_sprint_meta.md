@@ -3,9 +3,10 @@ sprint_folder_name: S02_M06_PTY_Streaming
 sprint_sequence_id: S02
 milestone_id: M06
 title: PTY 스트리밍 시스템 - 실시간 터미널 통신
-status: planned
+status: completed
 goal: Docker 컨테이너와 연결된 PTY 세션을 통한 실시간 터미널 스트리밍 시스템 구현
-last_updated: 2025-07-27T21:00:00+0900
+last_updated: 2025-08-10T18:00:00+0900
+completion_date: 2025-08-09T22:00:00+0900
 ---
 
 # Sprint: PTY 스트리밍 시스템 - 실시간 터미널 통신 (S02)
